@@ -10,7 +10,7 @@ Version 3. (See accompanying file License.txt)
 
 #pragma once
 #include "implimentation_types.h"
-#include "constLog2.h"
+#include "constlog2.h"
 
 // VS2008 valid StaticAssert
 template<bool> struct StaticAssert;

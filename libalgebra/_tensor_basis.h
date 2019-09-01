@@ -10,7 +10,7 @@ Version 3. (See accompanying file License.txt)
 
 #pragma once
 #include "implimentation_types.h"
-#include "constlog2.h"
+#include "constLog2.h"
 
 // VS2008 valid StaticAssert
 template<bool> struct StaticAssert;
@@ -438,6 +438,17 @@ public:
 		word_t ans;
 		word_t dPowerOfTwo = ldexp((word_t).5, int(iExponent - uBitsInLetter));
 		return (modf(dMantissa * dShiftPlus1, &ans) + (word_t)1.) * dPowerOfTwo;
+	}
+
+	/// Lexicographically reverses a tensor_basis element
+	inline _tensor_basis reverse() const
+	{
+		// written for correctness - review for performance if used a lot
+		_tensor_basis outword;
+		const _tensor_basis& me(*this);
+		for (int i(size()) ; i != 0 ;)
+			outword.push_back(me[--i]);
+		return outword;
 	}
 
 	static _tensor_basis end()

@@ -125,6 +125,58 @@ public:
 		}
 		return result;
 	}
+	/// Computes the truncated inverse of a free_tensor instance.
+	inline friend free_tensor inverse(const free_tensor& arg)
+	{
+		// Computes the truncated inverse of arg up to degree max_degree
+		// An exception is thrown if the leading term is zero.
+		// the module assumes 
+		// (a+x)^(-1) = (a(1+x/a))^(-1)
+		//  = a^(-1)(1 - x/a + x^2/a^2 + ... + (-1)^(n) x^n/a^n)
+		// = a^(-1) - x/a*[a^(-1)(1 - x/a + x^2/a^2 + ... + (-1)^(n) x^(n-1)/a^(n-1)))].
+		// S_n = a^(-1) + z S_{n-1}; z = - x/a ; S_0 = a^(-1)
+		// max_degree must be > 0
+
+		static KEY kunit;
+		SCA a(0);
+		free_tensor x, z(a);
+
+		const_iterator it(arg.find(kunit));
+		if (it == arg.end())
+			// const term a is 0;
+			throw "divide-by-zero";
+		else
+		{
+			a = (*it).second;
+			x = arg;
+			x.erase(kunit);
+		}
+
+		//S_n = a + z S_{ n - 1 }; z = -x / a; S_0 = a
+		//
+		// the nonzero scalar component a of the tensor arg restored to a tensor
+		free_tensor free_tensor_a_inverse(SCA(1)/a), result(free_tensor_a_inverse);
+		// z := - x/a
+		z.sub_scal_div(x, a);
+		// the iteration
+		for (DEG i = 0; i != max_degree; ++i)
+			result = free_tensor_a_inverse + z * result;
+		return result;
+	}
+	/// Computes the truncated inverse of a free_tensor instance.
+	inline friend free_tensor reflect(const free_tensor& arg)
+	{
+		// Computes the alternating reflection of arg up to degree max_degree
+		// For group-like elements this is the same as the inverse 
+		free_tensor ans(SCA(0));
+		for (const_iterator it = arg.begin(); it != arg.end(); ++it)
+		{
+			KEY old_key = it->first;
+			SCA old_value = it->second;
+			ans[old_key.reverse()] = (old_key.size()%2) ? SCA(0) - old_value : old_value;
+		}
+		return ans;
+	}
 };
 
 /// A specialisation of the algebra class with a shuffle tensor basis.

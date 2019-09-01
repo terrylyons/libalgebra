@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="Header Files\addons">
+      <UniqueIdentifier>{fa3a3c30-fa7b-4960-b867-f2cf7394f74c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libalgebra">
+      <UniqueIdentifier>{51ac7f85-debd-4c7f-8b0a-e226cac1ad4a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="addons\clone_unordered_map.h">
+      <Filter>Header Files\addons</Filter>
+    </ClInclude>
+    <ClInclude Include="addons\gmpwrapper.h">
+      <Filter>Header Files\addons</Filter>
+    </ClInclude>
+    <ClInclude Include="addons\sized_unordered_map.h">
+      <Filter>Header Files\addons</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\_tensor_basis.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\alg_types.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\algebra.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\basis_traits.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\constlog2.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\constpower.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\implimentation_types.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\libalgebra.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\lie.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\lie_basis.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\monomial_basis.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\multi_polynomial.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\poly_basis.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\poly_lie.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\poly_lie_basis.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\polynomials.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\sparse_vector.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\tensor.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\tensor_basis.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+    <ClInclude Include="libalgebra\utils.h">
+      <Filter>Header Files\libalgebra</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

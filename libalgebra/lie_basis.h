@@ -97,7 +97,7 @@ Version 3. (See accompanying file License.txt)
 // on construction). The code for lie basis has been modified to do this and avoid a subtle error.
 
 // It would be worthwhile to write a data driven sparse hall basis
-
+template<DEG n_letters>
 class hall_basis
 {
 public:
@@ -109,7 +109,12 @@ public:
 	typedef DEG KEY; // unsigned int
 	//typedef LET KEY; // unsigned longlong
 	/// The parents of a key are a pair of prior keys. Invalid 0 keys for letters.
-	typedef std::pair<KEY, KEY> PARENT;
+	typedef typename std::pair<KEY, KEY> PARENT;
+	/// The number of letters in alphabet
+	enum
+	{
+		n_letters = n_letters
+	};
 protected:
 	/// Parents, indexed by keys.
 	std::vector<PARENT> hall_set;
@@ -126,7 +131,7 @@ protected:
 	DEG curr_degree;
 public:
 	/// Constructs the basis with a given number of letters.
-	hall_basis(DEG n_letters)
+	hall_basis()
 		: curr_degree(0)
 	{
 		// We put something at position 0 to make indexing more logical
@@ -293,12 +298,22 @@ private:
 */
 
 template<typename SCA, typename RAT, DEG n_letters, DEG max_degree>
-class lie_basis : public hall_basis,
+class lie_basis : public hall_basis<n_letters>,
 				  public basis_traits<With_Degree, n_letters, max_degree>
 {
 public:
 	/// Import of the KEY type.
-	typedef hall_basis::KEY KEY;
+	typedef hall_basis<n_letters>::KEY KEY;
+	/// Import of the PARENT type.
+	typedef typename hall_basis<n_letters>::PARENT PARENT;
+	/// Import member functions.
+	using hall_basis<n_letters>::letter;
+	using hall_basis<n_letters>::getletter;
+	using hall_basis<n_letters>::lparent;
+	using hall_basis<n_letters>::rparent;
+	using hall_basis<n_letters>::degrees;
+	using hall_basis<n_letters>::growup;
+	using hall_basis<n_letters>::reverse_map;
 	/// The MAP type.
 	typedef std::map<KEY, SCA> MAP;
 	/// The Free Lie Associative Algebra element type.
@@ -308,9 +323,9 @@ public:
 public:
 	/// Constructs the basis for a finite number of letters.
 	lie_basis(void)
-		: hall_basis(n_letters) {
+		: hall_basis<n_letters>() {
 		// bug: tjl : 08 04 2017 without the following line the basis would not remain const and sharing it between threads would cause errors
-		hall_basis::growup(max_degree);
+		hall_basis<n_letters>::growup(max_degree);
 	}
 	/// Returns the product of two key.
 	/**

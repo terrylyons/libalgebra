@@ -234,7 +234,7 @@ public:
 		return ( (KEY) hall_set.size() - 1);
 	}
 	/// Outputs the Hall basis to an std::ostream.
-	inline friend std::ostream& operator<<(std::ostream& os, hall_basis& b)
+	inline friend std::ostream& operator<<(std::ostream& os, const hall_basis& b)
 	{	
 		for (KEY k = b.begin(); k != b.end(); k = b.nextkey(k))
 			os << b.key2string(k) << ' ';

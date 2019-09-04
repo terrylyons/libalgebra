@@ -298,7 +298,7 @@ private:
 */
 
 template<typename SCA, typename RAT, DEG n_letters, DEG max_degree>
-class lie_basis : public hall_basis<n_letters>,
+class lie_basis : private hall_basis<n_letters>,
 				  public basis_traits<With_Degree, n_letters, max_degree>
 {
 public:
@@ -314,6 +314,8 @@ public:
 	using hall_basis<n_letters>::degrees;
 	using hall_basis<n_letters>::growup;
 	using hall_basis<n_letters>::reverse_map;
+	using hall_basis<n_letters>::degree;
+	using hall_basis<n_letters>::keyofletter;
 	/// The MAP type.
 	typedef std::map<KEY, SCA> MAP;
 	/// The Free Lie Associative Algebra element type.
@@ -416,6 +418,11 @@ private:
 			LIE result(prod(k1, k3) * (LIE)k4);
 			return result.sub_mul(prod(k1, k4), (LIE)k3);
 		}
+	}
+	/// Outputs the lie basis to an std::ostream.
+	inline friend std::ostream& operator<<(std::ostream& os, const lie_basis& b)
+	{
+		return os << (const hall_basis<n_letters>&)b;
 	}
 	/// Outupts an std::pair<lie_basis*, KEY> to an std::ostream.
 	inline friend std::ostream& operator<<(std::ostream& os, const std::pair<lie_basis*, KEY>& t)

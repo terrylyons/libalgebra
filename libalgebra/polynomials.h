@@ -103,7 +103,7 @@ public:
 			}
 			else
 			{
-				SCA coeff = (it->second)--;
+				SCA coeff = SCA((it->second)--);
 				poly temp1(k);
 				poly temp2(coeff);
 				result = temp2 * temp1;

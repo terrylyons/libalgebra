@@ -358,7 +358,7 @@ public:
 	elements in v, and returns the recursively expanded result. The already
 	computed replacements are stored in table.
 	*/
-	LIE replace(const KEY& k, const std::vector<LET>& s, const std::vector<LIE*>& v, std::map<KEY, LIE>& table)
+	LIE replace(const KEY& k, const std::vector<LET>& s, const std::vector<const LIE*>& v, std::map<KEY, LIE>& table)
 	{
 		typename std::map<KEY, LIE>::iterator it;
 		it = table.find(k);

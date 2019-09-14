@@ -69,7 +69,7 @@ public:
 		: ALG(VECT::basis.keyofletter(letter), s) {}
 public:
 	/// Replaces the occurences of letters in s by Lie elements in v.
-	inline friend poly_lie replace(const poly_lie& src, const std::vector<LET>& s, const std::vector<poly_lie*>& v)	
+	inline friend poly_lie replace(const poly_lie& src, const std::vector<LET>& s, const std::vector<const poly_lie*>& v)	
 	{
 		poly_lie result;
 		std::map<KEY, poly_lie> table;

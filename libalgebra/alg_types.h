@@ -72,6 +72,7 @@ struct alg_types : Field < F >
 	typedef alg::lie<S,Q,ALPHABET_SIZE,DEPTH> LIE;
 	typedef alg::maps<S,Q,ALPHABET_SIZE,DEPTH> MAPS;
 	typedef alg::cbh<S,Q,ALPHABET_SIZE,DEPTH> CBH;
+	typedef alg::poly_lie<S, Q, ALPHABET_SIZE, DEPTH> POLYLIE;
 	typedef alg::multi_polynomial<S,Q,ALPHABET_SIZE,DEPTH> MULTIPOLY;
 	//typedef mtl::dense1D<RAT> mtlVector;
 	//typedef typename mtl::matrix<RAT, mtl::rectangle<>, mtl::dense<>, mtl::row_major>::type mtlMatrix;

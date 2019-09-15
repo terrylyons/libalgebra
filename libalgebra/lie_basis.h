@@ -298,7 +298,7 @@ private:
 */
 
 template<typename SCA, typename RAT, DEG n_letters, DEG max_degree>
-class lie_basis : private hall_basis<n_letters>,
+class lie_basis : protected hall_basis<n_letters>,
 				  public basis_traits<With_Degree, n_letters, max_degree>
 {
 public:
@@ -316,6 +316,11 @@ public:
 	using hall_basis<n_letters>::reverse_map;
 	using hall_basis<n_letters>::degree;
 	using hall_basis<n_letters>::keyofletter;
+	using hall_basis<n_letters>::begin;
+	using hall_basis<n_letters>::end;
+	using hall_basis<n_letters>::nextkey;
+	using hall_basis<n_letters>::key2string;
+	using hall_basis<n_letters>::size;
 	/// The MAP type.
 	typedef std::map<KEY, SCA> MAP;
 	/// The Free Lie Associative Algebra element type.

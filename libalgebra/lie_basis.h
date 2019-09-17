@@ -120,9 +120,20 @@ protected:
 	/// Parents, indexed by keys.
 	std::vector<PARENT> hall_set;
 	/// Reverse map from parents to keys.
-	std::map<PARENT, KEY> reverse_map;
+	struct REVERSE_MAP : private
+		std::map<PARENT, KEY> {
+		using std::map<PARENT, KEY>::operator [];
+		using std::map<PARENT, KEY>::find;
+		using std::map<PARENT, KEY>::end;
+	} reverse_map;
 	/// Degrees, indexed by keys.
-	std::vector<DEG> degrees;
+	struct DEGREE : private
+		std::vector<DEG> {
+		using std::vector<DEG>::operator [];
+		using std::vector<DEG>::push_back;
+		using std::vector<DEG>::begin;
+		using std::vector<DEG>::resize;
+	} degrees;
 	/// Letters, indexed by their keys.
 	//std::string letters;
 	std::vector<LET> letters;
@@ -161,6 +172,122 @@ public:
 	*/
 	inline void growup(DEG desired_degree)
 	{
+		////////////////////////////////////////////////////////////////////////////////////
+//#include <xutility>
+//
+//template <class KEY, class PARENT, DEG n_letters>
+//struct REVERSE_MAP : private std::map < PARENT, KEY>
+//{
+//
+//};
+//
+//template<DEG n_letters>
+//struct DEGREES : private std::vector<DEG>
+//{
+//
+//};
+//
+//template<DEG n_letters>
+//class hall_basis
+//{
+//public:
+//	/// The default key has value 0, which is an invalid value
+//	/// and occurs as a parent key of any letter.
+//	/// 
+//	/// keys can get large - but in the dense case this is not likely
+//	/// Make a choice for the length of a key in 64 bit.
+//	typedef DEG KEY; // unsigned int
+//	//typedef LET KEY; // unsigned longlong
+//	/// The parents of a key are a pair of prior keys. Invalid 0 keys for letters.
+//	typedef typename std::pair<KEY, KEY> PARENT;
+//	/// The number of letters in alphabet
+//	enum
+//	{
+//		n_letters = n_letters
+//	};
+//protected:
+//	/// Parents, indexed by keys.
+//	std::vector<PARENT> hall_set;
+//	/// comparison for parents that respects degree
+//	/*bool less_parent() (const PARENT lhs, const PARENT rhs) const {
+//			return ((degrees[lhs.first] + degrees[lhs.second]) < (degrees[rhs.first] + degrees[rhs.second])) || (lhs < rhs);
+//	};*/
+//	/// Reverse map from parents to keys.
+//	std::map < PARENT, KEY> reverse_map;
+//	/// Degrees, indexed by keys.
+//	std::vector<DEG> degrees;
+//	/// Letters, indexed by their keys.
+//	//std::string letters;
+//	std::vector<LET> letters;
+//	/// Maps letters to keys.
+//	std::map<LET, KEY> ltk;
+//	/// Current degree, always > 0 for any valid class instance.
+//	DEG curr_degree;
+//public:
+//	/// Constructs the basis with a given number of letters.
+//	hall_basis()
+//		: curr_degree(0)
+//	{
+//		// We put something at position 0 to make indexing more logical
+//		degrees.push_back(0);
+//		PARENT p(0, 0);
+//		hall_set.push_back(p);
+//
+//		for (LET c = 1; c <= n_letters; ++c)
+//			letters.push_back(c); //+= (char) c;
+//
+//		// We add the letters to the basis, starting from position 1.
+//		KEY i;
+//		for (i = 1; i <= letters.size(); ++i)
+//		{
+//			PARENT parents(0, i);
+//			hall_set.push_back(parents); // at [i]
+//			degrees.push_back(1); // at [i]
+//			ltk[letters[i - 1]] = (LET)i;
+//		}
+//		curr_degree = 1;
+//		// To construct the rest of the basis now, call growup(max_degree) here.
+//	}
+//	/// Constructs the basis up to a desired degree. 
+//	/**
+//	For performance reasons, max_degree is not checked. So be careful.
+//	*/
+//
+//	// the range 
+//
+//	inline void growup(DEG desired_degree)
+//	{
+//		for (DEG d = curr_degree + 1; d <= desired_degree; ++d)
+//		{
+//			KEY bound = (KEY)hall_set.size();
+//			KEY j_lower = 1, j_upper = bound + 2;
+//			for (KEY i = 1; (i <= bound) && (j_lower < j_upper); ++i)
+//			{
+//				auto p2 = std::equal_range(degrees.begin() + i + 1, degrees.begin() + bound + 1, d - degrees[i]);
+//				//j_lower = std::lower_bound(degrees.begin() + i + 1, degrees.begin() + bound + 1, d - degrees[i]) - degrees.begin();
+//				//j_upper = std::upper_bound(degrees.begin() + i + 1, degrees.begin() + bound + 1, d - degrees[i]) - degrees.begin();
+//				j_lower = p2.first - degrees.begin();
+//				j_upper = p2.second - degrees.begin();
+//
+//				for (KEY j = j_lower; j < j_upper; ++j)
+//					// so degrees[i] + degrees[j] = d
+//					if (hall_set[j].first <= i)
+//					{
+//						PARENT parents(i, j);
+//						hall_set.push_back(parents);  // at position max_key.
+//						degrees.push_back(d);         // at position max_key.
+//						reverse_map[parents] = (KEY)hall_set.size() - 1;
+//					}
+//			}
+//			KEY upper_bound = (KEY)hall_set.size();
+//			degrees.resize(upper_bound);
+//			std::fill(degrees.begin() + bound, degrees.begin() + upper_bound, d);
+//			++curr_degree;
+//		}
+//	}
+//
+//////////////////////////////////////////////////////////////////////////////////
+
 		for (DEG d = curr_degree + 1; d <= desired_degree; ++d)
 		{
 			KEY bound = (KEY)hall_set.size();
@@ -176,9 +303,12 @@ public:
 					{
 						PARENT parents(i, j);
 						hall_set.push_back(parents);  // at position max_key.
-						degrees.push_back(d);         // at position max_key.
+						//degrees.push_back(d);         // at position max_key.
 						reverse_map[parents] = (KEY)hall_set.size() - 1;
 					}
+				KEY upper_bound = (KEY)hall_set.size();
+				degrees.resize(upper_bound);
+				std::fill(degrees.begin() + bound, degrees.begin() + upper_bound, d);
 				++curr_degree;
 			}
 		}

@@ -68,7 +68,7 @@ public:
 	explicit poly_lie(LET letter, const SCA& s)
 		: ALG(VECT::basis.keyofletter(letter), s) {}
 public:
-	/// Replaces the occurences of letters in s by Lie elements in v.
+	/// Replaces the occurrences of letters in s by Lie elements in v.
 	inline friend poly_lie replace(const poly_lie& src, const std::vector<LET>& s, const std::vector<const poly_lie*>& v)	
 	{
 		poly_lie result;

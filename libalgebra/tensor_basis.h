@@ -112,7 +112,7 @@ public:
 	/// Returns the size of the basis.
 	inline DEG size(void) const
 	{
-		return _size;
+		return DEG(_size);
 	}
 	/// Returns the value of the smallest key in the basis.
 	inline KEY begin(void) const

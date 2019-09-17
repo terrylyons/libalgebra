@@ -97,6 +97,7 @@ Version 3. (See accompanying file License.txt)
 // on construction). The code for lie basis has been modified to do this and avoid a subtle error.
 
 // It would be worthwhile to write a data driven sparse hall basis
+
 template<DEG n_letters>
 class hall_basis
 {
@@ -163,16 +164,23 @@ public:
 		for (DEG d = curr_degree + 1; d <= desired_degree; ++d)
 		{
 			KEY bound = (KEY)hall_set.size();
-			for (KEY i = 1; i <= bound; ++i)
-				for (KEY j = i + 1; j <= bound; ++j)
+			KEY j_lower = 1, j_upper = bound + 2;
+			for (KEY i = 1; i <= bound; ++i) {
+				auto p2 = std::equal_range(degrees.begin() + i + 1, degrees.begin() + bound + 1, d - degrees[i]);
+				j_lower = p2.first - degrees.begin();
+				j_upper = p2.second - degrees.begin();
+				for (KEY j = j_lower; j < j_upper; ++j)
+// remove terrible algorithm:
+				//for (KEY j = i + 1; j <= bound; ++j)
 					if ((degrees[i] + degrees[j] == d) && (hall_set[j].first <= i))
 					{
 						PARENT parents(i, j);
 						hall_set.push_back(parents);  // at position max_key.
 						degrees.push_back(d);         // at position max_key.
-						reverse_map[parents] = (KEY) hall_set.size() - 1;
+						reverse_map[parents] = (KEY)hall_set.size() - 1;
 					}
-			++curr_degree;
+				++curr_degree;
+			}
 		}
 	}
 	/// Returns the degree (ie. weight) of a Lie key.

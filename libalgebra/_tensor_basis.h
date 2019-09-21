@@ -9,6 +9,7 @@ Version 3. (See accompanying file License.txt)
 ************************************************************* */
 
 #pragma once
+// fixes integer types alg::LET (for indexing bases etc.) and alg::DEG (for degrees)
 #include "implimentation_types.h"
 #include "constlog2.h"
 
@@ -110,7 +111,7 @@ namespace {
 template <unsigned No_Letters, unsigned DEPTH>
 struct NoWords
 {
-	enum
+	enum : LET64
 	{
 		ans = No_Letters * NoWords < No_Letters, DEPTH - 1 >::ans + 1
 	};
@@ -147,7 +148,7 @@ private:
 	static const long long uMaxSizeAlphabet = (1 << uBitsInLetter);
 	static const unsigned uMaxWordLength = (unsigned)(fp_info<word_t>::mantissa_bits_stored / uBitsInLetter);
 	//tjl 12/11/2017
-	static const long long uMaxFeatureDimension = 1 << (uBitsInLetter * DEPTH);
+	static const long long uMaxFeatureDimension = 1ULL << (uBitsInLetter * DEPTH);
 	static const fp_info<word_t> sanity_check;
 
 public:
@@ -477,7 +478,7 @@ public:
 	/// a helper class for hashing the keys
 	struct hash
 	{
-		enum
+		enum : LET64
 		{
 			// NoKeys <= HashEnd is the full dense dimension of the tensor
 			NoKeys = NoWords<No_Letters, DEPTH>::ans,

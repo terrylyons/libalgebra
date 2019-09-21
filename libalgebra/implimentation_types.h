@@ -20,11 +20,12 @@ Version 3. (See accompanying file License.txt)
 namespace alg {
 
 	// moved from  libalgebra.h
-
-	/// Used to store degrees. A value of 0 means no degree truncation.
+	
+	/// Used to store degrees.
 	typedef unsigned DEG;
-	/// Used to number letters. The value 0 is special.
-	typedef unsigned long long LET;
-
+	/// Used to index letters, and basis elements. The value 0 may be special.
+	typedef size_t LET;
+	/// Used for large integer calculations where overflow might otherwise occur
+	typdef unsigned long long LET64;
 }
 #endif // implimetation_types_h__

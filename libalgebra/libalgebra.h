@@ -52,6 +52,7 @@ typedef unsigned __int64    uint64_t;
 #include <cassert>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/recursive_mutex.hpp>
+#include <boost/container/flat_map.hpp>
 #include <boost/thread/locks.hpp>
 #include "implimentation_types.h"
 

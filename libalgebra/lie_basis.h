@@ -10,7 +10,6 @@ Version 3. (See accompanying file License.txt)
 
 
 
-
 //  lie_basis.h
 
 
@@ -107,8 +106,8 @@ public:
 	/// 
 	/// keys can get large - but in the dense case this is not likely
 	/// Make a choice for the length of a key in 64 bit.
-	typedef DEG KEY; // unsigned int
-	//typedef LET KEY; // unsigned longlong
+	//typedef DEG KEY; // unsigned int
+	typedef LET KEY; // size_t
 	/// The parents of a key are a pair of prior keys. Invalid 0 keys for letters.
 	typedef typename std::pair<KEY, KEY> PARENT;
 	/// The number of letters in alphabet
@@ -127,13 +126,15 @@ protected:
 		using std::map<PARENT, KEY>::end;
 	} reverse_map;
 	/// Degrees, indexed by keys.
-	struct DEGREE : private
+	static struct DEGREE : private
 		std::vector<DEG> {
 		using std::vector<DEG>::operator [];
 		using std::vector<DEG>::push_back;
 		using std::vector<DEG>::begin;
 		using std::vector<DEG>::resize;
 	} degrees;
+	/// Index to basis pointing at the first and one past the last of a given degree
+	std::vector<std::pair<size_t, size_t > > hall_set_range_of_degree;
 	/// Letters, indexed by their keys.
 	//std::string letters;
 	std::vector<LET> letters;
@@ -147,23 +148,28 @@ public:
 		: curr_degree(0)
 	{
 		// We put something at position 0 to make indexing more logical
+		
 		degrees.push_back(0);
-		PARENT p(0,0);
-		hall_set.push_back(p);
+		hall_set.emplace_back(0,0);
+		hall_set_range_of_degree.emplace_back(0, hall_set.size());
 	
 		for (LET c = 1; c <= n_letters; ++c)
 			letters.push_back(c); //+= (char) c;
 	
 		// We add the letters to the basis, starting from position 1.
-		KEY i;
-		for (i = 1; i <= letters.size(); ++i)
+
+		for (LET i = 1; i <= letters.size(); ++i)
 		{
 			PARENT parents(0,i);
 			hall_set.push_back(parents); // at [i]
 			degrees.push_back(1); // at [i]
 			ltk[letters[i - 1]] = (LET) i;
 		}
-		curr_degree = 1;
+		std::pair<size_t, size_t >  range;
+		range.first = hall_set_range_of_degree[curr_degree].second;
+		range.second = hall_set.size();
+		hall_set_range_of_degree.push_back(range);
+		++curr_degree;
 		// To construct the rest of the basis now, call growup(max_degree) here.
 	}
 	/// Constructs the basis up to a desired degree. 
@@ -287,32 +293,29 @@ public:
 //	}
 //
 //////////////////////////////////////////////////////////////////////////////////
-
 		for (DEG d = curr_degree + 1; d <= desired_degree; ++d)
-		{
-			KEY bound = (KEY)hall_set.size();
-			KEY j_lower = 1, j_upper = bound + 2;
-			for (KEY i = 1; i <= bound; ++i) {
-				auto p2 = std::equal_range(degrees.begin() + i + 1, degrees.begin() + bound + 1, d - degrees[i]);
-				j_lower = p2.first - degrees.begin();
-				j_upper = p2.second - degrees.begin();
-				for (KEY j = j_lower; j < j_upper; ++j)
-// remove terrible algorithm:
-				//for (KEY j = i + 1; j <= bound; ++j)
-					if ((degrees[i] + degrees[j] == d) && (hall_set[j].first <= i))
-					{
-						PARENT parents(i, j);
-						hall_set.push_back(parents);  // at position max_key.
-						//degrees.push_back(d);         // at position max_key.
-						reverse_map[parents] = (KEY)hall_set.size() - 1;
-					}
-				KEY upper_bound = (KEY)hall_set.size();
-				degrees.resize(upper_bound);
-				std::fill(degrees.begin() + bound, degrees.begin() + upper_bound, d);
+			for (DEG e = 1; 2 * e <= d; ++e) {
+				LET i_lower = hall_set_range_of_degree[e].first;
+				LET i_upper = hall_set_range_of_degree[e].second;
+				LET j_lower = hall_set_range_of_degree[d - e].first;
+				LET j_upper = hall_set_range_of_degree[d - e].second;
+				for (LET i = i_lower; i < i_upper; ++i)
+					for (LET j = std::max(j_lower, i+1); j < j_upper; ++j)
+						if (hall_set[j].first <= i)
+						{
+							PARENT parents(i, j);
+							hall_set.push_back(parents);
+							degrees.push_back(d);
+							reverse_map[parents] = hall_set.size() - 1;
+						}
+				std::pair<size_t, size_t >  range;
+				range.first = hall_set_range_of_degree[curr_degree].second;
+				range.second = hall_set.size();
+				hall_set_range_of_degree.push_back(range);
 				++curr_degree;
 			}
-		}
 	}
+
 	/// Returns the degree (ie. weight) of a Lie key.
 	inline DEG degree(const KEY& k) const
 	{
@@ -367,9 +370,9 @@ public:
 		return k;
 	}
 	/// Returns the size of the basis.
-	inline DEG size(void) const
+	inline KEY size(void) const
 	{
-		return ( (KEY) hall_set.size() - 1);
+		return ( hall_set.size() - 1);
 	}
 	/// Outputs the Hall basis to an std::ostream.
 	inline friend std::ostream& operator<<(std::ostream& os, const hall_basis& b)
@@ -427,6 +430,8 @@ private:
 		return oss.str();
 	}
 };
+template<DEG n_letters>
+typename hall_basis<n_letters>::DEGREE hall_basis<n_letters>::degrees;
 
 /// The Lie basis class.
 /** 

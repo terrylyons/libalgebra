@@ -110,9 +110,9 @@ public:
 		return k.size();
 	}
 	/// Returns the size of the basis.
-	inline DEG size(void) const
+	inline LET size(void) const
 	{
-		return DEG(_size);
+		return LET(_size);
 	}
 	/// Returns the value of the smallest key in the basis.
 	inline KEY begin(void) const

@@ -126,7 +126,8 @@ protected:
 		using std::map<PARENT, KEY>::end;
 	} reverse_map;
 	/// Degrees, indexed by keys.
-	static struct DEGREE : private
+	//static struct DEGREE : private
+	struct DEGREE : private
 		std::vector<DEG> {
 		using std::vector<DEG>::operator [];
 		using std::vector<DEG>::push_back;
@@ -430,8 +431,9 @@ private:
 		return oss.str();
 	}
 };
-template<DEG n_letters>
-typename hall_basis<n_letters>::DEGREE hall_basis<n_letters>::degrees;
+//// if degree is static
+//template<DEG n_letters>
+//typename hall_basis<n_letters>::DEGREE hall_basis<n_letters>::degrees;
 
 /// The Lie basis class.
 /** 

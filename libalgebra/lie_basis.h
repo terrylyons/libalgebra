@@ -489,18 +489,35 @@ public:
 	*/
 	inline const LIE& prod(const KEY& k1, const KEY& k2)
 	{
-		static boost::recursive_mutex table_access;
-		// get exclusive recursive access for the thread 
-		boost::lock_guard<boost::recursive_mutex> lock(table_access); 
+		// debug code
+		static std::map<std::pair<KEY, KEY>, unsigned> duplicates;
+		if (++duplicates[std::pair<KEY, KEY >(k1, k2)] > 0) {
+			std::cout << k1 << ": " << LIE(k1) << "\n";
+			std::cout << k2 << ": " << LIE(k2) << "\n" << std::endl;
+		}
+		if (++duplicates[std::pair<KEY, KEY >(k1, k2)] > 9) {
+			std::cout << "/n" << LIE::basis << std::endl;
+			throw;
+		}
 
-		static std::map<PARENT, LIE> table;
-		static typename std::map<PARENT, LIE>::iterator it;
+		static unsigned recursion_count;
+		static boost::recursive_mutex table_access;
+		static std::map<PARENT, LIE> table{ {{0,0}, LIE()} };
+		recursion_count++;
+		// get exclusive recursive access for the thread 
+		boost::lock_guard<boost::recursive_mutex> lock(table_access);
+		// [A,A] = 0.
+		if (k1 == k2)
+			return recursion_count--, table[PARENT(0,0)];
+		typename std::map<PARENT, LIE>::iterator it;
 		PARENT p(k1, k2);
 		it = table.find(p);
-		if (it == table.end())
-			return table[p] = _prod(k1, k2);
+		if (it == table.end()) {
+			LIE* ptr = &(table[p] = ((p.first < p.second) ? _prod(k1, k2) : -_prod(k2, k1)));
+			return recursion_count-- , *ptr;
+		}
 		else
-			return it->second;
+			return recursion_count--, it->second;
 	}
 	/// Replaces letters by lie<> instances in a lie<> instance.
 	/**
@@ -533,15 +550,9 @@ public:
 private:
 	/// The recursive key product.
 	LIE _prod(const KEY& k1, const KEY& k2)
-	{ 	
+	{
+		assert(k1 < k2);
 		LIE empty;
-		// [A,A] = 0.
-		if (k1 == k2)
-			return empty;
-		// if index(A) > index(B) we use [A,B] = -[B,A] 
-		if (k1 > k2)
-			return -prod(k2, k1);
-		//
 		DEG target_degree = degrees[k1] + degrees[k2];
 		if ((max_degree > 0) && (target_degree > max_degree))
 			return empty; // degree truncation

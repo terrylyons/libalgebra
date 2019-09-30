@@ -11,7 +11,7 @@ Version 3. (See accompanying file License.txt)
 
 
 //  lie_basis.h
-
+#include "SHOW.h"
 
 // Include once wrapper
 #ifndef DJC_COROPA_LIBALGEBRA_LIEBASISH_SEEN
@@ -135,7 +135,7 @@ protected:
 		using std::vector<DEG>::resize;
 	} degrees;
 	/// Index to basis pointing at the first and one past the last of a given degree
-	std::vector<std::pair<size_t, size_t > > hall_set_range_of_degree;
+	std::vector<std::pair<size_t, size_t > > hall_set_degree_ranges;
 	/// Letters, indexed by their keys.
 	//std::string letters;
 	std::vector<LET> letters;
@@ -152,7 +152,7 @@ public:
 		
 		degrees.push_back(0);
 		hall_set.emplace_back(0,0);
-		hall_set_range_of_degree.emplace_back(0, hall_set.size());
+		hall_set_degree_ranges.emplace_back(0, hall_set.size());
 	
 		for (LET c = 1; c <= n_letters; ++c)
 			letters.push_back(c); //+= (char) c;
@@ -163,13 +163,14 @@ public:
 		{
 			PARENT parents(0,i);
 			hall_set.push_back(parents); // at [i]
+			reverse_map[parents] = hall_set.size() - 1;
 			degrees.push_back(1); // at [i]
 			ltk[letters[i - 1]] = (LET) i;
 		}
 		std::pair<size_t, size_t >  range;
-		range.first = hall_set_range_of_degree[curr_degree].second;
+		range.first = hall_set_degree_ranges[curr_degree].second;
 		range.second = hall_set.size();
-		hall_set_range_of_degree.push_back(range);
+		hall_set_degree_ranges.push_back(range);
 		++curr_degree;
 		// To construct the rest of the basis now, call growup(max_degree) here.
 	}
@@ -179,142 +180,31 @@ public:
 	*/
 	inline void growup(DEG desired_degree)
 	{
-		////////////////////////////////////////////////////////////////////////////////////
-//#include <xutility>
-//
-//template <class KEY, class PARENT, DEG n_letters>
-//struct REVERSE_MAP : private std::map < PARENT, KEY>
-//{
-//
-//};
-//
-//template<DEG n_letters>
-//struct DEGREES : private std::vector<DEG>
-//{
-//
-//};
-//
-//template<DEG n_letters>
-//class hall_basis
-//{
-//public:
-//	/// The default key has value 0, which is an invalid value
-//	/// and occurs as a parent key of any letter.
-//	/// 
-//	/// keys can get large - but in the dense case this is not likely
-//	/// Make a choice for the length of a key in 64 bit.
-//	typedef DEG KEY; // unsigned int
-//	//typedef LET KEY; // unsigned longlong
-//	/// The parents of a key are a pair of prior keys. Invalid 0 keys for letters.
-//	typedef typename std::pair<KEY, KEY> PARENT;
-//	/// The number of letters in alphabet
-//	enum
-//	{
-//		n_letters = n_letters
-//	};
-//protected:
-//	/// Parents, indexed by keys.
-//	std::vector<PARENT> hall_set;
-//	/// comparison for parents that respects degree
-//	/*bool less_parent() (const PARENT lhs, const PARENT rhs) const {
-//			return ((degrees[lhs.first] + degrees[lhs.second]) < (degrees[rhs.first] + degrees[rhs.second])) || (lhs < rhs);
-//	};*/
-//	/// Reverse map from parents to keys.
-//	std::map < PARENT, KEY> reverse_map;
-//	/// Degrees, indexed by keys.
-//	std::vector<DEG> degrees;
-//	/// Letters, indexed by their keys.
-//	//std::string letters;
-//	std::vector<LET> letters;
-//	/// Maps letters to keys.
-//	std::map<LET, KEY> ltk;
-//	/// Current degree, always > 0 for any valid class instance.
-//	DEG curr_degree;
-//public:
-//	/// Constructs the basis with a given number of letters.
-//	hall_basis()
-//		: curr_degree(0)
-//	{
-//		// We put something at position 0 to make indexing more logical
-//		degrees.push_back(0);
-//		PARENT p(0, 0);
-//		hall_set.push_back(p);
-//
-//		for (LET c = 1; c <= n_letters; ++c)
-//			letters.push_back(c); //+= (char) c;
-//
-//		// We add the letters to the basis, starting from position 1.
-//		KEY i;
-//		for (i = 1; i <= letters.size(); ++i)
-//		{
-//			PARENT parents(0, i);
-//			hall_set.push_back(parents); // at [i]
-//			degrees.push_back(1); // at [i]
-//			ltk[letters[i - 1]] = (LET)i;
-//		}
-//		curr_degree = 1;
-//		// To construct the rest of the basis now, call growup(max_degree) here.
-//	}
-//	/// Constructs the basis up to a desired degree. 
-//	/**
-//	For performance reasons, max_degree is not checked. So be careful.
-//	*/
-//
-//	// the range 
-//
-//	inline void growup(DEG desired_degree)
-//	{
-//		for (DEG d = curr_degree + 1; d <= desired_degree; ++d)
-//		{
-//			KEY bound = (KEY)hall_set.size();
-//			KEY j_lower = 1, j_upper = bound + 2;
-//			for (KEY i = 1; (i <= bound) && (j_lower < j_upper); ++i)
-//			{
-//				auto p2 = std::equal_range(degrees.begin() + i + 1, degrees.begin() + bound + 1, d - degrees[i]);
-//				//j_lower = std::lower_bound(degrees.begin() + i + 1, degrees.begin() + bound + 1, d - degrees[i]) - degrees.begin();
-//				//j_upper = std::upper_bound(degrees.begin() + i + 1, degrees.begin() + bound + 1, d - degrees[i]) - degrees.begin();
-//				j_lower = p2.first - degrees.begin();
-//				j_upper = p2.second - degrees.begin();
-//
-//				for (KEY j = j_lower; j < j_upper; ++j)
-//					// so degrees[i] + degrees[j] = d
-//					if (hall_set[j].first <= i)
-//					{
-//						PARENT parents(i, j);
-//						hall_set.push_back(parents);  // at position max_key.
-//						degrees.push_back(d);         // at position max_key.
-//						reverse_map[parents] = (KEY)hall_set.size() - 1;
-//					}
-//			}
-//			KEY upper_bound = (KEY)hall_set.size();
-//			degrees.resize(upper_bound);
-//			std::fill(degrees.begin() + bound, degrees.begin() + upper_bound, d);
-//			++curr_degree;
-//		}
-//	}
-//
-//////////////////////////////////////////////////////////////////////////////////
 		for (DEG d = curr_degree + 1; d <= desired_degree; ++d)
+		{
 			for (DEG e = 1; 2 * e <= d; ++e) {
-				LET i_lower = hall_set_range_of_degree[e].first;
-				LET i_upper = hall_set_range_of_degree[e].second;
-				LET j_lower = hall_set_range_of_degree[d - e].first;
-				LET j_upper = hall_set_range_of_degree[d - e].second;
+				LET i_lower = hall_set_degree_ranges[e].first;
+				LET i_upper = hall_set_degree_ranges[e].second;
+				LET j_lower = hall_set_degree_ranges[d - e].first;
+				LET j_upper = hall_set_degree_ranges[d - e].second;
 				for (LET i = i_lower; i < i_upper; ++i)
-					for (LET j = std::max(j_lower, i+1); j < j_upper; ++j)
+					for (LET j = std::max(j_lower, i + 1); j < j_upper; ++j)
 						if (hall_set[j].first <= i)
 						{
 							PARENT parents(i, j);
 							hall_set.push_back(parents);
 							degrees.push_back(d);
+							assert(((degrees[i] + degrees[j]) == degrees[hall_set.size() - 1]));
 							reverse_map[parents] = hall_set.size() - 1;
 						}
-				std::pair<size_t, size_t >  range;
-				range.first = hall_set_range_of_degree[curr_degree].second;
-				range.second = hall_set.size();
-				hall_set_range_of_degree.push_back(range);
-				++curr_degree;
-			}
+
+			}				
+			std::pair<size_t, size_t > range;
+			range.first = hall_set_degree_ranges[curr_degree].second;
+			range.second = hall_set.size();
+			hall_set_degree_ranges.push_back(range);
+			++curr_degree;
+		}
 	}
 
 	/// Returns the degree (ie. weight) of a Lie key.
@@ -466,6 +356,7 @@ public:
 	using hall_basis<n_letters>::nextkey;
 	using hall_basis<n_letters>::key2string;
 	using hall_basis<n_letters>::size;
+	using hall_basis<n_letters>::hall_set;
 	/// The MAP type.
 	typedef std::map<KEY, SCA> MAP;
 	/// The Free Lie Associative Algebra element type.
@@ -485,43 +376,32 @@ public:
 	elements k1 and k2. For performance reasons, the basis is enriched/grown
 	dynamically and the already computed products are stored in a static
 	multiplication table to speed up further calculations. This function
-	returns a constant reference to the suitable table element.
+	returns a constant reference to the suitable table element. See Ch4 p93 and 94 Reutenauer
 	*/
 	inline const LIE& prod(const KEY& k1, const KEY& k2)
 	{
-		// debug code
-		static std::map<std::pair<KEY, KEY>, unsigned> duplicates;
-		if (++duplicates[std::pair<KEY, KEY >(k1, k2)] > 0) {
-			std::cout << k1 << ": " << LIE(k1) << "\n";
-			std::cout << k2 << ": " << LIE(k2) << "\n" << std::endl;
-		}
-		if (++duplicates[std::pair<KEY, KEY >(k1, k2)] > 9) {
-			std::cout << "/n" << LIE::basis << std::endl;
-			throw;
-		}
-
-		static unsigned recursion_count;
 		static boost::recursive_mutex table_access;
 		static std::map<PARENT, LIE> table{ {{0,0}, LIE()} };
-		recursion_count++;
 		// get exclusive recursive access for the thread 
 		boost::lock_guard<boost::recursive_mutex> lock(table_access);
 		// [A,A] = 0.
 		if (k1 == k2)
-			return recursion_count--, table[PARENT(0,0)];
+			return table[PARENT(0, 0)];
 		typename std::map<PARENT, LIE>::iterator it;
 		PARENT p(k1, k2);
 		it = table.find(p);
 		if (it == table.end()) {
-			LIE* ptr = &(table[p] = ((p.first < p.second) ? _prod(k1, k2) : -_prod(k2, k1)));
-			return recursion_count-- , *ptr;
+			LIE* ptr =
+				&(table[p] =
+				((p.first < p.second) ? _prod(k1, k2) : -_prod(k2, k1)));
+			return  *ptr;
 		}
 		else
-			return recursion_count--, it->second;
+			return  it->second;
 	}
 	/// Replaces letters by lie<> instances in a lie<> instance.
 	/**
-	Replaces the occurences of s letters in the expression of k by the lie<>
+	Replaces the occurrences of s letters in the expression of k by the lie<>
 	elements in v, and returns the recursively expanded result. The already
 	computed replacements are stored in table.
 	*/
@@ -549,13 +429,20 @@ public:
 	}
 private:
 	/// The recursive key product.
+	// Caution Reutenauer only states the induction where the state variable
+	// is the whole expression (the tree or the pre lie sum of products...) 
+	// we do not update that state and start over each time.
 	LIE _prod(const KEY& k1, const KEY& k2)
 	{
+#ifdef DEBUG // NO LOOPS IN RECURSION FOR _PROD
+		static std::map<PARENT, unsigned> counter;	
+		PARENT tmp(k1, k2);	
+		if (++counter[tmp] > 1) { assert(false); // add debug code here};
 		assert(k1 < k2);
-		LIE empty;
+#endif // DEBUG
 		DEG target_degree = degrees[k1] + degrees[k2];
 		if ((max_degree > 0) && (target_degree > max_degree))
-			return empty; // degree truncation
+			return LIE(); // degree truncation
 		// We grow up the basis up to the desired degree.
 		growup(target_degree);
 		// We look up for the desired product in our basis.
@@ -563,21 +450,21 @@ private:
 		typename std::map<PARENT, KEY>::const_iterator it;
 		it = reverse_map.find(parents);
 		if (it != reverse_map.end())
-		{
-			// [k1,k2] exists in the basis.
-			LIE result(it->second);
-			return result;
-		}
+		// [k1,k2] exists in the basis.
+			return LIE(it->second);
 		else
 			// [k1,k2] does not exists in the basis.
 		{
 			// Since k1 <= k2, k2 is not a letter because if it was a letter, 
 			// then also k1, which is impossible since [k1,k2] is not in the basis.
+			// similarly setting k2 = [k3,k4], it cannot be the case that k3 < k1 
+			// or this would be a hall tree. So k1 < k3 < k4
 			// We use Jacobi: [k1,k2] = [k1,[k3,k4]]] = [[k1,k3],k4]-[[k1,k4],k3] 
-			KEY k3(lparent (k2));
+			KEY k3(lparent(k2));
 			KEY k4(rparent (k2));
-			LIE result(prod(k1, k3) * (LIE)k4);
-			return result.sub_mul(prod(k1, k4), (LIE)k3);
+			LIE result(prod(k1, k3)* (LIE)k4);
+			result.sub_mul(prod(k1, k4), (LIE)k3);
+			return result;
 		}
 	}
 	/// Outputs the lie basis to an std::ostream.

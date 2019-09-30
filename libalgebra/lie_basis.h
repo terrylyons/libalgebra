@@ -11,7 +11,6 @@ Version 3. (See accompanying file License.txt)
 
 
 //  lie_basis.h
-#include "SHOW.h"
 
 // Include once wrapper
 #ifndef DJC_COROPA_LIBALGEBRA_LIEBASISH_SEEN

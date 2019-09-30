@@ -437,7 +437,7 @@ private:
 #ifdef DEBUG // NO LOOPS IN RECURSION FOR _PROD
 		static std::map<PARENT, unsigned> counter;	
 		PARENT tmp(k1, k2);	
-		if (++counter[tmp] > 1) { assert(false); // add debug code here};
+		if (++counter[tmp] > 1) { assert(false); } // add debug code here};
 		assert(k1 < k2);
 #endif // DEBUG
 		DEG target_degree = degrees[k1] + degrees[k2];

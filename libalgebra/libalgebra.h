@@ -56,6 +56,7 @@ typedef unsigned __int64    uint64_t;
 #include <boost/thread/locks.hpp>
 #include "implimentation_types.h"
 
+//#define ORDEREDMAP
 #define UNORDEREDMAP
 #define NOBTREE
 

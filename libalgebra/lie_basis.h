@@ -346,7 +346,7 @@ public:
 	using hall_basis<n_letters>::getletter;
 	using hall_basis<n_letters>::lparent;
 	using hall_basis<n_letters>::rparent;
-	using hall_basis<n_letters>::degrees;
+	//using hall_basis<n_letters>::degrees;
 	using hall_basis<n_letters>::growup;
 	using hall_basis<n_letters>::reverse_map;
 	using hall_basis<n_letters>::degree;
@@ -380,6 +380,13 @@ public:
 	*/
 	inline const LIE& prod(const KEY& k1, const KEY& k2)
 	{
+		static const LIE zero;
+		DEG target_degree = degree(k1) + degree(k2); //degrees[k1] + degrees[k2];
+		if ((max_degree > 0) && (target_degree > max_degree))
+			return zero; // degree truncation
+		// We grow up the basis up to the desired degree.
+		growup(target_degree);
+
 		static boost::recursive_mutex table_access;
 		static std::map<PARENT, LIE> table{ {{0,0}, LIE()} };
 		// get exclusive recursive access for the thread 
@@ -440,11 +447,7 @@ private:
 		if (++counter[tmp] > 1) { assert(false); }; // add debug code here};
 		assert(k1 < k2);
 #endif // DEBUG
-		DEG target_degree = degrees[k1] + degrees[k2];
-		if ((max_degree > 0) && (target_degree > max_degree))
-			return LIE(); // degree truncation
-		// We grow up the basis up to the desired degree.
-		growup(target_degree);
+
 		// We look up for the desired product in our basis.
 		PARENT parents(k1, k2);
 		typename std::map<PARENT, KEY>::const_iterator it;

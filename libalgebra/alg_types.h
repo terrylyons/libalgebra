@@ -58,6 +58,7 @@ namespace {
 template <size_t D, size_t W, coefficient_t F = Rational> 
 struct alg_types : Field < F >
 {
+	const static coefficient_t FIELD = F;
 	typedef typename Field < F >::S S;
 	typedef typename Field < F >::Q Q;
 	typedef S SCA;

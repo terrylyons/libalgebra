@@ -23,8 +23,10 @@ namespace alg {
 	
 	/// Used to store degrees.
 	typedef unsigned DEG;
+
 	/// Used to index letters, and basis elements. The value 0 may be special.
 	typedef size_t LET;
+
 	/// Used for large integer calculations where overflow might otherwise occur
 	typedef unsigned long long LET64;
 }

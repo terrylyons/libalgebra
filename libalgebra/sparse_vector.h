@@ -62,6 +62,10 @@ public:
 	using MAP::begin;
 	/// Import of Const_Iterator to end of the sparse vector
 	using MAP::end;
+	/// Import of Const_Iterator to beginning of the sparse vector
+	using MAP::cbegin;
+	/// Import of Const_Iterator to end of the sparse vector
+	using MAP::cend;
 	/// Import of find a KEY in the sparse vector
 	using MAP::find;
 	/// Import of insert a KEY SCALAR into the sparse vector
@@ -76,7 +80,6 @@ public:
 	using MAP::empty;
 	/// Import size()
 	using MAP::size;
-
 	/// Swap the vector instance controlled by *this with the one in the RHS
 	void swap(sparse_vector & rhs) {
 		MAP::swap((MAP&)rhs);
@@ -98,7 +101,11 @@ public:
 	const static SCALAR one;  //+1
 	/// The -1 scalar value.
 	const static SCALAR mone; //-1
-
+    /// Given a const instance of a sparse vector, returns a const reference to the scalar associated to the named basis element. (The default SCALAR element zero if the basis vector was not present in this sparse vector instance).
+	inline const typename SCALAR& operator[] (const KEY k) const {
+		const_iterator found = find(k);
+		return (found == cend()) ? zero : found->second;
+	}
 	/// The static basis. 
 	/// Can be dynamically updated by some internal mechanism.
 	static BASIS basis;

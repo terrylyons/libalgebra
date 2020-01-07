@@ -62,9 +62,13 @@ public:
 	/// Constructs a unidimensional instance from a given key (with scalar one).
 	explicit lie(const KEY& k)
 		: ALG(k) {}
-	/// Constructs a unidimensional instance from a letter and a scalar.
-	explicit lie(LET letter, const SCA& s)
-		: ALG(VECT::basis.keyofletter(letter), s) {}
+	///// Constructs a unidimensional instance from a letter and a scalar.
+	//explicit lie(LET letter, const SCA& s)
+	//	// flawed as basis is possibly not yet constructed
+	//	: ALG(VECT::basis.keyofletter(letter), s) {}
+	/// Constructs a unidimensional instance from a key and a scalar.
+	explicit lie(const KEY& k, const SCA& s)
+		: ALG(k, s) {}
 public:
 	/// Replaces the occurrences of letters in s by Lie elements in v.
 	inline friend lie replace(const lie& src, const std::vector<LET>& s, const std::vector<const lie*>& v)	

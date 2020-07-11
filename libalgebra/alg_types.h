@@ -1,7 +1,7 @@
 /* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai, 
-Greg Gyurkó and Arend Janssen. 
+Greg Gyurkï¿½ and Arend Janssen. 
 
 Distributed under the terms of the GNU General Public License, 
 Version 3. (See accompanying file License.txt)
@@ -12,7 +12,7 @@ Version 3. (See accompanying file License.txt)
 #define alg_types_h__
 
 #include "libalgebra/libalgebra.h"
-#include "addons/gmpwrapper.h"
+#include <addons/gmpwrapper.h>
 //#include "mtl/mtl.h"
 
 //#pragma warning(push)

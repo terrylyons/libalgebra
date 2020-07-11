@@ -1,7 +1,7 @@
 /* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai, 
-Greg Gyurkó and Arend Janssen. 
+Greg Gyurkï¿½ and Arend Janssen. 
 
 Distributed under the terms of the GNU General Public License, 
 Version 3. (See accompanying file License.txt)
@@ -96,7 +96,7 @@ Version 3. (See accompanying file License.txt)
 
 // It would be worthwhile to write a data driven sparse hall basis
 
-template<DEG n_letters>
+template<DEG N_letters>
 class hall_basis
 {
 public:
@@ -112,7 +112,7 @@ public:
 	/// The number of letters in alphabet
 	enum
 	{
-		n_letters = n_letters
+		n_letters = N_letters
 	};
 protected:
 	/// Parents, indexed by keys.
@@ -337,7 +337,7 @@ class lie_basis : protected hall_basis<n_letters>,
 {
 public:
 	/// Import of the KEY type.
-	typedef hall_basis<n_letters>::KEY KEY;
+	typedef typename hall_basis<n_letters>::KEY KEY;
 	/// Import of the PARENT type.
 	typedef typename hall_basis<n_letters>::PARENT PARENT;
 	/// Import member functions.

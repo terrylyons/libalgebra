@@ -102,7 +102,7 @@ public:
 	/// The -1 scalar value.
 	const static SCALAR mone; //-1
     /// Given a const instance of a sparse vector, returns a const reference to the scalar associated to the named basis element. (The default SCALAR element zero if the basis vector was not present in this sparse vector instance).
-	inline const typename SCALAR& operator[] (const KEY k) const {
+	inline const SCALAR& operator[] (const KEY k) const {
 		const_iterator found = find(k);
 		return (found == cend()) ? zero : found->second;
 	}

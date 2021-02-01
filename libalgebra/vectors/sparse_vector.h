@@ -55,7 +55,7 @@ Other iterators and references are not invalidated. Moreover (C++2014)
 the internal order of the elements not erased is preserved. However
 insertion causes a rehash which disrupts all iterators
 */
-    template<typename _Basis, typename _Field, template <typename, typename> MapType=DEFAULT_MAPPING_CLASS>
+    template<typename _Basis, typename _Field, template <typename, typename> typename MapType=DEFAULT_MAPPING_CLASS>
     class sparse_vector :
             /*private*/ MapType<_Basis::KEY, _Field::S>
     {

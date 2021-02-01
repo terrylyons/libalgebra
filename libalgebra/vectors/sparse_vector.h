@@ -59,7 +59,7 @@ insertion causes a rehash which disrupts all iterators
     class sparse_vector :
             /*private*/ MapType<typename _Basis::KEY, typename _Field::S>
     {
-        typedef MapType<_Basis::KEY, _Field::S> MAP;
+        typedef MapType<typename _Basis::KEY, typename _Field::S> MAP;
     public:
         /// Import of Const_Iterator to beginning of the sparse vector
         using MAP::begin;

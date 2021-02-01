@@ -1,7 +1,7 @@
 /* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai, 
-Greg Gyurkó and Arend Janssen. 
+Greg Gyurkï¿½ and Arend Janssen. 
 
 Distributed under the terms of the GNU General Public License, 
 Version 3. (See accompanying file License.txt)
@@ -52,7 +52,7 @@ typedef unsigned __int64    uint64_t;
 #include <cassert>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/recursive_mutex.hpp>
-#include <boost/container/flat_map.hpp>
+
 #include <boost/thread/locks.hpp>
 #include "implimentation_types.h"
 
@@ -101,6 +101,9 @@ typedef unsigned __int64    uint64_t;
    operators are + - * / and explicit ctor from SCA type and int type.
 */
 
+#include "libalgebra/vectors/vectors.h"
+
+
 namespace alg
 {
 
@@ -116,13 +119,22 @@ namespace alg
 
 //  End of macros.
 
+
+// Temporary Coefficients declaration
+template <typename B>
+struct TrivialCoeffs
+{
+    typedef typename B::SCALAR S;
+    typedef typename B::RATIONAL Q;
+};
+
 /// Forward declaration of classes
 
 /// Sparse vectors with default MAP typename from BASIS typename.
-template<class BASIS, class MAP = typename BASIS::MAP>
-class sparse_vector;
+//template<class BASIS, class MAP = typename BASIS::MAP>
+//class sparse_vector;
 /// Generic Associative Algebra.
-template<class BASIS>
+template<typename BASIS, typename Coeffs=TrivialCoeffs<BASIS>>
 class algebra;
 /// Generic Associative Algebra basis.
 template<typename SCA, DEG n_letters, DEG max_degree = 0>

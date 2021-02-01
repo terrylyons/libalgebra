@@ -4,13 +4,19 @@ const_iterator Where,
 const value_type& Val
 );
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
-Greg Gyurkó and Arend Janssen.
+Greg Gyurkï¿½ and Arend Janssen.
 
 Distributed under the terms of the GNU General Public License,
 Version 3. (See accompanying file License.txt)
 
 ************************************************************* */
 
+
+/* Using the sparse_vector class directly is deprecated. Instead
+ * you should include use the vector interface class in
+ * vectors/vectors.h and provide vectors::sparse_vector<Basis, Field>
+ * as the third template argument.
+ */
 
 
 
@@ -20,6 +26,7 @@ Version 3. (See accompanying file License.txt)
 // Include once wrapper
 #ifndef DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN
 #define DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN
+
 
 /// A class to store and manipulate sparse vectors.
 
@@ -612,6 +619,9 @@ const typename MAP::mapped_type sparse_vector<BASIS, MAP>::zero(0);
 /// Static initialisation of the scalar constant -1.
 template<class BASIS, class MAP>
 const typename MAP::mapped_type sparse_vector<BASIS, MAP>::mone(-1);
+
+
+
 
 // Include once wrapper
 // DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN

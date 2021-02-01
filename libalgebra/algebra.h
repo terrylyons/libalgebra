@@ -1,7 +1,7 @@
 /* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai, 
-Greg Gyurkó and Arend Janssen. 
+Greg Gyurkï¿½ and Arend Janssen. 
 
 Distributed under the terms of the GNU General Public License, 
 Version 3. (See accompanying file License.txt)
@@ -28,8 +28,8 @@ BASIS::prod(const KEY&, const KEY&) with a return type suitable for
 use as the first arg of sparse_vector::add_scal_prod(); it can be a key or a sparse vector for example
 (3) The sparse_vector::MAP class must provide the swap() member function.
 */
-template<class BASIS>
-class algebra : public sparse_vector<BASIS>
+template<typename _Basis, typename _Coeff>
+class algebra : public vectors::vector<_Basis, _Coeff>
 {
 public:
 	/// The inherited sparse vector type.

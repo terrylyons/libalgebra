@@ -57,7 +57,7 @@ insertion causes a rehash which disrupts all iterators
 */
     template<typename _Basis, typename _Field, template <typename, typename> typename MapType=DEFAULT_MAPPING_CLASS>
     class sparse_vector :
-            /*private*/ MapType<_Basis::KEY, _Field::S>
+            /*private*/ MapType<typename _Basis::KEY, typename _Field::S>
     {
         typedef MapType<_Basis::KEY, _Field::S> MAP;
     public:

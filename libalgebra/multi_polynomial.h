@@ -1,7 +1,7 @@
 /* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai, 
-Greg Gyurkó and Arend Janssen. 
+Greg Gyurkï¿½ and Arend Janssen. 
 
 Distributed under the terms of the GNU General Public License, 
 Version 3. (See accompanying file License.txt)
@@ -36,10 +36,10 @@ public:
 	typedef free_monomial_basis<SCA, RAT, n_letters, max_degree> BASIS;
 	/// Import of the KEY type.
 	typedef typename BASIS::KEY KEY;
-	/// The sparse_vector type.
-	typedef sparse_vector<BASIS> VECT;
-	/// The algebra type.
-	typedef algebra<BASIS> ALG;
+    /// The algebra type.
+    typedef algebra<BASIS> ALG;
+    /// The sparse_vector type.
+	typedef typename ALG::VECT VECT;
 	/// Import of the iterator type.
 	typedef typename ALG::iterator iterator;
 	/// Import of the constant iterator type.

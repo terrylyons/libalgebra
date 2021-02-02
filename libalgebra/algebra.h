@@ -32,8 +32,9 @@ template<typename _Basis, typename _Coeff>
 class algebra : public vectors::vector<_Basis, _Coeff>
 {
 public:
+    typedef _Basis BASIS;
 	/// The inherited sparse vector type.
-	typedef sparse_vector<BASIS> VECT;
+	typedef vectors::vector<_Basis, _Coeff> VECT;
 	/// Import of the iterator type from sparse_vector.
 	typedef typename VECT::iterator iterator;
 	/// Import of the constant iterator type from sparse_vector.

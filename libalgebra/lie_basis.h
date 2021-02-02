@@ -361,6 +361,7 @@ public:
 	/// The Free Lie Associative Algebra element type.
 	typedef lie<SCA, RAT, n_letters, max_degree> LIE;
 	/// The rationals.
+    typedef SCA SCALAR;
 	typedef RAT RATIONAL;
 public:
 	/// Constructs the basis for a finite number of letters.

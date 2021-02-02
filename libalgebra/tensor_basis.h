@@ -1,7 +1,7 @@
 /* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai, 
-Greg Gyurkó and Arend Janssen. 
+Greg Gyurkï¿½ and Arend Janssen. 
 
 Distributed under the terms of the GNU General Public License, 
 Version 3. (See accompanying file License.txt)
@@ -168,6 +168,9 @@ public:
 	}
 };
 
+
+
+
 /// The monoid of words of a finite number of letters with concat product.
 /** 
 This is the basis used to implement the free_tensor class as a
@@ -188,6 +191,7 @@ public:
 	/// The tensor_basis type.
 	typedef tensor_basis<SCA, n_letters, max_degree> TBASIS;
 	/// The rationals.
+    typedef SCA SCALAR;
 	typedef RAT RATIONAL;
 	/// The Free Associative Algebra element type.
 	typedef free_tensor<SCA, RAT, n_letters, max_degree> TENSOR;
@@ -244,6 +248,21 @@ static inline typename TBASIS::KEY prod(const typename TBASIS::KEY& k1,
 	}
 };
 
+
+
+namespace vectors {
+
+template<DEG n_letters, DEG max_depth, typename _Field>
+struct vector_type_selector<free_tensor_basis<typename _Field::S, typename _Field::Q, n_letters, max_depth>, _Field> {
+    typedef free_tensor_basis<typename _Field::S, typename _Field::Q, n_letters, max_depth> BASIS;
+    typedef typename BASIS::KEY KEY;
+    typedef sparse_vector<BASIS, _Field, std::unordered_map<KEY, typename _Field::S, typename KEY::hash>> type;
+};
+
+}
+
+
+
 ///The monoid of words of a finite number of letters with shuffle product.
 /** 
 This is the basis used to implement the shuffle_tensor class as a
@@ -267,10 +286,13 @@ public:
 	typedef typename TBASIS::KEY KEY;
 	/// Import of the MAP type.
 	typedef typename TBASIS::MAP MAP;
+	typedef SCA SCALAR;
 	/// The rationals.
 	typedef RAT RATIONAL;
 	/// The Shuffle Associative Algebra elements type.
 	typedef shuffle_tensor<SCA, RAT, n_letters, max_degree> TENSOR;
+
+	typedef algebra<free_tensor_basis<SCA, RAT, n_letters, max_degree>> FTENSOR;
 public:
 	/// Default constructor.
 	shuffle_tensor_basis(void) {}
@@ -309,8 +331,7 @@ private:
 	
 	inline void tensor_add_mul(const TENSOR& a, const TENSOR& b, TENSOR& ans) const
 	{
-		typename sparse_vector<free_tensor_basis<SCA, RAT, n_letters, max_degree>,MAP>
-		::const_iterator i, j;
+		typename FTENSOR::const_iterator i, j;
 		for (i = a.begin(); i != a.end(); ++i)
 			for (j = b.begin(); j != b.end(); ++j)
 				ans.add_scal_prod(free_tensor_prod(i->first, j->first),
@@ -364,6 +385,17 @@ private:
 };
 //#endif
 
+namespace vectors {
+
+template<DEG n_letters, DEG max_depth, typename _Field>
+struct vector_type_selector<shuffle_tensor_basis<typename _Field::S, typename _Field::Q, n_letters, max_depth>,
+        _Field> {
+    typedef shuffle_tensor_basis<typename _Field::S, typename _Field::Q, n_letters, max_depth> BASIS;
+    typedef typename BASIS::KEY KEY;
+    typedef sparse_vector<BASIS, _Field, std::unordered_map<KEY, typename _Field::S, typename KEY::hash>> type;
+};
+
+}
 
 // Include once wrapper
 #endif // DJC_COROPA_LIBALGEBRA_TENSORBASISH_SEEN

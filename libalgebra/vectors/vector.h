@@ -5,12 +5,15 @@
 #ifndef LIBALGEBRA_VECTOR_H
 #define LIBALGEBRA_VECTOR_H
 
+#include "libalgebra/vectors/sparse_vector.h"
+
+
 namespace alg {
 namespace vectors {
 
 template<typename _Basis, typename _Field>
 struct vector_type_selector {
-    typedef sparse_vector <_Basis> type;
+    typedef sparse_vector<_Basis, _Field> type;
 };
 
 
@@ -26,13 +29,14 @@ struct vector_type_selector {
  */
 template<typename _Basis,
         typename _Field,
-        template _VectorImpl= typename vector_type_selector<_Basis, _Field>> ::type
+        typename _VectorImpl = typename vector_type_selector<_Basis, _Field>::type
+        >
 class vector : _VectorImpl {
 public:
 
     // Type definitions
-    typedef typename _Field Field;
-    typedef typename _Basis BASIS;
+    typedef _Field Field;
+    typedef _Basis BASIS;
     typedef typename Field::S SCALAR;
     typedef typename Field::S RATIONAL;
     typedef typename BASIS::KEY KEY;
@@ -117,11 +121,18 @@ public:
         return UnderlyingVectorType::create_for_mul(lhs, rhs);
     }
 
+public:
 
-protected:
+    // Swap
+    void swap(vector& rhs) {
+        UnderlyingVectorType::swap(rhs);
+    }
+
+
+private:
 
     /// Constructor from underlying type
-    vector(UnderlyingVectorType other) : UnderlyingVectorType(other) {}
+    vector(UnderlyingVectorType&& other) : UnderlyingVectorType(other) {}
 
 public:
 
@@ -133,7 +144,7 @@ public:
 
     /// Additive inverse
     vector operator-(void) const {
-        return UnderlyingVectorType::operator-();
+        return vector(UnderlyingVectorType::operator-());
     }
 
     /// Inplace scalar multiply
@@ -336,7 +347,7 @@ public:
         return (os << (const UnderlyingVectorType &) rhs);
     }
 
-
+#if 0  // Not yet implemented
 public:
 
     // Serialization access and methods
@@ -346,7 +357,7 @@ public:
     void serialize(Archive &ar, const unsigned int /*version*/) {
         ar & boost::serialization::base_object<UnderlyingVectorType>(*this);
     }
-
+#endif
 
 public:
 
@@ -422,7 +433,7 @@ public:
             vector &result,
             const vector &rhs,
             _KT key_transform,
-            _IT index_transform,
+            _IT index_transform
     ) const {
 #if 0
         UnderlyingVectorType::square_buffered_apply_transform(

@@ -21,7 +21,7 @@ namespace alg {
 namespace vectors {
 
 // This is a macro because template aliases are c++11
-#define DEFAULT_MAPPING_CLASS std::unordered_map
+#define LIBALGEBRA_DEFAULT_MAP_TYPE std::unordered_map<typename _Basis::KEY, typename _Field::S>
 
 /// A class to store and manipulate sparse vectors.
 
@@ -55,11 +55,13 @@ Other iterators and references are not invalidated. Moreover (C++2014)
 the internal order of the elements not erased is preserved. However
 insertion causes a rehash which disrupts all iterators
 */
-    template<typename _Basis, typename _Field, template <typename, typename> typename MapType=DEFAULT_MAPPING_CLASS>
+    template<typename _Basis, typename _Field,
+             typename MapType=LIBALGEBRA_DEFAULT_MAP_TYPE>
     class sparse_vector :
-            /*private*/ MapType<typename _Basis::KEY, typename _Field::S>
+            /*private*/ MapType
     {
-        typedef MapType<typename _Basis::KEY, typename _Field::S> MAP;
+        typedef MapType MAP;
+        typedef _Basis BASIS;
     public:
         /// Import of Const_Iterator to beginning of the sparse vector
         using MAP::begin;
@@ -94,7 +96,7 @@ insertion causes a rehash which disrupts all iterators
         /// Import of the KEY type from the MAP class.
         typedef typename MAP::key_type KEY;
         /// Import of the SCALAR type from the MAP class.
-        typedef typename MAP::mapped_type SCALAR;
+        typedef typename _Field::S SCALAR;
         /// Import of the iterator type from the MAP type.
         typedef typename MAP::iterator iterator;
         /// Import of the KEY constant iterator type from the MAP type.
@@ -588,20 +590,20 @@ insertion causes a rehash which disrupts all iterators
 // Initialisation of static members of sparse_vector<>
 
 /// Static initialisation of the sparse_vector basis.
-    template<class BASIS, class MAP>
-    BASIS sparse_vector<BASIS, MAP>::basis;
+    template<class BASIS, typename F, typename MAP>
+    BASIS sparse_vector<BASIS, F, MAP>::basis;
 
 /// Static initialisation of the scalar constant +1.
-    template<class BASIS, class MAP>
-    const typename MAP::mapped_type sparse_vector<BASIS, MAP>::one(+1);
+    template<class BASIS, typename F, typename MAP>
+    const typename F::S sparse_vector<BASIS, F, MAP>::one(+1);
 
 /// Static initialisation of the scalar constant 0.
-    template<class BASIS, class MAP>
-    const typename MAP::mapped_type sparse_vector<BASIS, MAP>::zero(0);
+    template<class BASIS, typename F, typename MAP>
+    const typename F::S sparse_vector<BASIS, F, MAP>::zero(0);
 
 /// Static initialisation of the scalar constant -1.
-    template<class BASIS, class MAP>
-    const typename MAP::mapped_type sparse_vector<BASIS, MAP>::mone(-1);
+    template<class BASIS, typename F, typename MAP>
+    const typename F::S sparse_vector<BASIS, F, MAP>::mone(-1);
 } // namespace vectors
 } // namespace alg
 

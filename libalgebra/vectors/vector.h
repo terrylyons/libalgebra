@@ -358,11 +358,10 @@ public:
 
     // Apply transform methods
 
-    /// Triangular buffered apply transform with separate transforms
+    /// Buffered apply transform with separate transforms
     /**
-     * Apply transform to the vector using triangular optimisation
-     * permitted by the existence of degree. Apply separately to
-     * components held in dense storage and sparse storage.
+     * Apply transform to paired vectors using a buffer. Apply using different
+     * transforms for by-index or by-key chosen by the under data source.
      *
      * @tparam KeyTransform Key transform type
      * @tparam IndexTransform Index transform type
@@ -370,15 +369,13 @@ public:
      * @param rhs Right hand side buffer
      * @param key_transform Transform to apply by keys (sparse elements)
      * @param index_transform Transform to apply by index (dense elements)
-     * @param max_degree Maximum degree to compute the product to. Default BASIS::MAX_DEGREE
      */
     template<typename KeyTransform, typename IndexTransform>
-    void triangular_buffered_apply_transform(
+    void buffered_apply_transform(
             vector &result,
             const vector &rhs,
             KeyTransform key_transform,
             IndexTransform index_transform,
-            const DEG max_degree = BASIS::MAX_DEGREE
     ) const {
 #if 0
         UnderlyingVectorType::triangular_buffered_apply_transform(
@@ -386,78 +383,18 @@ public:
 #endif
     }
 
-    /// Triangular buffered apply transform with unified transform
-    /**
-    * Apply transform to the vector using triangular optimisation
-    * permitted by the existence of degree. Apply the same transform
-    * to be both dense and sparse components.
-    *
-    * @tparam KeyTransform Key transform type
-    * @param result Buffer to fill with the result.
-    * @param rhs Right hand side vector to the operation.
-    * @param key_transform Transform to apply by key (sparse and dense)
-    * @param max_degree Maximum degree to compute the transform.
-    * DEFAULT BASIS::MAX_DEGREE
-    */
-    template<typename KeyTransform>
-    void triangular_buffered_apply_transform(
+    /// Buffered apply transform with only key transform
+    template <typename KeyTransform>
+    void buffered_apply_transform(
             vector &result,
-            const vector &rhs,
-            KeyTransform key_transform,
-            const DEG max_degree = BASIS::MAX_DEGREE
-    ) const {
-#if 0
-        UnderlyingVectorType::triangular_buffered_apply_transform(
-               result, rhs, key_transform, max_degree);
-#endif
-    }
-
-    /// Square buffered apply transform with separate transforms
-    /**
-    * Apply buffered transform without any degree optimisations.
-    *
-    * @tparam KeyTransform
-    * @tparam IndexTransform
-    * @param result
-    * @param rhs
-    * @param key_transform
-    * @param index_transform
-    */
-    template<typename KeyTransform, typename IndexTransform>
-    void square_buffered_apply_transform(
-            vector &result,
-            const vector &rhs,
-            KeyTransform key_transform,
-            IndexTransform index_transform
-    ) const {
-#if 0
-        UnderlyingVectorType::square_buffered_apply_transform(
-               result, rhs, key_transform, index_transform
-               );
-#endif
-    }
-
-    /// Square buffered apply transform with unified transform
-    /**
-     * Apply buffered transform without degree optimisations.
-     *
-     * @tparam KeyTransform
-     * @param result
-     * @param rhs
-     * @param key_transform
-     */
-    template<typename KeyTransform>
-    void square_buffered_apply_transform(
-            vector &result,
-            const vector &rhs,
+            const vector& rhs,
             KeyTransform key_transform
     ) const {
 #if 0
-        UnderlyingVectorType::square_buffered_apply_transform(
-               result, rhs, key_transform
-               );
+
 #endif
     }
+
 
 
 };

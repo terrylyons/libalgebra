@@ -18,7 +18,31 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_ALGEBRAH_SEEN
 #define DJC_COROPA_LIBALGEBRA_ALGEBRAH_SEEN
 
+/// Temporary implementation of a basis-level key_transform for multiplication.
+template <typename Basis, typename Coeffs, typename Transform>
+struct multiplication_operator
+{
 
+    typedef typename Basis::KEY KEY;
+    typedef typename Coeffs::S S;
+
+    template <typename Vector>
+    inline void operator()(
+            Vector& result,
+            const KEY& lhs_key,
+            const S& lhs_val,
+            const KEY& rhs_key,
+            const S& rhs_val
+    ) {
+        result.add_scal_prod(
+                Vector::basis.prod(lhs_key, rhs_key),
+                m_transform(lhs_val * rhs_val)
+                );
+    }
+
+private:
+    Transform m_transform;
+};
 
 
 /// A class to store and manipulate associative algebras elements.
@@ -80,29 +104,7 @@ public:
 	/// and construct an increasing vector iterators so that segment [iterators[i-1], iterators[i])
 	/// contains keys of degree i; the first begins at [begin(), and the last ends at end), and it can be empty
 
-	void separate_by_degree(std::vector<std::pair<KEY, SCALAR> > &buffer, const algebra &rhs, const size_t DEPTH1, std::vector<typename std::vector<std::pair<KEY, SCALAR> >::const_iterator> &iterators) const
-	{
-		buffer.assign(rhs.begin(), rhs.end());
-#ifndef ORDEREDMAP
-		std::sort(buffer.begin(), buffer.end(),
-			[](const std::pair<KEY, SCALAR>&lhs, const std::pair<KEY, SCALAR>&rhs)->bool
-		{return lhs.first < rhs.first; }
-		);
-#endif // ORDEREDMAP
- 
-		iterators.assign(DEPTH1 + 1, buffer.end());
-		unsigned deg = 0;
-		for (typename std::vector<std::pair<KEY, SCALAR> >::const_iterator j0 = buffer.begin();
-			j0 != buffer.end();
-			j0++)
-		{
-			DEG d = VECT::basis.degree(j0->first);
-			assert(d >= deg && d <= DEPTH1); // order assumed to respect degree
-			while (deg < d)
-				iterators[deg++] = j0;
-			// deg == d
-		}
-	}
+
 
 	template <class Transform>
 	inline void squarebufferedmultiplyandcombine(const algebra& rhs, algebra& result, Transform fn) const
@@ -176,7 +178,9 @@ public:
 	template <unsigned DEPTH1>
 	inline void bufferedmultiplyandadd(const algebra& rhs, algebra& result) const
 	{
-		bufferedmultiplyandadd( rhs, result, identity<DEPTH1>());
+	    multiplication_operator<Basis, Coeff, scalar_passthrough> fn;
+	    VECT::buffered_apply_binary_transform(result, rhs, fn);
+		//bufferedmultiplyandadd( rhs, result, identity<DEPTH1>());
 	}
 private:
 	/// multiplies *this and rhs adding it to result with optimizations coming from degree
@@ -197,7 +201,9 @@ public:
 	template <unsigned DEPTH1>
 	inline void bufferedmultiplyandsub(const algebra& rhs, algebra& result) const
 	{
-		bufferedmultiplyandsub(rhs, result, identity<DEPTH1>());
+        multiplication_operator<Basis, Coeff, scalar_minus> fn;
+        VECT::buffered_apply_binary_transform(result, rhs, fn);
+        //bufferedmultiplyandsub(rhs, result, identity<DEPTH1>());
 	}
 private:
 	template <unsigned DEPTH1>

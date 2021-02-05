@@ -594,6 +594,37 @@ public:
     }
 
 
+private:
+
+    void separate_by_degree(
+            std::vector<std::pair<KEY, SCALAR> > &buffer,
+            const algebra &rhs,
+            const size_t DEPTH1,
+            std::vector<typename std::vector<std::pair<KEY, SCALAR> >::const_iterator> &iterators
+    ) const
+    {
+        buffer.assign(rhs.begin(), rhs.end());
+#ifndef ORDEREDMAP
+        std::sort(buffer.begin(), buffer.end(),
+                  [](const std::pair<KEY, SCALAR>&lhs, const std::pair<KEY, SCALAR>&rhs)->bool
+                  {return lhs.first < rhs.first; }
+        );
+#endif // ORDEREDMAP
+
+        iterators.assign(DEPTH1 + 1, buffer.end());
+        unsigned deg = 0;
+        for (typename std::vector<std::pair<KEY, SCALAR> >::const_iterator j0 = buffer.begin();
+                j0 != buffer.end();
+        j0++)
+        {
+            DEG d = VECT::basis.degree(j0->first);
+            assert(d >= deg && d <= DEPTH1); // order assumed to respect degree
+            while (deg < d)
+                iterators[deg++] = j0;
+            // deg == d
+        }
+    }
+
 public:
     // Transform methods
 
@@ -606,6 +637,24 @@ public:
             const DEG max_depth = BASIS::MAX_DEPTH
             )
     {
+        // create buffers to avoid unnecessary calls to MAP inside loop
+        std::vector<std::pair<KEY, SCALAR> > buffer;
+        std::vector<typename std::vector<std::pair<KEY, SCALAR> >::const_iterator>
+            iterators;
+        separate_by_degree(buffer, rhs, max_depth, iterators);
+
+        typename std::vector<std::pair<KEY, SCALAR> >::const_iterator j, jEnd;
+        const_iterator i(begin()), iEnd(end());
+        for ( ; i != iEnd; ++i)
+        {
+            const KEY& k = i->first;
+            size_t rhdegree = max_depth - basis.degree(k);
+            typename std::vector<std::pair<KEY, SCALAR> >:: const_iterator&
+            jEnd = iterators[rhdegree];
+            for (j = buffer.begin(); j != jEnd; ++j) {
+                key_transform(result, i->first, i->second, j->first, j->second);
+            }
+        }
     }
 
     template <typename KeyTransform, typename IndexTransform>
@@ -628,6 +677,20 @@ public:
             KeyTransform key_transform
     ) const
     {
+        // create buffer to avoid unnecessary calls to MAP inside loop
+        std::vector<std::pair<KEY, SCALAR> > buffer(rhs.begin(), rhs.end());
+        const_iterator i;
+
+        // DEPTH1 == 0
+        typename std::vector<std::pair<KEY, SCALAR> >:: const_iterator j;
+        for (i = begin(); i != end(); ++i)
+        {
+            for (j = buffer.begin(); j != buffer.end(); ++j) {
+                key_transform(result, i->first, i->second, j->first, j->second);
+            }
+        }
+
+
     }
 
     template <typename KeyTransform, typename IndexTransform>

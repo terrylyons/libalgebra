@@ -371,7 +371,7 @@ public:
      * @param index_transform Transform to apply by index (dense elements)
      */
     template<typename KeyTransform, typename IndexTransform>
-    void buffered_apply_transform(
+    void buffered_apply_binary_transform(
             vector &result,
             const vector &rhs,
             KeyTransform key_transform,
@@ -385,7 +385,7 @@ public:
 
     /// Buffered apply transform with only key transform
     template <typename KeyTransform>
-    void buffered_apply_transform(
+    void buffered_apply_binary_transform(
             vector &result,
             const vector& rhs,
             KeyTransform key_transform

@@ -333,7 +333,7 @@ public:
 				break;
 			}
 			case 3: {
-				it->second = ((it->second > cit->second) ? (it->second) : (cit->second));
+			    operator[](it->first) = ((it->second > cit->second) ? (it->second) : (cit->second));
 				++cit;
 				++it;
 				break; }

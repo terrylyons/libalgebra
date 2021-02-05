@@ -4,7 +4,7 @@ const_iterator Where,
 const value_type& Val
 );
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
-Greg Gyurkó and Arend Janssen.
+Greg Gyurkï¿½ and Arend Janssen.
 
 Distributed under the terms of the GNU General Public License,
 Version 3. (See accompanying file License.txt)
@@ -102,7 +102,7 @@ public:
 	/// The -1 scalar value.
 	const static SCALAR mone; //-1
     /// Given a const instance of a sparse vector, returns a const reference to the scalar associated to the named basis element. (The default SCALAR element zero if the basis vector was not present in this sparse vector instance).
-	inline const typename SCALAR& operator[] (const KEY k) const {
+	inline const SCALAR& operator[] (const KEY k) const {
 		const_iterator found = find(k);
 		return (found == cend()) ? zero : found->second;
 	}
@@ -333,7 +333,7 @@ public:
 				break;
 			}
 			case 3: {
-				it->second = ((it->second > cit->second) ? (it->second) : (cit->second));
+			    operator[](it->first) = ((it->second > cit->second) ? (it->second) : (cit->second));
 				++cit;
 				++it;
 				break; }

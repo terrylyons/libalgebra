@@ -512,6 +512,20 @@ public:
 		}
 		return *this;
 	}
+
+	inline sparse_vector& add_scal_div(const KEY& rhs, const RATIONAL& s)
+    {
+	    if (zero == (operator[](rhs) += one / s)) erase(rhs);
+        return *this;
+
+    }
+
+    inline sparse_vector& sub_scal_div(const KEY& rhs, const RATIONAL& s)
+    {
+        if (zero == (operator[](rhs) -= one / s)) erase(rhs);
+        return *this;
+    }
+
 	/// Compares the instance to a sparse_vector.
 	bool operator==(const sparse_vector& rhs) const
 	{

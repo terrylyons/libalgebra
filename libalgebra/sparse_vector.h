@@ -340,7 +340,7 @@ public:
 				break;
 			}
 			case 3: {
-				it->second = ((it->second > cit->second) ? (it->second) : (cit->second));
+			    operator[](it->first) = ((it->second > cit->second) ? (it->second) : (cit->second));
 				++cit;
 				++it;
 				break; }
@@ -519,6 +519,20 @@ public:
 		}
 		return *this;
 	}
+
+	inline sparse_vector& add_scal_div(const KEY& rhs, const RATIONAL& s)
+    {
+	    if (zero == (operator[](rhs) += one / s)) erase(rhs);
+        return *this;
+
+    }
+
+    inline sparse_vector& sub_scal_div(const KEY& rhs, const RATIONAL& s)
+    {
+        if (zero == (operator[](rhs) -= one / s)) erase(rhs);
+        return *this;
+    }
+
 	/// Compares the instance to a sparse_vector.
 	bool operator==(const sparse_vector& rhs) const
 	{

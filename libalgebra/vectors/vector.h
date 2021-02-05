@@ -390,7 +390,7 @@ public:
             const vector& rhs,
             KeyTransform key_transform
     ) const {
-#if 0
+#if 0 // not yet implemented
 
 #endif
     }

@@ -22,23 +22,23 @@ struct vector_type_selector {
  * Main vector interface for libalgebra.
  *
  *
- * @tparam _Basis The basis class for the vector to use
- * @tparam _Field The coefficient field to use
- * @tparam _VectorImpl The underlying vector class to use. Selected automatically
+ * @tparam Basis The basis class for the vector to use
+ * @tparam Field The coefficient field to use
+ * @tparam VectorImpl The underlying vector class to use. Selected automatically
  * based on the vector_type_selector trait.
  */
 template<typename Basis,
-        typename Field,
+        typename Coeffs,
         typename VectorImpl = typename vector_type_selector<Basis, Field>::type
         >
 class vector : VectorImpl {
 public:
 
     // Type definitions
-    typedef Field FIELD;
+    typedef Coeffs FIELD;
     typedef Basis BASIS;
-    typedef typename Field::S SCALAR;
-    typedef typename Field::S RATIONAL;
+    typedef typename FIELD::S SCALAR;
+    typedef typename FIELD::S RATIONAL;
     typedef typename BASIS::KEY KEY;
 
     // Iterator definitions

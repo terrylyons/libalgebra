@@ -18,6 +18,9 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_ALGEBRAH_SEEN
 #define DJC_COROPA_LIBALGEBRA_ALGEBRAH_SEEN
 
+
+
+
 /// A class to store and manipulate associative algebras elements.
 /**
 The template class BASIS must
@@ -28,13 +31,13 @@ BASIS::prod(const KEY&, const KEY&) with a return type suitable for
 use as the first arg of sparse_vector::add_scal_prod(); it can be a key or a sparse vector for example
 (3) The sparse_vector::MAP class must provide the swap() member function.
 */
-template<typename _Basis, typename _Coeff>
-class algebra : public vectors::vector<_Basis, _Coeff>
+template<typename Basis, typename Coeff, typename VectorType>
+class algebra : public vectors::vector<Basis, Coeff>
 {
 public:
-    typedef _Basis BASIS;
+    typedef Basis BASIS;
 	/// The inherited sparse vector type.
-	typedef vectors::vector<_Basis, _Coeff> VECT;
+	typedef vectors::vector<Basis, Coeff> VECT;
 	/// Import of the iterator type from sparse_vector.
 	typedef typename VECT::iterator iterator;
 	/// Import of the constant iterator type from sparse_vector.

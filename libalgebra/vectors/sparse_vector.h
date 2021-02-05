@@ -592,6 +592,61 @@ public:
         os << " }";
         return os;
     }
+
+
+public:
+    // Transform methods
+
+
+    template <typename KeyTransform>
+    void triangular_buffered_apply_binary_transform(
+            sparse_vector& result,
+            const sparse_vector& rhs,
+            KeyTransform key_transform,
+            const DEG max_depth = BASIS::MAX_DEPTH
+            )
+    {
+    }
+
+    template <typename KeyTransform, typename IndexTransform>
+    void triangular_buffered_apply_binary_transform(
+            sparse_vector& result,
+            const sparse_vector& rhs,
+            KeyTransform key_transform,
+            IndexTransform /* index_transform */,
+            const DEG max_depth = BASIS::MAX_DEPTH
+    ) const
+    {
+        triangular_buffered_apply_binary_transform(result, rhs, key_transform, max_depth);
+    }
+
+
+    template <typename KeyTransform>
+    void square_buffered_apply_binary_transform(
+            sparse_vector& result,
+            const sparse_vector& rhs,
+            KeyTransform key_transform
+    ) const
+    {
+    }
+
+    template <typename KeyTransform, typename IndexTransform>
+    void square_buffered_apply_binary_transform(
+            sparse_vector& result,
+            const sparse_vector& rhs,
+            KeyTransform key_transform,
+            IndexTransform /* index_transform */
+    ) const
+    {
+        square_buffered_apply_binary_transform(result, rhs, key_transform);
+    }
+
+
+
+
+
+
+
 };
 
 

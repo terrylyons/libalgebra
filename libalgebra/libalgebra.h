@@ -137,7 +137,7 @@ struct TrivialCoeffs
 template<typename BASIS, typename Coeffs=TrivialCoeffs<BASIS>>
 class algebra;
 /// Generic Associative Algebra basis.
-template<typename SCA, DEG n_letters, DEG max_degree = 0>
+template<DEG n_letters, DEG max_degree = 0>
 class tensor_basis;
 /// Free Associative Algegra Basis. Concatenation product. Non commutative.
 template<typename SCA, typename RAT,

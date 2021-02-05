@@ -11,9 +11,9 @@
 namespace alg {
 namespace vectors {
 
-template<typename _Basis, typename _Field>
+template<typename Basis, typename Field>
 struct vector_type_selector {
-    typedef sparse_vector<_Basis, _Field> type;
+    typedef sparse_vector<Basis, Field> type;
 };
 
 
@@ -27,30 +27,30 @@ struct vector_type_selector {
  * @tparam _VectorImpl The underlying vector class to use. Selected automatically
  * based on the vector_type_selector trait.
  */
-template<typename _Basis,
-        typename _Field,
-        typename _VectorImpl = typename vector_type_selector<_Basis, _Field>::type
+template<typename Basis,
+        typename Field,
+        typename VectorImpl = typename vector_type_selector<Basis, Field>::type
         >
-class vector : _VectorImpl {
+class vector : VectorImpl {
 public:
 
     // Type definitions
-    typedef _Field Field;
-    typedef _Basis BASIS;
+    typedef Field FIELD;
+    typedef Basis BASIS;
     typedef typename Field::S SCALAR;
     typedef typename Field::S RATIONAL;
     typedef typename BASIS::KEY KEY;
 
     // Iterator definitions
-    typedef typename _VectorImpl::iterator iterator;
-    typedef typename _VectorImpl::const_iterator const_iterator;
+    typedef typename VectorImpl::iterator iterator;
+    typedef typename VectorImpl::const_iterator const_iterator;
 
 protected:
 
     // The underlying vector type is accessible from derived classes
     // since we might need to access the class directly in order to
     // optimise some operations.
-    typedef _VectorImpl UnderlyingVectorType;
+    typedef VectorImpl UnderlyingVectorType;
 
 public:
 
@@ -95,7 +95,7 @@ public:
     vector(void) : UnderlyingVectorType() {}
 
     /// Copy constructor
-    vector(const vector &other) : UnderlyingVectorType(other) {}
+    vector(const UnderlyingVectorType &other) : UnderlyingVectorType(other) {}
 
     /// Unidimensional constructor.
     /**
@@ -128,11 +128,6 @@ public:
         UnderlyingVectorType::swap(rhs);
     }
 
-
-private:
-
-    /// Constructor from underlying type
-    vector(UnderlyingVectorType&& other) : UnderlyingVectorType(other) {}
 
 public:
 
@@ -369,20 +364,20 @@ public:
      * permitted by the existence of degree. Apply separately to
      * components held in dense storage and sparse storage.
      *
-     * @tparam _KT Key transform type
-     * @tparam _IT Index transform type
+     * @tparam KeyTransform Key transform type
+     * @tparam IndexTransform Index transform type
      * @param result Buffer in which to place the result
      * @param rhs Right hand side buffer
      * @param key_transform Transform to apply by keys (sparse elements)
      * @param index_transform Transform to apply by index (dense elements)
      * @param max_degree Maximum degree to compute the product to. Default BASIS::MAX_DEGREE
      */
-    template<typename _KT, typename _IT>
+    template<typename KeyTransform, typename IndexTransform>
     void triangular_buffered_apply_transform(
             vector &result,
             const vector &rhs,
-            _KT key_transform,
-            _IT index_transform,
+            KeyTransform key_transform,
+            IndexTransform index_transform,
             const DEG max_degree = BASIS::MAX_DEGREE
     ) const {
 #if 0
@@ -397,18 +392,18 @@ public:
     * permitted by the existence of degree. Apply the same transform
     * to be both dense and sparse components.
     *
-    * @tparam _KT Key transform type
+    * @tparam KeyTransform Key transform type
     * @param result Buffer to fill with the result.
     * @param rhs Right hand side vector to the operation.
     * @param key_transform Transform to apply by key (sparse and dense)
     * @param max_degree Maximum degree to compute the transform.
     * DEFAULT BASIS::MAX_DEGREE
     */
-    template<typename _KT>
+    template<typename KeyTransform>
     void triangular_buffered_apply_transform(
             vector &result,
             const vector &rhs,
-            _KT key_transform,
+            KeyTransform key_transform,
             const DEG max_degree = BASIS::MAX_DEGREE
     ) const {
 #if 0
@@ -421,19 +416,19 @@ public:
     /**
     * Apply buffered transform without any degree optimisations.
     *
-    * @tparam _KT
-    * @tparam _IT
+    * @tparam KeyTransform
+    * @tparam IndexTransform
     * @param result
     * @param rhs
     * @param key_transform
     * @param index_transform
     */
-    template<typename _KT, typename _IT>
+    template<typename KeyTransform, typename IndexTransform>
     void square_buffered_apply_transform(
             vector &result,
             const vector &rhs,
-            _KT key_transform,
-            _IT index_transform
+            KeyTransform key_transform,
+            IndexTransform index_transform
     ) const {
 #if 0
         UnderlyingVectorType::square_buffered_apply_transform(
@@ -446,16 +441,16 @@ public:
     /**
      * Apply buffered transform without degree optimisations.
      *
-     * @tparam _KT
+     * @tparam KeyTransform
      * @param result
      * @param rhs
      * @param key_transform
      */
-    template<typename _KT>
+    template<typename KeyTransform>
     void square_buffered_apply_transform(
             vector &result,
             const vector &rhs,
-            _KT key_transform
+            KeyTransform key_transform
     ) const {
 #if 0
         UnderlyingVectorType::square_buffered_apply_transform(

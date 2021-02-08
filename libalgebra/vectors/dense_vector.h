@@ -41,7 +41,7 @@ public:
     typedef Basis BASIS;
     typedef Coeffs COEFFS;
     typedef typename BASIS::KEY KEY;
-    typedef typename COEFFS:S SCALAR;
+    typedef typename COEFFS::S SCALAR;
     typedef typename COEFFS::Q RATIONAL;
     typedef typename STORAGE::iterator iterator;
     typedef typename STORAGE::const_iterator const_iterator;
@@ -89,7 +89,7 @@ public:
 
     /// Reserve to degree
     typename alg::utils::enable_if<has_degree<BASIS>::value>::type
-    reserve_to_degree(const DEG deg)
+    resize_to_degree(const DEG deg)
     {}
 
 
@@ -134,8 +134,8 @@ public:
     void swap(dense_vector& other)
     {
         m_data.swap(other.m_data);
-        m_dimension.swap(other.m_dimension);
-        m_degree.swap(other.m_degree);
+        std::swap(m_dimension, other.m_dimension);
+        std::swap(m_degree, other.m_degree);
     }
 
 public:
@@ -331,10 +331,10 @@ public:
             }
         }
 
-            for (DIMN i=mid; i<m_dimension; ++i) {
-                m_data[i] = std::max(zero, m_data[i]);
-            }
+        for (DIMN i=mid; i<m_dimension; ++i) {
+            m_data[i] = std::max(zero, m_data[i]);
         }
+
         return *this;
     }
 
@@ -355,7 +355,7 @@ public:
                                                                       \
     dense_vector& NAME(const dense_vector& rhs, const T s) {          \
         if (m_dimension < rhs.m_dimension) {                          \
-            resize_to_diension(rhs.m_dimension);                      \
+            resize_to_dimension(rhs.m_dimension);                      \
         }                                                             \
                                                                       \
         for (DIMN i=0; i<rhs.m_dimension; ++i) {                      \
@@ -441,9 +441,9 @@ public:
         token.first = &dense_vector::basis;
 
         os << '{';
-        for (DIMN i=0; i<m_dimension; ++i) {
+        for (DIMN i=0; i<rhs.m_dimension; ++i) {
             token.second = key_from_index(i);
-            os << ' ' << m_data[i] << '(' << token << ')';
+            os << ' ' << rhs.m_data[i] << '(' << token << ')';
         }
         os << ' ' << '}';
         return os;

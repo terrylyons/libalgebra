@@ -10,7 +10,7 @@
 namespace alg {
 namespace utils {
 
-    typedef std::enable_if enable_if;
+    using std::enable_if;
 
 
 } // namespace utils

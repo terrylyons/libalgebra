@@ -15,7 +15,7 @@
 	{ return OLDT::operator OLDOP (); }
 
 #include "libalgebra/vectors/sparse_vector.h"
-
+#include "libalgebra/vectors/dense_vector.h"
 
 #include "libalgebra/vectors/vector.h"
 

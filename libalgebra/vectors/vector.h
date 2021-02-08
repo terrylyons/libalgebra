@@ -377,10 +377,8 @@ public:
             KeyTransform key_transform,
             IndexTransform index_transform
     ) const {
-#if 0
-        UnderlyingVectorType::triangular_buffered_apply_transform(
-                result, rhs, key_transform, index_transform, max_degree);
-#endif
+        buffered_apply_binary_transform(result, rhs, key_transform, index_transform,
+                                        temporary_tag<BASIS::MAX_DEGREE>());
     }
 
     /// Buffered apply transform with only key transform
@@ -390,9 +388,7 @@ public:
             const vector& rhs,
             KeyTransform key_transform
     ) const {
-        UnderlyingVectorType::square_buffered_apply_binary_transform(
-                result, rhs, key_transform
-                );
+        buffered_apply_binary_transform(result, rhs, key_transform, temporary_tag<BASIS::MAX_DEGREE>());
     }
 
 private:
@@ -401,7 +397,7 @@ private:
     struct temporary_tag {};
 
     template <typename KeyTransform>
-    buffered_apply_binary_transform(
+    void buffered_apply_binary_transform(
             vector& result,
             const vector& rhs,
             KeyTransform key_transform,
@@ -413,19 +409,19 @@ private:
     }
 
     template <DEG D, typename KeyTransform>
-    buffered_apply_binary_transform(
+    void buffered_apply_binary_transform(
             vector& result,
             const vector& rhs,
             KeyTransform key_transform,
             temporary_tag<D>
     ) const {
         UnderlyingVectorType::triangular_buffered_apply_binary_transform(
-                result, rhs, key_transform
+                result, rhs, key_transform, D
         );
     }
 
     template <typename KeyTransform, typename IndexTransform>
-    buffered_apply_binary_transform(
+    void buffered_apply_binary_transform(
             vector& result,
             const vector& rhs,
             KeyTransform key_transform,
@@ -438,7 +434,7 @@ private:
     }
 
     template <DEG D, typename KeyTransform, typename IndexTransform>
-    buffered_apply_binary_transform(
+    void buffered_apply_binary_transform(
             vector& result,
             const vector& rhs,
             KeyTransform key_transform,
@@ -446,7 +442,7 @@ private:
             temporary_tag<D>
     ) const {
         UnderlyingVectorType::triangular_buffered_apply_binary_transform(
-                result, rhs, key_transform, index_transform
+                result, rhs, key_transform, index_transform, D
         );
     }
 

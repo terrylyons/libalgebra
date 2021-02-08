@@ -596,6 +596,9 @@ public:
 
 private:
 
+    /// copy the (key, value) elements from rhs to a sorted vector buffer (using the key for sorting)
+    /// and construct an increasing vector iterators so that segment [iterators[i-1], iterators[i])
+    /// contains keys of degree i; the first begins at [begin(), and the last ends at end), and it can be empty
     void separate_by_degree(
             std::vector<std::pair<KEY, SCALAR> > &buffer,
             const sparse_vector &rhs,
@@ -634,8 +637,8 @@ public:
             Vector& result,
             const sparse_vector& rhs,
             KeyTransform key_transform,
-            const DEG max_depth = BASIS::MAX_DEPTH
-            )
+            const DEG max_depth
+            ) const
     {
         // create buffers to avoid unnecessary calls to MAP inside loop
         std::vector<std::pair<KEY, SCALAR> > buffer;
@@ -663,7 +666,7 @@ public:
             const sparse_vector& rhs,
             KeyTransform key_transform,
             IndexTransform /* index_transform */,
-            const DEG max_depth = BASIS::MAX_DEPTH
+            const DEG max_depth
     ) const
     {
         triangular_buffered_apply_binary_transform(result, rhs, key_transform, max_depth);

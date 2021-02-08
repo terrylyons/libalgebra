@@ -83,53 +83,8 @@ public:
 
 	static const DEG MAX_DEGREE = BASIS::MAX_DEGREE;
 
-	template <class Transform, size_t DEPTH1>
-	inline void triangularbufferedmultiplyandcombine(const algebra& rhs, algebra& result, Transform fn) const
-	{
-		// create buffers to avoid unnecessary calls to MAP inside loop
-		std::vector<std::pair<KEY, SCALAR> > buffer;
-		std::vector<typename std::vector<std::pair<KEY, SCALAR> >::const_iterator>
-			iterators;
-		separate_by_degree(buffer, rhs, DEPTH1, iterators);
-
-		typename std::vector<std::pair<KEY, SCALAR> >::const_iterator j, jEnd;
-		const_iterator i(VECT::begin()), iEnd(VECT::end());
-		for ( ; i != iEnd; ++i)
-		{
-			const KEY& k = i->first;
-			size_t rhdegree = DEPTH1 - VECT::basis.degree(k);
-			typename std::vector<std::pair<KEY, SCALAR> >:: const_iterator&
-				jEnd = iterators[rhdegree];
-			for (j = buffer.begin(); j != jEnd; ++j)
-				result.add_scal_prod(VECT::basis.prod(i->first, j->first),
-				fn(i->second * j->second));
-		}
-
-	}
-
-	/// copy the (key, value) elements from rhs to a sorted vector buffer (using the key for sorting) 
-	/// and construct an increasing vector iterators so that segment [iterators[i-1], iterators[i])
-	/// contains keys of degree i; the first begins at [begin(), and the last ends at end), and it can be empty
 
 
-
-	template <class Transform>
-	inline void squarebufferedmultiplyandcombine(const algebra& rhs, algebra& result, Transform fn) const
-	{	
-		// create buffer to avoid unnecessary calls to MAP inside loop
-		std::vector<std::pair<KEY, SCALAR> > buffer(rhs.begin(), rhs.end());
-		const_iterator i;
-
-		// DEPTH1 == 0
-		typename std::vector<std::pair<KEY, SCALAR> >:: const_iterator j;
-		for (i = VECT::begin(); i != VECT::end(); ++i)
-		{
-			for (j = buffer.begin(); j != buffer.end(); ++j)
-				result.add_scal_prod(VECT::basis.prod(i->first, j->first),
-				fn(i->second * j->second));
-		}
-
-	}
 
 	// Transformations
 
@@ -189,20 +144,7 @@ public:
 	    VECT::buffered_apply_binary_transform(result, rhs, fn);
 		//bufferedmultiplyandadd( rhs, result, identity<DEPTH1>());
 	}
-private:
-	/// multiplies *this and rhs adding it to result with optimizations coming from degree
-	template <unsigned DEPTH1>
-	inline void bufferedmultiplyandadd(const algebra& rhs, algebra& result, identity<DEPTH1>) const
-	{
-		scalar_passthrough fn;
-		triangularbufferedmultiplyandcombine<scalar_passthrough, DEPTH1>(rhs, result, fn);
-	}
-	/// multiplies *this and rhs adding it to result without optimizations coming from degree
-	inline void bufferedmultiplyandadd(const algebra& rhs, algebra& result, identity<0>) const
-	{
-		scalar_passthrough fn;
-		squarebufferedmultiplyandcombine(rhs, result, fn);
-	}
+
 public:
 	/// multiplies *this and rhs subtracting it from result
 	template <unsigned DEPTH1>
@@ -212,20 +154,7 @@ public:
         VECT::buffered_apply_binary_transform(result, rhs, fn);
         //bufferedmultiplyandsub(rhs, result, identity<DEPTH1>());
 	}
-private:
-	template <unsigned DEPTH1>
-	inline void bufferedmultiplyandsub(const algebra& rhs, algebra& result, identity<DEPTH1>) const
-	{
-		scalar_minus fn;
-		triangularbufferedmultiplyandcombine<scalar_minus, DEPTH1>(rhs, result, fn);
-	}
 
-	/// multiplies *this and rhs subtracting it to result without optimizations coming from degree
-	inline void bufferedmultiplyandsub(const algebra& rhs, algebra& result, identity<0>) const
-	{
-		scalar_minus fn;
-		squarebufferedmultiplyandcombine(rhs, result, fn);
-	}
 public:
 	struct wrapscalar
 	{
@@ -247,21 +176,7 @@ public:
         VECT::buffered_apply_binary_transform(result, rhs, fn);
 		//bufferedmultiplyandsmult(ss, rhs, result, identity<DEPTH1>());
 	}
-private:
-	/// multiplies  *this and rhs adds it * s to result
-	template <unsigned DEPTH1>
-	inline void bufferedmultiplyandsmult(const wrapscalar& ss, const algebra& rhs, algebra& result, identity<DEPTH1>) const
-	{
-		scalar_post_mult fn(ss.hidden);
-		triangularbufferedmultiplyandcombine<scalar_post_mult, DEPTH1>(rhs, result, fn);
-	}
 
-	/// multiplies *this and rhs adds it * s to result without optimizations coming from degree
-	inline void bufferedmultiplyandsmult(const wrapscalar& ss, const algebra& rhs, algebra& result, identity<0>) const
-	{
-		scalar_post_mult fn(ss.hidden);
-		squarebufferedmultiplyandcombine(rhs, result, fn);
-	}
 public:
 	/// multiplies  *this and rhs adds it * s to result
 	template <unsigned DEPTH1>
@@ -271,22 +186,7 @@ public:
         VECT::buffered_apply_binary_transform(result, rhs, fn);
 		//bufferedmultiplyandsdiv(rhs, ss, result, identity<DEPTH1>());
 	}
-private:
-	/// multiplies  *this and rhs adds it * s to result
-	template <unsigned DEPTH1>
-	inline void bufferedmultiplyandsdiv(const algebra& rhs, const wraprational& ss, algebra& result, identity<DEPTH1>) const
-	{
-		rational_post_div fn(ss.hidden);
-		triangularbufferedmultiplyandcombine<rational_post_div, DEPTH1>(rhs, result, fn);
-	}
 
-	/// multiplies *this and rhs adds it * s to result without optimizations coming from degree
-	inline void bufferedmultiplyandsdiv(const algebra& rhs, const wraprational& ss, algebra& result,  identity<0>) const
-	{
-		rational_post_div fn(ss.hidden);
-		squarebufferedmultiplyandcombine(rhs, result, fn);
-	}
-public:
 public:
 	/// Default constructor. 
 	/**

@@ -30,7 +30,7 @@ namespace vectors {
 
 //Unordered and Ordered forms
 // sparse_vector is by default ordered (unless the UNORDERED macro is defined)
-// unordered_sparse_vector is not ordered; it is significatly faster for normal functions
+// unordered_sparse_vector is not ordered; it is significantly faster for normal functions
 // however iterators may be invalidated by any sort of insertion in the unordered settings
 /**
 An instance of the sparse_vector class is just a(n unordered) MAP between KEY and
@@ -598,7 +598,7 @@ private:
 
     void separate_by_degree(
             std::vector<std::pair<KEY, SCALAR> > &buffer,
-            const algebra &rhs,
+            const sparse_vector &rhs,
             const size_t DEPTH1,
             std::vector<typename std::vector<std::pair<KEY, SCALAR> >::const_iterator> &iterators
     ) const
@@ -617,7 +617,7 @@ private:
                 j0 != buffer.end();
         j0++)
         {
-            DEG d = VECT::basis.degree(j0->first);
+            DEG d = basis.degree(j0->first);
             assert(d >= deg && d <= DEPTH1); // order assumed to respect degree
             while (deg < d)
                 iterators[deg++] = j0;
@@ -629,9 +629,9 @@ public:
     // Transform methods
 
 
-    template <typename KeyTransform>
+    template <typename Vector, typename KeyTransform>
     void triangular_buffered_apply_binary_transform(
-            sparse_vector& result,
+            Vector& result,
             const sparse_vector& rhs,
             KeyTransform key_transform,
             const DEG max_depth = BASIS::MAX_DEPTH
@@ -657,9 +657,9 @@ public:
         }
     }
 
-    template <typename KeyTransform, typename IndexTransform>
+    template <typename Vector, typename KeyTransform, typename IndexTransform>
     void triangular_buffered_apply_binary_transform(
-            sparse_vector& result,
+            Vector& result,
             const sparse_vector& rhs,
             KeyTransform key_transform,
             IndexTransform /* index_transform */,
@@ -670,9 +670,9 @@ public:
     }
 
 
-    template <typename KeyTransform>
+    template <typename Vector, typename KeyTransform>
     void square_buffered_apply_binary_transform(
-            sparse_vector& result,
+            Vector& result,
             const sparse_vector& rhs,
             KeyTransform key_transform
     ) const
@@ -693,9 +693,9 @@ public:
 
     }
 
-    template <typename KeyTransform, typename IndexTransform>
+    template <typename Vector, typename KeyTransform, typename IndexTransform>
     void square_buffered_apply_binary_transform(
-            sparse_vector& result,
+            Vector& result,
             const sparse_vector& rhs,
             KeyTransform key_transform,
             IndexTransform /* index_transform */

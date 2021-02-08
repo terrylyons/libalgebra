@@ -48,7 +48,7 @@ common ancestor for free_tensor_basis and shuffle_tensor_basis classes.
 The implementation of the prod() member function constitutes the essential
 difference between free_tensor_basis and shuffle_tensor_basis.
 */
-template<DEG n_letters, DEG max_degree>
+template<typename, DEG n_letters, DEG max_degree>
 class tensor_basis
 {
 public:
@@ -185,12 +185,12 @@ particular basis keys, i.e. words of length one. The empty word is a
 special key used for the imbedding of letters (words of length one).
 */
 template<typename SCA, typename RAT, DEG n_letters, DEG max_degree>
-class free_tensor_basis : public tensor_basis<n_letters, max_degree>,
+class free_tensor_basis : public tensor_basis<SCA, n_letters, max_degree>,
 						  public basis_traits<With_Degree, n_letters, max_degree>
 {
 public:
 	/// The tensor_basis type.
-	typedef tensor_basis<n_letters, max_degree> TBASIS;
+	typedef tensor_basis<SCA, n_letters, max_degree> TBASIS;
 	/// The rationals.
     typedef SCA SCALAR;
 	typedef RAT RATIONAL;
@@ -243,7 +243,8 @@ static inline typename TBASIS::KEY prod(const typename TBASIS::KEY& k1,
 
 	/// Outputs an std::pair<free_tensor_basis*, KEY> to an std::ostream.
 	inline friend
-		std::ostream& operator<<(std::ostream& os, const std::pair<free_tensor_basis*, typename alg::tensor_basis<n_letters, max_degree>::KEY>& t)
+		std::ostream& operator<<(std::ostream& os, const std::pair<free_tensor_basis*, typename
+		alg::tensor_basis<SCA, n_letters, max_degree>::KEY>& t)
 	{
 		return os << (t.first)->key2string(t.second);
 	}
@@ -277,12 +278,12 @@ particular basis keys, i.e. words of length one. The empty word is a
 special key used for the imbedding of letters (words of length one).
 */
 template<typename SCA, typename RAT, DEG n_letters, DEG max_degree>
-class shuffle_tensor_basis : public tensor_basis<n_letters, max_degree>,
+class shuffle_tensor_basis : public tensor_basis<SCA, n_letters, max_degree>,
 							 public basis_traits<With_Degree, n_letters, max_degree>
 {
 public:
 	/// The tensor_basis type.
-	typedef tensor_basis<n_letters, max_degree> TBASIS;
+	typedef tensor_basis<SCA, n_letters, max_degree> TBASIS;
 	/// Import of the KEY type.
 	typedef typename TBASIS::KEY KEY;
 	/// Import of the MAP type.

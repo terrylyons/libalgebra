@@ -134,12 +134,12 @@ struct TrivialCoeffs
 //template<class BASIS, class MAP = typename BASIS::MAP>
 //class sparse_vector;
 /// Generic Associative Algebra.
-template<typename BASIS,
-        typename Coeffs=TrivialCoeffs<BASIS>,
-        typename VectorType = typename vector_type_selector<Basis, Field>::type>
+template<typename Basis,
+        typename Coeffs=TrivialCoeffs<Basis>,
+        typename VectorType = typename vectors::vector_type_selector<Basis, Coeffs>::type>
 class algebra;
 /// Generic Associative Algebra basis.
-template<DEG n_letters, DEG max_degree = 0>
+template<typename S, DEG n_letters, DEG max_degree = 0>
 class tensor_basis;
 /// Free Associative Algegra Basis. Concatenation product. Non commutative.
 template<typename SCA, typename RAT,

@@ -29,7 +29,7 @@ struct vector_type_selector {
  */
 template<typename Basis,
         typename Coeffs,
-        typename VectorImpl = typename vector_type_selector<Basis, Field>::type
+        typename VectorImpl = typename vector_type_selector<Basis, Coeffs>::type
         >
 class vector : VectorImpl {
 public:
@@ -375,7 +375,7 @@ public:
             vector &result,
             const vector &rhs,
             KeyTransform key_transform,
-            IndexTransform index_transform,
+            IndexTransform index_transform
     ) const {
 #if 0
         UnderlyingVectorType::triangular_buffered_apply_transform(
@@ -390,10 +390,12 @@ public:
             const vector& rhs,
             KeyTransform key_transform
     ) const {
-#if 0 // not yet implemented
-
-#endif
+        UnderlyingVectorType::square_buffered_apply_binary_transform(
+                result, rhs, key_transform
+                );
     }
+
+private:
 
 
 

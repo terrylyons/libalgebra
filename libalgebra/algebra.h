@@ -26,6 +26,13 @@ struct multiplication_operator
     typedef typename Basis::KEY KEY;
     typedef typename Coeffs::S S;
 
+    /// Trivial constructor
+    multiplication_operator() : m_transform() {}
+
+    /// Passthrough constructor for transform
+    template <typename Arg>
+    multiplication_operator(Arg a) : m_transform(a) {}
+
     template <typename Vector>
     inline void operator()(
             Vector& result,
@@ -236,7 +243,9 @@ public:
 	template <unsigned DEPTH1>
 	inline void bufferedmultiplyandsmult(const wrapscalar& ss, const algebra& rhs, algebra& result) const
 	{
-		bufferedmultiplyandsmult(ss, rhs, result, identity<DEPTH1>());
+	    multiplication_operator<BASIS, Coeff, scalar_post_mult> fn(ss.hidden);
+        VECT::buffered_apply_binary_transform(result, rhs, fn);
+		//bufferedmultiplyandsmult(ss, rhs, result, identity<DEPTH1>());
 	}
 private:
 	/// multiplies  *this and rhs adds it * s to result
@@ -258,7 +267,9 @@ public:
 	template <unsigned DEPTH1>
 	inline void bufferedmultiplyandsdiv(const algebra& rhs, const wraprational& ss, algebra& result) const
 	{
-		bufferedmultiplyandsdiv(rhs, ss, result, identity<DEPTH1>());
+        multiplication_operator<BASIS, Coeff, rational_post_div> fn(ss.hidden);
+        VECT::buffered_apply_binary_transform(result, rhs, fn);
+		//bufferedmultiplyandsdiv(rhs, ss, result, identity<DEPTH1>());
 	}
 private:
 	/// multiplies  *this and rhs adds it * s to result

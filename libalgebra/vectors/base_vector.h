@@ -11,7 +11,7 @@ namespace vectors {
 template<typename Basis, typename Field>
 class base_vector {
 public:
-    typedef typename Basis BASIS;
+    typedef Basis BASIS;
     typedef typename Field::S SCALAR;
     typedef typename Field::Q RATIONAL;
 

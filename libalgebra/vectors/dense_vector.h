@@ -32,6 +32,9 @@ class dense_vector : base_vector<Basis, Coeffs>, dtl::requires_order<Basis>
 {
     typedef Storage STORAGE;
     typedef base_vector <Basis, Coeffs> BASE_VEC;
+
+private:
+    // Data members
     STORAGE m_data;
     DIMN m_dimension;
     DEG m_degree = 0;
@@ -68,7 +71,8 @@ public:
     /// Copy constructor
     dense_vector(const dense_vector &v)
             : m_data(v.m_data),
-              m_dimension(0)
+              m_dimension(v.m_dimension),
+              m_degree(v.m_degree)
     {}
 
     /// Unidimensional constructor
@@ -77,6 +81,7 @@ public:
     {
         DIMN idx = resize_for_key(k, degree_tag);
         m_data[idx] = s;
+        set_degree(degree_tag);
     }
 
 private:
@@ -86,13 +91,13 @@ private:
     {
         DEG d = basis.degree(key);
         resize_to_degree(d);
-        return index_from_key(key);
+        return key_to_index(key);
     }
 
     DIMN resize_for_key(const KEY &key, alg::basis::without_degree)
     {
         DIMN idx = key_to_index(key);
-        resize_to_dimension(idx);
+        resize_to_dimension(idx+1);
         return idx;
     }
 
@@ -182,39 +187,65 @@ public:
     const_iterator cend() const
     { return m_data.end(); }
 
-    std::pair<iterator, bool> insert(iterator it, SCALAR val)
+    void insert(iterator it, SCALAR val)
     {
-        //TODO:: implement me
+        *it = val;
     }
 
     void insert(const KEY &key, SCALAR val)
     {
-        //TODO: implement me
+        DIMN idx = key_to_index(key);
+        if (idx >= m_dimension) {
+            resize_to_dimension(idx + 1);
+        }
+        m_data[idx] = val;
     }
 
     template<typename InputIterator>
     void insert(InputIterator begin, InputIterator end)
     {
-        //TODO: implement me
+        typedef std::vector<std::pair<DIMN, SCALAR>> TMPVEC;
+        TMPVEC tmp;
+        tmp.reserve(end - begin);
+
+        DIMN curr, max_index = 0;
+
+        for (InputIterator it=begin; it != end; ++it) {
+            curr = key_to_index(it->first);
+            max_index = (max_index < curr) ? curr : max_index;
+            tmp.push_back(std::pair<DIMN, SCALAR>(curr, it->second));
+        }
+
+        resize_to_dimension(max_index + 1);
+
+        for (typename TMPVEC::const_iterator cit=tmp.begin(); cit != tmp.end(); ++cit) {
+            m_data[cit->first] = cit->second;
+        }
+
     }
 
     void erase(const KEY &key)
     {
-        //TODO: implement me
+        DIMN idx;
+        if ((idx = key_to_index(key)) < m_dimension) {
+            m_data[idx] = zero;
+        }
     }
 
-    void erase(const iterator &it)
+    void erase(iterator &it)
     {
-        //TODO: implement me
+        if (it != end()) {
+            *it = zero;
+        }
     }
 
 public:
 
     void clear()
     {
-        m_data.clear();
-        m_dimension = m_data.size();
-        set_degree(degree_tag);
+        for (DIMN i=0; i<m_dimension; ++i) {
+            m_data[i] = zero;
+        }
     }
 
 public:
@@ -244,9 +275,6 @@ public:
 
     const SCALAR &value(const DIMN dim) const
     {
-        if (dim >= m_dimension) {
-            return zero;
-        }
         return m_data[dim];
     }
 
@@ -261,7 +289,15 @@ public:
 
     bool empty() const
     {
-        m_data.empty();
+        if (m_data.empty()) {
+            return true;
+        }
+        for (DIMN i=0; i<m_dimension; ++i) {
+            if (m_data[i] != zero) {
+                return false;
+            }
+        }
+        return true;
     }
 
 private:
@@ -295,7 +331,7 @@ private:
 
     static DIMN max_dimension(alg::basis::without_degree)
     {
-        return 0;
+        return basis.max_dimension();
     }
 
 public:
@@ -304,12 +340,22 @@ public:
 
     const SCALAR &operator[](const KEY &k) const
     {
-        return value(key_to_index(k));
+        DIMN idx;
+        if ((idx = key_to_index(k)) < m_dimension) {
+            return value(idx);
+        }
+        return zero;
     }
 
     SCALAR &operator[](const KEY &k)
     {
-        return value(key_to_index(k));
+        DIMN idx = key_to_index(k);
+        if ((idx < m_dimension)) {
+            return value(idx);
+        }
+
+        resize_to_dimension(idx+1);
+        return value(idx);
     }
 
 
@@ -368,11 +414,14 @@ public:
     /// Inplace addition
     dense_vector &operator+=(const dense_vector &rhs)
     {
-        if (empty())
-            return (*this = rhs);
-
-        if (rhs.empty())
+        if (empty()) {
+            *this = rhs;
             return *this;
+        }
+
+        if (rhs.empty()) {
+            return *this;
+        }
 
         if (rhs.m_dimension > m_dimension) {
             resize_to_dimension(rhs.m_dimension);
@@ -388,8 +437,9 @@ public:
     /// Inplace subtraction
     dense_vector &operator-=(const dense_vector &rhs)
     {
-        if (rhs.empty())
+        if (rhs.empty()) {
             return *this;
+        }
 
         if (rhs.m_dimension > m_dimension) {
             resize_to_dimension(rhs.m_dimension);
@@ -491,9 +541,9 @@ public:
 
     DECLARE_FUSED_OP(sub_scal_prod, -=, *, SCALAR);
 
-    DECLARE_FUSED_OP(add_scal_div, +=, *, RATIONAL);
+    DECLARE_FUSED_OP(add_scal_div, +=, /, RATIONAL);
 
-    DECLARE_FUSED_OP(sub_scal_div, +=, *, RATIONAL);
+    DECLARE_FUSED_OP(sub_scal_div, -=, /, RATIONAL);
 
 #undef DECLARE_FUSED_OP
 

@@ -558,6 +558,29 @@ public:
         }
         return ans;
     }
+
+    /// Compute the l-infinity norm of a sparse vector
+    SCALAR NormLInf() const
+    {
+        const_iterator i;
+        SCALAR ans(zero);
+        for (i = begin(); i != end(); ++i) {
+            ans = std::max(abs(i->second), ans);
+        }
+        return ans;
+    }
+
+    /// Computes the l-infinity norm of degree d component of a sparse vector with respect to this basis
+    inline SCALAR NormLInf(const DEG &d) const {
+        const_iterator i;
+        SCALAR ans(zero);
+        for (i = begin(); i != end(); ++i) {
+            if (d == basis.degree(i->first))
+                ans = std::max(abs(i->second), ans);
+        }
+        return ans;
+    }
+
     /// Outputs a sparse_vector to an std::ostream.
     /**
     It is assumed that there is std::ostream support to

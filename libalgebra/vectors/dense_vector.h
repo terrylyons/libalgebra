@@ -644,6 +644,121 @@ public:
         return os;
     }
 
+public:
+
+    // Transform methods
+
+    template <typename Vector, typename KeyTransform>
+    void triangular_buffered_apply_binary_transform(
+            Vector& result,
+            const dense_vector& rhs,
+            KeyTransform key_transform,
+            const DEG max_depth
+            ) const
+    {
+        const DEG max_degree = std::min(max_depth, m_degree + rhs.m_degree);
+
+        DEG lhs_deg_min, lhs_deg_max, rhs_deg;
+
+        for (DEG out_deg = max_degree; out_deg > 0; --out_deg) {
+            lhs_deg_min = std::max(DEG(0), out_deg - rhs.m_degree);
+            lhs_deg_max = std::min(out_deg, m_degree);
+            for (DEG lhs_deg = lhs_deg_max; lhs_deg > lhs_deg_min; --lhs_deg) {
+                rhs_deg = out_deg - lhs_deg;
+
+                for (DIMN i=start_of_degree(lhs_deg);
+                        i < start_of_degree(lhs_deg + 1);
+                        ++i) {
+                    for (DIMN j=start_of_degree(rhs_deg);
+                            j < start_of_degree(rhs_deg+1);
+                            ++j) {
+                        key_transform(
+                                result,
+                                index_to_key(i),
+                                m_data[i],
+                                index_to_key(j),
+                                rhs.m_data[j]
+                                );
+                    }
+                }
+
+            }
+        }
+
+    }
+
+    template <typename Vector, typename KeyTransform, typename IndexTransform>
+    void triangular_buffered_apply_binary_transform(
+            Vector& result,
+            const dense_vector& rhs,
+            KeyTransform key_transform,
+            IndexTransform index_transform,
+            const DEG max_depth
+            ) const
+    {
+        dense_vector& d_result = static_cast<dense_vector&>(result);
+        const DEG max_degree = std::min(max_depth, m_degree + rhs.m_degree);
+
+        DEG lhs_deg_min, lhs_deg_max, rhs_deg;
+
+        for (DEG out_deg = max_degree; out_deg > 0; --out_deg) {
+            lhs_deg_min = std::max(DEG(0), out_deg - rhs.m_degree);
+            lhs_deg_max = std::min(out_deg, m_degree);
+            for (DEG lhs_deg = lhs_deg_max; lhs_deg > lhs_deg_min; --lhs_deg) {
+                rhs_deg = out_deg - lhs_deg;
+
+                DEG lh_deg_start = start_of_degree(lhs_deg);
+                DEG rh_deg_start = start_of_degree(rhs_deg);
+
+                index_transform(
+                        &d_result.m_data[start_of_degree(out_deg)],
+                        &m_data[start_of_degree(lhs_deg)],
+                        &rhs.m_data[start_of_degree(rhs_deg)],
+                        start_of_degree(lhs_deg + 1) - lh_deg_start,
+                        start_of_degree(rhs_deg + 1) - rh_deg_start
+                        );
+            }
+        }
+    }
+
+    template <typename Vector, typename KeyTransform>
+    void square_buffered_apply_binary_transform(
+            Vector& result,
+            const dense_vector& rhs,
+            KeyTransform key_transform
+    ) const
+    {
+        for (DIMN i=0; i < m_dimension; ++i) {
+            for (DIMN j = 0; j < rhs.m_dimension; ++j) {
+                key_transform(
+                        result,
+                        index_to_key(i),
+                        m_data[i],
+                        index_to_key(j),
+                        rhs.m_data[j]
+                        );
+            }
+        }
+    }
+
+    template <typename Vector, typename KeyTransform, typename IndexTransform>
+    void square_buffered_apply_binary_transform(
+            Vector& result,
+            const dense_vector& rhs,
+            KeyTransform /*key_transform*/,
+            IndexTransform index_transform
+    ) const
+    {
+        dense_vector& d_result = static_cast<dense_vector&>(result);
+
+        index_transform(
+                &d_result.m_data[0],
+                &m_data[0],
+                &rhs.m_data[0],
+                m_dimension,
+                rhs.m_dimension
+        );
+    }
 
 };
 

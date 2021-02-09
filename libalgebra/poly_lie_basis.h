@@ -52,6 +52,12 @@ public:
 	typedef poly_lie<SCA, RAT, n_letters, max_degree> POLY_LIE;
 
 public:
+    // Property tags
+    typedef alg::basis::with_degree<max_degree> degree_tag;
+    typedef alg::basis::unordered ordering_tag;
+
+
+public:
 	/// Default constructor. Empty basis.
 	poly_lie_basis(void) {}
 public:

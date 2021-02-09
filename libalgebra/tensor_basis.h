@@ -68,6 +68,9 @@ public:
 #endif
 #endif // !ORDEREDMAP
 #endif
+    typedef alg::basis::with_degree<max_degree> degree_tag;
+    typedef alg::basis::ordered<std::less<KEY>> ordering_tag;
+
 
 private:
 	/// The size of the full basis
@@ -167,6 +170,56 @@ public:
 		}
 		return oss.str();
 	}
+
+public:
+
+    static DIMN key_to_index(const KEY& key)
+    {
+        DIMN idx = 0;
+        if (key.size() == 0) {
+            return idx;
+        }
+
+        KEY tmp(key);
+        while (tmp.size() > 0) {
+            idx *= n_letters;
+            idx += static_cast<DIMN>(key.FirstLetter());
+        }
+        return idx;
+    }
+
+    static KEY index_to_key(const DIMN idx)
+    {
+        static boost::recursive_mutex __access;
+        boost::lock_guard<boost::recursive_mutex> lock(__access);
+        //static const std::vector<KEY> __cache = _key_of_index_cache();
+        //assert(idx < __cache.size());
+        //return __cache[idx];
+
+        static std::map<DIMN, KEY> __cache;
+
+        auto it = __cache.find(idx);
+        if (it != __cache.end())
+            return it->second;
+
+        KEY rv{};
+        if (idx == 0)
+            return rv;
+
+        DIMN pow = n_letters;
+        DIMN i = idx;
+
+        DIMN l;
+        while (i) {
+            i -= 1;
+            l = i % n_letters;
+            rv.push_back(LET{1 + l});
+            i /= n_letters;
+        }
+        return __cache[idx] = rv.reverse();
+    }
+
+
 };
 
 
@@ -295,6 +348,10 @@ public:
 	typedef shuffle_tensor<SCA, RAT, n_letters, max_degree> TENSOR;
 
 	typedef algebra<free_tensor_basis<SCA, RAT, n_letters, max_degree>> FTENSOR;
+
+    typedef alg::basis::with_degree<max_degree> degree_tag;
+    typedef alg::basis::ordered<std::less<KEY>> ordering_tag;
+
 public:
 	/// Default constructor.
 	shuffle_tensor_basis(void) {}

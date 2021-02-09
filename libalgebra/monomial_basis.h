@@ -182,6 +182,13 @@ public:
     typedef SCA SCALAR;
 	/// The multi_polynomial element type.
 	typedef multi_polynomial<SCA, RAT, n_letters, max_degree> MULTIPOLY;
+
+
+public:
+    // Property tags
+    typedef alg::basis::with_degree<max_degree> degree_tag;
+    typedef alg::basis::unordered ordering_tag;
+
 public:
 	/// Default constructor.
 	free_monomial_basis(void) {}

@@ -10,7 +10,30 @@
 namespace alg {
 namespace utils {
 
-    using std::enable_if;
+struct true_type
+{
+    static const bool value = true;
+};
+
+struct false_type
+{
+    static const bool value = false;
+};
+
+
+// C++98 does not have enable_if, so define our own
+template <bool Cond, typename T = void>
+struct enable_if {};
+
+template <typename T>
+struct enable_if<true, T>
+{
+    typedef T type;
+};
+
+
+
+
 
 
 } // namespace utils

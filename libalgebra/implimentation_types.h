@@ -2,7 +2,7 @@
 /* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai, 
-Greg Gyurkó and Arend Janssen. 
+Greg Gyurkï¿½ and Arend Janssen. 
 
 Distributed under the terms of the GNU General Public License, 
 Version 3. (See accompanying file License.txt)
@@ -29,5 +29,10 @@ namespace alg {
 
 	/// Used for large integer calculations where overflow might otherwise occur
 	typedef unsigned long long LET64;
+
+	/// Used for dimension of of vector elements and indices in dense vectors
+	typedef size_t DIMN;
+
+
 }
 #endif // implimetation_types_h__

@@ -46,6 +46,13 @@ public:
     typedef std::map <KEY, SCA, KEY_LESS> MAP;
     /// The Multivariate Polynomials Algebra element type.
     typedef poly <SCA, RAT> POLY;
+
+
+public:
+    // Property tags
+    typedef alg::basis::without_degree degree_tag;
+    typedef alg::basis::unordered ordering_tag;
+
 public:
     /// Default constructor. Empty basis.
     poly_basis(void) {}

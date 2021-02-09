@@ -40,6 +40,7 @@ public:
 	typedef typename ALG::iterator iterator;
 	/// Import of the constant iterator type.
 	typedef typename ALG::const_iterator const_iterator;
+
 public:
 	/// Default constructor. Zero lie element.
 	poly_lie(void) {}

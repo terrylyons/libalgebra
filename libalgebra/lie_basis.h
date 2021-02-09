@@ -16,6 +16,9 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_LIEBASISH_SEEN
 #define DJC_COROPA_LIBALGEBRA_LIEBASISH_SEEN
 
+
+#include "libalgebra/basis/basis.h"
+
 /// The Hall Basis class.
 /**
 
@@ -363,6 +366,12 @@ public:
 	/// The rationals.
     typedef SCA SCALAR;
 	typedef RAT RATIONAL;
+
+public:
+
+    typedef alg::basis::with_degree<max_degree> degree_tag;
+    typedef alg::basis::ordered<std::less<KEY>> ordering_tag;
+
 public:
 	/// Constructs the basis for a finite number of letters.
 	lie_basis(void)
@@ -480,6 +489,27 @@ private:
 	{
 		return os << t.first->key2string(t.second);
 	}
+
+public:
+
+    // index_to_key and friends
+
+    /// Convert a key to index in basis order
+    static DIMN key_to_index(const KEY k)
+    {
+	    return DIMN(k - 1);
+    }
+
+    /// Convert an index to key
+    static KEY index_to_key(const DIMN idx)
+    {
+	    return KEY(idx + 1);
+    }
+
+    static DIMN start_of_degree(const DEG d)
+    {}
+
+
 };
 
 

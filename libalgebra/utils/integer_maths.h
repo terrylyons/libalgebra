@@ -128,7 +128,7 @@ namespace Mobius {
 The strategy is to compute -1 times the Mobius function
 of the next divisor if the number is square free, and 0 otherwise.
 */
-template<typename Divisor, bool= true, bool= square_free<Divisor>::value>
+template<typename Divisor, bool= true, bool= square_free<Divisor>::ans>
 struct mobius_func_impl
 {
     enum : Long

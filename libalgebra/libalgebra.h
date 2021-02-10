@@ -102,7 +102,7 @@ typedef unsigned __int64    uint64_t;
 */
 
 #include "libalgebra/vectors/vectors.h"
-
+#include "libalgebra/utils/integer_maths.h"
 
 namespace alg
 {

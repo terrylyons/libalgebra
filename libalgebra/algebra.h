@@ -79,7 +79,7 @@ public:
 	typedef typename VECT::SCALAR SCALAR;	
 	/// Import of the RATIONAL type from sparse_vector.
 	typedef typename VECT::RATIONAL RATIONAL;	
-	
+
 
 	static const DEG MAX_DEGREE = BASIS::MAX_DEGREE;
 
@@ -170,7 +170,7 @@ public:
 	};
 	/// multiplies  *this and rhs adds it * s to result
 	template <unsigned DEPTH1>
-	inline void bufferedmultiplyandsmult(const wrapscalar& ss, const algebra& rhs, algebra& result) const
+	inline void bufferedmultiplyandsmult(const algebra& rhs, const wrapscalar& ss, algebra& result) const
 	{
 	    multiplication_operator<BASIS, Coeff, scalar_post_mult> fn(ss.hidden);
         VECT::buffered_apply_binary_transform(result, rhs, fn);
@@ -251,7 +251,7 @@ public:
 	inline algebra& mul_scal_prod(const algebra& rhs, const SCALAR& s)
 	{
 		algebra result;
-		bufferedmultiplyandsmult(rhs, wrapscalar(s), result);
+		bufferedmultiplyandsmult<MAX_DEGREE>(rhs, wrapscalar(s), result);
 		this->swap(result);
 		return *this;
 	}

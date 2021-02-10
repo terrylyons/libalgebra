@@ -507,7 +507,9 @@ public:
     }
 
     static DIMN start_of_degree(const DEG d)
-    {}
+    {
+	    return 0;
+    }
 
 
 };

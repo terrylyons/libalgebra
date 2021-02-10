@@ -43,7 +43,7 @@ namespace dtl {
     template <DEG NoLetters, DEG Level, DEG Divisor=1, DEG Remainder=(Level % Divisor)>
     struct hall_set_level_size
     {
-        enum : long long
+        enum
         {
             value = hall_set_level_size<NoLetters, Level, Divisor+1>::value
         };
@@ -57,7 +57,7 @@ namespace dtl {
     template <DEG NoLetters, DEG Level, DEG Divisor>
     struct hall_set_level_size<NoLetters, Level, Divisor, 0>
     {
-        enum : long long
+        enum
         {
             value = mobius_func<Divisor>::value
                     * ConstPower<NoLetters, Level/Divisor>::ans
@@ -71,9 +71,9 @@ namespace dtl {
     template <DEG NoLetters, DEG Level>
     struct hall_set_level_size<NoLetters, Level, Level, 0>
     {
-        enum : long long
+        enum
         {
-            value = mobius_func<Level> * NoLetters
+            value = mobius_func<Level>::value * NoLetters
         };
     };
 
@@ -83,7 +83,7 @@ namespace dtl {
     template <DEG NoLetters>
     struct hall_set_level_size<NoLetters, 1, 1, 0>
     {
-        enum : long long
+        enum
         {
             value = NoLetters
         };
@@ -95,7 +95,7 @@ namespace dtl {
     template <DEG NoLetters, DEG Divisor>
     struct hall_set_level_size<NoLetters, 0, Divisor, 0>
     {
-        enum : long long
+        enum
         {
             value = 0
         };
@@ -107,8 +107,8 @@ namespace dtl {
     {
         enum : DIMN
         {
-            value = hall_set_level_size<NoLetters, MaxLevel>::value
-                    * hall_set_size<NoLetters, MaxLevel-1>::value
+            value = (hall_set_level_size<NoLetters, MaxLevel-1>::value / (MaxLevel - 1))
+                     + hall_set_size<NoLetters, MaxLevel-1>::value
         };
     };
 
@@ -117,7 +117,7 @@ namespace dtl {
     {
         enum : DIMN
         {
-            value = NoLetters
+            value = 0
         };
     };
 
@@ -147,7 +147,9 @@ namespace dtl {
         return tmp;
     }
 
-
+    template <DEG NoLetters, DEG MaxDepth>
+    const std::array<DIMN, MaxDepth+1> hall_set_info<NoLetters, MaxDepth>::degree_sizes
+        = populate_hall_set_size_array<NoLetters, MaxDepth>();
 
 }
 
@@ -472,8 +474,10 @@ private:
 
 template<typename SCA, typename RAT, DEG n_letters, DEG max_degree>
 class lie_basis : protected hall_basis<n_letters>,
-				  public basis_traits<With_Degree, n_letters, max_degree>
+				  public basis_traits<With_Degree, n_letters, max_degree>,
+				  dtl::hall_set_info<n_letters, max_degree>
 {
+    typedef dtl::hall_set_info<n_letters, max_degree> SIZE_INFO;
 public:
 	/// Import of the KEY type.
 	typedef typename hall_basis<n_letters>::KEY KEY;
@@ -505,8 +509,8 @@ public:
 
 public:
 
-    typedef alg::basis::with_degree<max_degree> degree_tag;
-    typedef alg::basis::ordered<std::less<KEY>> ordering_tag;
+    typedef basis::with_degree<max_degree> degree_tag;
+    typedef basis::ordered<std::less<KEY>> ordering_tag;
 
 public:
 	/// Constructs the basis for a finite number of letters.
@@ -644,7 +648,8 @@ public:
 
     static DIMN start_of_degree(const DEG d)
     {
-	    return 0;
+	    assert(d <= max_degree+1);
+	    return SIZE_INFO::degree_sizes[d];
     }
 
 

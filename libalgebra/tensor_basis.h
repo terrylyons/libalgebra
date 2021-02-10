@@ -60,22 +60,22 @@ struct tensor_size_info
     static const DEG mantissa_bits_stored = std::numeric_limits<word_t>::digits - 1;
     static const DEG max_depth = mantissa_bits_stored / bits_per_letter;
 
-    static const std::array<DIMN, max_depth + 1> degree_sizes;
+    static const std::array<DIMN, max_depth + 2> degree_sizes;
 
 };
 
 template <DEG NoLetters>
-std::array<DIMN, tensor_size_info<NoLetters>::max_depth + 1>
+std::array<DIMN, tensor_size_info<NoLetters>::max_depth + 2>
 populate_tensor_size_info_array()
 {
-    std::array<DIMN, tensor_size_info<NoLetters>::max_depth + 1> tmp;
+    std::array<DIMN, tensor_size_info<NoLetters>::max_depth + 2> tmp;
     alg::utils::populate_array<depth_size, NoLetters, tensor_size_info<NoLetters>::max_depth
-            + 1>::fill(tmp);
+            + 2>::fill(tmp);
     return tmp;
 }
 
 template <DEG NoLetters>
-const std::array<DIMN, tensor_size_info<NoLetters>::max_depth + 1>
+const std::array<DIMN, tensor_size_info<NoLetters>::max_depth + 2>
         tensor_size_info<NoLetters>::degree_sizes = populate_tensor_size_info_array<NoLetters>();
 
 } // namespace dtl
@@ -279,7 +279,7 @@ public:
 
     static DIMN start_of_degree(const DEG deg)
     {
-	    assert(deg <= max_degree);
+	    assert(deg <= max_degree+1);
 	    return SIZE_INFO::degree_sizes[deg];
     }
 

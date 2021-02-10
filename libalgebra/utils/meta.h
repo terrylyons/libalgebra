@@ -32,8 +32,27 @@ struct enable_if<true, T>
 };
 
 
+template <template <unsigned, unsigned> class Compute, unsigned W, unsigned D>
+struct populate_array
+{
+    template <typename Array>
+    static inline void fill(Array& arr)
+    {
+        arr[D] = Compute<W, D>::value;
+        populate_array<Compute, W, D-1>::fill(arr);
+    }
 
+};
 
+template <template <unsigned, unsigned> class Compute, unsigned W>
+struct populate_array<Compute, W, 0>
+{
+    template <typename Array>
+    static inline void fill(Array& arr)
+    {
+        arr[0] = Compute<W, 0>::value;
+    }
+};
 
 
 } // namespace utils

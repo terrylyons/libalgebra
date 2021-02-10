@@ -18,10 +18,67 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_TENSORBASISH_SEEN
 #define DJC_COROPA_LIBALGEBRA_TENSORBASISH_SEEN
 
-
+#include <limits>
 #include "_tensor_basis.h"
 #include "constpower.h"
+#include "constlog2.h"
 #include "basis_traits.h"
+
+
+namespace dtl {
+
+template <DEG NoLetters, DEG Depth>
+struct depth_size
+{
+    enum : DIMN {
+        value = (ConstPower<NoLetters, Depth>::ans - 1) / (NoLetters - 1)
+    };
+};
+/*
+template <DEG NoLetters>
+struct depth_size<NoLetters, 1>
+{
+    enum : DIMN {
+        value = 1 + NoLetters
+    };
+};
+
+template <DEG NoLetters>
+struct depth_size<NoLetters, 0>
+{
+    enum : DIMN {
+        value = 0
+    };
+};
+*/
+
+
+template<DEG NoLetters>
+struct tensor_size_info
+{
+    static const DEG bits_per_letter = ConstLog2<NoLetters - 1>::ans + 1;
+    static const DEG mantissa_bits_stored = std::numeric_limits<word_t>::digits - 1;
+    static const DEG max_depth = mantissa_bits_stored / bits_per_letter;
+
+    static const std::array<DIMN, max_depth + 1> degree_sizes;
+
+};
+
+template <DEG NoLetters>
+std::array<DIMN, tensor_size_info<NoLetters>::max_depth + 1>
+populate_tensor_size_info_array()
+{
+    std::array<DIMN, tensor_size_info<NoLetters>::max_depth + 1> tmp;
+    alg::utils::populate_array<depth_size, NoLetters, tensor_size_info<NoLetters>::max_depth
+            + 1>::fill(tmp);
+    return tmp;
+}
+
+template <DEG NoLetters>
+const std::array<DIMN, tensor_size_info<NoLetters>::max_depth + 1>
+        tensor_size_info<NoLetters>::degree_sizes = populate_tensor_size_info_array<NoLetters>();
+
+} // namespace dtl
 
 /// Implements an interface for the set of words of a finite number of letters.
 /** 
@@ -49,8 +106,9 @@ The implementation of the prod() member function constitutes the essential
 difference between free_tensor_basis and shuffle_tensor_basis.
 */
 template<typename, DEG n_letters, DEG max_degree>
-class tensor_basis
+class tensor_basis : dtl::tensor_size_info<n_letters>
 {
+    typedef dtl::tensor_size_info<n_letters> SIZE_INFO;
 public:
 	/// A key is an dual ended queue of letters
 	typedef _tensor_basis<n_letters, max_degree> KEY;
@@ -219,6 +277,11 @@ public:
         return __cache[idx] = rv.reverse();
     }
 
+    static DIMN start_of_degree(const DEG deg)
+    {
+	    assert(deg <= max_depth);
+	    return SIZE_INFO::degree_sizes[deg];
+    }
 
 };
 

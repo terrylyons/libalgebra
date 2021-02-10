@@ -279,7 +279,7 @@ public:
 
     static DIMN start_of_degree(const DEG deg)
     {
-	    assert(deg <= max_depth);
+	    assert(deg <= max_degree);
 	    return SIZE_INFO::degree_sizes[deg];
     }
 

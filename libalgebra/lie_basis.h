@@ -18,6 +18,142 @@ Version 3. (See accompanying file License.txt)
 
 
 #include "libalgebra/basis/basis.h"
+#include "libalgebra/utils/integer_maths.h"
+
+namespace dtl {
+
+    using alg::integer_maths::divisor_calc;
+    using alg::integer_maths::mobius_func;
+
+    /**
+     * The size of the Hall set with n letters has number of members at level k given by
+     *
+     * (1/k) * \sum_{d | k} \mu(d) n^{K/d}
+     *
+     * where \mu is the Mobius function and the sum is taken over all divisors of d.
+     */
+
+    /*
+    Struct for computing the size of a layer in the Hall set.
+
+    We recurse down through divisors, adding on the corresponding
+    term from the formula for the size of the layer. This quantity
+    is not normalised.
+    */
+    template <DEG NoLetters, DEG Level, DEG Divisor=1, DEG Remainder=(Level % Divisor)>
+    struct hall_set_level_size
+    {
+        enum : long long
+        {
+            value = hall_set_level_size<NoLetters, Level, Divisor+1>::value
+        };
+
+    };
+
+    /*
+    Specialisation for divisors: multiply mobius by exponent and add to next
+    divisor term value.
+    */
+    template <DEG NoLetters, DEG Level, DEG Divisor>
+    struct hall_set_level_size<NoLetters, Level, Divisor, 0>
+    {
+        enum : long long
+        {
+            value = mobius_func<Divisor>::value
+                    * ConstPower<NoLetters, Level/Divisor>::ans
+                    + hall_set_level_size<NoLetters, Level, Divisor+1>::value
+        };
+    };
+
+    /*
+    Specialisation for divisor = number (terminal case).
+    */
+    template <DEG NoLetters, DEG Level>
+    struct hall_set_level_size<NoLetters, Level, Level, 0>
+    {
+        enum : long long
+        {
+            value = mobius_func<Level> * NoLetters
+        };
+    };
+
+    /*
+    Specialisation for 1
+    */
+    template <DEG NoLetters>
+    struct hall_set_level_size<NoLetters, 1, 1, 0>
+    {
+        enum : long long
+        {
+            value = NoLetters
+        };
+    };
+
+    /*
+    Specialisation for 0.
+    */
+    template <DEG NoLetters, DEG Divisor>
+    struct hall_set_level_size<NoLetters, 0, Divisor, 0>
+    {
+        enum : long long
+        {
+            value = 0
+        };
+    };
+
+
+    template <DEG NoLetters, DEG MaxLevel>
+    struct hall_set_size
+    {
+        enum : DIMN
+        {
+            value = hall_set_level_size<NoLetters, MaxLevel>::value
+                    * hall_set_size<NoLetters, MaxLevel-1>::value
+        };
+    };
+
+    template <DEG NoLetters>
+    struct hall_set_size<NoLetters, 1>
+    {
+        enum : DIMN
+        {
+            value = NoLetters
+        };
+    };
+
+    template <DEG NoLetters>
+    struct hall_set_size<NoLetters, 0>
+    {
+        enum : DIMN
+        {
+            value = 0
+        };
+    };
+
+
+    template <DEG NoLetters, DEG MaxDepth>
+    struct hall_set_info
+    {
+        static const std::array<DIMN, MaxDepth+1> degree_sizes;
+    };
+
+
+    template <DEG NoLetters, DEG MaxDepth>
+    std::array<DIMN, MaxDepth+1>
+    populate_hall_set_size_array()
+    {
+        std::array<DIMN, MaxDepth+1> tmp;
+        utils::populate_array<hall_set_size, NoLetters, MaxDepth>::fill(tmp);
+        return tmp;
+    }
+
+
+
+}
+
+
+
+
 
 /// The Hall Basis class.
 /**

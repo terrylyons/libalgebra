@@ -49,6 +49,11 @@ const typename Field::S base_vector<Basis, Field>::zero(0);
 template<typename Basis, typename Field>
 const typename Field::S base_vector<Basis, Field>::mone(-1);
 
+template <typename Basis, typename Field>
+const typename alg::basis::basis_traits<Basis>::degree_tag
+    base_vector<Basis, Field>::degree_tag;
+
+
 } // namespace alg
 } // namespace vectors
 

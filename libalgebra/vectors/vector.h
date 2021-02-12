@@ -11,10 +11,36 @@
 namespace alg {
 namespace vectors {
 
+
 template<typename Basis, typename Field>
-struct vector_type_selector {
-    typedef sparse_vector<Basis, Field> type;
+struct vector_type_selector;
+
+
+
+template<typename Basis,
+        typename Coeffs,
+        typename VectorImpl = typename vector_type_selector<Basis, Coeffs>::type
+>
+class vector;
+
+
+
+namespace dtl {
+class vector_base_access
+{
+public:
+
+    template<typename Basis, typename Coeffs, typename Vector>
+    static Vector& convert(vector<Basis, Coeffs, Vector>& arg)
+    {
+        return arg;
+    }
+
 };
+}
+
+
+
 
 
 /// Main vector interface
@@ -27,10 +53,7 @@ struct vector_type_selector {
  * @tparam VectorImpl The underlying vector class to use. Selected automatically
  * based on the vector_type_selector trait.
  */
-template<typename Basis,
-        typename Coeffs,
-        typename VectorImpl = typename vector_type_selector<Basis, Coeffs>::type
-        >
+template<typename Basis, typename Coeffs, typename VectorImpl>
 class vector : VectorImpl {
 public:
 
@@ -51,6 +74,8 @@ protected:
     // since we might need to access the class directly in order to
     // optimise some operations.
     typedef VectorImpl UnderlyingVectorType;
+
+    friend class dtl::vector_base_access;
 
 public:
 
@@ -77,6 +102,8 @@ public:
     // Utility
     using UnderlyingVectorType::comp;
 
+protected:
+    using UnderlyingVectorType::degree_tag;
 
 protected:
 
@@ -116,10 +143,13 @@ public:
         //TODO: Implement me
     }
 
-    /// Create new vector for result of multiplication
-    friend vector create_for_mul(const vector &lhs, const vector &rhs) {
-        return UnderlyingVectorType::create_for_mul(lhs, rhs);
+protected:
+
+    bool ensure_sized_for_degree(const DEG deg)
+    {
+        return UnderlyingVectorType::ensure_sized_for_degree(deg);
     }
+
 
 public:
 
@@ -356,6 +386,28 @@ public:
 
 public:
 
+    // Information methods
+
+    DEG degree() const
+    {
+        return degree_impl(degree_tag);
+    }
+
+private:
+
+    template <DEG D>
+    DEG degree_impl(alg::basis::with_degree<D>) const
+    {
+        return UnderlyingVectorType::degree();
+    }
+
+    DEG degree_impl(alg::basis::without_degree) const
+    {
+        return 0;
+    }
+
+public:
+
     // Apply transform methods
 
     /// Buffered apply transform with separate transforms
@@ -448,6 +500,11 @@ private:
 
 
 };
+
+
+
+
+
 
 
 } // namespace vectors

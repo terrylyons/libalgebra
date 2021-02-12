@@ -19,37 +19,51 @@ Version 3. (See accompanying file License.txt)
 #define DJC_COROPA_LIBALGEBRA_ALGEBRAH_SEEN
 
 /// Temporary implementation of a basis-level key_transform for multiplication.
-template <typename Basis, typename Coeffs, typename Transform>
-struct multiplication_operator
+
+
+struct one_method_multiplication_tag {};
+struct two_method_multiplication_tag {};
+
+template <typename SelectBasis>
+struct basis_multiplication_selector
 {
+    typedef one_method_multiplication_tag tag;
 
-    typedef typename Basis::KEY KEY;
-    typedef typename Coeffs::S S;
+    template <typename Basis, typename Coeffs, typename Transform>
+    struct key_operator
+    {
 
-    /// Trivial constructor
-    multiplication_operator() : m_transform() {}
+        typedef typename Basis::KEY KEY;
+        typedef typename Coeffs::S S;
 
-    /// Passthrough constructor for transform
-    template <typename Arg>
-    multiplication_operator(Arg a) : m_transform(a) {}
+        /// Trivial constructor
+        key_operator() : m_transform() {}
 
-    template <typename Vector>
-    inline void operator()(
-            Vector& result,
-            const KEY& lhs_key,
-            const S& lhs_val,
-            const KEY& rhs_key,
-            const S& rhs_val
-    ) {
-        result.add_scal_prod(
-                Vector::basis.prod(lhs_key, rhs_key),
-                m_transform(lhs_val * rhs_val)
-                );
-    }
+        /// Passthrough constructor for transform
+        template <typename Arg>
+        key_operator(Arg a) : m_transform(a) {}
 
-private:
-    Transform m_transform;
+        template <typename Vector>
+        inline void operator()(
+                Vector& result,
+                const KEY& lhs_key,
+                const S& lhs_val,
+                const KEY& rhs_key,
+                const S& rhs_val
+        ) {
+            result.add_scal_prod(
+                    Vector::basis.prod(lhs_key, rhs_key),
+                    m_transform(lhs_val * rhs_val)
+            );
+        }
+
+    private:
+        Transform m_transform;
+    };
 };
+
+
+
 
 
 /// A class to store and manipulate associative algebras elements.
@@ -63,12 +77,12 @@ use as the first arg of sparse_vector::add_scal_prod(); it can be a key or a spa
 (3) The sparse_vector::MAP class must provide the swap() member function.
 */
 template<typename Basis, typename Coeff, typename VectorType>
-class algebra : public vectors::vector<Basis, Coeff>
+class algebra : public vectors::vector<Basis, Coeff, VectorType>
 {
 public:
     typedef Basis BASIS;
 	/// The inherited sparse vector type.
-	typedef vectors::vector<Basis, Coeff> VECT;
+	typedef vectors::vector<Basis, Coeff, VectorType> VECT;
 	/// Import of the iterator type from sparse_vector.
 	typedef typename VECT::iterator iterator;
 	/// Import of the constant iterator type from sparse_vector.
@@ -136,13 +150,42 @@ public:
 	struct identity {}; 
 
 
+    template <typename Transform>
+    inline void buffered_apply_binary_transform(
+            algebra& result,
+            const algebra& rhs,
+            Transform fn,
+            one_method_multiplication_tag
+            ) const
+    {
+        typename basis_multiplication_selector<BASIS>::
+            template key_operator<BASIS, Coeff, Transform>
+            key_fn(fn);
+        VECT::buffered_apply_binary_transform(result, rhs, key_fn);
+    }
+
+    template <typename Transform>
+    inline void buffered_apply_binary_transform(
+            algebra& result,
+            const algebra& rhs,
+            Transform fn,
+            two_method_multiplication_tag
+    ) const
+    {
+        typename basis_multiplication_selector<BASIS>::
+                template index_operator<BASIS, Coeff, Transform> index_fn(fn);
+        typename basis_multiplication_selector<BASIS>::
+                template key_operator<BASIS, Coeff, Transform> key_fn(fn);
+        VECT::buffered_apply_binary_transform(result, rhs, key_fn, index_fn);
+    }
+
+
 	/// multiplies *this and rhs adding it to result
 	template <unsigned DEPTH1>
 	inline void bufferedmultiplyandadd(const algebra& rhs, algebra& result) const
 	{
-	    multiplication_operator<Basis, Coeff, scalar_passthrough> fn;
-	    VECT::buffered_apply_binary_transform(result, rhs, fn);
-		//bufferedmultiplyandadd( rhs, result, identity<DEPTH1>());
+        typename basis_multiplication_selector<BASIS>::tag tag;
+	    buffered_apply_binary_transform(result, rhs, scalar_passthrough(), tag);
 	}
 
 public:
@@ -150,9 +193,8 @@ public:
 	template <unsigned DEPTH1>
 	inline void bufferedmultiplyandsub(const algebra& rhs, algebra& result) const
 	{
-        multiplication_operator<Basis, Coeff, scalar_minus> fn;
-        VECT::buffered_apply_binary_transform(result, rhs, fn);
-        //bufferedmultiplyandsub(rhs, result, identity<DEPTH1>());
+        typename basis_multiplication_selector<BASIS>::tag tag;
+        buffered_apply_binary_transform(result, rhs, scalar_minus(), tag);
 	}
 
 public:
@@ -172,9 +214,8 @@ public:
 	template <unsigned DEPTH1>
 	inline void bufferedmultiplyandsmult(const algebra& rhs, const wrapscalar& ss, algebra& result) const
 	{
-	    multiplication_operator<BASIS, Coeff, scalar_post_mult> fn(ss.hidden);
-        VECT::buffered_apply_binary_transform(result, rhs, fn);
-		//bufferedmultiplyandsmult(ss, rhs, result, identity<DEPTH1>());
+        typename basis_multiplication_selector<BASIS>::tag tag;
+        buffered_apply_binary_transform(result, rhs, scalar_post_mult(ss.hidden), tag);
 	}
 
 public:
@@ -182,9 +223,8 @@ public:
 	template <unsigned DEPTH1>
 	inline void bufferedmultiplyandsdiv(const algebra& rhs, const wraprational& ss, algebra& result) const
 	{
-        multiplication_operator<BASIS, Coeff, rational_post_div> fn(ss.hidden);
-        VECT::buffered_apply_binary_transform(result, rhs, fn);
-		//bufferedmultiplyandsdiv(rhs, ss, result, identity<DEPTH1>());
+        typename basis_multiplication_selector<BASIS>::tag tag;
+        buffered_apply_binary_transform(result, rhs, rational_post_div(ss.hidden), tag);
 	}
 
 public:
@@ -202,6 +242,14 @@ public:
 	/// Unidimensional constructor.
 	explicit algebra(const KEY& k, const SCALAR& s = VECT::one)
 		: VECT(k, s) {}
+
+    /// Create new vector for result of multiplication
+    friend algebra create_for_mul(const algebra &lhs, const algebra &rhs) {
+        algebra result();
+        result.ensure_sized_for_degree(lhs.degree() + rhs.degree());
+        return result;
+    }
+
 public:	
 	/// Multiplies the instance with scalar s.
 	inline algebra& operator*=(const SCALAR& s)

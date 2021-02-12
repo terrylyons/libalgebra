@@ -94,6 +94,8 @@ public:
     using BASE_VEC::mone;
     using BASE_VEC::zero;
 
+    using BASE_VEC::degree_tag;
+
     /// Swap the vector instance controlled by *this with the one in the RHS
     void swap(sparse_vector &rhs) {
         MAP::swap((MAP &) rhs);
@@ -139,6 +141,17 @@ public:
         if (zero != s)
             (*this)[k] = s;
     }
+
+protected:
+
+    bool ensure_sized_for_degree(const DEG)
+    {
+        return true;
+    }
+
+
+public:
+
 
     /// Returns an instance of the additive inverse of the instance.
     inline sparse_vector operator-(void) const {

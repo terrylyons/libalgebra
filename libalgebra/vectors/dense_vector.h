@@ -11,6 +11,7 @@
 #ifndef LIBALGEBRA_DENSE_VECTOR_H
 #define LIBALGEBRA_DENSE_VECTOR_H
 
+#include "libalgebra/vectors/vector.h"
 
 namespace alg {
 namespace vectors {
@@ -126,6 +127,13 @@ private:
     void set_degree(alg::basis::without_degree)
     {}
 
+protected:
+
+    bool ensure_sized_for_degree(const DEG deg)
+    {
+        resize_to_degree(deg);
+        return (m_degree == deg);
+    }
 
 public:
 
@@ -223,6 +231,26 @@ public:
         }
 
     }
+
+    const_iterator find(const KEY& key) const
+    {
+        DIMN idx;
+        if ((idx = key_to_index(key)) < m_dimension) {
+            return &m_data[idx];
+        }
+        return end();
+    }
+
+    iterator find(const KEY& key)
+    {
+        DIMN idx;
+        if ((idx = key_to_index(key)) < m_dimension) {
+            return &m_data[idx];
+        }
+        return end();
+    }
+
+
 
     void erase(const KEY &key)
     {
@@ -656,14 +684,16 @@ public:
             const DEG max_depth
             ) const
     {
-        const DEG max_degree = std::min(max_depth, m_degree + rhs.m_degree);
+        const IDEG max_degree = static_cast<IDEG>(std::min(max_depth, m_degree + rhs.m_degree));
+        dense_vector& d_result = dtl::vector_base_access::convert(result);
+        d_result.resize_to_degree(static_cast<DEG>(max_degree));
 
-        DEG lhs_deg_min, lhs_deg_max, rhs_deg;
+        IDEG lhs_deg_min, lhs_deg_max, rhs_deg;
 
-        for (DEG out_deg = max_degree; out_deg > 0; --out_deg) {
-            lhs_deg_min = std::max(DEG(0), out_deg - rhs.m_degree);
-            lhs_deg_max = std::min(out_deg, m_degree);
-            for (DEG lhs_deg = lhs_deg_max; lhs_deg > lhs_deg_min; --lhs_deg) {
+        for (IDEG out_deg = max_degree; out_deg >= 0; --out_deg) {
+            lhs_deg_min = std::max(IDEG(0), out_deg - static_cast<IDEG>(rhs.m_degree));
+            lhs_deg_max = std::min(out_deg, static_cast<IDEG>(m_degree));
+            for (IDEG lhs_deg = lhs_deg_max; lhs_deg >= lhs_deg_min; --lhs_deg) {
                 rhs_deg = out_deg - lhs_deg;
 
                 for (DIMN i=start_of_degree(lhs_deg);
@@ -696,15 +726,17 @@ public:
             const DEG max_depth
             ) const
     {
-        dense_vector& d_result = static_cast<dense_vector&>(result);
+        dense_vector& d_result = dtl::vector_base_access::convert(result);
+
         const DEG max_degree = std::min(max_depth, m_degree + rhs.m_degree);
+        d_result.resize_to_degree(max_degree);
 
-        DEG lhs_deg_min, lhs_deg_max, rhs_deg;
+        IDEG lhs_deg_min, lhs_deg_max, rhs_deg;
 
-        for (DEG out_deg = max_degree; out_deg > 0; --out_deg) {
-            lhs_deg_min = std::max(DEG(0), out_deg - rhs.m_degree);
-            lhs_deg_max = std::min(out_deg, m_degree);
-            for (DEG lhs_deg = lhs_deg_max; lhs_deg > lhs_deg_min; --lhs_deg) {
+        for (IDEG out_deg = max_degree; out_deg >= 0; --out_deg) {
+            lhs_deg_min = std::max(IDEG(0), out_deg - static_cast<IDEG>(rhs.m_degree));
+            lhs_deg_max = std::min(out_deg, static_cast<IDEG>(m_degree));
+            for (IDEG lhs_deg = lhs_deg_max; lhs_deg >= lhs_deg_min; --lhs_deg) {
                 rhs_deg = out_deg - lhs_deg;
 
                 DEG lh_deg_start = start_of_degree(lhs_deg);
@@ -719,6 +751,7 @@ public:
                         );
             }
         }
+
     }
 
     template <typename Vector, typename KeyTransform>
@@ -728,6 +761,9 @@ public:
             KeyTransform key_transform
     ) const
     {
+        dense_vector& d_result = dtl::vector_base_access::convert(result);
+        d_result.resize_to_dimension(std::max(m_dimension, rhs.m_dimension));
+
         for (DIMN i=0; i < m_dimension; ++i) {
             for (DIMN j = 0; j < rhs.m_dimension; ++j) {
                 key_transform(
@@ -749,7 +785,8 @@ public:
             IndexTransform index_transform
     ) const
     {
-        dense_vector& d_result = static_cast<dense_vector&>(result);
+        dense_vector& d_result = dtl::vector_base_access::convert(result);
+        d_result.resize_to_dimension(std::max(m_dimension, rhs.m_dimension));
 
         index_transform(
                 &d_result.m_data[0],

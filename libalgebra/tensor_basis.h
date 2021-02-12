@@ -241,7 +241,8 @@ public:
         KEY tmp(key);
         while (tmp.size() > 0) {
             idx *= n_letters;
-            idx += static_cast<DIMN>(key.FirstLetter());
+            idx += static_cast<DIMN>(tmp.FirstLetter());
+            tmp = tmp.rparent();
         }
         return idx;
     }
@@ -378,6 +379,75 @@ struct vector_type_selector<free_tensor_basis<typename _Field::S, typename _Fiel
 };
 
 }
+
+
+template <DEG n_letters, DEG max_depth, typename Scalar, typename Rational>
+struct basis_multiplication_selector<free_tensor_basis<Scalar, Rational, n_letters, max_depth>>
+{
+    typedef two_method_multiplication_tag tag;
+
+    template <typename Basis, typename Coeffs, typename Transform>
+    struct index_operator
+    {
+
+        index_operator() : m_transform() {}
+
+        template<typename Arg>
+        index_operator(Arg arg) : m_transform(arg) {}
+
+        void operator()(
+                typename Coeffs::S* result_ptr,
+                const typename Coeffs::S* lhs_ptr,
+                const typename Coeffs::S* rhs_ptr,
+                const DEG lhs_target,
+                const DEG rhs_target
+                )
+        {
+            for (DIMN i=0; i < lhs_target; ++i) {
+                for (DIMN j=0; j<rhs_target; ++j) {
+                    *(result_ptr++) += m_transform(lhs_ptr[i] * rhs_ptr[j]);
+                }
+            }
+        }
+
+    private:
+        Transform m_transform;
+    };
+
+
+    template <typename Basis, typename Coeffs, typename Transform>
+    struct key_operator
+    {
+
+        typedef typename Basis::KEY KEY;
+        typedef typename Coeffs::S S;
+
+        /// Trivial constructor
+        key_operator() : m_transform() {}
+
+        /// Passthrough constructor for transform
+        template <typename Arg>
+        key_operator(Arg a) : m_transform(a) {}
+
+        template <typename Vector>
+        inline void operator()(
+                Vector& result,
+                const KEY& lhs_key,
+                const S& lhs_val,
+                const KEY& rhs_key,
+                const S& rhs_val
+        ) {
+            result.add_scal_prod(
+                    Vector::basis.prod(lhs_key, rhs_key),
+                    m_transform(lhs_val * rhs_val)
+            );
+        }
+
+    private:
+        Transform m_transform;
+    };
+};
+
 
 
 

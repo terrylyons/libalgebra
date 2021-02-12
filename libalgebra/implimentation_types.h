@@ -23,6 +23,7 @@ namespace alg {
 	
 	/// Used to store degrees.
 	typedef unsigned DEG;
+	typedef int IDEG; // signed integer same size as degree
 
 	/// Used to index letters, and basis elements. The value 0 may be special.
 	typedef size_t LET;

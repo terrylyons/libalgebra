@@ -328,7 +328,7 @@ public:
         return true;
     }
 
-private:
+protected:
 
     // Index of key and key of index
     static KEY index_to_key(const DIMN index)

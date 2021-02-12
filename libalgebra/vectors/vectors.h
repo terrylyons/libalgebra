@@ -17,6 +17,7 @@
 #include "libalgebra/vectors/vector.h"
 #include "libalgebra/vectors/sparse_vector.h"
 #include "libalgebra/vectors/dense_vector.h"
+#include "libalgebra/vectors/hybrid_vector.h"
 
 namespace alg { namespace vectors {
 template <typename Basis, typename Coeffs>

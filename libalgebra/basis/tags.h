@@ -17,8 +17,13 @@ template <DEG D>
 struct with_degree
 {
     static const typename alg::utils::enable_if<(D > 0), DEG>::type
-        max_degree = D;
+        max_degree;
 };
+
+template <DEG D>
+const typename alg::utils::enable_if<(D>0), DEG>::type with_degree<D>::max_degree = D;
+
+
 
 struct without_degree {};
 

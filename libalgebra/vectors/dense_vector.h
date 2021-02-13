@@ -1,16 +1,17 @@
 //
 // Created by sam on 08/02/2021.
 //
+
+
+#ifndef LIBALGEBRA_DENSE_VECTOR_H
+#define LIBALGEBRA_DENSE_VECTOR_H
+
 #include <vector>
 #include <utility>
 
 #include "libalgebra/vectors/base_vector.h"
 #include "libalgebra/utils/meta.h"
 #include "libalgebra/basis/basis.h"
-
-#ifndef LIBALGEBRA_DENSE_VECTOR_H
-#define LIBALGEBRA_DENSE_VECTOR_H
-
 #include "libalgebra/vectors/vector.h"
 
 namespace alg {
@@ -606,6 +607,20 @@ public:
         return !operator==(rhs);
     }
 
+protected:
+
+    std::pair<DIMN, bool> equal_to_min(const dense_vector& rhs) const
+    {
+        DIMN mid = std::min(m_dimension, rhs.m_dimension);
+
+        for (DIMN i = 0; i < mid; ++i) {
+            if (m_data[i] != rhs.m_data[i]) {
+                return std::pair<DIMN, bool>(mid, false);
+            }
+        }
+        return std::pair<DIMN, bool>(mid, true);
+    }
+
 public:
 
     // Norms
@@ -649,8 +664,8 @@ public:
 
 public:
 
-    static bool comp(typename std::pair<KEY, SCALAR> lhs,
-                     typename std::pair<KEY, SCALAR> rhs)
+    static bool comp(std::pair<KEY, SCALAR> lhs,
+                     std::pair<KEY, SCALAR> rhs)
     {
         return lhs.first < rhs.first;
     }
@@ -665,8 +680,10 @@ public:
 
         os << '{';
         for (DIMN i = 0; i < rhs.m_dimension; ++i) {
-            token.second = index_to_key(i);
-            os << ' ' << rhs.m_data[i] << '(' << token << ')';
+            if (zero != rhs.m_data[i]) {
+                token.second = index_to_key(i);
+                os << ' ' << rhs.m_data[i] << '(' << token << ')';
+            }
         }
         os << ' ' << '}';
         return os;

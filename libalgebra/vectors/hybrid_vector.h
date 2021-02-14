@@ -78,8 +78,8 @@ public:
 
     typedef typename dtl::requires_order<Basis>::key_ordering key_ordering;
 
-    typedef void iterator;
-    typedef void const_iterator;
+    class iterator;
+    class const_iterator;
 
 public:
 
@@ -618,6 +618,219 @@ public:
 
 
 };
+
+
+
+template <typename Basis, typename Coeffs, typename ResizeManager, typename SparseMap, typename DenseStorage>
+class hybrid_vector<Basis, Coeffs, ResizeManager, SparseMap, DenseStorage>::iterator
+{
+    typedef hybrid_vector<Basis, Coeffs, ResizeManager, SparseMap, DenseStorage> HYBRID;
+    typedef typename dense_vector<Basis, Coeffs, DenseStorage>::iterator dense_iterator;
+    typedef typename sparse_vector<Basis, Coeffs, SparseMap>::iterator sparse_iterator;
+
+    typedef typename Basis::KEY KEY;
+    typedef typename Coeffs::S SCALAR;
+
+public:
+
+    typedef std::pair<const KEY, SCALAR&> value_type;
+    typedef value_type& reference;
+    typedef value_type* pointer;
+    typedef typename sparse_iterator::difference_type difference_type;
+    typedef std::forward_iterator_tag iterator_category;
+
+private:
+
+    dense_iterator m_dense_iterator;
+    dense_iterator m_dense_end;
+    sparse_iterator m_sparse_begin;
+    sparse_iterator m_sparse_iterator;
+
+    value_type m_current;
+    bool m_up_to_date;
+
+private:
+
+    void update_current()
+    {
+        if (m_dense_iterator != m_dense_end) {
+            m_current = value_type(
+                    HYBRID::basis.nextkey(m_current.first),
+                    *m_dense_iterator
+                );
+        } else {
+            m_current = value_type(
+                    m_sparse_iterator->first,
+                    m_sparse_iterator->second
+                );
+        }
+    }
+
+public:
+
+    // constructors
+
+    /// Dense iterator constructor
+    iterator(HYBRID& vect, dense_iterator diter)
+        : m_dense_iterator(diter),
+          m_dense_end(vect.dense_part().end()),
+          m_sparse_begin(vect.sparse_part().begin()),
+          m_sparse_iterator(m_sparse_begin),
+          m_current(),
+          m_up_to_date(false)
+    {}
+
+    /// Sparse iterator constructor
+    iterator(HYBRID& vector, sparse_iterator siter)
+            : m_dense_iterator(vect.dense_part().end()),
+              m_dense_end(vect.dense_part().end()),
+              m_sparse_begin(vect.sparse_part().begin()),
+              m_sparse_iterator(siter),
+              m_current(),
+              m_up_to_date(false)
+    {}
+
+    iterator& operator++()
+    {
+        if (m_dense_iterator != m_dense_end) {
+            ++m_dense_iterator;
+        } else {
+            ++m_sparse_iterator;
+        }
+        m_up_to_date = false;
+        return *this;
+    }
+
+    iterator operator++(int)
+    {
+        iterator new_it(*this);
+        ++(*this);
+        return new_it;
+    }
+
+    reference operator*()
+    {
+        if (!m_up_to_date) {
+            update_current();
+        }
+        return m_current;
+    }
+
+    pointer operator->()
+    {
+        if (!m_up_to_date) {
+            update_current();
+        }
+        return &m_current;
+    }
+
+};
+
+template <typename Basis, typename Coeffs, typename ResizeManager, typename SparseMap, typename DenseStorage>
+class hybrid_vector<Basis, Coeffs, ResizeManager, SparseMap, DenseStorage>::const_iterator
+{
+    typedef hybrid_vector<Basis, Coeffs, ResizeManager, SparseMap, DenseStorage> HYBRID;
+    typedef typename dense_vector<Basis, Coeffs, DenseStorage>::const_iterator dense_iterator;
+    typedef typename sparse_vector<Basis, Coeffs, SparseMap>::const_iterator sparse_iterator;
+
+    typedef typename Basis::KEY KEY;
+    typedef typename Coeffs::S SCALAR;
+
+public:
+
+    typedef std::pair<const KEY, const SCALAR&> value_type;
+    typedef value_type& reference;
+    typedef value_type* pointer;
+    typedef typename sparse_iterator::difference_type difference_type;
+    typedef std::forward_iterator_tag iterator_category;
+
+private:
+
+    dense_iterator m_dense_iterator;
+    dense_iterator m_dense_end;
+    sparse_iterator m_sparse_begin;
+    sparse_iterator m_sparse_iterator;
+
+    value_type m_current;
+    bool m_up_to_date;
+
+private:
+
+    void update_current()
+    {
+        if (m_dense_iterator != m_dense_end) {
+            m_current = value_type(
+                    HYBRID::basis.nextkey(m_current.first),
+                    *m_dense_iterator
+            );
+        } else {
+            m_current = value_type(
+                    m_sparse_iterator->first,
+                    m_sparse_iterator->second
+            );
+        }
+    }
+
+public:
+
+    // constructors
+
+    /// Dense iterator constructor
+    const_iterator(const HYBRID& vect, dense_iterator diter)
+            : m_dense_iterator(diter),
+              m_dense_end(vect.dense_part().end()),
+              m_sparse_begin(vect.sparse_part().begin()),
+              m_sparse_iterator(m_sparse_begin),
+              m_current(),
+              m_up_to_date(false)
+    {}
+
+    /// Sparse iterator constructor
+    const_iterator(const HYBRID& vector, sparse_iterator siter)
+            : m_dense_iterator(vect.dense_part().end()),
+              m_dense_end(vect.dense_part().end()),
+              m_sparse_begin(vect.sparse_part().begin()),
+              m_sparse_iterator(siter),
+              m_current(),
+              m_up_to_date(false)
+    {}
+
+    const_iterator& operator++()
+    {
+        if (m_dense_iterator != m_dense_end) {
+            ++m_dense_iterator;
+        } else {
+            ++m_sparse_iterator;
+        }
+        m_up_to_date = false;
+        return *this;
+    }
+
+    const_iterator operator++(int)
+    {
+        const_iterator new_it(*this);
+        ++(*this);
+        return new_it;
+    }
+
+    reference operator*()
+    {
+        if (!m_up_to_date) {
+            update_current();
+        }
+        return m_current;
+    }
+
+    pointer operator->()
+    {
+        if (!m_up_to_date) {
+            update_current();
+        }
+        return &m_current;
+    }
+
+};
+
 
 #undef DEFINE_FUSED_OP
 

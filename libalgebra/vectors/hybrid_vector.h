@@ -172,7 +172,22 @@ private:
 
     /// Incorporate the dense elements that will need to be sparse
     void incorporate_dense(const DIMN from_index)
-    {}
+    {
+        if (from_index >= dense_dimension()) {
+            return;
+        }
+        typedef std::pair<KEY, SCALAR> PAIR;
+        std::vector<std::pair<KEY, SCALAR>> tmp;
+        tmp.reserve(dense_dimension() - from_index);
+
+        for (DIMN i=from_index; i<dense_dimension(); ++i) {
+            tmp.push_back(PAIR(index_to_key(i), DENSE::value(i)));
+        }
+
+        DENSE::resize_to_dimension(from_index);
+        SPARSE::insert(tmp.begin(), tmp.end());
+
+    }
 
 public:
 

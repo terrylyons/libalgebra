@@ -683,6 +683,9 @@ public:
 
     private:
 
+        static KEY s_default_key;
+        static SCALAR s_default_scalar;
+
         dense_iterator m_dense_iterator;
         dense_iterator m_dense_end;
         sparse_iterator m_sparse_begin;
@@ -715,7 +718,7 @@ public:
                   m_dense_end(vect.dense_part().end()),
                   m_sparse_begin(vect.sparse_part().begin()),
                   m_sparse_iterator(m_sparse_begin),
-                  m_current(KEY(), HYBRID::zero),
+                  m_current(s_default_key, s_default_scalar),
                   m_up_to_date(false)
         {}
 
@@ -725,7 +728,7 @@ public:
                   m_dense_end(vect.dense_part().end()),
                   m_sparse_begin(vect.sparse_part().begin()),
                   m_sparse_iterator(siter),
-                  m_current(KEY(), HYBRID::zero),
+                  m_current(s_default_key, s_default_scalar),
                   m_up_to_date(false)
         {}
 
@@ -823,6 +826,9 @@ public:
 
     private:
 
+        static KEY s_default_key;
+        static SCALAR s_default_scalar;
+
         dense_iterator m_dense_iterator;
         dense_iterator m_dense_end;
         sparse_iterator m_sparse_begin;
@@ -855,7 +861,7 @@ public:
                   m_dense_end(it.dense_end()),
                   m_sparse_begin(it.sparse_begin()),
                   m_sparse_iterator(it.sparse()),
-                  m_current(KEY(), HYBRID::zero),
+                  m_current(s_default_key, s_default_scalar),
                   m_up_to_date(false)
         {}
 
@@ -865,7 +871,7 @@ public:
                   m_dense_end(vect.dense_part().end()),
                   m_sparse_begin(vect.sparse_part().begin()),
                   m_sparse_iterator(m_sparse_begin),
-                  m_current(KEY(), HYBRID::zero),
+                  m_current(s_default_key, s_default_scalar),
                   m_up_to_date(false)
         {}
 
@@ -875,7 +881,7 @@ public:
                   m_dense_end(vect.dense_part().end()),
                   m_sparse_begin(vect.sparse_part().begin()),
                   m_sparse_iterator(siter),
-                  m_current(KEY(), HYBRID::zero),
+                  m_current(s_default_key, s_default_scalar),
                   m_up_to_date(false)
         {}
 
@@ -943,10 +949,28 @@ public:
 
 };
 
+template<typename Basis, typename Coeffs,typename ResizeManager,typename DenseStorage,typename SparseMap>
+typename Basis::KEY hybrid_vector<Basis, Coeffs, ResizeManager, DenseStorage, SparseMap>
+        ::iterator::s_default_key;
+
+template<typename Basis, typename Coeffs,typename ResizeManager,typename DenseStorage,typename SparseMap>
+typename Basis::KEY hybrid_vector<Basis, Coeffs, ResizeManager, DenseStorage, SparseMap>
+        ::const_iterator::s_default_key;
+
+template<typename Basis, typename Coeffs,typename ResizeManager,typename DenseStorage,typename SparseMap>
+typename Coeffs::S hybrid_vector<Basis, Coeffs, ResizeManager, DenseStorage, SparseMap>
+        ::iterator::s_default_scalar(0);
+
+template<typename Basis, typename Coeffs,typename ResizeManager,typename DenseStorage,typename SparseMap>
+typename Coeffs::S hybrid_vector<Basis, Coeffs, ResizeManager, DenseStorage, SparseMap>
+        ::const_iterator::s_default_scalar(0);
+
 
 
 
 #undef DEFINE_FUSED_OP
+
+
 
 } // namespace vectors
 } // namespace alg

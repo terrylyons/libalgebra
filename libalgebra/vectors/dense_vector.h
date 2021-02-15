@@ -107,6 +107,9 @@ private:
     DIMN adjust_dimension(const DIMN dim, alg::basis::with_degree<D>)
     {
         DEG d = index_to_degree(dim);
+        if (dim == start_of_degree(d)) {
+            return dim;
+        }
         return start_of_degree(d + 1);
     }
 

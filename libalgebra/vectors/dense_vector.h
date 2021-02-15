@@ -30,7 +30,7 @@ struct requires_order
 
 template<typename Basis, typename Coeffs,
         typename Storage = std::vector<typename Coeffs::S>>
-class dense_vector : base_vector<Basis, Coeffs>, dtl::requires_order<Basis>
+class dense_vector : protected base_vector<Basis, Coeffs>, dtl::requires_order<Basis>
 {
     typedef Storage STORAGE;
     typedef base_vector <Basis, Coeffs> BASE_VEC;

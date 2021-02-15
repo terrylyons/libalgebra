@@ -60,7 +60,7 @@ insertion causes a rehash which disrupts all iterators
 */
 template<typename Basis, typename Coeffs,
         typename MapType=LIBALGEBRA_DEFAULT_MAP_TYPE >
-class sparse_vector : /*private*/ MapType, base_vector<Basis, Coeffs> {
+class sparse_vector : /*private*/ MapType, protected base_vector<Basis, Coeffs> {
     typedef MapType MAP;
     typedef Basis BASIS;
     typedef base_vector<Basis, Coeffs> BASE_VEC;

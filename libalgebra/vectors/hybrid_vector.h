@@ -366,6 +366,12 @@ public:
         }
     }
 
+    SCALAR& update(iterator& it, SCALAR value)
+    {
+        return operator[](it->first) = it.second;
+    }
+
+
 public:
 
     void clear()

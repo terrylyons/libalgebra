@@ -271,6 +271,11 @@ public:
         }
     }
 
+    SCALAR& update(iterator& it, SCALAR value)
+    {
+        return (*it = value);
+    }
+
 public:
 
     void clear()

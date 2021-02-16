@@ -89,6 +89,7 @@ public:
     using UnderlyingVectorType::clear;
     using UnderlyingVectorType::empty;
     using UnderlyingVectorType::size;
+    using UnderlyingVectorType::update;
 
     // Pull the static members from the underlying vector class
     using UnderlyingVectorType::one;

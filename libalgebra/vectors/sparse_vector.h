@@ -120,6 +120,11 @@ public:
         return (found == cend()) ? zero : found->second;
     }
 
+    SCALAR& update(iterator& it, SCALAR value)
+    {
+        return (it->second = value);
+    }
+
 
 public:
     /// Default constructor.

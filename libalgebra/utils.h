@@ -14,6 +14,8 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_UTILSH_SEEN
 #define DJC_COROPA_LIBALGEBRA_UTILSH_SEEN
 
+namespace iter = alg::utils::iterators;
+
 /// Provides maps between lie<> and free_tensor<> instances.
 template<typename SCA, typename RAT, DEG n_letters, DEG max_degree>
 class maps
@@ -80,7 +82,7 @@ public:
 		TENSOR result;
 		typename LIE::const_iterator i;
 		for (i = arg.begin(); i != arg.end(); ++i)
-			result.add_scal_prod(expand(i->first), i->second);
+			result.add_scal_prod(expand(iter::key<LIE>(i)), iter::value<LIE>(i));
 		return result;
 	}
 	/// Returns the free lie element corresponding to a tensor_element.
@@ -94,10 +96,12 @@ public:
 		LIE result;
 		typename TENSOR::const_iterator i;
 		for (i = arg.begin(); i != arg.end(); ++i)
-			result.add_scal_prod(rbraketing(i->first), i->second);
+			result.add_scal_prod(rbraketing(iter::key<TENSOR>(i)), iter::value<TENSOR>(i));
 		typename LIE::iterator j;
-		for (j = result.begin(); j != result.end(); ++j)
-		    result.update(j, (j->second) / (RAT)(LIE::basis.degree(j->first)));
+		for (j = result.begin(); j != result.end(); ++j) {
+		    SCA& lhs = iter::value<LIE>(j);
+            lhs /= (RAT) (LIE::basis.degree(iter::key<LIE>(j)));
+        }
 		return result;
 	}
 	/// For a1,a2,...,an, return the expression [a1,[a2,[...,an]]].

@@ -2,8 +2,8 @@
 // Created by sam on 17/02/2021.
 //
 
-#ifndef LIBALGEBRA_ITERATORS_H
-#define LIBALGEBRA_ITERATORS_H
+#ifndef LIBALGEBRA_VECTORS_ITERATORS_H
+#define LIBALGEBRA_VECTORS_ITERATORS_H
 
 #include <iterator>
 
@@ -24,15 +24,18 @@ namespace iterators {
  * public:
  *      // Declare friend of vector iterator so it has access to
  *      // the internals
- *      template <typename Basis, typename Coeff>
- *      friend class vector_iterator<Basis, Coeff, vector_iterator_item>;
+ *      friend class vector_iterator<vector_iterator_item>;
  *
  *      vector_iterator_item(); // Default constructor
  *      vector_iterator_item(const vector_iterator_item&); // Copy constructor
  *      vector_iterator_item((const) Vector&, Iterator it); // Vector/iterator initialisation
  *
- *      Key key();
- *      Value& value();
+ *      // type definitions of output types
+ *      typedef Key key_type;
+ *      typedef Value value_type;
+ *
+ *      key_type key();
+ *      value_type& value();
  *
  * private:
  *      Iterator m_iterator;
@@ -47,7 +50,7 @@ namespace iterators {
  *
  */
 
-template <typename Basis, typename Coeff, typename ValueType>
+template <typename ValueType>
 class vector_iterator
 {
 public:
@@ -134,4 +137,4 @@ public:
 } // namespace alg
 
 
-#endif //LIBALGEBRA_ITERATORS_H
+#endif //LIBALGEBRA_VECTORS_ITERATORS_H

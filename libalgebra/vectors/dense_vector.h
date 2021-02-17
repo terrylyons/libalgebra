@@ -30,7 +30,7 @@ struct requires_order
 
 template<typename Basis, typename Coeffs,
         typename Storage = std::vector<typename Coeffs::S>>
-class dense_vector : base_vector<Basis, Coeffs>, dtl::requires_order<Basis>
+class dense_vector : protected base_vector<Basis, Coeffs>, dtl::requires_order<Basis>
 {
     typedef Storage STORAGE;
     typedef base_vector <Basis, Coeffs> BASE_VEC;
@@ -107,6 +107,9 @@ private:
     DIMN adjust_dimension(const DIMN dim, alg::basis::with_degree<D>)
     {
         DEG d = index_to_degree(dim);
+        if (dim == start_of_degree(d)) {
+            return dim;
+        }
         return start_of_degree(d + 1);
     }
 
@@ -266,6 +269,11 @@ public:
         if (it != end()) {
             *it = zero;
         }
+    }
+
+    SCALAR& update(iterator& it, SCALAR value)
+    {
+        return (*it = value);
     }
 
 public:

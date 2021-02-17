@@ -97,7 +97,7 @@ public:
 			result.add_scal_prod(rbraketing(i->first), i->second);
 		typename LIE::iterator j;
 		for (j = result.begin(); j != result.end(); ++j)
-			(j->second) /= (RAT)(LIE::basis.degree(j->first));
+		    result.update(j, (j->second) / (RAT)(LIE::basis.degree(j->first)));
 		return result;
 	}
 	/// For a1,a2,...,an, return the expression [a1,[a2,[...,an]]].

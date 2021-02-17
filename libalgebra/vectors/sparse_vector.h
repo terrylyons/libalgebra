@@ -24,7 +24,7 @@ namespace vectors {
 
 // This is a macro because template aliases are c++11
 #define LIBALGEBRA_DEFAULT_MAP_TYPE \
-    std::unordered_map<typename Basis::KEY, typename Field::S>
+    std::unordered_map<typename Basis::KEY, typename Coeffs::S>
 
 /// A class to store and manipulate sparse vectors.
 
@@ -58,12 +58,12 @@ Other iterators and references are not invalidated. Moreover (C++2014)
 the internal order of the elements not erased is preserved. However
 insertion causes a rehash which disrupts all iterators
 */
-template<typename Basis, typename Field,
+template<typename Basis, typename Coeffs,
         typename MapType=LIBALGEBRA_DEFAULT_MAP_TYPE >
-class sparse_vector : /*private*/ MapType, base_vector<Basis, Field> {
+class sparse_vector : /*private*/ MapType, protected base_vector<Basis, Coeffs> {
     typedef MapType MAP;
     typedef Basis BASIS;
-    typedef base_vector<Basis, Field> BASE_VEC;
+    typedef base_vector<Basis, Coeffs> BASE_VEC;
 public:
     /// Import of Const_Iterator to beginning of the sparse vector
     using MAP::begin;
@@ -101,7 +101,7 @@ public:
         MAP::swap((MAP &) rhs);
     }
 
-    typedef Field FIELD;
+    typedef Coeffs FIELD;
 
     /// Import of the KEY type from the MAP class.
     typedef typename BASIS::KEY KEY;
@@ -118,6 +118,11 @@ public:
     inline const SCALAR &operator[](const KEY k) const {
         const_iterator found = find(k);
         return (found == cend()) ? zero : found->second;
+    }
+
+    SCALAR& update(iterator& it, SCALAR value)
+    {
+        return (it->second = value);
     }
 
 

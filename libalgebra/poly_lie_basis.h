@@ -88,8 +88,8 @@ public:
 		POLY_LIE result;
 		for (typename POLY::const_iterator it = poly1.begin(); it != poly1.end(); it++)
 		{
-			SCA temp = it->second;
-			POLYBASIS_KEY temp2 = POLYBASIS::prod2(liemon1.second, it->first);
+			SCA temp = it->value();
+			POLYBASIS_KEY temp2 = POLYBASIS::prod2(liemon1.second, it->key());
 			result[make_pair(liemon1.first, temp2)] = temp;
 		}
 		return result;

@@ -325,8 +325,8 @@ public:
 		algebra result;
 		const_iterator i;
 		for (i = VECT::begin(); i != VECT::end(); ++i)
-			if ((VECT::basis.degree(i->first) >= min) && (VECT::basis.degree(i->first) <= max))
-				result[i->first] = i->second;
+			if ((VECT::basis.degree(i->key()) >= min) && (VECT::basis.degree(i->key()) <= max))
+				result[i->key()] = i->value();
 		return result;
 	}
 	/// Returns the degree of the instance by using basis:degree()
@@ -335,7 +335,7 @@ public:
 		DEG result(0);
 		const_iterator i;
 		for (i = VECT::begin(); i != VECT::end(); ++i)
-			result = std::max(result, VECT::basis.degree(i->first));
+			result = std::max(result, VECT::basis.degree(i->key()));
 		return result;
 	}
 };

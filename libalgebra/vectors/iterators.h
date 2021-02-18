@@ -45,6 +45,9 @@ namespace iterators {
  *      // Compare the iterators, return True on equal
  *      bool compare_iterator(const vector_iterator_item& other);
  *
+ *      // Const iterator
+ *      void advance_iterator();
+ *
  * };
  *
  *
@@ -81,6 +84,12 @@ public:
     vector_iterator(Vector& vect, Iterator it) : m_value(vect, it)
     {}
 
+    vector_iterator& operator=(const vector_iterator& other)
+    {
+        m_value = other.m_value;
+        return *this;
+    }
+
 public:
 
     // Iterator advance methods
@@ -88,7 +97,7 @@ public:
     /// Prefix increment
     vector_iterator& operator++()
     {
-        m_value.m_iterator++;
+        m_value.advance();
         return *this;
     }
 
@@ -120,12 +129,12 @@ public:
 
     bool operator==(const vector_iterator& other) const
     {
-        return m_value.compare_iterator(other.m_value);
+        return m_value.compare_iterators(other.m_value);
     }
 
     bool operator!=(const vector_iterator& other) const
     {
-        return !m_value.compare_iterator(other.m_value);
+        return !operator==(other);
     }
 
 

@@ -82,7 +82,7 @@ public:
 	{
 		SCA result(VECT::zero);
 		for (const_iterator i = VECT::begin(); i != VECT::end(); ++i)
-			result += VECT::basis.eval_key(i->first, values) * i->second;
+			result += VECT::basis.eval_key(i->key(), values) * i->value();
 		return result;
 	}
 
@@ -120,7 +120,7 @@ public:
 		const_iterator it;
 		for (it = p1.begin(); it != p1.end(); ++it)
 		{
-			result += poly(it->second) * prediff(it->first, k2);
+			result += poly(it->value()) * prediff(it->key(), k2);
 		}
 		return result;
 	}

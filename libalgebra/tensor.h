@@ -148,7 +148,7 @@ public:
 			throw "divide-by-zero";
 		else
 		{
-			a = (*it).second;
+			a = (*it).value();
 			x = arg;
 			x.erase(kunit);
 		}
@@ -172,8 +172,8 @@ public:
 		free_tensor ans(SCA(0));
 		for (const_iterator it = arg.begin(); it != arg.end(); ++it)
 		{
-			KEY old_key = it->first;
-			SCA old_value = it->second;
+			KEY old_key = it->key();
+			SCA old_value = it->value();
 			ans[old_key.reverse()] = (old_key.size()%2) ? SCA(0) - old_value : old_value;
 		}
 		return ans;

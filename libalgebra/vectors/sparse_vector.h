@@ -18,6 +18,7 @@ Version 3. (See accompanying file License.txt)
 #define DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN
 
 #include "libalgebra/vectors/base_vector.h"
+#include "libalgebra/vectors/iterators.h"
 
 namespace alg {
 namespace vectors {
@@ -65,21 +66,7 @@ class sparse_vector : /*private*/ MapType, protected base_vector<Basis, Coeffs> 
     typedef Basis BASIS;
     typedef base_vector<Basis, Coeffs> BASE_VEC;
 public:
-    /// Import of Const_Iterator to beginning of the sparse vector
-    using MAP::begin;
-    /// Import of Const_Iterator to end of the sparse vector
-    using MAP::end;
-    /// Import of Const_Iterator to beginning of the sparse vector
-    using MAP::cbegin;
-    /// Import of Const_Iterator to end of the sparse vector
-    using MAP::cend;
-    /// Import of find a KEY in the sparse vector
-    using MAP::find;
-    /// Import of insert a KEY SCALAR into the sparse vector
-    using MAP::insert;
-    /// Import of erase a KEY from the sparse vector
-    using MAP::erase;
-    /// Import of set a KEY with a given SCALAR
+
     using MAP::operator[];
     /// Import of set this instance to the zero instance
     using MAP::clear;
@@ -109,9 +96,243 @@ public:
     typedef typename FIELD::S SCALAR;
     typedef typename FIELD::Q RATIONAL;
     /// Import of the iterator type from the MAP type.
-    typedef typename MAP::iterator iterator;
+    //typedef typename MAP::iterator iterator;
     /// Import of the KEY constant iterator type from the MAP type.
-    typedef typename MAP::const_iterator const_iterator;
+    //typedef typename MAP::const_iterator const_iterator;
+
+    class iterator_item
+    {
+        friend class iterators::vector_iterator<iterator_item>;
+        friend class sparse_vector;
+    public:
+
+        typedef KEY key_type;
+        typedef SCALAR& value_type;
+
+        iterator_item() : m_iterator()
+        {}
+
+        iterator_item(const iterator_item& other)
+            : m_iterator(other.m_iterator)
+        {}
+
+        iterator_item(sparse_vector&, typename MAP::iterator it)
+            : m_iterator(it)
+        {}
+
+        key_type key()
+        {
+            return m_iterator->first;
+        }
+
+        value_type value()
+        {
+            return m_iterator->second;
+        }
+
+        bool operator==(const iterator_item& other) const
+        {
+            return compare_iterators(other);
+        }
+
+        bool operator!=(const iterator_item& other) const
+        {
+            return !compare_iterators(other);
+        }
+
+    private:
+        typename MAP::iterator m_iterator;
+
+    private:
+
+        bool compare_iterators(const iterator_item& other) const
+        {
+            return (m_iterator == other.m_iterator);
+        }
+
+        void advance()
+        {
+            ++m_iterator;
+        }
+
+    };
+
+    class const_iterator_item
+    {
+        friend class iterators::vector_iterator<const_iterator_item>;
+        friend class sparse_vector;
+    public:
+
+        typedef KEY key_type;
+        typedef const SCALAR& value_type;
+
+        const_iterator_item() : m_iterator()
+        {}
+
+        const_iterator_item(const const_iterator_item& other)
+                : m_iterator(other.m_iterator)
+        {}
+
+        const_iterator_item(const sparse_vector&,
+                            typename MAP::const_iterator it)
+                : m_iterator(it)
+        {}
+
+        const_iterator_item& operator=(const const_iterator_item& other)
+        {
+            m_iterator = other.m_iterator;
+            return *this;
+        }
+
+        key_type key()
+        {
+            return m_iterator->first;
+        }
+
+        value_type value()
+        {
+            return m_iterator->second;
+        }
+
+        bool operator==(const const_iterator_item& other) const
+        {
+            return compare_iterators(other);
+        }
+
+        bool operator!=(const const_iterator_item& other) const
+        {
+            return !compare_iterators(other);
+        }
+
+    private:
+        typename MAP::const_iterator m_iterator;
+
+    private:
+
+        bool compare_iterators(const const_iterator_item& other) const
+        {
+            bool result = m_iterator == other.m_iterator;
+            return result;
+        }
+
+        void advance()
+        {
+            ++m_iterator;
+        }
+
+    };
+
+
+    typedef iterators::vector_iterator<iterator_item> iterator;
+    typedef iterators::vector_iterator<const_iterator_item> const_iterator;
+
+private:
+
+    typename MAP::iterator map_begin()
+    {
+        return MAP::begin();
+    }
+
+    typename MAP::iterator map_end()
+    {
+        return MAP::end();
+    }
+
+    typename MAP::const_iterator map_begin() const
+    {
+        return MAP::begin();
+    }
+
+    typename MAP::const_iterator map_end() const
+    {
+        return MAP::end();
+    }
+
+    typename MAP::iterator map_find(const KEY& key)
+    {
+         return MAP::find(key);
+    }
+
+    typename MAP::const_iterator map_find(const KEY& key) const
+    {
+        return MAP::find(key);
+    }
+
+public:
+
+    // Iterator methods
+
+    iterator begin()
+    {
+        return iterator(*this, map_begin());
+    }
+
+    iterator end()
+    {
+        return iterator(*this, map_end());
+    }
+
+    const_iterator begin() const
+    {
+        return const_iterator(*this, map_begin());
+    }
+
+    const_iterator end() const
+    {
+        return const_iterator(*this, map_end());
+    }
+
+    const_iterator cbegin() const
+    {
+        return begin();
+    }
+
+    const_iterator cend() const
+    { return end(); }
+
+    iterator find(const KEY& key)
+    {
+        return iterator(*this, map_find(key));
+    }
+
+    const_iterator find(const KEY& key) const
+    {
+        return const_iterator(*this, map_find(key));
+    }
+
+    /// Import the insert from iterator function
+    using MAP::insert;
+
+    // Redefine the other inserts
+    std::pair<iterator, bool> insert(std::pair<const KEY, SCALAR>& value)
+    {
+        std::pair<typename MAP::iterator, bool> p = MAP::insert(value);
+        return std::pair<iterator, bool>(iterator(*this, p.first), p.second);
+    }
+
+    iterator insert(iterator position, const std::pair<const KEY, SCALAR>& value)
+    {
+        typename MAP::iterator it = MAP::insert(position->m_iterator, value);
+        return iterator(*this, it);
+    }
+
+    /// Import of erase a KEY from the sparse vector
+    using MAP::erase;
+    // Redefine the erases involving iterators
+    void erase(iterator position)
+    {
+        MAP::erase(position->m_iterator);
+    }
+
+    void erase(iterator first, iterator last)
+    {
+        MAP::erase(
+                first->m_iterator,
+                last->m_iterator
+        );
+    }
+
+
 public:
 
     /// Given a const instance of a sparse vector, returns a const reference to the scalar associated to the named basis element. (The default SCALAR element zero if the basis vector was not present in this sparse vector instance).
@@ -165,7 +386,7 @@ public:
         const_iterator in;
         sparse_vector result;
         for (in = begin(); in != end(); ++in)
-            result[in->first] = -(in->second);
+            result[in->key()] = -(in->value());
         return result;
     }
 
@@ -175,7 +396,7 @@ public:
             iterator it;
             if (!empty())
                 for (it = begin(); it != end(); ++it)
-                    it->second *= s;
+                    it->value() *= s;
         } else
             clear();
         return *this;
@@ -191,7 +412,7 @@ public:
         if (!empty())
             for (it = begin(); it != end(); ++it) {
                 RATIONAL temp(1);
-                it->second *= (temp / s);
+                it->value() *= (temp / s);
             }
         return *this;
     }
@@ -209,11 +430,11 @@ public:
         if (empty())
             return *this = rhs;
         for (cit = rhs.begin(); cit != rhs.end(); ++cit) { // Instead of a bare (*this)[cit->first] += cit->second;
-            it = find(cit->first);
+            it = find(cit->key());
             if (it == end())
-                (*this)[cit->first] = cit->second;
-            else if ((it->second += cit->second) == zero)
-                erase(it->first);
+                (*this)[cit->key()] = cit->value();
+            else if ((it->value() += cit->value()) == zero)
+                erase(it->key());
         }
         return *this;
     }
@@ -231,11 +452,11 @@ public:
         if (empty())
             return *this = -rhs;
         for (cit = rhs.begin(); cit != rhs.end(); ++cit) { // Instead of a bare (*this)[cit->first] -= cit->second;
-            it = find(cit->first);
+            it = find(cit->key());
             if (it == end())
-                (*this)[cit->first] = -(cit->second);
-            else if ((it->second -= cit->second) == zero)
-                erase(it->first);
+                (*this)[cit->key()] = -(cit->value());
+            else if ((it->value() -= cit->value()) == zero)
+                erase(it->key());
         }
         return *this;
     }
@@ -249,7 +470,9 @@ public:
 // these min max operators are slower (factor of 3?) on unordered sparse vectors
 #ifdef UNORDEREDMAP
         {
-        typename std::vector<std::pair<KEY, SCALAR> >target(begin(), end()), source(rhs.begin(), rhs.end());
+        typename std::vector<std::pair<KEY, SCALAR> >
+                target(map_begin(), map_end()),
+                source(rhs.map_begin(), rhs.map_end());
         const auto & comp = [](typename std::pair<KEY, SCALAR>  lhs, typename std::pair<KEY, SCALAR>  rhs)->bool {return lhs.first < rhs.first; };
         std::sort(target.begin(), target.end(), comp);
         std::sort(source.begin(), source.end(), comp);
@@ -290,9 +513,9 @@ public:
         }
     }
 #else
-        iterator it = begin();
-        const_iterator cit = rhs.begin();
-        for (; it != end() && cit != rhs.end();) {
+        typename MAP::iterator it = map_begin();
+        typename MAP::const_iterator cit = rhs.map_begin();
+        for (; it != map_end() && cit != rhs.map_end();) {
             int c = (it->first < cit->first) ? 1 : (cit->first < it->first) ? 2 : (cit->first == it->first) ? 3 : 4;
             switch (c) {
                 case 1: {
@@ -334,7 +557,9 @@ public:
     inline sparse_vector &operator|=(const sparse_vector &rhs) {
 #ifdef UNORDEREDMAP
 
-        typename std::vector<std::pair<KEY, SCALAR> >target(begin(), end()), source(rhs.begin(), rhs.end());
+        typename std::vector<std::pair<KEY, SCALAR> >
+                target(map_begin(), map_end()),
+                source(rhs.map_begin(), rhs.map_end());
     std::sort(target.begin(), target.end(), comp);
     std::sort(source.begin(), source.end(), comp);
 
@@ -375,9 +600,9 @@ public:
             if (cit->second > SCALAR(0)) insert(*cit);
     }
 #else
-        iterator it = begin();
-        const_iterator cit = rhs.begin();
-        for (; it != end() && cit != rhs.end();) {
+        typename MAP::iterator it = map_begin();
+        typename MAP::const_iterator cit = rhs.map_begin();
+        for (; it != map_end() && cit != rhs.map_end();) {
             // c++11 syntax auto
             int c = (it->first < cit->first) ? 1 : (cit->first < it->first) ? 2 : (cit->first == it->first) ? 3 : 4;
             switch (c) {
@@ -438,9 +663,9 @@ public:
         iterator it = begin();
         const_iterator cit;
         for (cit = rhs.begin(); cit != rhs.end(); ++cit) { // Instead of a bare (*this)[cit->first] += cit->second * s;
-            it = this->insert(it, std::make_pair(cit->first,
+            it = this->insert(it, std::make_pair(cit->key(),
                                                  zero)); // note this fails if the entry is already there but sets it in any case
-            if ((it->second += cit->second * s) == zero)
+            if ((it->value() += cit->value() * s) == zero)
                 // erase returns void until c++11
             {
                 iterator j(it++);
@@ -472,11 +697,11 @@ public:
             return operator*=(-s);
         }
         for (cit = rhs.begin(); cit != rhs.end(); ++cit) { // Instead of a bare (*this)[cit->first] -= cit->second * s;
-            it = find(cit->first);
+            it = find(cit->key());
             if (it == end())
-                (*this)[cit->first] = cit->second * -s;
-            else if ((it->second -= cit->second * s) == zero)
-                erase(it->first);
+                (*this)[cit->key()] = cit->value() * -s;
+            else if ((it->value() -= cit->value() * s) == zero)
+                erase(it->key());
         }
         return *this;
     }
@@ -493,11 +718,11 @@ public:
             return operator/=(s);
         }
         for (cit = rhs.begin(); cit != rhs.end(); ++cit) { // Instead of a bare (*this)[cit->first] += cit->second / s;
-            it = find(cit->first);
+            it = find(cit->key());
             if (it == end())
-                (*this)[cit->first] = cit->second / s;
-            else if ((it->second += (cit->second / s)) == zero)
-                erase(it->first);
+                (*this)[cit->key()] = cit->value() / s;
+            else if ((it->value() += (cit->value() / s)) == zero)
+                erase(it->key());
         }
         return *this;
     }
@@ -514,11 +739,11 @@ public:
             return operator/=(-s);
         }
         for (cit = rhs.begin(); cit != rhs.end(); ++cit) { // Instead of a bare (*this)[cit->first] -= cit->second / s;
-            it = find(cit->first);
+            it = find(cit->key());
             if (it == end())
-                (*this)[cit->first] = -cit->second / s;
-            else if ((it->second -= (cit->second / s)) == zero)
-                erase(it->first);
+                (*this)[cit->key()] = -cit->value() / s;
+            else if ((it->value() -= (cit->value() / s)) == zero)
+                erase(it->key());
         }
         return *this;
     }
@@ -537,10 +762,10 @@ public:
     bool operator==(const sparse_vector &rhs) const {
         if (size() != rhs.size())
             return false;
-        const_iterator i, j;
-        for (i = begin(); i != end(); ++i) {
-            j = rhs.find(i->first);
-            if ((j == rhs.end()) || (j->second != i->second))
+        const_iterator i, j, jend(rhs.end()), iend(end());
+        for (i = begin(); i != iend; ++i) {
+            j = rhs.find(i->key());
+            if ((j == jend) || (j->value() != i->value()))
                 return false;
         }
         return true;
@@ -548,7 +773,7 @@ public:
 
     /// Lexicographically compares the instance to a sparse_vector.
     bool operator<(const sparse_vector &rhs) const {
-        return std::lexicographical_compare(begin(), end(), rhs.begin(), rhs.end());
+        return std::lexicographical_compare(map_begin(), map_end(), rhs.map_begin(), rhs.map_end());
     }
 
     /// Boolean negation of operator==()
@@ -561,7 +786,7 @@ public:
         const_iterator i;
         SCALAR ans(zero);
         for (i = begin(); i != end(); ++i) {
-            ans += abs(i->second);
+            ans += abs(i->value());
         }
         return ans;
     }
@@ -571,8 +796,8 @@ public:
         const_iterator i;
         SCALAR ans(zero);
         for (i = begin(); i != end(); ++i) {
-            if (d == basis.degree(i->first))
-                ans += abs(i->second);
+            if (d == basis.degree(i->key()))
+                ans += abs(i->value());
         }
         return ans;
     }
@@ -583,7 +808,7 @@ public:
         const_iterator i;
         SCALAR ans(zero);
         for (i = begin(); i != end(); ++i) {
-            ans = std::max(abs(i->second), ans);
+            ans = std::max(abs(i->value()), ans);
         }
         return ans;
     }
@@ -593,8 +818,8 @@ public:
         const_iterator i;
         SCALAR ans(zero);
         for (i = begin(); i != end(); ++i) {
-            if (d == basis.degree(i->first))
-                ans = std::max(abs(i->second), ans);
+            if (d == basis.degree(i->key()))
+                ans = std::max(abs(i->value()), ans);
         }
         return ans;
     }
@@ -619,17 +844,24 @@ public:
 #ifndef ORDEREDMAP
         typename std::vector<std::pair < KEY, SCALAR> > ::const_iterator
         cit;
-        typename std::vector<std::pair < KEY, SCALAR> > buffer(rhs.begin(), rhs.end());
+        typename std::vector<std::pair < KEY, SCALAR> >
+                buffer(rhs.map_begin(), rhs.map_end());
         std::sort(buffer.begin(), buffer.end(), comp);
-#else
-        const_iterator cit;
-    const sparse_vector& buffer = rhs;
-#endif // ORDEREDMAP
-
         for (cit = buffer.begin(); cit != buffer.end(); ++cit) {
             token.second = cit->first;
             os << ' ' << cit->second << '(' << token << ')';
         }
+
+#else
+        const_iterator cit;
+    const sparse_vector& buffer = rhs;
+
+        for (cit = begin(); cit != end(); ++cit) {
+            token.second = cit->key();
+            os << ' ' << cit->value() << '(' << token << ')';
+        }
+#endif // ORDEREDMAP
+
         os << " }";
         return os;
     }
@@ -647,7 +879,7 @@ private:
             std::vector<typename std::vector<std::pair<KEY, SCALAR> >::const_iterator> &iterators
     ) const
     {
-        buffer.assign(rhs.begin(), rhs.end());
+        buffer.assign(rhs.map_begin(), rhs.map_end());
 #ifndef ORDEREDMAP
         std::sort(buffer.begin(), buffer.end(),
                   [](const std::pair<KEY, SCALAR>&lhs, const std::pair<KEY, SCALAR>&rhs)->bool
@@ -691,12 +923,12 @@ public:
         const_iterator i(begin()), iEnd(end());
         for ( ; i != iEnd; ++i)
         {
-            const KEY& k = i->first;
+            const KEY& k = i->key();
             size_t rhdegree = max_depth - basis.degree(k);
             typename std::vector<std::pair<KEY, SCALAR> >:: const_iterator&
             jEnd = iterators[rhdegree];
             for (j = buffer.begin(); j != jEnd; ++j) {
-                key_transform(result, i->first, i->second, j->first, j->second);
+                key_transform(result, i->key(), i->value(), j->first, j->second);
             }
         }
     }
@@ -722,7 +954,7 @@ public:
     ) const
     {
         // create buffer to avoid unnecessary calls to MAP inside loop
-        std::vector<std::pair<KEY, SCALAR> > buffer(rhs.begin(), rhs.end());
+        std::vector<std::pair<KEY, SCALAR> > buffer(rhs.map_begin(), rhs.map_end());
         const_iterator i;
 
         // DEPTH1 == 0
@@ -730,7 +962,7 @@ public:
         for (i = begin(); i != end(); ++i)
         {
             for (j = buffer.begin(); j != buffer.end(); ++j) {
-                key_transform(result, i->first, i->second, j->first, j->second);
+                key_transform(result, i->key(), i->value(), j->first, j->second);
             }
         }
 

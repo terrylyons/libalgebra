@@ -78,7 +78,7 @@ public:
 		std::map<KEY, lie> table;
 		const_iterator i;
 		for (i = src.begin(); i != src.end(); ++i)
-			result.add_scal_prod(VECT::basis.replace(i->first, s, v, table), i->second);
+			result.add_scal_prod(VECT::basis.replace(i->key(), s, v, table), i->value());
 		return result;
 	}
 };

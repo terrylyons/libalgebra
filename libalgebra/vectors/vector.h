@@ -99,6 +99,7 @@ public:
 
     // norms
     using UnderlyingVectorType::NormL1;
+    using UnderlyingVectorType::NormLInf;
 
     // Utility
     using UnderlyingVectorType::comp;

@@ -430,7 +430,11 @@ public:
 
     iterator begin()
     {
-        return iterator(*this, DENSE::begin());
+        if (dense_empty()) {
+            return iterator(*this, SPARSE::begin());
+        } else {
+            return iterator(*this, DENSE::begin());
+        }
     }
 
     iterator end()
@@ -440,7 +444,11 @@ public:
 
     const_iterator begin() const
     {
-        return const_iterator(*this, DENSE::begin());
+        if (dense_empty()) {
+            return const_iterator(*this, SPARSE::begin());
+        } else {
+            return const_iterator(*this, DENSE::begin());
+        }
     }
 
     const_iterator end() const

@@ -246,7 +246,7 @@ public:
         const_iterator_item() : m_vector(), m_iterator()
         {}
 
-        const_iterator_item(const iterator_item &other)
+        const_iterator_item(const const_iterator_item &other)
                 : m_vector(other.m_vector), m_iterator(other.m_iterator)
         {}
 

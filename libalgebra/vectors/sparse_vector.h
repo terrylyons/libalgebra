@@ -318,6 +318,13 @@ public:
     using MAP::insert;
 
     // Redefine the other inserts
+    std::pair<iterator, bool> insert(const std::pair<const KEY, SCALAR> &value)
+    {
+        std::pair<typename MAP::iterator, bool> p = MAP::insert(value);
+        return std::pair<iterator, bool>(iterator(*this, p.first), p.second);
+    }
+
+    // Redefine the other inserts
     std::pair<iterator, bool> insert(std::pair<const KEY, SCALAR> &value)
     {
         std::pair<typename MAP::iterator, bool> p = MAP::insert(value);

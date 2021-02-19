@@ -583,11 +583,6 @@ public:
         }
     }
 
-    SCALAR &update(iterator &it, SCALAR value)
-    {
-        return operator[](it->first) = it.second;
-    }
-
 
 public:
 
@@ -986,7 +981,8 @@ private:
 
         }
 
-        dtl::vector_base_access::convert(result).maybe_resize();
+        dtl::vector_base_access::convert(result).incorporate_sparse();
+        //dtl::vector_base_access::convert(result).maybe_resize();
     }
 
     template<typename Vector, typename KeyTransform>

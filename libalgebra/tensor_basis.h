@@ -240,6 +240,8 @@ public:
 
     static DIMN key_to_index(const KEY &key)
     {
+        assert(key.valid());
+
         DIMN idx = 0;
         if (key.size() == 0) {
             return idx;

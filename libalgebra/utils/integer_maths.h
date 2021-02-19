@@ -25,8 +25,8 @@ struct divisor_calc
     enum : Unsigned
     {
         num = N,
-        divisor = divisor_calc<N, D+1>::divisor,
-        quotient = divisor_calc<N, D+1>::quotient
+        divisor = divisor_calc<N, D + 1>::divisor,
+        quotient = divisor_calc<N, D + 1>::quotient
     };
 
 };

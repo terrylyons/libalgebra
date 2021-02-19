@@ -23,61 +23,62 @@ Version 3. (See accompanying file License.txt)
 
 enum coefficient_t
 {
-	Rational,
-	DPReal,
-	SPReal
+    Rational,
+    DPReal,
+    SPReal
 };
 
 namespace {
 
-	template <coefficient_t F> struct Field;
+template<coefficient_t F>
+struct Field;
 
-	template<>
-	struct Field < Rational >
-	{
-		typedef mpq_class S;
-		typedef mpq_class Q;
-	};
+template<>
+struct Field<Rational>
+{
+    typedef mpq_class S;
+    typedef mpq_class Q;
+};
 
-	template<>
-	struct Field < DPReal >
-	{
-		typedef double S;
-		typedef double Q;
-	};
+template<>
+struct Field<DPReal>
+{
+    typedef double S;
+    typedef double Q;
+};
 
-	template<>
-	struct Field < SPReal >
-	{
-		typedef float S;
-		typedef float Q;
-	};
+template<>
+struct Field<SPReal>
+{
+    typedef float S;
+    typedef float Q;
+};
 
 } // anon namespace
 
-template <size_t D, size_t W, coefficient_t F = Rational> 
-struct alg_types : Field < F >
+template<size_t D, size_t W, coefficient_t F = Rational>
+struct alg_types : Field<F>
 {
-	const static coefficient_t FIELD = F;
-	typedef typename Field < F >::S S;
-	typedef typename Field < F >::Q Q;
-	typedef S SCA;
-	typedef Q RAT;
-	typedef alg::DEG DEG;
-	typedef alg::LET LET;
-	static const unsigned DEPTH = D;
-	static const unsigned myDIM = W;
-	static const unsigned ALPHABET_SIZE = W;
-	typedef alg::poly<S,Q> MULTIPOLY1;
-	typedef alg::free_tensor<S,Q,ALPHABET_SIZE,DEPTH> TENSOR;
-	typedef alg::lie<S,Q,ALPHABET_SIZE,DEPTH> LIE;
-	typedef alg::maps<S,Q,ALPHABET_SIZE,DEPTH> MAPS;
-	typedef alg::cbh<S,Q,ALPHABET_SIZE,DEPTH> CBH;
-	typedef alg::poly_lie<S, Q, ALPHABET_SIZE, DEPTH> POLYLIE;
-	typedef alg::multi_polynomial<S,Q,ALPHABET_SIZE,DEPTH> MULTIPOLY;
-	//typedef mtl::dense1D<RAT> mtlVector;
-	//typedef typename mtl::matrix<RAT, mtl::rectangle<>, mtl::dense<>, mtl::row_major>::type mtlMatrix;
-	//typedef typename mtl::matrix<RAT, mtl::diagonal<>, mtl::packed<>, mtl::row_major>::type mtlDiagMat;
+    const static coefficient_t FIELD = F;
+    typedef typename Field<F>::S S;
+    typedef typename Field<F>::Q Q;
+    typedef S SCA;
+    typedef Q RAT;
+    typedef alg::DEG DEG;
+    typedef alg::LET LET;
+    static const unsigned DEPTH = D;
+    static const unsigned myDIM = W;
+    static const unsigned ALPHABET_SIZE = W;
+    typedef alg::poly<S, Q> MULTIPOLY1;
+    typedef alg::free_tensor<S, Q, ALPHABET_SIZE, DEPTH> TENSOR;
+    typedef alg::lie<S, Q, ALPHABET_SIZE, DEPTH> LIE;
+    typedef alg::maps<S, Q, ALPHABET_SIZE, DEPTH> MAPS;
+    typedef alg::cbh<S, Q, ALPHABET_SIZE, DEPTH> CBH;
+    typedef alg::poly_lie<S, Q, ALPHABET_SIZE, DEPTH> POLYLIE;
+    typedef alg::multi_polynomial<S, Q, ALPHABET_SIZE, DEPTH> MULTIPOLY;
+    //typedef mtl::dense1D<RAT> mtlVector;
+    //typedef typename mtl::matrix<RAT, mtl::rectangle<>, mtl::dense<>, mtl::row_major>::type mtlMatrix;
+    //typedef typename mtl::matrix<RAT, mtl::diagonal<>, mtl::packed<>, mtl::row_major>::type mtlDiagMat;
 };
 
 

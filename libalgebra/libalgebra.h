@@ -32,13 +32,15 @@ typedef unsigned __int32    uint32_t;
 typedef unsigned __int64    uint64_t;
 #endif
 #elif __cplusplus < 201103L
+
 #include <stdint.h>
+
 #else
 #include <cstdint>
 #endif
 
 #include <iostream>
-#include <iomanip> 
+#include <iomanip>
 #include <sstream>
 #include <string>
 #include <deque>
@@ -85,7 +87,7 @@ typedef unsigned __int64    uint64_t;
 #include <type_traits>
 #include <unordered_map>
 #define MY_UNORDERED_MAP std::unordered_map
-#else 
+#else
 #define ORDEREDMAP
 #endif // !UNORDEREDMAP
 #ifndef NOBTREE
@@ -104,24 +106,23 @@ typedef unsigned __int64    uint64_t;
 #include "libalgebra/vectors/vectors.h"
 #include "libalgebra/utils/integer_maths.h"
 
-namespace alg
-{
+namespace alg {
 
 // Some useful macros to avoid similar codes.
 
 #define __DECLARE_BINARY_OPERATOR(T1, NEWOP, OLDOP, T2) \
-	T1 operator NEWOP(const T2& rhs) const \
-	{ T1 result(*this); return result OLDOP rhs; }
+    T1 operator NEWOP(const T2& rhs) const \
+    { T1 result(*this); return result OLDOP rhs; }
 
 #define __DECLARE_UNARY_OPERATOR(NEWT, NEWOP, OLDOP, OLDT) \
-	NEWT operator NEWOP(void) const \
-	{ return OLDT::operator OLDOP (); }
+    NEWT operator NEWOP(void) const \
+    { return OLDT::operator OLDOP (); }
 
 //  End of macros.
 
 
 // Temporary Coefficients declaration
-template <typename B>
+template<typename B>
 struct TrivialCoeffs
 {
     typedef typename B::SCALAR S;
@@ -138,47 +139,59 @@ template<typename Basis,
         typename Coeffs=TrivialCoeffs<Basis>,
         typename VectorType = typename vectors::vector_type_selector<Basis, Coeffs>::type>
 class algebra;
+
 /// Generic Associative Algebra basis.
 template<typename S, DEG n_letters, DEG max_degree = 0>
 class tensor_basis;
+
 /// Free Associative Algegra Basis. Concatenation product. Non commutative.
 template<typename SCA, typename RAT,
-		 DEG n_letters, DEG max_degree = 0>
+        DEG n_letters, DEG max_degree = 0>
 class free_tensor_basis;
+
 /// Free Shuffle Associative Algebra Basis. Shuffle product. Commutative.
 template<typename SCA, typename RAT,
-		 DEG n_letters, DEG max_degree = 0>
+        DEG n_letters, DEG max_degree = 0>
 class shuffle_tensor_basis;
+
 /// Free Associative Algebra.  Associative and non commutative.
 template<typename SCA, typename RAT,
-		 DEG n_letters, DEG max_degree = 0>
+        DEG n_letters, DEG max_degree = 0>
 class free_tensor;
+
 /// Free Associative Shuffle Algebra.  Associative and Commutative.
 template<typename SCA, typename RAT,
-		 DEG n_letters, DEG max_degree = 0>
+        DEG n_letters, DEG max_degree = 0>
 class shuffle_tensor;
+
 /// Philip Hall Lie Basis.
 template<DEG n_letters>
 class hall_basis;
+
 /// Free Lie Associative Algebra Basis.  Associative and non commutative.
 template<typename SCA, typename RAT,
-		 DEG n_letters, DEG max_degree = 0>
+        DEG n_letters, DEG max_degree = 0>
 class lie_basis;
+
 /// Free Lie Associative Algebra.  Associative and non commutative.
 template<typename SCA, typename RAT,
-		 DEG n_letters, DEG max_degree = 0>
+        DEG n_letters, DEG max_degree = 0>
 class lie;
+
 /// Maps between Free Lie and Free Algebra elements.
 template<typename SCA, typename RAT,
-		 DEG n_letters, DEG max_degree = 0>
+        DEG n_letters, DEG max_degree = 0>
 class maps;
+
 /// Campbell-Baker-Hausdorff formulas.
 template<typename SCA, typename RAT,
-		 DEG n_letters, DEG max_degree>
+        DEG n_letters, DEG max_degree>
 class cbh;
+
 /// Multivariate Polynomial Algebra Basis. Associative and Commutative.
 template<typename SCA, typename RAT>
 class poly_basis;
+
 /// Multivariate Polynomial Algebra.  Associative and Commutative.
 template<typename SCA, typename RAT>
 class poly;
@@ -187,9 +200,11 @@ class poly;
 /// II. Multivariate Polynomial Algebra pre Basis. Associative and Commutative
 template<typename SCA, DEG n_letters, DEG max_degree = 0>
 class monomial_basis;
+
 /// II. Multivariate Polynomial Algebra Basis. Associative and Commutative
 template<typename SCA, typename RAT, DEG n_letters, DEG max_degree = 0>
 class free_monomial_basis;
+
 /// II. Multivariate Polynomial Algebra   Associative and Commutative.
 template<typename SCA, typename RAT, DEG n_letters, DEG max_degree = 0>
 class multi_polynomial;

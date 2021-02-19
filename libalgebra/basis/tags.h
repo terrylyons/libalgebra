@@ -13,29 +13,31 @@ namespace alg {
 namespace basis {
 
 
-template <DEG D>
+template<DEG D>
 struct with_degree
 {
     static const typename alg::utils::enable_if<(D > 0), DEG>::type
-        max_degree;
+            max_degree;
 };
 
-template <DEG D>
-const typename alg::utils::enable_if<(D>0), DEG>::type with_degree<D>::max_degree = D;
+template<DEG D>
+const typename alg::utils::enable_if<(D > 0), DEG>::type with_degree<D>::max_degree = D;
 
 
+struct without_degree
+{
+};
 
-struct without_degree {};
 
-
-template <typename OrderOperator>
+template<typename OrderOperator>
 struct ordered
 {
     typedef OrderOperator order;
 };
 
-struct unordered {};
-
+struct unordered
+{
+};
 
 
 } // namespace basis

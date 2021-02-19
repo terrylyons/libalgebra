@@ -12,7 +12,6 @@ namespace vectors {
 namespace iterators {
 
 
-
 /*
  * The value type of a vector iterator should have the following format.
  *
@@ -53,14 +52,14 @@ namespace iterators {
  *
  */
 
-template <typename ValueType>
+template<typename ValueType>
 class vector_iterator
 {
 public:
 
     typedef ValueType value_type;
-    typedef value_type& reference;
-    typedef value_type* pointer;
+    typedef value_type &reference;
+    typedef value_type *pointer;
     typedef std::ptrdiff_t difference_type;
     typedef std::forward_iterator_tag iterator_category;
 
@@ -76,26 +75,28 @@ public:
     {}
 
     /// Copy constructor
-    vector_iterator(const vector_iterator& other) : m_value(other.m_value)
+    vector_iterator(const vector_iterator &other) : m_value(other.m_value)
     {}
 
     /// Vector/iterator constructor
-    template <typename Vector, typename Iterator>
-    vector_iterator(Vector& vect, Iterator it) : m_value(vect, it)
+    template<typename Vector, typename Iterator>
+    vector_iterator(Vector &vect, Iterator it) : m_value(vect, it)
     {}
 
+    /*
     vector_iterator& operator=(const vector_iterator& other)
     {
         m_value = other.m_value;
         return *this;
     }
 
+     */
 public:
 
     // Iterator advance methods
 
     /// Prefix increment
-    vector_iterator& operator++()
+    vector_iterator &operator++()
     {
         m_value.advance();
         return *this;
@@ -127,12 +128,12 @@ public:
 
     // Comparison operators
 
-    bool operator==(const vector_iterator& other) const
+    bool operator==(const vector_iterator &other) const
     {
         return m_value.compare_iterators(other.m_value);
     }
 
-    bool operator!=(const vector_iterator& other) const
+    bool operator!=(const vector_iterator &other) const
     {
         return !operator==(other);
     }

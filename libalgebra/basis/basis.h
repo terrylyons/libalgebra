@@ -4,24 +4,21 @@
 
 #ifndef LIBALGEBRA_BASIS_H
 #define LIBALGEBRA_BASIS_H
+
 #include "libalgebra/implimentation_types.h"
 
 #include "libalgebra/basis/tags.h"
 
 
-
 namespace alg {
 namespace basis {
 
-template <typename Basis>
+template<typename Basis>
 struct basis_traits
 {
     typedef typename Basis::ordering_tag ordering_tag;
     typedef typename Basis::degree_tag degree_tag;
 };
-
-
-
 
 
 } // namespace basis

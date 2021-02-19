@@ -30,7 +30,7 @@ struct requires_order
 } // namespace dtl
 
 template<typename Basis, typename Coeffs,
-        typename Storage = std::vector<typename Coeffs::S>>
+        typename Storage = std::vector<typename Coeffs::S> >
 class dense_vector : protected base_vector<Basis, Coeffs>, dtl::requires_order<Basis>
 {
     typedef Storage STORAGE;
@@ -202,7 +202,7 @@ public:
 
         key_type key()
         {
-            assert( index() < m_vector->m_data.size());
+            assert(index() < m_vector->m_data.size());
             return index_to_key(index());
         }
 
@@ -220,7 +220,7 @@ public:
 
         bool compare_iterators(const iterator_item &other) const
         {
-            return m_iterator == other.m_iterator;
+            return !(m_iterator != other.m_iterator);
         }
 
         void advance()
@@ -259,7 +259,7 @@ public:
 
         key_type key()
         {
-            assert( index() < m_vector->m_data.size());
+            assert(index() < m_vector->m_data.size());
             return index_to_key(index());
         }
 
@@ -277,7 +277,7 @@ public:
 
         bool compare_iterators(const const_iterator_item &other) const
         {
-            return m_iterator == other.m_iterator;
+            return !(m_iterator != other.m_iterator);
         }
 
         void advance()
@@ -338,7 +338,7 @@ public:
         m_data[idx] = val;
     }
 
-    std::pair<iterator, bool> insert(std::pair<const KEY, SCALAR>& arg)
+    std::pair<iterator, bool> insert(std::pair<const KEY, SCALAR> &arg)
     {
         DIMN idx = key_to_index(arg.first);
         std::pair<iterator, bool> rv;
@@ -348,7 +348,7 @@ public:
             rv.second = false;
             return rv;
         } else {
-            resize_to_dimension(idx+1);
+            resize_to_dimension(idx + 1);
         }
         assert(idx < m_data.size());
         rv.first = iterator(*this, m_data.begin() + idx);
@@ -362,7 +362,7 @@ public:
     template<typename InputIterator>
     void insert(InputIterator begin, InputIterator end)
     {
-        typedef std::vector<std::pair<DIMN, SCALAR>> TMPVEC;
+        typedef std::vector<std::pair<DIMN, SCALAR> > TMPVEC;
         TMPVEC tmp;
         tmp.reserve(end - begin);
 
@@ -915,8 +915,8 @@ public:
             for (IDEG lhs_deg = lhs_deg_max; lhs_deg >= lhs_deg_min; --lhs_deg) {
                 rhs_deg = out_deg - lhs_deg;
 
-                DEG lh_deg_start = start_of_degree(lhs_deg);
-                DEG rh_deg_start = start_of_degree(rhs_deg);
+                DIMN lh_deg_start = start_of_degree(lhs_deg);
+                DIMN rh_deg_start = start_of_degree(rhs_deg);
 
                 index_transform(
                         &d_result.m_data[start_of_degree(out_deg)],

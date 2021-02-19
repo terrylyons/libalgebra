@@ -19,20 +19,20 @@ Version 3. (See accompanying file License.txt)
 
 namespace alg {
 
-	// moved from  libalgebra.h
-	
-	/// Used to store degrees.
-	typedef unsigned DEG;
-	typedef int IDEG; // signed integer same size as degree
+// moved from  libalgebra.h
 
-	/// Used to index letters, and basis elements. The value 0 may be special.
-	typedef size_t LET;
+/// Used to store degrees.
+typedef unsigned DEG;
+typedef int IDEG; // signed integer same size as degree
 
-	/// Used for large integer calculations where overflow might otherwise occur
-	typedef unsigned long long LET64;
+/// Used to index letters, and basis elements. The value 0 may be special.
+typedef size_t LET;
 
-	/// Used for dimension of of vector elements and indices in dense vectors
-	typedef size_t DIMN;
+/// Used for large integer calculations where overflow might otherwise occur
+typedef unsigned long long LET64;
+
+/// Used for dimension of of vector elements and indices in dense vectors
+typedef size_t DIMN;
 
 
 }

@@ -16,13 +16,11 @@ template<typename Basis, typename Field>
 struct vector_type_selector;
 
 
-
 template<typename Basis,
         typename Coeffs,
         typename VectorImpl = typename vector_type_selector<Basis, Coeffs>::type
 >
 class vector;
-
 
 
 namespace dtl {
@@ -31,7 +29,7 @@ class vector_base_access
 public:
 
     template<typename Basis, typename Coeffs, typename Vector>
-    static Vector& convert(vector<Basis, Coeffs, Vector>& arg)
+    static Vector &convert(vector<Basis, Coeffs, Vector> &arg)
     {
         return arg;
     }
@@ -54,7 +52,8 @@ public:
  * based on the vector_type_selector trait.
  */
 template<typename Basis, typename Coeffs, typename VectorImpl>
-class vector : VectorImpl {
+class vector : VectorImpl
+{
 public:
 
     // Type definitions
@@ -89,7 +88,7 @@ public:
     using UnderlyingVectorType::clear;
     using UnderlyingVectorType::empty;
     using UnderlyingVectorType::size;
-    using UnderlyingVectorType::update;
+
 
     // Pull the static members from the underlying vector class
     using UnderlyingVectorType::one;
@@ -110,7 +109,8 @@ protected:
 protected:
 
     /// Accessor for underlying vector type for derived classes
-    UnderlyingVectorType &underlying_vector() { return *this; }
+    UnderlyingVectorType &underlying_vector()
+    { return *this; }
 
 public:
 
@@ -121,10 +121,12 @@ public:
      * Create an instance of an empty vector.
      * This element is neutral with respect to + and -.
      */
-    vector(void) : UnderlyingVectorType() {}
+    vector(void) : UnderlyingVectorType()
+    {}
 
     /// Copy constructor
-    vector(const UnderlyingVectorType &other) : UnderlyingVectorType(other) {}
+    vector(const UnderlyingVectorType &other) : UnderlyingVectorType(other)
+    {}
 
     /// Unidimensional constructor.
     /**
@@ -132,7 +134,8 @@ public:
     * to the given coefficient (default +1).
     */
     explicit vector(const KEY &k, const SCALAR &s = one)
-            : UnderlyingVectorType(k, s) {}
+            : UnderlyingVectorType(k, s)
+    {}
 
     /// Copy from other vector type
     /**
@@ -141,7 +144,8 @@ public:
      * @tparam V Other underlying vector type.
      */
     template<typename F, typename V>
-    explicit vector(const vector<BASIS, F, V> &other) : vector() {
+    explicit vector(const vector<BASIS, F, V> &other) : vector()
+    {
         //TODO: Implement me
     }
 
@@ -156,7 +160,8 @@ protected:
 public:
 
     // Swap
-    void swap(vector& rhs) {
+    void swap(vector &rhs)
+    {
         UnderlyingVectorType::swap(rhs);
     }
 
@@ -170,64 +175,69 @@ public:
      */
 
     /// Additive inverse
-    vector operator-(void) const {
+    vector operator-(void) const
+    {
         return vector(UnderlyingVectorType::operator-());
     }
 
     /// Inplace scalar multiply
-    vector &operator*=(const SCALAR &s) {
+    vector &operator*=(const SCALAR &s)
+    {
         UnderlyingVectorType::operator*=(s);
         return *this;
     }
 
     /// Inplace rational divide
-    vector &operator/=(const RATIONAL &s) {
+    vector &operator/=(const RATIONAL &s)
+    {
         UnderlyingVectorType::operator/=(s);
         return *this;
     }
 
     /// Inplace addition
-    vector &operator+=(const vector &rhs) {
+    vector &operator+=(const vector &rhs)
+    {
         UnderlyingVectorType::operator+=(rhs);
         return *this;
     }
 
     /// Inplace subtraction
-    vector &operator-=(const vector &rhs) {
+    vector &operator-=(const vector &rhs)
+    {
         UnderlyingVectorType::operator-=(rhs);
         return *this;
     }
 
     /// Inplace coordinatewise minimum
-    vector &operator&=(const vector &rhs) {
+    vector &operator&=(const vector &rhs)
+    {
         UnderlyingVectorType::operator&=(rhs);
         return *this;
     }
 
     /// Inplace coordinatewise maximum
-    vector &operator|=(const vector &rhs) {
+    vector &operator|=(const vector &rhs)
+    {
         UnderlyingVectorType::operator|=(rhs);
         return *this;
     }
 
     /// Scalar multiply
-    __DECLARE_BINARY_OPERATOR(vector, *
-    , *=, SCALAR);
+    __DECLARE_BINARY_OPERATOR(vector, *, *=, SCALAR);
     /// Rational divide
     __DECLARE_BINARY_OPERATOR(vector,
-    /, /=, RATIONAL);
+                              /, /=, RATIONAL);
     /// Addition
     __DECLARE_BINARY_OPERATOR(vector,
-    +, +=, vector);
+                              +, +=, vector);
     /// Subtraction
     __DECLARE_BINARY_OPERATOR(vector,
-    -, -=, vector);
+                              -, -=, vector);
     /// Coordinatewise minimum
-    __DECLARE_BINARY_OPERATOR(vector, &
-    , &=, vector);
+    __DECLARE_BINARY_OPERATOR(vector, &, &=, vector);
     /// Coordinatewise maximum
     __DECLARE_BINARY_OPERATOR(vector,
-    |, |=, vector);
+                              |, |=, vector);
 
 public:
 
@@ -242,7 +252,8 @@ public:
      * @param s
      * @return
      */
-    vector &add_scal_prod(const KEY &rhs, const SCALAR &s) {
+    vector &add_scal_prod(const KEY &rhs, const SCALAR &s)
+    {
         UnderlyingVectorType::add_scal_prod(rhs, s);
         return *this;
     }
@@ -256,7 +267,8 @@ public:
      * @param s
      * @return
      */
-    vector &add_scal_prod(const vector &rhs, const SCALAR &s) {
+    vector &add_scal_prod(const vector &rhs, const SCALAR &s)
+    {
         UnderlyingVectorType::add_scal_prod(rhs, s);
         return *this;
     }
@@ -270,7 +282,8 @@ public:
      * @param s
      * @return
      */
-    vector &sub_scal_prod(const KEY &rhs, const SCALAR &s) {
+    vector &sub_scal_prod(const KEY &rhs, const SCALAR &s)
+    {
         UnderlyingVectorType::sub_scal_prod(rhs, s);
         return *this;
     }
@@ -284,7 +297,8 @@ public:
      * @param s
      * @return
      */
-    vector &sub_scal_prod(const vector &rhs, const SCALAR &s) {
+    vector &sub_scal_prod(const vector &rhs, const SCALAR &s)
+    {
         UnderlyingVectorType::sub_scal_prod(rhs, s);
         return *this;
     }
@@ -298,7 +312,8 @@ public:
      * @param s
      * @return
      */
-    vector &add_scal_div(const KEY &rhs, const RATIONAL &s) {
+    vector &add_scal_div(const KEY &rhs, const RATIONAL &s)
+    {
         UnderlyingVectorType::add_scal_div(rhs, s);
         return *this;
     }
@@ -312,7 +327,8 @@ public:
      * @param s
      * @return
      */
-    vector &add_scal_div(const vector &rhs, const RATIONAL &s) {
+    vector &add_scal_div(const vector &rhs, const RATIONAL &s)
+    {
         UnderlyingVectorType::add_scal_div(rhs, s);
         return *this;
     }
@@ -326,7 +342,8 @@ public:
      * @param s
      * @return
      */
-    vector &sub_scal_div(const KEY &rhs, const RATIONAL &s) {
+    vector &sub_scal_div(const KEY &rhs, const RATIONAL &s)
+    {
         UnderlyingVectorType::sub_scal_div(rhs, s);
         return *this;
     }
@@ -340,7 +357,8 @@ public:
      * @param s
      * @return
      */
-    vector &sub_scal_div(const vector &rhs, const RATIONAL &s) {
+    vector &sub_scal_div(const vector &rhs, const RATIONAL &s)
+    {
         UnderlyingVectorType::sub_scal_div(rhs, s);
         return *this;
     }
@@ -350,17 +368,20 @@ public:
     // Comparison operators
 
     /// Equality operator
-    bool operator==(const vector &rhs) const {
+    bool operator==(const vector &rhs) const
+    {
         return UnderlyingVectorType::operator==(rhs);
     }
 
     /// Non-equality operator
-    bool operator!=(const vector &rhs) const {
+    bool operator!=(const vector &rhs) const
+    {
         return !operator==(rhs);
     }
 
     /// Lexicographic comparison
-    bool operator<(const vector &rhs) const {
+    bool operator<(const vector &rhs) const
+    {
         return UnderlyingVectorType::operator<(rhs);
     }
 
@@ -370,20 +391,21 @@ public:
     // Display
 
     inline friend std::ostream &operator<<(std::ostream &os,
-                                           const vector &rhs) {
+                                           const vector &rhs)
+    {
         return (os << (const UnderlyingVectorType &) rhs);
     }
 
 #if 0  // Not yet implemented
-public:
+    public:
 
-    // Serialization access and methods
-    friend class boost::serialization::access;
+        // Serialization access and methods
+        friend class boost::serialization::access;
 
-    template<typename Archive>
-    void serialize(Archive &ar, const unsigned int /*version*/) {
-        ar & boost::serialization::base_object<UnderlyingVectorType>(*this);
-    }
+        template<typename Archive>
+        void serialize(Archive &ar, const unsigned int /*version*/) {
+            ar & boost::serialization::base_object<UnderlyingVectorType>(*this);
+        }
 #endif
 
 public:
@@ -397,7 +419,7 @@ public:
 
 private:
 
-    template <DEG D>
+    template<DEG D>
     DEG degree_impl(alg::basis::with_degree<D>) const
     {
         return UnderlyingVectorType::degree();
@@ -430,71 +452,79 @@ public:
             const vector &rhs,
             KeyTransform key_transform,
             IndexTransform index_transform
-    ) const {
+    ) const
+    {
         buffered_apply_binary_transform(result, rhs, key_transform, index_transform,
                                         temporary_tag<BASIS::MAX_DEGREE>());
     }
 
     /// Buffered apply transform with only key transform
-    template <typename KeyTransform>
+    template<typename KeyTransform>
     void buffered_apply_binary_transform(
             vector &result,
-            const vector& rhs,
+            const vector &rhs,
             KeyTransform key_transform
-    ) const {
+    ) const
+    {
         buffered_apply_binary_transform(result, rhs, key_transform, temporary_tag<BASIS::MAX_DEGREE>());
     }
 
 private:
 
-    template <DEG D>
-    struct temporary_tag {};
+    template<DEG D>
+    struct temporary_tag
+    {
+    };
 
-    template <typename KeyTransform>
+    template<typename KeyTransform>
     void buffered_apply_binary_transform(
-            vector& result,
-            const vector& rhs,
+            vector &result,
+            const vector &rhs,
             KeyTransform key_transform,
             temporary_tag<0>
-            ) const {
+    ) const
+    {
         UnderlyingVectorType::square_buffered_apply_binary_transform(
                 result, rhs, key_transform
         );
     }
 
-    template <DEG D, typename KeyTransform>
+    template<DEG D, typename KeyTransform>
     void buffered_apply_binary_transform(
-            vector& result,
-            const vector& rhs,
+            vector &result,
+            const vector &rhs,
             KeyTransform key_transform,
             temporary_tag<D>
-    ) const {
+    ) const
+    {
         UnderlyingVectorType::triangular_buffered_apply_binary_transform(
                 result, rhs, key_transform, D
         );
     }
 
-    template <typename KeyTransform, typename IndexTransform>
+    template<typename KeyTransform, typename IndexTransform>
     void buffered_apply_binary_transform(
-            vector& result,
-            const vector& rhs,
+            vector &result,
+            const vector &rhs,
             KeyTransform key_transform,
             IndexTransform index_transform,
             temporary_tag<0>
-    ) const {
+    ) const
+    {
         UnderlyingVectorType::square_buffered_apply_binary_transform(
                 result, rhs, key_transform, index_transform
         );
     }
 
-    template <DEG D, typename KeyTransform, typename IndexTransform>
+    template<DEG D, typename KeyTransform, typename IndexTransform>
     void buffered_apply_binary_transform(
-            vector& result,
-            const vector& rhs,
+            vector &result,
+            const vector &rhs,
             KeyTransform key_transform,
             IndexTransform index_transform,
             temporary_tag<D>
-    ) const {
+    ) const
+    {
         UnderlyingVectorType::triangular_buffered_apply_binary_transform(
                 result, rhs, key_transform, index_transform, D
         );
@@ -502,11 +532,6 @@ private:
 
 
 };
-
-
-
-
-
 
 
 } // namespace vectors

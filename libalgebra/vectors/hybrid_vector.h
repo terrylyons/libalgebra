@@ -471,9 +471,24 @@ public:
         it->second = val;
     }
 
-    iterator insert(const KEY &key, SCALAR val)
+    std::pair<iterator, bool> insert(const KEY &key, SCALAR val)
     {
-        operator[](key) = val;
+        std::pair<iterator, bool> rv(end(), false);
+        DIMN idx;
+        if ((idx = key_to_index(key)) < dense_dimension()) {
+            if (DENSE::value(idx) == zero) {
+                DENSE::value(idx) = val;
+                rv.second = true;
+            }
+            rv.first = iterator(*this, DENSE::find(idx));
+        } else {
+            std::pair<const KEY, SCALAR> tmp_pair(key, val);
+            std::pair<typename SPARSE::iterator, bool> tmp =
+                    SPARSE::insert(tmp_pair);
+            rv.first = iterator(*this, tmp.first);
+            rv.second = tmp.second;
+        }
+        return rv;
     }
 
     std::pair<iterator, bool> insert(std::pair<const KEY, SCALAR> &p)

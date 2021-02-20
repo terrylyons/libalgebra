@@ -386,12 +386,10 @@ struct vector_type_selector<free_tensor_basis<typename Field::S, typename Field:
 {
     typedef free_tensor_basis<typename Field::S, typename Field::Q, n_letters, max_depth> BASIS;
     typedef typename BASIS::KEY KEY;
-    typedef hybrid_vector <
+    typedef vectors::dense_vector <
     BASIS,
     Field,
-    vectors::basic_resize_manager,
-    std::vector<typename Field::S>,
-    std::unordered_map<KEY, typename Field::S, typename KEY::hash>
+    std::vector<typename Field::S>
     > type;
 };
 

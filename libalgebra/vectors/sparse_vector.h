@@ -151,7 +151,7 @@ public:
 
         bool compare_iterators(const iterator_item &other) const
         {
-            return !(m_iterator != other.m_iterator);
+            return (m_iterator == other.m_iterator);
         }
 
         void advance()
@@ -220,7 +220,7 @@ public:
         bool compare_iterators(const const_iterator_item &other) const
         {
             bool result = m_iterator != other.m_iterator;
-            return !result;
+            return m_iterator == other.m_iterator;
         }
 
         void advance()

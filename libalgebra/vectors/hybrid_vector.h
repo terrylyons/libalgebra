@@ -94,9 +94,10 @@ public:
     hybrid_vector(void) : DENSE(), SPARSE()
     {}
 
-    explicit hybrid_vector(const KEY &key, const SCALAR s = one)
+    explicit hybrid_vector(const KEY &key, const SCALAR& s = one)
             : DENSE(), SPARSE(key, s)
-    {}
+    {
+    }
 
     hybrid_vector(const hybrid_vector &other)
             : DENSE(other), SPARSE(other)
@@ -106,7 +107,8 @@ private:
 
     hybrid_vector(DENSE dense_vec, SPARSE sparse_vec)
             : DENSE(dense_vec), SPARSE(sparse_vec)
-    {}
+    {
+    }
 
 protected:
 
@@ -124,10 +126,10 @@ protected:
 
     void resize_dense_to_dimension(const DIMN dim)
     {
-        if (dim > DENSE::dimension()) {
+        if (dim > dense_dimension()) {
             DENSE::resize_to_dimension(dim);
             incorporate_sparse();
-        } else {
+        } else if (dim < dense_dimension()) {
             incorporate_dense(dim);
             DENSE::resize_to_dimension(dim);
         }
@@ -143,7 +145,7 @@ protected:
     {
         DIMN sparse_sz(sparse_size());
         while (sparse_sz > dense_dimension()) {
-            resize_dense_to_dimension(dense_dimension() + 1);
+            resize_dense_to_dimension(2*dense_dimension() + 1);
         }
         incorporate_sparse();
     }
@@ -776,8 +778,8 @@ public:
     hybrid_vector &operator+=(const hybrid_vector &other)
     {
         DIMN dim = std::max(
-                DENSE::dimension(),
-                other.dimension()
+                dense_dimension(),
+                other.dense_dimension()
         );
         resize_dense_to_dimension(dim);
 
@@ -790,9 +792,10 @@ public:
     hybrid_vector &operator-=(const hybrid_vector &other)
     {
         DIMN dim = std::max(
-                DENSE::dimension(),
-                other.dimension()
+                dense_dimension(),
+                other.dense_dimension()
         );
+        std::cout << dim << '\n';
         resize_dense_to_dimension(dim);
 
         DENSE::operator-=(other);
@@ -804,8 +807,8 @@ public:
     hybrid_vector &operator&=(const hybrid_vector &rhs)
     {
         DIMN dim = std::max(
-                DENSE::dimension(),
-                rhs.dimension()
+                dense_dimension(),
+                rhs.dense_dimension()
         );
         resize_dense_to_dimension(dim);
 
@@ -818,8 +821,8 @@ public:
     hybrid_vector &operator|=(const hybrid_vector &rhs)
     {
         DIMN dim = std::max(
-                DENSE::dimension(),
-                rhs.dimension()
+                dense_dimension(),
+                rhs.dense_dimension()
         );
         resize_dense_to_dimension(dim);
 

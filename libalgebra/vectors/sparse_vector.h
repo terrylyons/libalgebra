@@ -320,6 +320,10 @@ public:
     // Redefine the other inserts
     std::pair<iterator, bool> insert(const std::pair<const KEY, SCALAR> &value)
     {
+        if (zero == value.second) {
+            return std::pair<iterator, bool>(
+                    iterator(*this, MAP::find(value.first)), false);
+        }
         std::pair<typename MAP::iterator, bool> p = MAP::insert(value);
         return std::pair<iterator, bool>(iterator(*this, p.first), p.second);
     }
@@ -327,6 +331,10 @@ public:
     // Redefine the other inserts
     std::pair<iterator, bool> insert(std::pair<const KEY, SCALAR> &value)
     {
+        if (zero == value.second) {
+            return std::pair<iterator, bool>(
+                    iterator(*this, MAP::find(value.first)), false);
+        }
         std::pair<typename MAP::iterator, bool> p = MAP::insert(value);
         return std::pair<iterator, bool>(iterator(*this, p.first), p.second);
     }

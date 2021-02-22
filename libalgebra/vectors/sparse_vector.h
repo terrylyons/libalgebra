@@ -369,7 +369,7 @@ public:
     inline const SCALAR &operator[](const KEY k) const
     {
         const_iterator found = find(k);
-        return (found == cend()) ? zero : found->second;
+        return (found == cend()) ? zero : found->value();
     }
 
 

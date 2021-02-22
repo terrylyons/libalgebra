@@ -112,7 +112,7 @@ namespace alg {
 
 #define __DECLARE_BINARY_OPERATOR(T1, NEWOP, OLDOP, T2) \
     T1 operator NEWOP(const T2& rhs) const \
-    { T1 result(*this); return result OLDOP rhs; }
+    { T1 result(*this); result OLDOP rhs; return result; }
 
 #define __DECLARE_UNARY_OPERATOR(NEWT, NEWOP, OLDOP, OLDT) \
     NEWT operator NEWOP(void) const \

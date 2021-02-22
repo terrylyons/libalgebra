@@ -272,14 +272,6 @@ public:
             : VECT(k, s)
     {}
 
-    /// Create new vector for result of multiplication
-    friend algebra create_for_mul(const algebra &lhs, const algebra &rhs)
-    {
-        algebra result();
-        result.ensure_sized_for_degree(lhs.degree() + rhs.degree());
-        return result;
-    }
-
 public:
     /// Multiplies the instance with scalar s.
     inline algebra &operator*=(const SCALAR &s)
@@ -314,7 +306,7 @@ public:
     inline algebra &operator*=(const algebra &rhs)
     {
         algebra result;
-        bufferedmultiplyandadd<MAX_DEGREE>(rhs, result);
+            bufferedmultiplyandadd<MAX_DEGREE>(rhs, result);
         this->swap(result);
         return *this;
     }
@@ -340,7 +332,7 @@ public:
     inline algebra &mul_scal_prod(const algebra &rhs, const SCALAR &s)
     {
         algebra result;
-        bufferedmultiplyandsmult<MAX_DEGREE>(rhs, wrapscalar(s), result);
+            bufferedmultiplyandsmult<MAX_DEGREE>(rhs, wrapscalar(s), result);
         this->swap(result);
         return *this;
     }
@@ -349,7 +341,7 @@ public:
     inline algebra &mul_scal_div(const algebra &rhs, const RATIONAL &s)
     {
         algebra result;
-        bufferedmultiplyandsdiv<MAX_DEGREE>(rhs, wraprational(s), result);
+            bufferedmultiplyandsdiv<MAX_DEGREE>(rhs, wraprational(s), result);
         this->swap(result);
         return *this;
     }

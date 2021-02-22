@@ -378,6 +378,22 @@ public:
     }
 };
 
+namespace dtl {
+
+template <bool Cond, typename T1, typename T2>
+struct type_selector
+{
+    typedef T1 type;
+};
+
+template <typename T1, typename T2>
+struct type_selector<true, T1, T2>
+{
+    typedef T2 type;
+};
+
+}
+
 
 namespace vectors {
 
@@ -386,12 +402,26 @@ struct vector_type_selector<free_tensor_basis<typename Field::S, typename Field:
 {
     typedef free_tensor_basis<typename Field::S, typename Field::Q, n_letters, max_depth> BASIS;
     typedef typename BASIS::KEY KEY;
+    typedef vectors::sparse_vector <
+            BASIS,
+            Field,
+            MY_UNORDERED_MAP<KEY, typename Field::S, typename KEY::hash>
+    > sparse_vect;
     typedef vectors::dense_vector <
-    BASIS,
-    Field,
-    std::vector<typename Field::S>
-    > type;
+            BASIS,
+            Field,
+            std::vector<typename Field::S>
+    > dense_vect;
+
+    typedef typename alg::dtl::type_selector<
+            boost::is_pod<typename Field::S>::value,
+            sparse_vect,
+            dense_vect
+        >::type type;
+
+
 };
+
 
 }
 

@@ -29,6 +29,30 @@ struct requires_order
 
 } // namespace dtl
 
+
+
+#define DECLARE_FUSED_OP(NAME, OP1, OP2, T)                           \
+    dense_vector& NAME(const KEY& rhs, const T s) {                   \
+        operator[](rhs) OP1 (one OP2 s);                              \
+        return *this;                                                 \
+    }                                                                 \
+                                                                      \
+    dense_vector& NAME(const dense_vector& rhs, const T s) {          \
+        if (m_dimension < rhs.m_dimension) {                          \
+            resize_to_dimension(rhs.m_dimension);                     \
+        }                                                             \
+                                                                      \
+        for (DIMN i=0; i<rhs.m_dimension; ++i) {                      \
+            m_data[i] OP1 (rhs.m_data[i] OP2 s);                      \
+        }                                                             \
+        return *this;                                                 \
+    }
+
+
+
+
+
+
 template<typename Basis, typename Coeffs,
         typename Storage = std::vector<typename Coeffs::S> >
 class dense_vector : protected base_vector<Basis, Coeffs>, dtl::requires_order<Basis>
@@ -117,7 +141,7 @@ private:
 
     DIMN adjust_dimension(const DIMN dim, alg::basis::without_degree)
     {
-        return dim;
+        return std::min(max_dimension(degree_tag), dim);
     }
 
     template<DEG D>
@@ -719,22 +743,6 @@ public:
 
 public:
 
-#define DECLARE_FUSED_OP(NAME, OP1, OP2, T)                           \
-    dense_vector& NAME(const KEY& rhs, const T s) {                   \
-        operator[](rhs) OP1 (one OP2 s);                              \
-        return *this;                                                 \
-    }                                                                 \
-                                                                      \
-    dense_vector& NAME(const dense_vector& rhs, const T s) {          \
-        if (m_dimension < rhs.m_dimension) {                          \
-            resize_to_dimension(rhs.m_dimension);                     \
-        }                                                             \
-                                                                      \
-        for (DIMN i=0; i<rhs.m_dimension; ++i) {                      \
-            m_data[i] OP1 (rhs.m_data[i] OP2 s);                      \
-        }                                                             \
-        return *this;                                                 \
-    }
 
     // Fused add/sub scalar multiplication/division
     DECLARE_FUSED_OP(add_scal_prod, +=, *, SCALAR);
@@ -745,7 +753,7 @@ public:
 
     DECLARE_FUSED_OP(sub_scal_div, -=, /, RATIONAL);
 
-#undef DECLARE_FUSED_OP
+
 
 public:
 
@@ -873,6 +881,10 @@ public:
             const DEG max_depth
     ) const
     {
+        if (empty() || rhs.empty()) {
+            return;
+        }
+
         const IDEG max_degree = static_cast<IDEG>(std::min(max_depth, m_degree + rhs.m_degree));
         dense_vector &d_result = dtl::vector_base_access::convert(result);
         d_result.resize_to_degree(static_cast<DEG>(max_degree));
@@ -920,6 +932,10 @@ public:
             const DEG max_depth
     ) const
     {
+        if (empty() || rhs.empty()) {
+            return;
+        }
+
         dense_vector &d_result = dtl::vector_base_access::convert(result);
 
         const DEG max_degree = std::min(max_depth, m_degree + rhs.m_degree);
@@ -962,6 +978,10 @@ public:
             KeyTransform key_transform
     ) const
     {
+        if (empty() || rhs.empty()) {
+            return;
+        }
+
         dense_vector &d_result = dtl::vector_base_access::convert(result);
         d_result.resize_to_dimension(std::max(m_dimension, rhs.m_dimension));
 
@@ -988,6 +1008,10 @@ public:
             IndexTransform index_transform
     ) const
     {
+        if (empty() || rhs.empty()) {
+            return;
+        }
+
         dense_vector &d_result = dtl::vector_base_access::convert(result);
         d_result.resize_to_dimension(std::max(m_dimension, rhs.m_dimension));
 
@@ -1003,6 +1027,10 @@ public:
     }
 
 };
+
+
+#undef DECLARE_FUSED_OP
+
 
 } // namespace vectors
 } // namespace alg

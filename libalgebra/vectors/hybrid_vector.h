@@ -36,6 +36,24 @@ namespace alg {
 namespace vectors {
 
 
+namespace tools {
+
+struct size_control
+{
+
+    template <typename Basis, typename Coeff, typename Vector>
+    static DIMN set_dense_dimension(vector<Basis, Coeff, Vector>& vect, DIMN dim)
+    {
+        Vector& v_vect = dtl::vector_base_access::convert(vect);
+        v_vect.resize_dense(dim);
+        return v_vect.dense_dimension();
+    }
+
+
+};
+
+}
+
 class basic_resize_manager
 {
 public:
@@ -56,6 +74,7 @@ class hybrid_vector : public dense_vector<Basis, Coeffs, DenseStorage>,
     typedef sparse_vector <Basis, Coeffs, SparseMap> SPARSE;
     typedef ResizeManager MANAGER;
 
+    friend struct tools::size_control;
 
 private:
 
@@ -1016,7 +1035,7 @@ private:
         std::vector<std::pair<KEY, SCALAR> > buffer;
         rhs.fill_buffer(buffer);
 
-        typename std::vector<std::pair<KEY, SCALAR> >
+        typename std::vector<std::pair<KEY, SCALAR> >::const_iterator
                 cit, buf_begin(buffer.begin()), buf_end(buffer.end());
 
         // First deal with the dense * sparse case
@@ -1093,13 +1112,11 @@ public:
             KeyTransform key_transform
     ) const
     {
-
         if (!dense_empty() && !rhs.dense_empty()) {
             DENSE::square_buffered_apply_binary_transform(result, rhs, key_transform);
         }
 
         square_binary_transform_mixed_case(result, rhs, key_transform);
-
     }
 
     template<typename Vector, typename KeyTransform, typename IndexTransform>

@@ -66,7 +66,7 @@ public:
 
     // Constructors
     /// Default constructor
-    dense_vector() : m_data(), m_dimension(0)
+    dense_vector() : m_data(), m_dimension(0), m_degree(0)
     {}
 
     /// Copy constructor
@@ -455,7 +455,10 @@ public:
     { return m_dimension; }
 
     DEG degree() const
-    { return m_degree; }
+    {
+        assert (m_degree <= BASIS::MAX_DEGREE);
+        return m_degree;
+    }
 
     SCALAR &value(const DIMN dim)
     {

@@ -225,6 +225,11 @@ public:
         return DENSE::empty() && SPARSE::empty();
     }
 
+    DEG degree() const
+    {
+        return std::max(dense_degree(), SPARSE::degree());
+    }
+
     bool dense_empty() const
     { return DENSE::empty(); }
 

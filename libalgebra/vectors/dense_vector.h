@@ -676,7 +676,7 @@ public:
         } else if (m_dimension > rhs.m_dimension) {
 
             for (DIMN i = mid; i < m_dimension; ++i) {
-                m_data[i] = std::min(zero, rhs.m_data[i]);
+                m_data[i] = std::min(zero, m_data[i]);
             }
         }
         return *this;

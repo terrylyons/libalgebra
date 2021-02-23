@@ -28,6 +28,9 @@ class vector_base_access
 {
 public:
 
+    template <typename Vector>
+    static Vector& convert(Vector& arg) { return arg; }
+
     template<typename Basis, typename Coeffs, typename Vector>
     static Vector &convert(vector<Basis, Coeffs, Vector> &arg)
     {
@@ -455,7 +458,7 @@ public:
     ) const
     {
         buffered_apply_binary_transform(result, rhs, key_transform, index_transform,
-                                        temporary_tag<BASIS::MAX_DEGREE>());
+                                        UnderlyingVectorType::degree_tag);
     }
 
     /// Buffered apply transform with only key transform
@@ -466,22 +469,17 @@ public:
             KeyTransform key_transform
     ) const
     {
-        buffered_apply_binary_transform(result, rhs, key_transform, temporary_tag<BASIS::MAX_DEGREE>());
+        buffered_apply_binary_transform(result, rhs, key_transform, UnderlyingVectorType::degree_tag);
     }
 
 private:
-
-    template<DEG D>
-    struct temporary_tag
-    {
-    };
 
     template<typename KeyTransform>
     void buffered_apply_binary_transform(
             vector &result,
             const vector &rhs,
             KeyTransform key_transform,
-            temporary_tag<0>
+            alg::basis::without_degree
     ) const
     {
         UnderlyingVectorType::square_buffered_apply_binary_transform(
@@ -494,7 +492,7 @@ private:
             vector &result,
             const vector &rhs,
             KeyTransform key_transform,
-            temporary_tag<D>
+            alg::basis::with_degree<D>
     ) const
     {
         UnderlyingVectorType::triangular_buffered_apply_binary_transform(
@@ -508,7 +506,7 @@ private:
             const vector &rhs,
             KeyTransform key_transform,
             IndexTransform index_transform,
-            temporary_tag<0>
+            alg::basis::without_degree
     ) const
     {
         UnderlyingVectorType::square_buffered_apply_binary_transform(
@@ -522,7 +520,7 @@ private:
             const vector &rhs,
             KeyTransform key_transform,
             IndexTransform index_transform,
-            temporary_tag<D>
+            alg::basis::with_degree<D>
     ) const
     {
         UnderlyingVectorType::triangular_buffered_apply_binary_transform(

@@ -397,7 +397,7 @@ struct type_selector<true, T1, T2>
 
 namespace vectors {
 
-template<DEG n_letters, DEG max_depth, typename Field>
+template <DEG n_letters, DEG max_depth, typename Field>
 struct vector_type_selector<free_tensor_basis<typename Field::S, typename Field::Q, n_letters, max_depth>, Field>
 {
     typedef free_tensor_basis<typename Field::S, typename Field::Q, n_letters, max_depth> BASIS;
@@ -405,7 +405,11 @@ struct vector_type_selector<free_tensor_basis<typename Field::S, typename Field:
     typedef vectors::sparse_vector <
             BASIS,
             Field,
+#ifndef ORDERED_MAP
             MY_UNORDERED_MAP<KEY, typename Field::S, typename KEY::hash>
+#else
+            std::map<KEY, typename FIELD::S>
+#endif
     > sparse_vect;
     typedef vectors::dense_vector <
             BASIS,

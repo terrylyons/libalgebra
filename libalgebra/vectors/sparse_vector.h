@@ -366,7 +366,7 @@ public:
 public:
 
     /// Given a const instance of a sparse vector, returns a const reference to the scalar associated to the named basis element. (The default SCALAR element zero if the basis vector was not present in this sparse vector instance).
-    inline const SCALAR &operator[](const KEY k) const
+    inline const SCALAR &operator[](const KEY& k) const
     {
         const_iterator found = find(k);
         return (found == cend()) ? zero : found->value();
@@ -817,6 +817,16 @@ public:
     bool operator!=(const sparse_vector &rhs) const
     {
         return !operator==(rhs);
+    }
+
+    DEG degree() const
+    {
+        DEG ans(0);
+        for (const_iterator it(begin()); it != end(); ++it) {
+            ans = std::max(basis.degree(it->key()), ans);
+        }
+        assert (ans <= BASIS::MAX_DEGREE);
+        return ans;
     }
 
     /// Computes the l1 norm of sparse vector with respect to this basis

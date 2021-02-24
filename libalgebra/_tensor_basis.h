@@ -121,7 +121,7 @@ template<class re> const bool fp_info<re>::ieefp_to_int_as_expected =
 template<unsigned No_Letters, unsigned DEPTH>
 struct NoWords
 {
-    enum : LET64
+    enum
     {
         ans = No_Letters * NoWords<No_Letters, DEPTH - 1>::ans + 1
     };
@@ -498,7 +498,7 @@ public:
     /// a helper class for hashing the keys
     struct hash
     {
-        enum : LET64
+        enum
         {
             // NoKeys <= HashEnd is the full dense dimension of the tensor
             NoKeys = NoWords<No_Letters, DEPTH>::ans,

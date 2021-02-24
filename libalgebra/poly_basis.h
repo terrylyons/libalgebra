@@ -193,7 +193,7 @@ struct vector_type_selector<poly_basis<typename _Field::S, typename _Field::Q>, 
 {
     typedef poly_basis<typename _Field::S, typename _Field::Q> BASIS;
     typedef sparse_vector <BASIS, _Field,
-    std::map<typename BASIS::KEY, typename _Field::S, typename BASIS::KEY_LESS>> type;
+    std::map<typename BASIS::KEY, typename _Field::S, typename BASIS::KEY_LESS> > type;
 };
 
 

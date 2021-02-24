@@ -57,7 +57,7 @@ struct Field<SPReal>
 } // anon namespace
 
 template<size_t D, size_t W, coefficient_t F = Rational>
-struct alg_types : Field<F>
+struct alg_types
 {
     const static coefficient_t FIELD = F;
     typedef typename Field<F>::S S;

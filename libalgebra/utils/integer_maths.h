@@ -22,7 +22,7 @@ template<Unsigned N, Unsigned D = 2, Unsigned Q = (N / D), Unsigned R = (N % D)>
 struct divisor_calc
 {
     typedef typename divisor_calc<N, D + 1>::next next;
-    enum : Unsigned
+    enum
     {
         num = N,
         divisor = divisor_calc<N, D + 1>::divisor,
@@ -38,7 +38,7 @@ template<Unsigned N, Unsigned D, Unsigned Q>
 struct divisor_calc<N, D, Q, 0>
 {
     typedef divisor_calc<Q> next;
-    enum : Unsigned
+    enum
     {
         num = N,
         divisor = D,
@@ -55,7 +55,7 @@ template<Unsigned N>
 struct divisor_calc<N, N, 1, 0>
 {
     typedef divisor_calc<1> next;
-    enum : Unsigned
+    enum
     {
         num = N,
         divisor = N,
@@ -71,7 +71,7 @@ template<Unsigned D, Unsigned Q, Unsigned R>
 struct divisor_calc<1, D, Q, R>
 {
     typedef divisor_calc<1> next;
-    enum : Unsigned
+    enum
     {
         num = 1,
         divisor = 1,
@@ -103,8 +103,7 @@ last divisor.
 template<Unsigned LastNum>
 struct square_free<divisor_calc<1>, false, LastNum>
 {
-    enum
-    {
+    enum {
         ans = 1
     };
 };
@@ -115,8 +114,7 @@ Specialise for the case where a repeated digit is detected.
 template<typename Divisor, Unsigned LastNum>
 struct square_free<Divisor, true, LastNum>
 {
-    enum
-    {
+    enum {
         ans = 0
     };
 };
@@ -131,10 +129,7 @@ of the next divisor if the number is square free, and 0 otherwise.
 template<typename Divisor, bool= true, bool= square_free<Divisor>::ans>
 struct mobius_func_impl
 {
-    enum : Long
-    {
-        value = -1 * mobius_func_impl<typename Divisor::next, (Divisor::num > 1), true>::value
-    };
+    static const Long value = -1 * mobius_func_impl<typename Divisor::next, (Divisor::num > 1), true>::value;
 };
 
 /*
@@ -143,10 +138,7 @@ Specialise for non-square-free case.
 template<typename Divisor, bool B>
 struct mobius_func_impl<Divisor, B, false>
 {
-    enum : Long
-    {
-        value = 0
-    };
+    static const Long value = 0;
 };
 
 /*
@@ -155,10 +147,7 @@ Specialise for terminal case.
 template<bool B>
 struct mobius_func_impl<divisor_calc<1>, B, true>
 {
-    enum : Long
-    {
-        value = 1
-    };
+    static const Long value = 1;
 };
 
 } // namespace Mobius
@@ -166,10 +155,7 @@ struct mobius_func_impl<divisor_calc<1>, B, true>
 template<Unsigned N>
 struct mobius_func
 {
-    enum : Long
-    {
-        value = Mobius::mobius_func_impl<divisor_calc<N>>::value
-    };
+    static const Long value = Mobius::mobius_func_impl<divisor_calc<N> >::value;
 };
 
 

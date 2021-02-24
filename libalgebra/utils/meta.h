@@ -5,7 +5,7 @@
 #ifndef LIBALGEBRA_META_H
 #define LIBALGEBRA_META_H
 
-#include <type_traits>
+
 #include <boost/type_traits.hpp>
 
 namespace alg {

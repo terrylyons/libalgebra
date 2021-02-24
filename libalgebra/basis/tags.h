@@ -33,6 +33,17 @@ template<typename OrderOperator>
 struct ordered
 {
     typedef OrderOperator order;
+
+    struct pair_order
+    {
+        template <typename Key, typename Scalar>
+        bool operator()(const std::pair<Key, Scalar>& p1, const std::pair<Key, Scalar>& p2) const
+        {
+            order o;
+            return o(p1.first, p2.first);
+        }
+    };
+
 };
 
 struct unordered

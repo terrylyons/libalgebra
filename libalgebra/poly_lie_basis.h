@@ -131,12 +131,12 @@ public:
 
 namespace vectors {
 
-template<DEG n_letters, DEG max_degree, typename _Field>
-struct vector_type_selector<poly_lie_basis<typename _Field::S, typename _Field::Q, n_letters, max_degree>, _Field>
+template<DEG n_letters, DEG max_degree, typename Field>
+struct vector_type_selector<poly_lie_basis<typename Field::S, typename Field::Q, n_letters, max_degree>, Field>
 {
-    typedef poly_lie_basis<typename _Field::S, typename _Field::Q, n_letters, max_degree> BASIS;
-    typedef sparse_vector <BASIS, _Field,
-    std::map<typename BASIS::KEY, typename _Field::S, typename BASIS::KEY_LESS>> type;
+    typedef poly_lie_basis<typename Field::S, typename Field::Q, n_letters, max_degree> BASIS;
+    typedef sparse_vector <BASIS, Field,
+    std::map<typename BASIS::KEY, typename Field::S, typename BASIS::KEY_LESS> > type;
 };
 
 

@@ -25,12 +25,15 @@ Version 3. (See accompanying file License.txt)
 #include "basis_traits.h"
 
 
+
+
 namespace dtl {
+
 
 template<DEG NoLetters, DEG Depth>
 struct depth_size
 {
-    enum : DIMN
+    enum
     {
         value = (ConstPower<NoLetters, Depth>::ans - 1) / (NoLetters - 1)
     };
@@ -61,22 +64,22 @@ struct tensor_size_info
     static const DEG mantissa_bits_stored = std::numeric_limits<word_t>::digits - 1;
     static const DEG max_depth = mantissa_bits_stored / bits_per_letter;
 
-    static const std::array<DIMN, max_depth + 2> degree_sizes;
+    static const LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, max_depth + 2> degree_sizes;
 
 };
 
 template<DEG NoLetters>
-std::array<DIMN, tensor_size_info<NoLetters>::max_depth + 2>
+LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, tensor_size_info<NoLetters>::max_depth + 2>
 populate_tensor_size_info_array()
 {
-    std::array<DIMN, tensor_size_info<NoLetters>::max_depth + 2> tmp;
+    LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, tensor_size_info<NoLetters>::max_depth + 2> tmp;
     alg::utils::populate_array<depth_size, NoLetters, tensor_size_info<NoLetters>::max_depth
-                                                      + 2>::fill(tmp);
+                                                      + 1>::fill(tmp);
     return tmp;
 }
 
 template<DEG NoLetters>
-const std::array<DIMN, tensor_size_info<NoLetters>::max_depth + 2>
+const LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, tensor_size_info<NoLetters>::max_depth + 2>
         tensor_size_info<NoLetters>::degree_sizes = populate_tensor_size_info_array<NoLetters>();
 
 } // namespace dtl
@@ -128,7 +131,7 @@ public:
 #endif // !ORDEREDMAP
 #endif
     typedef alg::basis::with_degree<max_degree> degree_tag;
-    typedef alg::basis::ordered<std::less<KEY>> ordering_tag;
+    typedef alg::basis::ordered<std::less<KEY> > ordering_tag;
 
 
 private:
@@ -266,11 +269,11 @@ public:
 
         static std::map<DIMN, KEY> __cache;
 
-        auto it = __cache.find(idx);
+        typename std::map<DIMN, KEY>::iterator it = __cache.find(idx);
         if (it != __cache.end())
             return it->second;
 
-        KEY rv{};
+        KEY rv;
         if (idx == 0)
             return rv;
 
@@ -281,7 +284,7 @@ public:
         while (i) {
             i -= 1;
             l = i % n_letters;
-            rv.push_back(LET{1 + l});
+            rv.push_back(LET(1 + l));
             i /= n_letters;
         }
         return __cache[idx] = rv.reverse();
@@ -405,10 +408,10 @@ struct vector_type_selector<free_tensor_basis<typename Field::S, typename Field:
     typedef vectors::sparse_vector <
             BASIS,
             Field,
-#ifndef ORDERED_MAP
+#ifndef ORDEREDMAP
             MY_UNORDERED_MAP<KEY, typename Field::S, typename KEY::hash>
 #else
-            std::map<KEY, typename FIELD::S>
+            std::map<KEY, typename Field::S>
 #endif
     > sparse_vect;
     typedef vectors::dense_vector <
@@ -431,7 +434,7 @@ struct vector_type_selector<free_tensor_basis<typename Field::S, typename Field:
 
 
 template<DEG n_letters, DEG max_depth, typename Scalar, typename Rational>
-struct basis_multiplication_selector<free_tensor_basis<Scalar, Rational, n_letters, max_depth>>
+struct basis_multiplication_selector<free_tensor_basis<Scalar, Rational, n_letters, max_depth> >
 {
     typedef two_method_multiplication_tag tag;
 
@@ -534,10 +537,10 @@ public:
     /// The Shuffle Associative Algebra elements type.
     typedef shuffle_tensor<SCA, RAT, n_letters, max_degree> TENSOR;
 
-    typedef algebra<free_tensor_basis<SCA, RAT, n_letters, max_degree>> FTENSOR;
+    typedef algebra<free_tensor_basis<SCA, RAT, n_letters, max_degree> > FTENSOR;
 
     typedef alg::basis::with_degree<max_degree> degree_tag;
-    typedef alg::basis::ordered<std::less<KEY>> ordering_tag;
+    typedef alg::basis::ordered<std::less<KEY> > ordering_tag;
 
 public:
     /// Default constructor.
@@ -632,13 +635,19 @@ private:
 
 namespace vectors {
 
-template<DEG n_letters, DEG max_depth, typename _Field>
-struct vector_type_selector<shuffle_tensor_basis<typename _Field::S, typename _Field::Q, n_letters, max_depth>,
-        _Field>
+template<DEG n_letters, DEG max_depth, typename Field>
+struct vector_type_selector<shuffle_tensor_basis<typename Field::S, typename Field::Q, n_letters, max_depth>,
+        Field>
 {
-    typedef shuffle_tensor_basis<typename _Field::S, typename _Field::Q, n_letters, max_depth> BASIS;
+    typedef shuffle_tensor_basis<typename Field::S, typename Field::Q, n_letters, max_depth> BASIS;
     typedef typename BASIS::KEY KEY;
-    typedef sparse_vector <BASIS, _Field, std::unordered_map<KEY, typename _Field::S, typename KEY::hash>> type;
+    typedef sparse_vector <BASIS, Field,
+#ifndef ORDEREDMAP
+    std::unordered_map<KEY, typename Field::S, typename KEY::hash>
+#else
+    std::map<KEY, typename Field::S>
+#endif
+    > type;
 };
 
 }

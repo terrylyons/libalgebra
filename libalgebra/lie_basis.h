@@ -25,6 +25,8 @@ namespace dtl {
 using alg::integer_maths::divisor_calc;
 using alg::integer_maths::mobius_func;
 
+typedef long long Long;
+
 /**
  * The size of the Hall set with n letters has number of members at level k given by
  *
@@ -43,11 +45,7 @@ is not normalised.
 template<DEG NoLetters, DEG Level, DEG Divisor = 1, DEG Remainder = (Level % Divisor)>
 struct hall_set_level_size
 {
-    enum
-    {
-        value = hall_set_level_size<NoLetters, Level, Divisor + 1>::value
-    };
-
+    static const Long value = hall_set_level_size<NoLetters, Level, Divisor + 1>::value;
 };
 
 /*
@@ -57,12 +55,9 @@ divisor term value.
 template<DEG NoLetters, DEG Level, DEG Divisor>
 struct hall_set_level_size<NoLetters, Level, Divisor, 0>
 {
-    enum
-    {
-        value = mobius_func<Divisor>::value
-                * ConstPower<NoLetters, Level / Divisor>::ans
-                + hall_set_level_size<NoLetters, Level, Divisor + 1>::value
-    };
+    static const Long value = mobius_func<Divisor>::value
+                              * ConstPower<NoLetters, Level / Divisor>::ans
+                              + hall_set_level_size<NoLetters, Level, Divisor + 1>::value;
 };
 
 /*
@@ -71,10 +66,7 @@ Specialisation for divisor = number (terminal case).
 template<DEG NoLetters, DEG Level>
 struct hall_set_level_size<NoLetters, Level, Level, 0>
 {
-    enum
-    {
-        value = mobius_func<Level>::value * NoLetters
-    };
+    static const Long value = mobius_func<Level>::value * NoLetters;
 };
 
 /*
@@ -83,11 +75,10 @@ Specialisation for 1
 template<DEG NoLetters>
 struct hall_set_level_size<NoLetters, 1, 1, 0>
 {
-    enum
-    {
-        value = NoLetters
-    };
+    static const Long value = NoLetters;
 };
+
+
 
 /*
 Specialisation for 0.
@@ -95,60 +86,64 @@ Specialisation for 0.
 template<DEG NoLetters, DEG Divisor>
 struct hall_set_level_size<NoLetters, 0, Divisor, 0>
 {
-    enum
-    {
-        value = 0
-    };
+    static const Long value = NoLetters;
 };
+
 
 
 template<DEG NoLetters, DEG MaxLevel>
 struct hall_set_size
 {
-    enum : DIMN
-    {
-        value = (hall_set_level_size<NoLetters, MaxLevel - 1>::value / (MaxLevel - 1))
-                + hall_set_size<NoLetters, MaxLevel - 1>::value
-    };
+    static const Long value;
+    /*
+    static const Long value = ((hall_set_level_size<NoLetters, MaxLevel - 1>::value / (MaxLevel - 1))
+        + hall_set_size<NoLetters, MaxLevel - 1>::value);
+    */
 };
 
 template<DEG NoLetters>
 struct hall_set_size<NoLetters, 1>
 {
-    enum : DIMN
-    {
-        value = 0
-    };
+    static const Long value;
 };
 
 template<DEG NoLetters>
 struct hall_set_size<NoLetters, 0>
 {
-    enum : DIMN
-    {
-        value = 0
-    };
+    static const Long value;
 };
+
+
+template < DEG NoLetters, DEG MaxLevel >
+const Long hall_set_size < NoLetters, MaxLevel >::value =
+        ((hall_set_level_size<NoLetters, MaxLevel - 1>::value / (MaxLevel - 1))
+          + hall_set_size<NoLetters, MaxLevel - 1>::value);
+
+template < DEG NoLetters >
+const Long hall_set_size < NoLetters, 1 >::value = 0;
+
+template < DEG NoLetters >
+const Long hall_set_size < NoLetters, 0 >::value = 0;
 
 
 template<DEG NoLetters, DEG MaxDepth>
 struct hall_set_info
 {
-    static const std::array<DIMN, MaxDepth + 1> degree_sizes;
+    static const LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, MaxDepth + 1> degree_sizes;
 };
 
 
 template<DEG NoLetters, DEG MaxDepth>
-std::array<DIMN, MaxDepth + 1>
+LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, MaxDepth + 1>
 populate_hall_set_size_array()
 {
-    std::array<DIMN, MaxDepth + 1> tmp;
+    LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, MaxDepth + 1> tmp;
     utils::populate_array<hall_set_size, NoLetters, MaxDepth>::fill(tmp);
     return tmp;
 }
 
 template<DEG NoLetters, DEG MaxDepth>
-const std::array<DIMN, MaxDepth + 1> hall_set_info<NoLetters, MaxDepth>::degree_sizes
+const LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, MaxDepth + 1> hall_set_info<NoLetters, MaxDepth>::degree_sizes
         = populate_hall_set_size_array<NoLetters, MaxDepth>();
 
 }
@@ -249,7 +244,7 @@ public:
     //typedef DEG KEY; // unsigned int
     typedef LET KEY; // size_t
     /// The parents of a key are a pair of prior keys. Invalid 0 keys for letters.
-    typedef typename std::pair<KEY, KEY> PARENT;
+    typedef std::pair<KEY, KEY> PARENT;
     /// The number of letters in alphabet
     enum
     {
@@ -258,13 +253,17 @@ public:
 protected:
     /// Parents, indexed by keys.
     std::vector<PARENT> hall_set;
+
+public:
     /// Reverse map from parents to keys.
     struct REVERSE_MAP : private std::map<PARENT, KEY>
     {
         using std::map<PARENT, KEY>::operator[];
         using std::map<PARENT, KEY>::find;
         using std::map<PARENT, KEY>::end;
-    } reverse_map;
+    };
+protected:
+    REVERSE_MAP reverse_map;
     /// Degrees, indexed by keys.
     //static struct DEGREE : private
     struct DEGREE : private std::vector<DEG>
@@ -291,8 +290,8 @@ public:
         // We put something at position 0 to make indexing more logical
 
         degrees.push_back(0);
-        hall_set.emplace_back(0, 0);
-        hall_set_degree_ranges.emplace_back(0, hall_set.size());
+        hall_set.push_back(PARENT(0, 0));
+        hall_set_degree_ranges.push_back(std::pair<DIMN, DIMN>(0, hall_set.size()));
 
         for (LET c = 1; c <= n_letters; ++c)
             letters.push_back(c); //+= (char) c;
@@ -505,6 +504,7 @@ public:
     using hall_basis<n_letters>::key2string;
     using hall_basis<n_letters>::size;
     using hall_basis<n_letters>::hall_set;
+    using hall_basis<n_letters>::REVERSE_MAP;
     /// The MAP type.
     typedef std::map<KEY, SCA> MAP;
     /// The Free Lie Associative Algebra element type.
@@ -516,7 +516,7 @@ public:
 public:
 
     typedef basis::with_degree<max_degree> degree_tag;
-    typedef basis::ordered<std::less<KEY>> ordering_tag;
+    typedef basis::ordered<std::less<KEY> > ordering_tag;
 
 public:
     /// Constructs the basis for a finite number of letters.
@@ -526,6 +526,15 @@ public:
         // bug: tjl : 08 04 2017 without the following line the basis would not remain const and sharing it between threads would cause errors
         hall_basis<n_letters>::growup(max_degree);
     }
+
+private:
+    static std::map<PARENT, LIE> prime_prod_cache_table() {
+        std::map<PARENT, LIE> rv;
+        rv[PARENT(0, 0)] = LIE();
+        return rv;
+    }
+
+public:
     /// Returns the product of two key.
     /**
     Returns the LIE instance corresponding to the product of the two basis
@@ -544,7 +553,7 @@ public:
         growup(target_degree);
 
         static boost::recursive_mutex table_access;
-        static std::map<PARENT, LIE> table{{{0, 0}, LIE()}};
+        static std::map<PARENT, LIE> table(prime_prod_cache_table());
         // get exclusive recursive access for the thread
         boost::lock_guard<boost::recursive_mutex> lock(table_access);
         // [A,A] = 0.

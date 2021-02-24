@@ -147,7 +147,7 @@ public:
      * @tparam V Other underlying vector type.
      */
     template<typename F, typename V>
-    explicit vector(const vector<BASIS, F, V> &other) : vector()
+    explicit vector(const vector<BASIS, F, V> &other)
     {
         //TODO: Implement me
     }

@@ -23,9 +23,10 @@ Version 3. (See accompanying file License.txt)
 namespace alg {
 namespace vectors {
 
+
 // This is a macro because template aliases are c++11
 #define LIBALGEBRA_DEFAULT_MAP_TYPE \
-    std::unordered_map<typename Basis::KEY, typename Coeffs::S>
+    std::map<typename Basis::KEY, typename Coeffs::S>
 
 /// A class to store and manipulate sparse vectors.
 
@@ -540,9 +541,9 @@ public:
         }
     }
 #else
-        typename MAP::iterator it = map_begin();
-        typename MAP::const_iterator cit = rhs.map_begin();
-        for (; it != map_end() && cit != rhs.map_end();) {
+        typename MAP::iterator it(map_begin()), itend(map_end());
+        typename MAP::const_iterator cit(rhs.map_begin()), cend(rhs.map_end());
+        for (; it != itend && cit != cend;) {
             int c = (it->first < cit->first) ? 1 : (cit->first < it->first) ? 2 : (cit->first == it->first) ? 3 : 4;
             switch (c) {
                 case 1: {
@@ -563,13 +564,13 @@ public:
                 default:;
             }
         }
-        if (cit == rhs.end()) {
-            for (; it != end();)
+        if (cit == cend) {
+            for (; it != itend;)
                 if (!(it->second < SCALAR(0))) erase(it++);
                 else ++it;
         }
-        if (it == end()) {
-            for (; cit != rhs.end(); ++cit)
+        if (it == itend) {
+            for (; cit != cend; ++cit)
                 if (cit->second < SCALAR(0)) insert(*cit);
         }
 #endif
@@ -627,9 +628,9 @@ public:
             if (cit->second > SCALAR(0)) insert(*cit);
     }
 #else
-        typename MAP::iterator it = map_begin();
-        typename MAP::const_iterator cit = rhs.map_begin();
-        for (; it != map_end() && cit != rhs.map_end();) {
+        typename MAP::iterator it(map_begin()), itend(map_end());
+        typename MAP::const_iterator cit(rhs.map_begin()), cend(rhs.map_end());
+        for (; it != itend && cit != cend;) {
             // c++11 syntax auto
             int c = (it->first < cit->first) ? 1 : (cit->first < it->first) ? 2 : (cit->first == it->first) ? 3 : 4;
             switch (c) {
@@ -651,13 +652,13 @@ public:
                 default:;
             }
         }
-        if (cit == rhs.end()) {
-            for (; it != end();)
+        if (cit == cend) {
+            for (; it != itend;)
                 if (!(it->second > SCALAR(0))) erase(it++);
                 else ++it;
         }
-        if (it == end()) {
-            for (; cit != rhs.end(); ++cit)
+        if (it == itend) {
+            for (; cit != cend; ++cit)
                 if (cit->second > SCALAR(0)) insert(*cit);
         }
 #endif // UNORDEREDMAP
@@ -909,7 +910,7 @@ public:
         const_iterator cit;
         const sparse_vector &buffer = rhs;
 
-        for (cit = begin(); cit != end(); ++cit) {
+        for (cit = rhs.begin(); cit != rhs.end(); ++cit) {
             token.second = cit->key();
             os << ' ' << cit->value() << '(' << token << ')';
         }

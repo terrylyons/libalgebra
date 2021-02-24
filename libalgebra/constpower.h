@@ -18,7 +18,7 @@ Version 3. (See accompanying file License.txt)
 template<unsigned long long arg, alg::DEG exp>
 struct ConstPower
 {
-    enum : unsigned long long
+    enum
     {
         ans = ConstPower<arg, exp / 2>::ans * ConstPower<arg, exp / 2>::ans * ((exp % 2 == 0) ? 1ULL : arg),
         enum1_force_long_long = 18446744073709551615ULL
@@ -28,7 +28,7 @@ struct ConstPower
 template<unsigned long long arg>
 struct ConstPower<arg, 0>
 {
-    enum : unsigned long long
+    enum
     {
         ans = 1ULL,
         enum1_force_long_long = 18446744073709551615ULL
@@ -41,7 +41,7 @@ struct ConstPower<arg, 0>
 template<unsigned long long arg, alg::DEG exp>
 struct TestConstPower
 {
-    enum : unsigned long long
+    enum
     {
         intermediate = ConstPower<arg, exp>::ans * TestConstPower<arg, exp - 1>::intermediate,
         ans = (intermediate == ConstPower<arg, (ConstPower<exp, 2>::ans + exp) / 2>::ans) && TestConstPower<arg - 1,
@@ -53,7 +53,7 @@ struct TestConstPower
 template<unsigned long long arg>
 struct TestConstPower<arg, 0>
 {
-    enum : unsigned long long
+    enum
     {
         intermediate = ConstPower<arg, 0>::ans,
         ans = (intermediate == 1ULL),

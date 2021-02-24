@@ -58,6 +58,15 @@ typedef unsigned __int64    uint64_t;
 #include <boost/thread/locks.hpp>
 #include "implimentation_types.h"
 
+
+#if __cplusplus >= 201103L
+#include <array>
+#define LIBALGEBRA_STATIC_ARRAY_TYPE std::array
+#else
+#include <boost/array.hpp>
+#define LIBALGEBRA_STATIC_ARRAY_TYPE boost::array
+#endif
+
 //#define ORDEREDMAP
 #define UNORDEREDMAP
 #define NOBTREE

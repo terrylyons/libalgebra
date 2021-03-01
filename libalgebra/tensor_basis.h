@@ -414,16 +414,28 @@ struct vector_type_selector<free_tensor_basis<typename Field::S, typename Field:
             std::map<KEY, typename Field::S>
 #endif
     > sparse_vect;
+
     typedef vectors::dense_vector <
+        BASIS,
+        Field,
+        std::vector<typename Field::S>
+        > dense_vect;
+
+    typedef vectors::hybrid_vector <
             BASIS,
             Field,
-            std::vector<typename Field::S>
-    > dense_vect;
+#ifndef ORDEREDMAP
+            MY_UNORDERED_MAP<KEY, typename Field::S, typename KEY::hash>
+#else
+            std::map<KEY, typename Field::S>
+#endif
+    ,       std::vector<typename Field::S>
+    > hybrid_vect;
 
     typedef typename alg::dtl::type_selector<
             boost::is_pod<typename Field::S>::value,
             sparse_vect,
-            dense_vect
+            hybrid_vect
         >::type type;
 
 
@@ -450,14 +462,15 @@ struct basis_multiplication_selector<free_tensor_basis<Scalar, Rational, n_lette
         {}
 
         void operator()(
-                typename Coeffs::S *result_ptr,
-                const typename Coeffs::S *lhs_ptr,
-                const typename Coeffs::S *rhs_ptr,
+                typename Coeffs::S __restrict *result_ptr,
+                const typename Coeffs::S __restrict *lhs_ptr,
+                const typename Coeffs::S __restrict *rhs_ptr,
                 const DEG lhs_target,
                 const DEG rhs_target
         )
         {
             for (DIMN i = 0; i < lhs_target; ++i) {
+#pragma omp simd
                 for (DIMN j = 0; j < rhs_target; ++j) {
                     *(result_ptr++) += m_transform(lhs_ptr[i] * rhs_ptr[j]);
                 }

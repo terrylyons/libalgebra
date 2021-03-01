@@ -60,10 +60,10 @@ class vector : VectorImpl
 public:
 
     // Type definitions
-    typedef Coeffs FIELD;
+    typedef Coeffs coefficient_field;
     typedef Basis BASIS;
-    typedef typename FIELD::S SCALAR;
-    typedef typename FIELD::S RATIONAL;
+    typedef typename coefficient_field::S SCALAR;
+    typedef typename coefficient_field::S RATIONAL;
     typedef typename BASIS::KEY KEY;
 
     // Iterator definitions
@@ -420,6 +420,11 @@ public:
         return degree_impl(degree_tag);
     }
 
+    bool degree_equals(const DEG degree) const
+    {
+        return UnderlyingVectorType::degree_equals(const DEG degree);
+    }
+
 private:
 
     template<DEG D>
@@ -471,6 +476,67 @@ public:
     {
         buffered_apply_binary_transform(result, rhs, key_transform, UnderlyingVectorType::degree_tag);
     }
+
+    template<typename KeyTransform, typename IndexTransform>
+    void buffered_apply_binary_transform(
+            vector &result,
+            const vector &rhs,
+            KeyTransform key_transform,
+            IndexTransform index_transform,
+            const DEG max_depth
+    ) const
+    {
+        UnderlyingVectorType::triangular_buffered_apply_transform(
+                result, rhs, key_transform, index_transform, max_depth
+        );
+    }
+
+    /// Buffered apply transform with only key transform
+    template<typename KeyTransform>
+    void buffered_apply_binary_transform(
+            vector &result,
+            const vector &rhs,
+            KeyTransform key_transform,
+            const DEG max_depth
+    ) const
+    {
+        UnderlyingVectorType::triangular_buffered_apply_transform(
+                result, rhs, key_transform, max_depth
+        );
+    }
+
+public:
+
+    // Methods for operator implementation
+
+    template <typename KeyTransform, typename IndexTransform>
+    void buffered_apply_unary_transform(
+            vector& result,
+            KeyTransform key_transform,
+            IndexTransform index_transform
+    ) const
+    {
+        UnderlyingVectorType::buffered_apply_unary_transform(result, key_transform, index_transform);
+    }
+
+    template <typename KeyTransform>
+    void buffered_apply_unary_transform(
+            vector& result,
+            KeyTransform key_transform
+    ) const
+    {
+        UnderlyingVectorType::buffered_apply_unary_transform(result, key_transform);
+    }
+
+    template <typename Transform>
+    void buffered_apply_unary_transform_passthrough(
+            vector& result,
+            Transform transform
+    ) const
+    {
+        UnderlyingVectorType::buffered_apply_unary_transform_passthrough(result, transform);
+    }
+
 
 private:
 

@@ -484,6 +484,11 @@ public:
         return m_degree;
     }
 
+    bool degree_equals(const DEG degree) const
+    {
+        return m_degree == degree;
+    }
+
     SCALAR &value(const DIMN dim)
     {
         assert (dim < m_data.size());
@@ -1025,6 +1030,37 @@ public:
                 rhs.m_dimension
         );
     }
+
+public:
+    template <typename Vector, typename KeyTransform, typename IndexTransform>
+    void buffered_apply_unary_transform(
+            Vector& result,
+            KeyTransform key_transform,
+            IndexTransform index_transform
+    ) const
+    {
+
+    }
+
+    template <typename Vector, typename KeyTransform>
+    void buffered_apply_unary_transform(
+            Vector& result,
+            KeyTransform key_transform
+    ) const
+    {
+
+    }
+
+    template <typename Transform>
+    void buffered_apply_unary_transform_passthrough(
+            dense_vector& result,
+            Transform transform
+    ) const
+    {
+        transform(result, *this);
+    }
+
+
 
 };
 

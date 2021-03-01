@@ -100,6 +100,7 @@ public:
     typedef typename VECT::SCALAR SCALAR;
     /// Import of the RATIONAL type from sparse_vector.
     typedef typename VECT::RATIONAL RATIONAL;
+    using VECT::coefficient_field;
 
 
     static const DEG MAX_DEGREE = BASIS::MAX_DEGREE;
@@ -337,6 +338,14 @@ public:
         return *this;
     }
 
+    algebra& mul_scal_prod(const algebra& rhs, const Rational&s, const DEG depth)
+    {
+        algebra result;
+        buffered_apply_binary_transform(result, rhs, scalar_post_mult(s), depth);
+        this->swap(result);
+        return *this;
+    }
+
     /// Multiplies the instance by (algebra instance)/s.
     inline algebra &mul_scal_div(const algebra &rhs, const RATIONAL &s)
     {
@@ -345,6 +354,15 @@ public:
         this->swap(result);
         return *this;
     }
+
+    algebra& mul_scal_div(const algebra& rhs, const Rational&s, const DEG depth)
+    {
+        algebra result;
+        buffered_apply_binary_transform(result, rhs, rational_post_div(s), depth);
+        this->swap(result);
+        return *this;
+    }
+
 
     /// Returns an instance of the commutator of two algebra instances.
     inline friend algebra commutator(const algebra &a, const algebra &b)

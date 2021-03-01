@@ -249,6 +249,22 @@ public:
         return std::max(dense_degree(), SPARSE::degree());
     }
 
+    bool degree_equals(const DEG degree) const
+    {
+        bool result (DENSE::degree_equals(degree));
+        DEG d;
+        for (typename SPARSE::const_iterator it(SPARSE::begin()); it != SPARSE::end(); ++it) {
+            d = basis.degree(it->key())
+            if (d > degree) {
+                return false;
+            } else if (!result && d == degree) {
+                result = true;
+            }
+        }
+        return result;
+    }
+
+
     bool dense_empty() const
     { return DENSE::empty(); }
 
@@ -1133,6 +1149,41 @@ public:
 
         square_binary_transform_mixed_case(result, rhs, key_transform);
     }
+
+
+
+public:
+
+
+    template <typename Vector, typename KeyTransform, typename IndexTransform>
+    void buffered_apply_unary_transform(
+            Vector& result,
+            KeyTransform key_transform,
+            IndexTransform index_transform
+    ) const
+    {
+
+    }
+
+    template <typename Vector, typename KeyTransform>
+    void buffered_apply_unary_transform(
+            Vector& result,
+            KeyTransform key_transform
+    ) const
+    {
+
+    }
+
+    template <typename Transform>
+    void buffered_apply_unary_transform_passthrough(
+            hybrid_vector& result,
+            Transform transform
+    ) const
+    {
+        transform(result, *this);
+    }
+
+
 
 
 };

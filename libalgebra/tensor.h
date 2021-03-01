@@ -118,16 +118,37 @@ inline __DECLARE_BINARY_OPERATOR(free_tensor, -, -=, free_tensor)
 /// Ensures that the return type is a free_tensor.
 inline __DECLARE_UNARY_OPERATOR(free_tensor, -, -, ALG)
 
+private:
+
+    free_tensor exp_impl() const
+    {
+
+    }
+
+public:
+
 /// Computes the truncated exponential of a free_tensor instance.
 inline friend free_tensor exp(const free_tensor &arg)
 {
     // Computes the truncated exponential of arg
     // 1 + arg + arg^2/2! + ... + arg^n/n! where n = max_degree
     KEY kunit;
-    free_tensor result(kunit);
-    for (DEG i = max_degree; i >= 1; --i) {
-        result.mul_scal_div(arg, (RAT) i);
-        result += (free_tensor) kunit;
+    free_tensor result(kunit), tunit(kunit);
+
+    typename VECT::const_iterator unit_it(arg.find(kunit));
+    bool unit_zero = (unit_it == VECT::end()) || (unit_it->value() == VECT::zero);
+
+    if (arg.degree_equals(1) && unit_zero) {
+        for (DEG i=1; i < max_degree; ++i) {
+            result.mul_scal_div(arg, static_cast<RAT>(i));
+        }
+
+
+    } else {
+        for (DEG i = max_degree; i >= 1; --i) {
+            result.mul_scal_div(arg, (RAT) i);
+            result += tunit;
+        }
     }
     return result;
 }

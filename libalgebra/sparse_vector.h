@@ -4,13 +4,19 @@ const_iterator Where,
 const value_type& Val
 );
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
-Greg Gyurkó and Arend Janssen.
+Greg Gyurkï¿½ and Arend Janssen.
 
 Distributed under the terms of the GNU General Public License,
 Version 3. (See accompanying file License.txt)
 
 ************************************************************* */
 
+
+/* Using the sparse_vector class directly is deprecated. Instead
+ * you should include use the vector interface class in
+ * vectors/vectors.h and provide vectors::sparse_vector<Basis, Field>
+ * as the third template argument.
+ */
 
 
 
@@ -20,6 +26,7 @@ Version 3. (See accompanying file License.txt)
 // Include once wrapper
 #ifndef DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN
 #define DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN
+
 
 /// A class to store and manipulate sparse vectors.
 
@@ -333,7 +340,7 @@ public:
 				break;
 			}
 			case 3: {
-				it->second = ((it->second > cit->second) ? (it->second) : (cit->second));
+			    operator[](it->first) = ((it->second > cit->second) ? (it->second) : (cit->second));
 				++cit;
 				++it;
 				break; }
@@ -512,6 +519,20 @@ public:
 		}
 		return *this;
 	}
+
+	inline sparse_vector& add_scal_div(const KEY& rhs, const RATIONAL& s)
+    {
+	    if (zero == (operator[](rhs) += one / s)) erase(rhs);
+        return *this;
+
+    }
+
+    inline sparse_vector& sub_scal_div(const KEY& rhs, const RATIONAL& s)
+    {
+        if (zero == (operator[](rhs) -= one / s)) erase(rhs);
+        return *this;
+    }
+
 	/// Compares the instance to a sparse_vector.
 	bool operator==(const sparse_vector& rhs) const
 	{
@@ -612,6 +633,9 @@ const typename MAP::mapped_type sparse_vector<BASIS, MAP>::zero(0);
 /// Static initialisation of the scalar constant -1.
 template<class BASIS, class MAP>
 const typename MAP::mapped_type sparse_vector<BASIS, MAP>::mone(-1);
+
+
+
 
 // Include once wrapper
 // DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN

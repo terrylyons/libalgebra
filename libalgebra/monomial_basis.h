@@ -1,7 +1,7 @@
 /* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai, 
-Greg Gyurkó and Arend Janssen. 
+Greg Gyurkï¿½ and Arend Janssen. 
 
 Distributed under the terms of the GNU General Public License, 
 Version 3. (See accompanying file License.txt)
@@ -179,6 +179,7 @@ public:
 	typedef typename PBASIS::MAP MAP;
 	/// The rationals.
 	typedef RAT RATIONAL;
+    typedef SCA SCALAR;
 	/// The multi_polynomial element type.
 	typedef multi_polynomial<SCA, RAT, n_letters, max_degree> MULTIPOLY;
 public:

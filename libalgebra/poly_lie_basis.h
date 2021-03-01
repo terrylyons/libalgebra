@@ -1,7 +1,7 @@
 /* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai, 
-Greg Gyurkó and Arend Janssen. 
+Greg Gyurkï¿½ and Arend Janssen. 
 
 Distributed under the terms of the GNU General Public License, 
 Version 3. (See accompanying file License.txt)
@@ -37,6 +37,7 @@ public:
 	typedef poly<SCA, RAT> POLY;
 	/// The rationals.
 	typedef RAT RATIONAL;
+    typedef SCA SCALAR;
 	/// The order in the MAP class reflects the degree
 	struct  KEY_LESS
 	{
@@ -115,4 +116,22 @@ public:
 
 
 };
+
+
+
+namespace vectors {
+
+template<DEG n_letters, DEG max_degree, typename _Field>
+struct vector_type_selector<poly_lie_basis<typename _Field::S, typename _Field::Q, n_letters, max_degree>, _Field> {
+    typedef poly_lie_basis<typename _Field::S, typename _Field::Q, n_letters, max_degree> BASIS;
+    typedef sparse_vector <BASIS, _Field,
+    std::map<typename BASIS::KEY, typename _Field::S, typename BASIS::KEY_LESS>> type;
+};
+
+
+}
+
+
+
+
 #endif

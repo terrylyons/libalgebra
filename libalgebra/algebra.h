@@ -1,7 +1,7 @@
 /* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai, 
-Greg Gyurkó and Arend Janssen. 
+Greg Gyurkï¿½ and Arend Janssen. 
 
 Distributed under the terms of the GNU General Public License, 
 Version 3. (See accompanying file License.txt)
@@ -18,6 +18,40 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_ALGEBRAH_SEEN
 #define DJC_COROPA_LIBALGEBRA_ALGEBRAH_SEEN
 
+/// Temporary implementation of a basis-level key_transform for multiplication.
+template <typename Basis, typename Coeffs, typename Transform>
+struct multiplication_operator
+{
+
+    typedef typename Basis::KEY KEY;
+    typedef typename Coeffs::S S;
+
+    /// Trivial constructor
+    multiplication_operator() : m_transform() {}
+
+    /// Passthrough constructor for transform
+    template <typename Arg>
+    multiplication_operator(Arg a) : m_transform(a) {}
+
+    template <typename Vector>
+    inline void operator()(
+            Vector& result,
+            const KEY& lhs_key,
+            const S& lhs_val,
+            const KEY& rhs_key,
+            const S& rhs_val
+    ) {
+        result.add_scal_prod(
+                Vector::basis.prod(lhs_key, rhs_key),
+                m_transform(lhs_val * rhs_val)
+                );
+    }
+
+private:
+    Transform m_transform;
+};
+
+
 /// A class to store and manipulate associative algebras elements.
 /**
 The template class BASIS must
@@ -28,12 +62,13 @@ BASIS::prod(const KEY&, const KEY&) with a return type suitable for
 use as the first arg of sparse_vector::add_scal_prod(); it can be a key or a sparse vector for example
 (3) The sparse_vector::MAP class must provide the swap() member function.
 */
-template<class BASIS>
-class algebra : public sparse_vector<BASIS>
+template<typename Basis, typename Coeff, typename VectorType>
+class algebra : public vectors::vector<Basis, Coeff>
 {
 public:
+    typedef Basis BASIS;
 	/// The inherited sparse vector type.
-	typedef sparse_vector<BASIS> VECT;
+	typedef vectors::vector<Basis, Coeff> VECT;
 	/// Import of the iterator type from sparse_vector.
 	typedef typename VECT::iterator iterator;
 	/// Import of the constant iterator type from sparse_vector.
@@ -48,75 +83,8 @@ public:
 
 	static const DEG MAX_DEGREE = BASIS::MAX_DEGREE;
 
-	template <class Transform, size_t DEPTH1>
-	inline void triangularbufferedmultiplyandcombine(const algebra& rhs, algebra& result, Transform fn) const
-	{
-		// create buffers to avoid unnecessary calls to MAP inside loop
-		std::vector<std::pair<KEY, SCALAR> > buffer;
-		std::vector<typename std::vector<std::pair<KEY, SCALAR> >::const_iterator>
-			iterators;
-		separate_by_degree(buffer, rhs, DEPTH1, iterators);
 
-		typename std::vector<std::pair<KEY, SCALAR> >::const_iterator j, jEnd;
-		const_iterator i(VECT::begin()), iEnd(VECT::end());
-		for ( ; i != iEnd; ++i)
-		{
-			const KEY& k = i->first;
-			size_t rhdegree = DEPTH1 - VECT::basis.degree(k);
-			typename std::vector<std::pair<KEY, SCALAR> >:: const_iterator&
-				jEnd = iterators[rhdegree];
-			for (j = buffer.begin(); j != jEnd; ++j)
-				result.add_scal_prod(VECT::basis.prod(i->first, j->first),
-				fn(i->second * j->second));
-		}
 
-	}
-
-	/// copy the (key, value) elements from rhs to a sorted vector buffer (using the key for sorting) 
-	/// and construct an increasing vector iterators so that segment [iterators[i-1], iterators[i])
-	/// contains keys of degree i; the first begins at [begin(), and the last ends at end), and it can be empty
-
-	void separate_by_degree(std::vector<std::pair<KEY, SCALAR> > &buffer, const algebra &rhs, const size_t DEPTH1, std::vector<typename std::vector<std::pair<KEY, SCALAR> >::const_iterator> &iterators) const
-	{
-		buffer.assign(rhs.begin(), rhs.end());
-#ifndef ORDEREDMAP
-		std::sort(buffer.begin(), buffer.end(),
-			[](const std::pair<KEY, SCALAR>&lhs, const std::pair<KEY, SCALAR>&rhs)->bool
-		{return lhs.first < rhs.first; }
-		);
-#endif // ORDEREDMAP
- 
-		iterators.assign(DEPTH1 + 1, buffer.end());
-		unsigned deg = 0;
-		for (typename std::vector<std::pair<KEY, SCALAR> >::const_iterator j0 = buffer.begin();
-			j0 != buffer.end();
-			j0++)
-		{
-			DEG d = VECT::basis.degree(j0->first);
-			assert(d >= deg && d <= DEPTH1); // order assumed to respect degree
-			while (deg < d)
-				iterators[deg++] = j0;
-			// deg == d
-		}
-	}
-
-	template <class Transform>
-	inline void squarebufferedmultiplyandcombine(const algebra& rhs, algebra& result, Transform fn) const
-	{	
-		// create buffer to avoid unnecessary calls to MAP inside loop
-		std::vector<std::pair<KEY, SCALAR> > buffer(rhs.begin(), rhs.end());
-		const_iterator i;
-
-		// DEPTH1 == 0
-		typename std::vector<std::pair<KEY, SCALAR> >:: const_iterator j;
-		for (i = VECT::begin(); i != VECT::end(); ++i)
-		{
-			for (j = buffer.begin(); j != buffer.end(); ++j)
-				result.add_scal_prod(VECT::basis.prod(i->first, j->first),
-				fn(i->second * j->second));
-		}
-
-	}
 
 	// Transformations
 
@@ -172,43 +140,21 @@ public:
 	template <unsigned DEPTH1>
 	inline void bufferedmultiplyandadd(const algebra& rhs, algebra& result) const
 	{
-		bufferedmultiplyandadd( rhs, result, identity<DEPTH1>());
+	    multiplication_operator<Basis, Coeff, scalar_passthrough> fn;
+	    VECT::buffered_apply_binary_transform(result, rhs, fn);
+		//bufferedmultiplyandadd( rhs, result, identity<DEPTH1>());
 	}
-private:
-	/// multiplies *this and rhs adding it to result with optimizations coming from degree
-	template <unsigned DEPTH1>
-	inline void bufferedmultiplyandadd(const algebra& rhs, algebra& result, identity<DEPTH1>) const
-	{
-		scalar_passthrough fn;
-		triangularbufferedmultiplyandcombine<scalar_passthrough, DEPTH1>(rhs, result, fn);
-	}
-	/// multiplies *this and rhs adding it to result without optimizations coming from degree
-	inline void bufferedmultiplyandadd(const algebra& rhs, algebra& result, identity<0>) const
-	{
-		scalar_passthrough fn;
-		squarebufferedmultiplyandcombine(rhs, result, fn);
-	}
+
 public:
 	/// multiplies *this and rhs subtracting it from result
 	template <unsigned DEPTH1>
 	inline void bufferedmultiplyandsub(const algebra& rhs, algebra& result) const
 	{
-		bufferedmultiplyandsub(rhs, result, identity<DEPTH1>());
-	}
-private:
-	template <unsigned DEPTH1>
-	inline void bufferedmultiplyandsub(const algebra& rhs, algebra& result, identity<DEPTH1>) const
-	{
-		scalar_minus fn;
-		triangularbufferedmultiplyandcombine<scalar_minus, DEPTH1>(rhs, result, fn);
+        multiplication_operator<Basis, Coeff, scalar_minus> fn;
+        VECT::buffered_apply_binary_transform(result, rhs, fn);
+        //bufferedmultiplyandsub(rhs, result, identity<DEPTH1>());
 	}
 
-	/// multiplies *this and rhs subtracting it to result without optimizations coming from degree
-	inline void bufferedmultiplyandsub(const algebra& rhs, algebra& result, identity<0>) const
-	{
-		scalar_minus fn;
-		squarebufferedmultiplyandcombine(rhs, result, fn);
-	}
 public:
 	struct wrapscalar
 	{
@@ -226,46 +172,21 @@ public:
 	template <unsigned DEPTH1>
 	inline void bufferedmultiplyandsmult(const wrapscalar& ss, const algebra& rhs, algebra& result) const
 	{
-		bufferedmultiplyandsmult(ss, rhs, result, identity<DEPTH1>());
-	}
-private:
-	/// multiplies  *this and rhs adds it * s to result
-	template <unsigned DEPTH1>
-	inline void bufferedmultiplyandsmult(const wrapscalar& ss, const algebra& rhs, algebra& result, identity<DEPTH1>) const
-	{
-		scalar_post_mult fn(ss.hidden);
-		triangularbufferedmultiplyandcombine<scalar_post_mult, DEPTH1>(rhs, result, fn);
+	    multiplication_operator<BASIS, Coeff, scalar_post_mult> fn(ss.hidden);
+        VECT::buffered_apply_binary_transform(result, rhs, fn);
+		//bufferedmultiplyandsmult(ss, rhs, result, identity<DEPTH1>());
 	}
 
-	/// multiplies *this and rhs adds it * s to result without optimizations coming from degree
-	inline void bufferedmultiplyandsmult(const wrapscalar& ss, const algebra& rhs, algebra& result, identity<0>) const
-	{
-		scalar_post_mult fn(ss.hidden);
-		squarebufferedmultiplyandcombine(rhs, result, fn);
-	}
 public:
 	/// multiplies  *this and rhs adds it * s to result
 	template <unsigned DEPTH1>
 	inline void bufferedmultiplyandsdiv(const algebra& rhs, const wraprational& ss, algebra& result) const
 	{
-		bufferedmultiplyandsdiv(rhs, ss, result, identity<DEPTH1>());
-	}
-private:
-	/// multiplies  *this and rhs adds it * s to result
-	template <unsigned DEPTH1>
-	inline void bufferedmultiplyandsdiv(const algebra& rhs, const wraprational& ss, algebra& result, identity<DEPTH1>) const
-	{
-		rational_post_div fn(ss.hidden);
-		triangularbufferedmultiplyandcombine<rational_post_div, DEPTH1>(rhs, result, fn);
+        multiplication_operator<BASIS, Coeff, rational_post_div> fn(ss.hidden);
+        VECT::buffered_apply_binary_transform(result, rhs, fn);
+		//bufferedmultiplyandsdiv(rhs, ss, result, identity<DEPTH1>());
 	}
 
-	/// multiplies *this and rhs adds it * s to result without optimizations coming from degree
-	inline void bufferedmultiplyandsdiv(const algebra& rhs, const wraprational& ss, algebra& result,  identity<0>) const
-	{
-		rational_post_div fn(ss.hidden);
-		squarebufferedmultiplyandcombine(rhs, result, fn);
-	}
-public:
 public:
 	/// Default constructor. 
 	/**

@@ -101,29 +101,147 @@ explicit free_tensor(const SCA &s)
 public:
 
 /// Ensures that the return type is a free_tensor.
-inline __DECLARE_BINARY_OPERATOR(free_tensor, *, *=, SCA)
+inline __DECLARE_BINARY_OPERATOR(free_tensor, *, *=, SCA);
 
 /// Ensures that the return type is a free_tensor.
-inline __DECLARE_BINARY_OPERATOR(free_tensor, /, /=, RAT)
+inline __DECLARE_BINARY_OPERATOR(free_tensor, /, /=, RAT);
 
 /// Ensures that the return type is a free_tensor.
-inline __DECLARE_BINARY_OPERATOR(free_tensor, *, *=, free_tensor)
+inline __DECLARE_BINARY_OPERATOR(free_tensor, *, *=, free_tensor);
 
 /// Ensures that the return type is a free_tensor.
-inline __DECLARE_BINARY_OPERATOR(free_tensor, +, +=, free_tensor)
+inline __DECLARE_BINARY_OPERATOR(free_tensor, +, +=, free_tensor);
 
 /// Ensures that the return type is a free_tensor.
-inline __DECLARE_BINARY_OPERATOR(free_tensor, -, -=, free_tensor)
+inline __DECLARE_BINARY_OPERATOR(free_tensor, -, -=, free_tensor);
 
 /// Ensures that the return type is a free_tensor.
-inline __DECLARE_UNARY_OPERATOR(free_tensor, -, -, ALG)
+inline __DECLARE_UNARY_OPERATOR(free_tensor, -, -, ALG);
 
 private:
 
-    free_tensor exp_impl() const
+
+    struct optimised_exp_deg_1_zero_unit
     {
 
-    }
+        DIMN dense_resize(const DIMN arg_dense_size) const
+        {
+            if (arg_dense_size <= 1) {
+                return arg_dense_size;
+            }
+            return BASIS::start_of_degree(max_degree+1);
+        }
+
+        struct key_transform {
+
+            template <typename Vector>
+            void operator()(Vector& result, const Vector& arg, const DEG max_deg)
+            {
+                assert (max_deg <= max_degree);
+
+                typedef std::pair<KEY, SCA> value_t;
+                typedef typename std::vector<value_t>::iterator iter;
+
+                std::vector<value_t> last_buffer, next_buffer;
+
+                if (max_deg == 0) {
+                    return;
+                }
+
+                for (typename Vector::const_iterator cit=arg.begin(); cit != arg.end(); ++cit) {
+                    last_buffer.push_back(value_t(cit->key(), cit->value()));
+                    result[cit->key()] = cit->value();
+                }
+
+                std::vector<value_t> arg_buffer(last_buffer);
+                DIMN n_values = last_buffer.size();
+
+                DIMN total_size = n_values;
+                for (DEG d(max_deg); d > 0; --d) {
+                    total_size *= n_values;
+                }
+                last_buffer.reserve(total_size);
+                next_buffer.reserve(total_size);
+
+
+                KEY k;
+                SCA s;
+                for (DEG d(2); d<max_deg; ++d) {
+
+                    for (iter lit(last_buffer.begin()); lit != last_buffer.end(); ++lit) {
+                        for (iter rit(arg_buffer.begin()); rit != arg_buffer.end(); ++rit) {
+                            k = (lit->first) * (rit->first);
+                            s = (lit->second) * (rit->second) / d;
+                            last_buffer.push_back(value_t(k, s));
+                            result[k] = s;
+                        }
+                    }
+
+                    next_buffer.swap(last_buffer);
+                    next_buffer.clear();
+                }
+
+
+            }
+
+        };
+
+        struct index_transform {
+
+            void operator()(
+                    SCA* __restrict result_ptr,
+                    const DIMN result_target,
+                    const SCA* __restrict arg_ptr,
+                    const DIMN arg_target,
+                    const DEG max_deg
+            )
+            {
+                assert (max_deg <= max_degree);
+
+                if (max_deg == 0) {
+                    return;
+                }
+                DIMN tmp = BASIS::start_of_degree(max_deg+1);
+                assert (result_target == BASIS::start_of_degree(max_deg+1));
+                assert (arg_target == BASIS::start_of_degree(2));
+
+                SCA* __restrict out_ptr = result_ptr;
+
+                out_ptr++; // skip ();
+
+                for (DIMN i=1; i<arg_target; ++i) {
+                    *(out_ptr++) = arg_ptr[i];
+                }
+
+                SCA factor;
+                for (DEG deg=2; deg <= max_deg; ++deg) {
+                    SCA* __restrict deg_m1_ptr = result_ptr + BASIS::start_of_degree(deg-1);
+                    DIMN rhs_target = BASIS::start_of_degree(deg) - BASIS::start_of_degree(deg-1);
+                    factor = VECT::one / deg;
+
+                    for (DIMN i=0; i<rhs_target; ++i) {
+#pragma omp simd
+                        for (DIMN j=1; j<1+n_letters; ++j) {
+                            *(out_ptr++) = factor * deg_m1_ptr[i] * arg_ptr[j];
+                        }
+                    }
+
+                }
+            }
+
+        };
+
+        key_transform get_key_transform()
+        {
+            return key_transform();
+        }
+
+        index_transform get_index_transform()
+        {
+            return index_transform();
+        }
+
+    };
 
 public:
 
@@ -136,14 +254,11 @@ inline friend free_tensor exp(const free_tensor &arg)
     free_tensor result(kunit), tunit(kunit);
 
     typename VECT::const_iterator unit_it(arg.find(kunit));
-    bool unit_zero = (unit_it == VECT::end()) || (unit_it->value() == VECT::zero);
+    bool unit_zero = (unit_it == arg.end()) || (unit_it->value() == VECT::zero);
 
     if (arg.degree_equals(1) && unit_zero) {
-        for (DEG i=1; i < max_degree; ++i) {
-            result.mul_scal_div(arg, static_cast<RAT>(i));
-        }
-
-
+        optimised_exp_deg_1_zero_unit fn;
+        arg.buffered_apply_unary_transform(result, fn);
     } else {
         for (DEG i = max_degree; i >= 1; --i) {
             result.mul_scal_div(arg, (RAT) i);

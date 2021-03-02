@@ -338,7 +338,7 @@ public:
         return *this;
     }
 
-    algebra& mul_scal_prod(const algebra& rhs, const Rational&s, const DEG depth)
+    algebra& mul_scal_prod(const algebra& rhs, const RATIONAL&s, const DEG depth)
     {
         algebra result;
         buffered_apply_binary_transform(result, rhs, scalar_post_mult(s), depth);
@@ -355,7 +355,7 @@ public:
         return *this;
     }
 
-    algebra& mul_scal_div(const algebra& rhs, const Rational&s, const DEG depth)
+    algebra& mul_scal_div(const algebra& rhs, const RATIONAL&s, const DEG depth)
     {
         algebra result;
         buffered_apply_binary_transform(result, rhs, rational_post_div(s), depth);

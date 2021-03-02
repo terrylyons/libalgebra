@@ -1032,33 +1032,51 @@ public:
     }
 
 public:
-    template <typename Vector, typename KeyTransform, typename IndexTransform>
-    void buffered_apply_unary_transform(
-            Vector& result,
-            KeyTransform key_transform,
-            IndexTransform index_transform
-    ) const
-    {
-
-    }
-
-    template <typename Vector, typename KeyTransform>
-    void buffered_apply_unary_transform(
-            Vector& result,
-            KeyTransform key_transform
-    ) const
-    {
-
-    }
 
     template <typename Transform>
-    void buffered_apply_unary_transform_passthrough(
+    void buffered_apply_unary_transform(
+            dense_vector& result,
+            Transform transform,
+            const DEG max_deg
+    ) const
+    {
+        if (empty()) {
+            return;
+        }
+
+        result.resize_to_dimension(transform.dense_resize(dimension()));
+        typename Transform::index_transform it(transform.get_index_transform());
+
+        it(
+                &result.m_data[0],
+                result.dimension(),
+                &m_data[0],
+                dimension(),
+                max_deg);
+    }
+
+
+    template <typename Transform>
+    void buffered_apply_unary_transform(
             dense_vector& result,
             Transform transform
     ) const
     {
-        transform(result, *this);
+        if (empty()) {
+            return;
+        }
+
+        result.resize_to_dimension(transform.dense_resize(dimension()));
+        typename Transform::index_transform it(transform.get_index_transform());
+
+        it(
+                &result.m_data[0],
+                result.dimension(),
+                &m_data[0],
+                dimension());
     }
+
+
 
 
 

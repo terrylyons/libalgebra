@@ -422,7 +422,7 @@ public:
 
     bool degree_equals(const DEG degree) const
     {
-        return UnderlyingVectorType::degree_equals(const DEG degree);
+        return UnderlyingVectorType::degree_equals(degree);
     }
 
 private:
@@ -505,37 +505,6 @@ public:
         );
     }
 
-public:
-
-    // Methods for operator implementation
-
-    template <typename KeyTransform, typename IndexTransform>
-    void buffered_apply_unary_transform(
-            vector& result,
-            KeyTransform key_transform,
-            IndexTransform index_transform
-    ) const
-    {
-        UnderlyingVectorType::buffered_apply_unary_transform(result, key_transform, index_transform);
-    }
-
-    template <typename KeyTransform>
-    void buffered_apply_unary_transform(
-            vector& result,
-            KeyTransform key_transform
-    ) const
-    {
-        UnderlyingVectorType::buffered_apply_unary_transform(result, key_transform);
-    }
-
-    template <typename Transform>
-    void buffered_apply_unary_transform_passthrough(
-            vector& result,
-            Transform transform
-    ) const
-    {
-        UnderlyingVectorType::buffered_apply_unary_transform_passthrough(result, transform);
-    }
 
 
 private:
@@ -593,6 +562,44 @@ private:
                 result, rhs, key_transform, index_transform, D
         );
     }
+
+
+public:
+
+    // Methods for operator implementation
+
+    template <typename Transform>
+    void buffered_apply_unary_transform(
+            vector& result,
+            Transform transform
+    ) const
+    {
+        buffered_apply_unary_transform_impl(result, transform, UnderlyingVectorType::degree_tag);
+    }
+
+private:
+
+    template <DEG D, typename Transform>
+    void buffered_apply_unary_transform_impl(
+            vector& result,
+            Transform transform,
+            alg::basis::with_degree<D>
+            ) const
+    {
+        UnderlyingVectorType::buffered_apply_unary_transform(result, transform, D);
+    }
+
+    template <typename Transform>
+    void buffered_apply_unary_transform_impl(
+            vector& result,
+            Transform transform,
+            alg::basis::without_degree
+            ) const
+    {
+        UnderlyingVectorType::buffered_apply_unary_transform(result, transform);
+    }
+
+
 
 
 };

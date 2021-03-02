@@ -254,7 +254,7 @@ public:
         bool result (DENSE::degree_equals(degree));
         DEG d;
         for (typename SPARSE::const_iterator it(SPARSE::begin()); it != SPARSE::end(); ++it) {
-            d = basis.degree(it->key())
+            d = basis.degree(it->key());
             if (d > degree) {
                 return false;
             } else if (!result && d == degree) {
@@ -1154,34 +1154,43 @@ public:
 
 public:
 
-
-    template <typename Vector, typename KeyTransform, typename IndexTransform>
+    template <typename Transform>
     void buffered_apply_unary_transform(
-            Vector& result,
-            KeyTransform key_transform,
-            IndexTransform index_transform
+            hybrid_vector& result,
+            Transform transform,
+            const DEG max_deg
     ) const
     {
+        if (empty()) {
+            return;
+        }
 
+        if (!dense_empty()) {
+            DENSE::buffered_apply_unary_transform(result, transform, max_deg);
+        }
+
+        SPARSE::buffered_apply_unary_transform(result, transform, max_deg);
+        result.maybe_resize();
     }
 
-    template <typename Vector, typename KeyTransform>
-    void buffered_apply_unary_transform(
-            Vector& result,
-            KeyTransform key_transform
-    ) const
-    {
-
-    }
 
     template <typename Transform>
-    void buffered_apply_unary_transform_passthrough(
+    void buffered_apply_unary_transform(
             hybrid_vector& result,
             Transform transform
     ) const
     {
-        transform(result, *this);
+        if (empty()) {
+            return;
+        }
+
+        if (!dense_empty()) {
+            DENSE::buffered_apply_unary_transform(result, transform);
+        }
+        SPARSE::buffered_apply_unary_transform(result, transform);
+        result.maybe_resize();
     }
+
 
 
 

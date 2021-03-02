@@ -835,7 +835,7 @@ public:
         bool result (false);
         DEG d;
         for (const_iterator it(begin()); it != end(); ++it) {
-            d = basis.degree(it->key())
+            d = basis.degree(it->key());
             if (d > degree) {
                 return false;
             } else if (!result && d == degree) {
@@ -1058,33 +1058,34 @@ public:
 
 public:
 
-    template <typename Vector, typename KeyTransform, typename IndexTransform>
+    template <typename Transform>
     void buffered_apply_unary_transform(
-            Vector& result,
-            KeyTransform key_transform,
-            IndexTransform index_transform
+            sparse_vector& result,
+            Transform transform,
+            const DEG max_deg
     ) const
     {
+        if (empty()) {
+            return;
+        }
 
-    }
-
-    template <typename Vector, typename KeyTransform>
-    void buffered_apply_unary_transform(
-            Vector& result,
-            KeyTransform key_transform
-    ) const
-    {
-
+        typename Transform::key_transform kt(transform.get_key_transform());
+        kt(result, *this, max_deg);
     }
 
 
     template <typename Transform>
-    void buffered_apply_unary_transform_passthrough(
+    void buffered_apply_unary_transform(
             sparse_vector& result,
             Transform transform
     ) const
     {
-        transform(result, *this);
+        if (empty()) {
+            return;
+        }
+
+        typename Transform::key_transform kt(transform.get_key_transform());
+        kt(result, *this);
     }
 
 

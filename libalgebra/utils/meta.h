@@ -76,6 +76,20 @@ struct populate_array<Compute, W, 0>
 };
 
 
+
+template <bool Cond, typename T1, typename T2>
+struct type_selector
+{
+    typedef T1 type;
+};
+
+template <typename T1, typename T2>
+struct type_selector<true, T1, T2>
+{
+    typedef T2 type;
+};
+
+
 } // namespace utils
 } // namespace alg
 

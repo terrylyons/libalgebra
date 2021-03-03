@@ -381,21 +381,7 @@ public:
     }
 };
 
-namespace dtl {
 
-template <bool Cond, typename T1, typename T2>
-struct type_selector
-{
-    typedef T1 type;
-};
-
-template <typename T1, typename T2>
-struct type_selector<true, T1, T2>
-{
-    typedef T2 type;
-};
-
-}
 
 
 namespace vectors {
@@ -432,7 +418,7 @@ struct vector_type_selector<free_tensor_basis<typename Field::S, typename Field:
     ,       std::vector<typename Field::S>
     > hybrid_vect;
 
-    typedef typename alg::dtl::type_selector<
+    typedef typename alg::utils::type_selector<
             boost::is_pod<typename Field::S>::value,
             sparse_vect,
             hybrid_vect

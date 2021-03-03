@@ -24,7 +24,15 @@ namespace vectors {
 template<typename Basis, typename Coeffs>
 struct vector_type_selector
 {
-    typedef sparse_vector<Basis, Coeffs> type;
+    typedef sparse_vector<Basis, Coeffs> sparse_vec;
+    typedef dense_vector<Basis, Coeffs, std::vector<typename Coeffs::S>> dense_vec;
+
+    typedef typename alg::utils::type_selector<
+        boost::is_pod<typename Coeffs::S>::value,
+        sparse_vec,
+        dense_vec
+        >::type type;
+
 };
 }
 }

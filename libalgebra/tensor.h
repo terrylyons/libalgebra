@@ -142,19 +142,20 @@ private:
                 typedef std::pair<KEY, SCA> value_t;
                 typedef typename std::vector<value_t>::iterator iter;
 
-                std::vector<value_t> last_buffer, next_buffer;
+                std::vector<value_t> last_buffer, next_buffer, arg_buffer;
 
                 if (max_deg == 0) {
                     return;
                 }
 
+                DIMN n_values = arg.size();
+                arg_buffer.reserve(arg.size());
                 for (typename Vector::const_iterator cit=arg.begin(); cit != arg.end(); ++cit) {
-                    last_buffer.push_back(value_t(cit->key(), cit->value()));
+                    arg_buffer.push_back(value_t(cit->key(), cit->value()));
                     result[cit->key()] = cit->value();
                 }
 
-                std::vector<value_t> arg_buffer(last_buffer);
-                DIMN n_values = last_buffer.size();
+                last_buffer = arg_buffer;
 
                 DIMN total_size = n_values;
                 for (DEG d(max_deg); d > 0; --d) {
@@ -166,13 +167,13 @@ private:
 
                 KEY k;
                 SCA s;
-                for (DEG d(2); d<max_deg; ++d) {
+                for (DEG d(2); d<=max_deg; ++d) {
 
                     for (iter lit(last_buffer.begin()); lit != last_buffer.end(); ++lit) {
                         for (iter rit(arg_buffer.begin()); rit != arg_buffer.end(); ++rit) {
                             k = (lit->first) * (rit->first);
                             s = (lit->second) * (rit->second) / d;
-                            last_buffer.push_back(value_t(k, s));
+                            next_buffer.push_back(value_t(k, s));
                             result[k] = s;
                         }
                     }
@@ -209,20 +210,18 @@ private:
 
                 out_ptr++; // skip ();
 
-                for (DIMN i=1; i<arg_target; ++i) {
-                    *(out_ptr++) = arg_ptr[i];
-                }
 
                 SCA factor;
-                for (DEG deg=2; deg <= max_deg; ++deg) {
+                for (DEG deg=1; deg <= max_deg; ++deg) {
                     SCA* __restrict deg_m1_ptr = result_ptr + BASIS::start_of_degree(deg-1);
                     DIMN rhs_target = BASIS::start_of_degree(deg) - BASIS::start_of_degree(deg-1);
-                    factor = VECT::one / deg;
+                    factor = VECT::one / static_cast<SCA>(deg);
+
 
                     for (DIMN i=0; i<rhs_target; ++i) {
 #pragma omp simd
-                        for (DIMN j=1; j<1+n_letters; ++j) {
-                            *(out_ptr++) = factor * deg_m1_ptr[i] * arg_ptr[j];
+                        for (DIMN j=1; j<=n_letters; ++j) {
+                            *(out_ptr++) = factor * deg_m1_ptr[i] * arg_ptr[j]  ;
                         }
                     }
 

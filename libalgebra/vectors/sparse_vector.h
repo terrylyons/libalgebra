@@ -220,7 +220,6 @@ public:
 
         bool compare_iterators(const const_iterator_item &other) const
         {
-            bool result = m_iterator != other.m_iterator;
             return m_iterator == other.m_iterator;
         }
 

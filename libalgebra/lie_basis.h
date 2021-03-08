@@ -129,21 +129,21 @@ const Long hall_set_size < NoLetters, 0 >::value = 0;
 template<DEG NoLetters, DEG MaxDepth>
 struct hall_set_info
 {
-    static const LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, MaxDepth + 1> degree_sizes;
+    static const LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, MaxDepth + 2> degree_sizes;
 };
 
 
 template<DEG NoLetters, DEG MaxDepth>
-LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, MaxDepth + 1>
+LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, MaxDepth + 2>
 populate_hall_set_size_array()
 {
-    LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, MaxDepth + 1> tmp;
-    utils::populate_array<hall_set_size, NoLetters, MaxDepth>::fill(tmp);
+    LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, MaxDepth + 2> tmp;
+    utils::populate_array<hall_set_size, NoLetters, MaxDepth+1>::fill(tmp);
     return tmp;
 }
 
 template<DEG NoLetters, DEG MaxDepth>
-const LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, MaxDepth + 1> hall_set_info<NoLetters, MaxDepth>::degree_sizes
+const LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, MaxDepth + 2> hall_set_info<NoLetters, MaxDepth>::degree_sizes
         = populate_hall_set_size_array<NoLetters, MaxDepth>();
 
 }
@@ -346,6 +346,7 @@ public:
     /// Returns the degree (ie. weight) of a Lie key.
     inline DEG degree(const KEY &k) const
     {
+        assert (k <= size());
         return degrees[k];
     }
 

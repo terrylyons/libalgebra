@@ -477,6 +477,41 @@ public:
         buffered_apply_binary_transform(result, rhs, key_transform, UnderlyingVectorType::degree_tag);
     }
 
+    /// Unbuffered apply transform with separate transforms
+    /**
+     * Apply transform to paired vectors using a buffer. Apply using different
+     * transforms for by-index or by-key chosen by the under data source.
+     *
+     * @tparam KeyTransform Key transform type
+     * @tparam IndexTransform Index transform type
+     * @param result Buffer in which to place the result
+     * @param rhs Right hand side buffer
+     * @param key_transform Transform to apply by keys (sparse elements)
+     * @param index_transform Transform to apply by index (dense elements)
+     */
+    template<typename KeyTransform, typename IndexTransform>
+    void unbuffered_apply_binary_transform(
+            const vector &rhs,
+            KeyTransform key_transform,
+            IndexTransform index_transform
+    )
+    {
+        unbuffered_apply_binary_transform(rhs, key_transform, index_transform,
+                                        UnderlyingVectorType::degree_tag);
+    }
+
+    /// Buffered apply transform with only key transform
+    template<typename KeyTransform>
+    void unbuffered_apply_binary_transform(
+            vector &result,
+            const vector &rhs,
+            KeyTransform key_transform
+    )
+    {
+        unbuffered_apply_binary_transform(result, rhs, key_transform, UnderlyingVectorType::degree_tag);
+    }
+
+
     template<typename KeyTransform, typename IndexTransform>
     void buffered_apply_binary_transform(
             vector &result,
@@ -491,6 +526,19 @@ public:
         );
     }
 
+    template <typename KeyTransform, typename IndexTransform>
+    void unbuffered_apply_binary_transform(
+            const vector& rhs,
+            KeyTransform key_transform,
+            IndexTransform index_transform,
+            const DEG max_depth
+            )
+    {
+        UnderlyingVectorType::triangular_unbuffered_apply_binary_transform(
+                rhs, key_transform, index_transform, max_depth
+                );
+    }
+
     /// Buffered apply transform with only key transform
     template<typename KeyTransform>
     void buffered_apply_binary_transform(
@@ -500,7 +548,7 @@ public:
             const DEG max_depth
     ) const
     {
-        UnderlyingVectorType::triangular_buffered_apply_transform(
+        UnderlyingVectorType::triangular_buffered_apply_binary_transform(
                 result, rhs, key_transform, max_depth
         );
     }
@@ -560,6 +608,60 @@ private:
     {
         UnderlyingVectorType::triangular_buffered_apply_binary_transform(
                 result, rhs, key_transform, index_transform, D
+        );
+    }
+
+    template<typename KeyTransform>
+    void unbuffered_apply_binary_transform(
+            const vector &rhs,
+            KeyTransform key_transform,
+            alg::basis::without_degree
+    )
+    {
+        UnderlyingVectorType result;
+        UnderlyingVectorType::square_buffered_apply_binary_transform(
+                result, rhs, key_transform
+        );
+        UnderlyingVectorType::swap(result);
+    }
+
+    template<DEG D, typename KeyTransform>
+    void unbuffered_apply_binary_transform(
+            const vector &rhs,
+            KeyTransform key_transform,
+            alg::basis::with_degree<D>
+    )
+    {
+        UnderlyingVectorType::triangular_unbuffered_apply_binary_transform(
+                rhs, key_transform, D
+        );
+    }
+
+    template<typename KeyTransform, typename IndexTransform>
+    void unbuffered_apply_binary_transform(
+            const vector &rhs,
+            KeyTransform key_transform,
+            IndexTransform index_transform,
+            alg::basis::without_degree
+    )
+    {
+        UnderlyingVectorType result;
+        UnderlyingVectorType::square_buffered_apply_binary_transform(
+                result, rhs, key_transform, index_transform
+        );
+        UnderlyingVectorType::swap(result);
+    }
+
+    template<DEG D, typename KeyTransform, typename IndexTransform>
+    void unbuffered_apply_binary_transform(
+            const vector &rhs,
+            KeyTransform key_transform,
+            IndexTransform index_transform,
+            alg::basis::with_degree<D>
+    )
+    {
+        UnderlyingVectorType::triangular_unbuffered_apply_binary_transform(
+                rhs, key_transform, index_transform, D
         );
     }
 

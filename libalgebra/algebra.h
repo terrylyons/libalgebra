@@ -196,7 +196,34 @@ public:
         VECT::buffered_apply_binary_transform(result, rhs, key_fn, index_fn);
     }
 
+    template <typename Transform>
+    inline void unbuffered_apply_binary_transform(
+            const algebra& rhs,
+            Transform fn,
+            one_method_multiplication_tag
+            )
+    {
+        typename basis_multiplication_selector<BASIS>::
+        template key_operator<BASIS, Coeff, Transform>
+                key_fn(fn);
+        VECT::unbuffered_apply_binary_transform(rhs, key_fn);
+    }
 
+    template <typename Transform>
+    inline void unbuffered_apply_binary_transform(
+            const algebra& rhs,
+            Transform fn,
+            two_method_multiplication_tag
+    )
+    {
+        typename basis_multiplication_selector<BASIS>::
+        template index_operator<BASIS, Coeff, Transform> index_fn(fn);
+        typename basis_multiplication_selector<BASIS>::
+        template key_operator<BASIS, Coeff, Transform> key_fn(fn);
+        VECT::unbuffered_apply_binary_transform(rhs, key_fn, index_fn);
+    }
+
+public:
     /// multiplies *this and rhs adding it to result
     template<unsigned DEPTH1>
     inline void bufferedmultiplyandadd(const algebra &rhs, algebra &result) const
@@ -205,13 +232,36 @@ public:
         buffered_apply_binary_transform(result, rhs, scalar_passthrough(), tag);
     }
 
-public:
     /// multiplies *this and rhs subtracting it from result
     template<unsigned DEPTH1>
     inline void bufferedmultiplyandsub(const algebra &rhs, algebra &result) const
     {
         typename basis_multiplication_selector<BASIS>::tag tag;
         buffered_apply_binary_transform(result, rhs, scalar_minus(), tag);
+    }
+
+    inline void buffered_multiply_and_add(algebra &result, const algebra &rhs) const
+    {
+        typename basis_multiplication_selector<BASIS>::tag tag;
+        buffered_apply_binary_transform(result, rhs, scalar_passthrough(), tag);
+    }
+
+    inline void buffered_multiply_and_sub(algebra& result, const algebra &rhs) const
+    {
+        typename basis_multiplication_selector<BASIS>::tag tag;
+        buffered_apply_binary_transform(result, rhs, scalar_minus(), tag);
+    }
+
+    inline void unbuffered_multiply_and_add(const algebra &rhs)
+    {
+        typename basis_multiplication_selector<BASIS>::tag tag;
+        unbuffered_apply_binary_transform(rhs, scalar_passthrough(), tag);
+    }
+
+    inline void unbuffered_multiply_and_sub(const algebra &rhs)
+    {
+        typename basis_multiplication_selector<BASIS>::tag tag;
+        unbuffered_apply_binary_transform(rhs, scalar_minus(), tag);
     }
 
 public:
@@ -233,6 +283,7 @@ public:
         {}
     };
 
+public:
     /// multiplies  *this and rhs adds it * s to result
     template<unsigned DEPTH1>
     inline void bufferedmultiplyandsmult(const algebra &rhs, const wrapscalar &ss, algebra &result) const
@@ -241,13 +292,37 @@ public:
         buffered_apply_binary_transform(result, rhs, scalar_post_mult(ss.hidden), tag);
     }
 
-public:
-    /// multiplies  *this and rhs adds it * s to result
+
+    /// multiplies  *this and rhs adds it / s to result
     template<unsigned DEPTH1>
     inline void bufferedmultiplyandsdiv(const algebra &rhs, const wraprational &ss, algebra &result) const
     {
         typename basis_multiplication_selector<BASIS>::tag tag;
         buffered_apply_binary_transform(result, rhs, rational_post_div(ss.hidden), tag);
+    }
+
+    inline void buffered_multiply_and_s_mult(algebra& result, const algebra& rhs, SCALAR s) const
+    {
+        typename basis_multiplication_selector<BASIS>::tag tag;
+        buffered_apply_binary_transform(result, rhs, scalar_post_mult(s), tag);
+    }
+
+    inline void buffered_multiply_and_s_div(algebra& result, const algebra& rhs, RATIONAL s) const
+    {
+        typename basis_multiplication_selector<BASIS>::tag tag;
+        buffered_apply_binary_transform(rhs, rational_post_div(s), tag);
+    }
+
+    inline void unbuffered_multiply_and_s_mult(const algebra& rhs, SCALAR s)
+    {
+        typename basis_multiplication_selector<BASIS>::tag tag;
+        unbuffered_apply_binary_transform(rhs, scalar_post_mult(s), tag);
+    }
+
+    inline void unbuffered_multiply_and_s_div(const algebra& rhs, RATIONAL s)
+    {
+        typename basis_multiplication_selector<BASIS>::tag tag;
+        unbuffered_apply_binary_transform(rhs, rational_post_div(s), tag);
     }
 
 public:
@@ -306,9 +381,7 @@ public:
     /// Multiplies the instance by an instance of algebra.
     inline algebra &operator*=(const algebra &rhs)
     {
-        algebra result;
-            bufferedmultiplyandadd<MAX_DEGREE>(rhs, result);
-        this->swap(result);
+        unbuffered_multiply_and_add(rhs);
         return *this;
     }
 
@@ -318,23 +391,21 @@ public:
     /// Adds to the instance a product of algebra instances.
     inline algebra &add_mul(const algebra &a, const algebra &b)
     {
-        a.bufferedmultiplyandadd<MAX_DEGREE>(b, *this);
+        a.buffered_multiply_and_add(*this, b);
         return *this;
     }
 
     /// Subtracts to the instance a product of algebra instances.
     inline algebra &sub_mul(const algebra &a, const algebra &b)
     {
-        a.bufferedmultiplyandsub<MAX_DEGREE>(b, *this);
+        a.buffered_multiply_and_sub(*this, b);
         return *this;
     }
 
     /// Multiplies the instance by (algebra instance)*s.
     inline algebra &mul_scal_prod(const algebra &rhs, const SCALAR &s)
     {
-        algebra result;
-            bufferedmultiplyandsmult<MAX_DEGREE>(rhs, wrapscalar(s), result);
-        this->swap(result);
+        unbuffered_multiply_and_s_mult(rhs, s);
         return *this;
     }
 
@@ -349,17 +420,19 @@ public:
     /// Multiplies the instance by (algebra instance)/s.
     inline algebra &mul_scal_div(const algebra &rhs, const RATIONAL &s)
     {
-        algebra result;
-            bufferedmultiplyandsdiv<MAX_DEGREE>(rhs, wraprational(s), result);
-        this->swap(result);
+        unbuffered_multiply_and_s_div(rhs, s);
         return *this;
     }
 
     algebra& mul_scal_div(const algebra& rhs, const RATIONAL&s, const DEG depth)
     {
-        algebra result;
-        buffered_apply_binary_transform(result, rhs, rational_post_div(s), depth);
-        this->swap(result);
+        rational_post_div fn(s);
+        typename basis_multiplication_selector<BASIS>::
+        template index_operator<BASIS, Coeff, rational_post_div> index_fn(fn);
+        typename basis_multiplication_selector<BASIS>::
+        template key_operator<BASIS, Coeff, rational_post_div> key_fn(fn);
+
+        VECT::unbuffered_apply_binary_transform(rhs, key_fn, index_fn, depth);
         return *this;
     }
 
@@ -368,8 +441,8 @@ public:
     inline friend algebra commutator(const algebra &a, const algebra &b)
     { // Returns a * b - b * a
         algebra result;
-        a.bufferedmultiplyandadd<MAX_DEGREE>(b, result);
-        b.bufferedmultiplyandsub<MAX_DEGREE>(a, result);
+        a.buffered_multiply_and_add(result, b);
+        b.buffered_multiply_and_sub(result, a);
         return result;
     }
 

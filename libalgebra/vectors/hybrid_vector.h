@@ -1121,6 +1121,31 @@ public:
 
     }
 
+    template <typename KeyTransform, typename IndexTransform>
+    void triangular_unbuffered_apply_binary_transform(
+            const hybrid_vector& rhs,
+            KeyTransform key_transform,
+            IndexTransform index_transform,
+            const DEG max_depth
+    )
+    {
+        hybrid_vector result;
+        triangular_buffered_apply_binary_transform(result, rhs, key_transform, index_transform, max_depth);
+        swap(result);
+    }
+
+    template <typename KeyTransform>
+    void triangular_unbuffered_apply_binary_transform(
+            const hybrid_vector& rhs,
+            KeyTransform key_transform,
+            const DEG max_depth
+    )
+    {
+        hybrid_vector result;
+        triangular_buffered_apply_binary_transform(result, rhs, key_transform, max_depth);
+        swap(result);
+    }
+
     template<typename Vector, typename KeyTransform>
     void square_buffered_apply_binary_transform(
             Vector &result,

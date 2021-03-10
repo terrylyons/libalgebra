@@ -1003,6 +1003,7 @@ public:
             )
     {
         if (empty() || rhs.empty()) {
+            clear();
             return;
         }
         /*
@@ -1039,8 +1040,8 @@ public:
                     &m_data[start_of_degree(0)],
                     &m_data[start_of_degree(0)],
                     &rhs.m_data[start_of_degree(0)],
-                    start_of_degree(1) - start_of_degree(0),
-                    start_of_degree(1) - start_of_degree(0),
+                    degree_difference_1_0,
+                    degree_difference_1_0,
                     true
             );
             return;
@@ -1051,15 +1052,13 @@ public:
 
         for (IDEG out_deg = max_degree; out_deg >= 0; --out_deg) {
             lhs_deg_min = std::max(IDEG(0), out_deg - static_cast<IDEG>(rhs.degree()));
+            assign = true;
 
             if (degree_difference_1_0 == 0) {
                 // Basis does not admit a degree 0.
                 offset = 1;
             } else if (degree_difference_1_0 == 1) {
-                if (m_data[0] == zero && out_deg > old_lhs_deg) {
-                    assign = false;
-                    offset = 1;
-                } else if (m_data[0] == one && out_deg <= old_lhs_deg) {
+                if (rhs.m_data[0] == one && out_deg <= old_lhs_deg) {
                     assign = false;
                     offset = 1;
                 }

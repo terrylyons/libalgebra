@@ -503,12 +503,11 @@ public:
     /// Buffered apply transform with only key transform
     template<typename KeyTransform>
     void unbuffered_apply_binary_transform(
-            vector &result,
             const vector &rhs,
             KeyTransform key_transform
     )
     {
-        unbuffered_apply_binary_transform(result, rhs, key_transform, UnderlyingVectorType::degree_tag);
+        unbuffered_apply_binary_transform(rhs, key_transform, UnderlyingVectorType::degree_tag);
     }
 
 
@@ -618,11 +617,11 @@ private:
             alg::basis::without_degree
     )
     {
-        UnderlyingVectorType result;
+        vector result;
         UnderlyingVectorType::square_buffered_apply_binary_transform(
                 result, rhs, key_transform
         );
-        UnderlyingVectorType::swap(result);
+        swap(result);
     }
 
     template<DEG D, typename KeyTransform>
@@ -632,9 +631,11 @@ private:
             alg::basis::with_degree<D>
     )
     {
-        UnderlyingVectorType::triangular_unbuffered_apply_binary_transform(
-                rhs, key_transform, D
+        vector result;
+        UnderlyingVectorType::triangular_buffered_apply_binary_transform(
+                result, rhs, key_transform, D
         );
+        swap(result);
     }
 
     template<typename KeyTransform, typename IndexTransform>
@@ -645,11 +646,11 @@ private:
             alg::basis::without_degree
     )
     {
-        UnderlyingVectorType result;
+        vector result;
         UnderlyingVectorType::square_buffered_apply_binary_transform(
                 result, rhs, key_transform, index_transform
         );
-        UnderlyingVectorType::swap(result);
+        swap(result);
     }
 
     template<DEG D, typename KeyTransform, typename IndexTransform>

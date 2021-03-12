@@ -324,7 +324,7 @@ public:
     typedef SCA SCALAR;
     typedef RAT RATIONAL;
     /// The Free Associative Algebra element type.
-    typedef free_tensor<SCA, RAT, n_letters, max_degree> TENSOR;
+
 public:
     /// Default constructor.
     free_tensor_basis(void)

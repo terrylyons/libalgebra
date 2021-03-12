@@ -165,7 +165,11 @@ class shuffle_tensor_basis;
 
 /// Free Associative Algebra.  Associative and non commutative.
 template<typename SCA, typename RAT,
-        DEG n_letters, DEG max_degree = 0>
+        DEG n_letters, DEG max_degree = 0,
+        typename VectorType = typename vectors::vector_type_selector<
+                free_tensor_basis<SCA, RAT, n_letters, max_degree>,
+            TrivialCoeffs<free_tensor_basis<SCA, RAT, n_letters, max_degree> >
+        >::type >
 class free_tensor;
 
 /// Free Associative Shuffle Algebra.  Associative and Commutative.

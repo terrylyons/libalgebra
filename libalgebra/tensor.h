@@ -29,9 +29,11 @@ Version 3. (See accompanying file License.txt)
    associative algebra corresponding to the SCALAR type. This is permitted by
    the existence of empty keys in free_tensor_basis.
  */
-template<typename SCA, typename RAT, DEG n_letters, DEG max_degree>
-class free_tensor : public algebra<free_tensor_basis < SCA, RAT, n_letters, max_degree>
-
+template<typename SCA, typename RAT, DEG n_letters, DEG max_degree, typename VectorType>
+class free_tensor : public algebra<
+        free_tensor_basis < SCA, RAT, n_letters, max_degree>,
+        TrivialCoeffs<free_tensor_basis < SCA, RAT, n_letters, max_degree> >,
+        VectorType
 > {
 public:
 /// The basis type.
@@ -167,12 +169,14 @@ private:
 
                 KEY k;
                 SCA s;
+                SCA factor;
                 for (DEG d(2); d<=max_deg; ++d) {
+                    factor = VECT::one / RAT(d);
 
                     for (iter lit(last_buffer.begin()); lit != last_buffer.end(); ++lit) {
                         for (iter rit(arg_buffer.begin()); rit != arg_buffer.end(); ++rit) {
                             k = (lit->first) * (rit->first);
-                            s = (lit->second) * (rit->second) / d;
+                            s = factor * (lit->second) * (rit->second) ;
                             next_buffer.push_back(value_t(k, s));
                             result[k] = s;
                         }

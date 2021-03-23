@@ -366,6 +366,53 @@ public:
         return *this;
     }
 
+    // Templated versions of the fused operations. For cross-vector type
+    // application.
+
+    template <typename VectorType>
+    vector& add_scal_prod(const vector<Basis, Coeffs, VectorType>& rhs,
+                          const SCALAR& s)
+    {
+        typename VectorType::const_iterator cit;
+        for (cit=rhs.begin(); cit!=rhs.end(); ++cit) {
+            UnderlyingVectorType::add_scal_prod(cit->key(), cit->value()*s);
+        }
+        return *this;
+    }
+
+    template <typename VectorType>
+    vector& sub_scal_prod(const vector<Basis, Coeffs, VectorType>& rhs,
+                          const SCALAR& s)
+    {
+        typename VectorType::const_iterator cit;
+        for (cit=rhs.begin(); cit!=rhs.end(); ++cit) {
+            UnderlyingVectorType::sub_scal_prod(cit->key(), cit->value()*s);
+        }
+        return *this;
+    }
+
+    template <typename VectorType>
+    vector& add_scal_div(const vector<Basis, Coeffs, VectorType>& rhs,
+                         const RATIONAL& s)
+    {
+        typename VectorType::const_iterator cit;
+        for (cit=rhs.begin(); cit!=rhs.end(); ++cit) {
+            UnderlyingVectorType::add_scal_prod(cit->key(), cit->value()/s);
+        }
+        return *this;
+    }
+
+    template <typename VectorType>
+    vector& sub_scal_div(const vector<Basis, Coeffs, VectorType>& rhs,
+                         const RATIONAL& s)
+    {
+        typename VectorType::const_iterator cit;
+        for (cit=rhs.begin(); cit!=rhs.end(); ++cit) {
+            UnderlyingVectorType::sub_scal_prod(cit->key(), cit->value()/s);
+        }
+        return *this;
+    }
+
 public:
 
     // Comparison operators

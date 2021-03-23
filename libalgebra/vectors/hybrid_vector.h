@@ -91,6 +91,7 @@ public:
     typedef Basis BASIS;
     typedef typename BASIS::KEY KEY;
 
+    typedef Coeffs COEFFS;
     typedef typename Coeffs::S SCALAR;
     typedef typename Coeffs::Q RATIONAL;
 

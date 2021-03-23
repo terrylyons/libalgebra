@@ -509,7 +509,13 @@ public:
     /// The MAP type.
     typedef std::map<KEY, SCA> MAP;
     /// The Free Lie Associative Algebra element type.
-    typedef lie<SCA, RAT, n_letters, max_degree> LIE;
+    struct temp_field
+    {
+        typedef SCA S;
+        typedef RAT Q;
+    };
+    typedef lie<SCA, RAT, n_letters, max_degree,
+        vectors::sparse_vector<lie_basis, temp_field> > LIE;
     /// The rationals.
     typedef SCA SCALAR;
     typedef RAT RATIONAL;
@@ -577,9 +583,10 @@ public:
     elements in v, and returns the recursively expanded result. The already
     computed replacements are stored in table.
     */
-    LIE replace(const KEY &k, const std::vector<LET> &s, const std::vector<const LIE *> &v, std::map<KEY, LIE> &table)
+    template <typename Lie>
+    Lie replace(const KEY &k, const std::vector<LET> &s, const std::vector<const Lie *> &v, std::map<KEY, Lie> &table)
     {
-        typename std::map<KEY, LIE>::iterator it;
+        typename std::map<KEY, Lie>::iterator it;
         it = table.find(k);
         if (it != table.end())
             return it->second;
@@ -589,7 +596,7 @@ public:
                 for (i = 0; i < s.size(); ++i)
                     if (s[i] == getletter(k))
                         return table[k] = *(v[i]);
-                return (table[k] = (LIE) k);
+                return (table[k] = (Lie) k);
             } else
                 return (table[k]
                                 = replace(lparent(k), s, v, table)

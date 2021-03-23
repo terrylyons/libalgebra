@@ -69,6 +69,7 @@ class sparse_vector : /*private*/ MapType, protected base_vector<Basis, Coeffs>
     typedef base_vector<Basis, Coeffs> BASE_VEC;
 public:
 
+
     using MAP::operator[];
     /// Import of set this instance to the zero instance
     using MAP::clear;
@@ -91,13 +92,13 @@ public:
         MAP::swap((MAP &) rhs);
     }
 
-    typedef Coeffs FIELD;
+    typedef Coeffs COEFFS;
 
     /// Import of the KEY type from the MAP class.
     typedef typename BASIS::KEY KEY;
     /// Import of the SCALAR and RATIONAL types from FIELD
-    typedef typename FIELD::S SCALAR;
-    typedef typename FIELD::Q RATIONAL;
+    typedef typename COEFFS::S SCALAR;
+    typedef typename COEFFS::Q RATIONAL;
     /// Import of the iterator type from the MAP type.
     //typedef typename MAP::iterator iterator;
     /// Import of the KEY constant iterator type from the MAP type.

@@ -836,7 +836,7 @@ public:
                 dense_dimension(),
                 other.dense_dimension()
         );
-        std::cout << dim << '\n';
+
         resize_dense_to_dimension(dim);
 
         DENSE::operator-=(other);

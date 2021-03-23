@@ -41,7 +41,7 @@ typedef free_tensor_basis <SCA, RAT, n_letters, max_degree> BASIS;
 /// Import of the KEY type.
 typedef typename BASIS::KEY KEY;
 /// The algebra type.
-typedef algebra <BASIS> ALG;
+typedef algebra <BASIS, TrivialCoeffs<BASIS>, VectorType> ALG;
 /// The sparse_vector type.
 typedef typename ALG::VECT VECT;
 

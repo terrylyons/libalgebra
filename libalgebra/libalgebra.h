@@ -188,12 +188,18 @@ class lie_basis;
 
 /// Free Lie Associative Algebra.  Associative and non commutative.
 template<typename SCA, typename RAT,
-        DEG n_letters, DEG max_degree = 0>
+        DEG n_letters, DEG max_degree = 0,
+        typename VectorType=typename vectors::vector_type_selector<
+            lie_basis<SCA, RAT, n_letters, max_degree>,
+            TrivialCoeffs<lie_basis<SCA, RAT, n_letters, max_degree> >
+        >::type >
 class lie;
 
 /// Maps between Free Lie and Free Algebra elements.
 template<typename SCA, typename RAT,
-        DEG n_letters, DEG max_degree = 0>
+        DEG n_letters, DEG max_degree = 0,
+        typename Tensor = free_tensor<SCA, RAT, n_letters, max_degree>,
+        typename Lie = lie<SCA, RAT, n_letters, max_degree> >
 class maps;
 
 /// Campbell-Baker-Hausdorff formulas.

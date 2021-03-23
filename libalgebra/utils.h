@@ -16,7 +16,7 @@ Version 3. (See accompanying file License.txt)
 
 
 /// Provides maps between lie<> and free_tensor<> instances.
-template<typename SCA, typename RAT, DEG n_letters, DEG max_degree>
+template<typename SCA, typename RAT, DEG n_letters, DEG max_degree, typename Tensor, typename Lie>
 class maps
 {
     /// The Free Associative Algebra Basis type
@@ -28,9 +28,12 @@ class maps
     /// The Free Associative Algebra Basis KEY type
     typedef typename TBASIS::KEY TKEY;
     /// The Free Lie Associative Algebra element type
-    typedef lie <SCA, RAT, n_letters, max_degree> LIE;
+    //typedef lie <SCA, RAT, n_letters, max_degree> LIE;
     /// The Free Associative Algebra element type
-    typedef free_tensor <SCA, RAT, n_letters, max_degree> TENSOR;
+    //typedef free_tensor <SCA, RAT, n_letters, max_degree> TENSOR;
+    typedef Lie LIE;
+    typedef Tensor TENSOR;
+
 public:
     /// Default constructor.
     maps(void)
@@ -79,10 +82,11 @@ public:
     }
 
     /// Returns the free_tensor corresponding to a free lie element.
-    inline TENSOR l2t(const LIE &arg)
+    template <typename InputLie>
+    inline Tensor l2t(const InputLie &arg)
     {
-        TENSOR result;
-        typename LIE::const_iterator i;
+        Tensor result;
+        typename InputLie::const_iterator i;
         for (i = arg.begin(); i != arg.end(); ++i)
             result.add_scal_prod(expand(i->key()), i->value());
         return result;
@@ -93,19 +97,19 @@ public:
     result makes sense only if the given free_tensor is the tensor expression
     of some free lie element.
     */
-    inline LIE t2l(const TENSOR &arg)
+    template <typename InputTensor>
+    inline Lie t2l(const InputTensor &arg)
     {
-        LIE result;
-        typename TENSOR::const_iterator i;
+        Lie result;
+        typename InputTensor::const_iterator i;
         for (i = arg.begin(); i != arg.end(); ++i) {
-            if (i->value() != TENSOR::zero) {
+            if (i->value() != Tensor::zero) {
                 result.add_scal_prod(rbraketing(i->key()), i->value());
             }
         }
-        typename LIE::iterator j;
+        typename Lie::iterator j;
         for (j = result.begin(); j != result.end(); ++j) {
-            SCA &lhs = j->value();
-            lhs /= (RAT) (LIE::basis.degree(j->key()));
+            j->value() /= (RAT) (LIE::basis.degree(j->key()));
         }
         return result;
     }

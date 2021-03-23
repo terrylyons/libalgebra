@@ -31,17 +31,18 @@ Version 3. (See accompanying file License.txt)
    element of the addition operation. There is no neutral element for the
    product (free Lie product).
  */
-template<typename SCA, typename RAT, DEG n_letters, DEG max_degree>
-class lie : public algebra<lie_basis < SCA, RAT, n_letters, max_degree>
-
-> {
+template<typename SCA, typename RAT, DEG n_letters, DEG max_degree, typename VectorType>
+class lie : public algebra<lie_basis < SCA, RAT, n_letters, max_degree>,
+                           TrivialCoeffs<lie_basis<SCA, RAT, n_letters, max_degree> >,
+                           VectorType>
+{
 public:
 /// The basis type.
 typedef lie_basis <SCA, RAT, n_letters, max_degree> BASIS;
 /// Import of the KEY type.
 typedef typename BASIS::KEY KEY;
 /// The algebra type.
-typedef algebra <BASIS> ALG;
+typedef algebra <BASIS, TrivialCoeffs<BASIS>, VectorType> ALG;
 /// The sparse_vector type.
 typedef typename ALG::VECT VECT;
 

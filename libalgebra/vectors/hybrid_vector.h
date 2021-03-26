@@ -762,6 +762,7 @@ public:
             // Case rhs.dense_dimension() > dense_dimension()
 
             cend = SPARSE::end();
+            DIMN sz(0), sparse_sz(sparse_size());
 
             for (DIMN i = dense_part_eq.first; i < rhs.dense_dimension(); ++i) {
                 if (rhs.dense_value(i) == zero) {
@@ -773,6 +774,7 @@ public:
                     if (cit->value() != rhs.dense_part().value(i)) {
                         return false;
                     }
+                    sz += 1;
                 } else {
                     return false;
                 }
@@ -780,14 +782,22 @@ public:
 
             for (oit = rhs.sparse_part().begin(); oit != rhs.sparse_part().end(); ++oit) {
                 cit = SPARSE::find(oit->key());
-                if (cit == cend || cit->value() != oit->value()) {
+                if (cit != cend) {
+                    if (cit->value() != oit->value()) {
+                        return false;
+                    }
+                    sz += 1;
+                } else {
                     return false;
                 }
             }
 
-            return true;
+            return sz == sparse_sz;
         } else if (dense_part_eq.first == rhs.dense_dimension()) {
             cend = rhs.sparse_part().end();
+
+            cend = SPARSE::end();
+            DIMN sz(0), sparse_sz(rhs.sparse_size());
 
             for (DIMN i = dense_part_eq.first; i < dense_dimension(); ++i) {
                 if (dense_value(i) == zero) {
@@ -799,6 +809,7 @@ public:
                     if (cit->value() != rhs.dense_part().value(i)) {
                         return false;
                     }
+                    sz += 1;
                 } else {
                     return false;
                 }
@@ -806,12 +817,17 @@ public:
 
             for (oit = sparse_part().begin(); oit != sparse_part().end(); ++oit) {
                 cit = rhs.sparse_part().find(oit->key());
-                if (cit == cend || cit->value() != oit->value()) {
+                if (cit != cend) {
+                    if (cit->value() != oit->value()) {
+                        return false;
+                    }
+                    sz += 1;
+                } else {
                     return false;
                 }
             }
 
-            return true;
+            return sz == sparse_sz;
 
         }
 

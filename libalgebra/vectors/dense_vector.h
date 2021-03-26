@@ -130,10 +130,10 @@ private:
     }
 
     template<DEG D>
-    DIMN adjust_dimension(const DIMN dim, alg::basis::with_degree<D>)
+    DIMN adjust_dimension(const DIMN dim, alg::basis::with_degree<D>) const
     {
-        if (dim == max_dimension(degree_tag)) {
-            return dim;
+        if (dim >= max_dimension(degree_tag)) {
+            return max_dimension(degree_tag);
         }
 
         DEG d = index_to_degree(dim);
@@ -144,7 +144,7 @@ private:
         return start_of_degree(d + 1);
     }
 
-    DIMN adjust_dimension(const DIMN dim, alg::basis::without_degree)
+    DIMN adjust_dimension(const DIMN dim, alg::basis::without_degree) const
     {
         return std::min(max_dimension(degree_tag), dim);
     }
@@ -203,6 +203,11 @@ public:
         m_dimension = dim;
         assert (m_dimension == m_data.size());
         m_degree = target_deg;
+    }
+
+    DIMN next_resize_size() const
+    {
+        return adjust_dimension(dimension()+1, degree_tag);
     }
 
 

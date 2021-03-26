@@ -14,21 +14,22 @@
     hybrid_vector& NAME(const KEY& rhs, const ST s)                         \
     {                                                                       \
         DIMN idx;                                                           \
-        if ((idx = DENSE::key_to_index(rhs)) < DENSE::dimension()) {        \
-            DENSE::value(idx) OP1 (one OP2 s);                              \
+        if ((idx = DENSE::key_to_index(rhs)) < dense_dimension()) {         \
+            DENSE:: NAME(rhs, s);                                           \
         } else {                                                            \
-            SPARSE::operator[](rhs) OP1 (one OP2 s);                        \
+            SPARSE:: NAME (rhs, s);                                         \
         }                                                                   \
+        maybe_resize();                                                     \
         return *this;                                                       \
     }                                                                       \
                                                                             \
     hybrid_vector& NAME(const hybrid_vector& rhs, const ST s)               \
     {                                                                       \
-        DIMN dim = std::max(DENSE::dimension(), rhs.dimension());           \
+        DIMN dim = std::max(dense_dimension(), rhs.dense_dimension());      \
         resize_dense_to_dimension(dim);                                     \
         DENSE:: NAME (rhs, s);                                              \
         SPARSE:: NAME (rhs, s);                                             \
-        incorporate_sparse();                                               \
+        maybe_resize();                                                     \
         return *this;                                                       \
     }
 
@@ -54,17 +55,43 @@ struct size_control
 
 }
 
-class basic_resize_manager
-{
-public:
+namespace policy {
 
-};
+    class basic_resize_policy {
+    public:
+
+        template <typename Vector>
+        DIMN get_resize_size(const Vector& vect)
+        {
+            DIMN dense_dim(vect.dense_dimension());
+            DIMN sparse_dim(vect.sparse_size());
+
+            DIMN next_dense_size(vect.next_resize_size());
+            assert (next_dense_size <= vect.max_dense_dimension());
+            assert (dense_dim <= vect.max_dense_dimension());
+
+            //std::cerr << next_dense_size << ' ' << dense_dim << ' ' << sparse_dim << '\n';
+
+            if (sparse_dim > ((next_dense_size - dense_dim) / 2)) {
+                return next_dense_size;
+            } else {
+                return dense_dim;
+            }
+        }
+
+
+    };
+
+
+}
+
+
 
 
 template<
         typename Basis,
         typename Coeffs,
-        typename ResizeManager=basic_resize_manager,
+        typename ResizePolicy=policy::basic_resize_policy,
         typename DenseStorage=std::vector<typename Coeffs::S>,
         typename SparseMap=LIBALGEBRA_DEFAULT_MAP_TYPE >
 class hybrid_vector : public dense_vector<Basis, Coeffs, DenseStorage>,
@@ -72,7 +99,7 @@ class hybrid_vector : public dense_vector<Basis, Coeffs, DenseStorage>,
 {
     typedef dense_vector <Basis, Coeffs, DenseStorage> DENSE;
     typedef sparse_vector <Basis, Coeffs, SparseMap> SPARSE;
-    typedef ResizeManager MANAGER;
+    typedef ResizePolicy POLICY;
 
     friend struct tools::size_control;
 
@@ -83,7 +110,7 @@ private:
     // proportion of the vector. This applies only to cases where
     // resizing is optional. This does not apply when resize is
     // mandatory.
-    MANAGER m_resize_manager;
+    POLICY m_resize_policy;
 
 public:
 
@@ -111,22 +138,22 @@ public:
 
     // Constructors
 
-    hybrid_vector(void) : DENSE(), SPARSE()
+    hybrid_vector(void) : DENSE(), SPARSE(), m_resize_policy()
     {}
 
     explicit hybrid_vector(const KEY &key, const SCALAR& s = one)
-            : DENSE(), SPARSE(key, s)
+            : DENSE(), SPARSE(key, s), m_resize_policy()
     {
     }
 
     hybrid_vector(const hybrid_vector &other)
-            : DENSE(other), SPARSE(other)
+            : DENSE(other), SPARSE(other), m_resize_policy()
     {}
 
 private:
 
     hybrid_vector(DENSE dense_vec, SPARSE sparse_vec)
-            : DENSE(dense_vec), SPARSE(sparse_vec)
+            : DENSE(dense_vec), SPARSE(sparse_vec), m_resize_policy()
     {
     }
 
@@ -151,7 +178,6 @@ protected:
             incorporate_sparse();
         } else if (dim < dense_dimension()) {
             incorporate_dense(dim);
-            DENSE::resize_to_dimension(dim);
         }
     }
 
@@ -163,10 +189,8 @@ protected:
 
     void maybe_resize()
     {
-        DIMN sparse_sz(sparse_size());
-        while (sparse_sz > dense_dimension()) {
-            resize_dense_to_dimension(2*dense_dimension() + 1);
-        }
+        DIMN resize_size = m_resize_policy.get_resize_size(*this);
+        resize_dense_to_dimension(resize_size);
         incorporate_sparse();
     }
 
@@ -175,17 +199,16 @@ private:
     /// Incorporate the sparse elements that should now be dense
     void incorporate_sparse()
     {
-        if (dense_dimension() == 0 || sparse_empty()) {
+        DIMN dense_dim(dense_dimension());
+        if (dense_dim == 0 || sparse_empty()) {
             return;
         }
 
         typename SPARSE::iterator it(SPARSE::begin()), end(SPARSE::end());
 
-
         DIMN idx;
-
         while (it != end) {
-            if ((idx = key_to_index(it->key())) < dense_dimension()) {
+            if ((idx = key_to_index(it->key())) < dense_dim) {
                 DENSE::value(idx) += it->value();
                 SPARSE::erase(it++);
             } else {
@@ -205,13 +228,15 @@ private:
         std::vector<std::pair<KEY, SCALAR> > tmp;
         tmp.reserve(dense_dimension() - from_index);
 
-        for (DIMN i = from_index; i < dense_dimension(); ++i) {
-            tmp.push_back(PAIR(index_to_key(i), DENSE::value(i)));
+        SCALAR val;
+        for (DIMN i= from_index; i < dense_dimension(); ++i) {
+            val = dense_value(i);
+            if (val != zero) {
+                tmp.push_back(PAIR(index_to_key(i), val));
+            }
         }
 
-        DENSE::resize_to_dimension(from_index);
         SPARSE::insert(tmp.begin(), tmp.end());
-
     }
 
 public:
@@ -271,6 +296,9 @@ public:
 
     bool sparse_empty() const
     { return SPARSE::empty(); }
+
+    using DENSE::next_resize_size;
+
 
 protected:
 
@@ -333,7 +361,7 @@ public:
                 : m_dense_iterator(it),
                   m_dense_end(vect.dense_part().end()),
                   m_sparse_begin(vect.sparse_part().begin()),
-                  m_sparse_iterator(m_sparse_begin)
+                  m_sparse_iterator(vect.sparse_part().begin())
         {}
 
         key_type key()
@@ -368,8 +396,12 @@ public:
         {
             assert(m_sparse_begin == other.m_sparse_begin);
             assert(m_dense_end == other.m_dense_end);
-            if (is_dense() && other.is_dense()) {
+
+            bool lhs_dense(is_dense()), rhs_dense(other.is_dense());
+            if (lhs_dense && rhs_dense) {
                 return m_dense_iterator == other.m_dense_iterator;
+            } else if (lhs_dense || rhs_dense) {
+                return false;
             } else {
                 return m_sparse_iterator == other.m_sparse_iterator;
             }
@@ -427,14 +459,14 @@ public:
                 : m_dense_iterator(it),
                   m_dense_end(vect.dense_part().end()),
                   m_sparse_begin(vect.sparse_part().begin()),
-                  m_sparse_iterator(m_sparse_begin)
+                  m_sparse_iterator(vect.sparse_part().begin())
         {
             assert(vect.sparse_empty() || m_sparse_begin != vect.sparse_part().end());
         }
 
         key_type key()
         {
-            if (m_dense_iterator != m_dense_end) {
+            if (is_dense()) {
                 return m_dense_iterator->key();
             } else {
                 return m_sparse_iterator->key();
@@ -443,7 +475,7 @@ public:
 
         value_type value()
         {
-            if (m_dense_iterator != m_dense_end) {
+            if (is_dense()) {
                 return m_dense_iterator->value();
             } else {
                 return m_sparse_iterator->value();
@@ -464,8 +496,12 @@ public:
         {
             assert(m_sparse_begin == other.m_sparse_begin);
             assert(m_dense_end == other.m_dense_end);
-            if (is_dense() && other.is_dense()) {
+
+            bool lhs_dense(is_dense()), rhs_dense(other.is_dense());
+            if (lhs_dense && rhs_dense) {
                 return m_dense_iterator == other.m_dense_iterator;
+            } else if (lhs_dense || rhs_dense) {
+                return false;
             } else {
                 return m_sparse_iterator == other.m_sparse_iterator;
             }
@@ -473,7 +509,7 @@ public:
 
         void advance()
         {
-            if (m_dense_iterator != m_dense_end) {
+            if (is_dense()) {
                 ++m_dense_iterator;
             } else {
                 ++m_sparse_iterator;
@@ -494,7 +530,7 @@ public:
 
     iterator begin()
     {
-        if (dense_empty()) {
+        if (dense_dimension() == 0) {
             return iterator(*this, SPARSE::begin());
         } else {
             return iterator(*this, DENSE::begin());
@@ -508,7 +544,7 @@ public:
 
     const_iterator begin() const
     {
-        if (dense_empty()) {
+        if (dense_dimension() == 0) {
             return const_iterator(*this, SPARSE::begin());
         } else {
             return const_iterator(*this, DENSE::begin());
@@ -622,7 +658,7 @@ public:
         if (it->is_dense()) {
             it->value() = zero;
         } else {
-            SPARSE::erase(it->key());
+            SPARSE::erase(it->m_sparse_iterator);
         }
     }
 
@@ -641,6 +677,7 @@ public:
     {
         DENSE::swap(other);
         SPARSE::swap(other);
+        maybe_resize();
     }
 
 public:
@@ -702,10 +739,6 @@ public:
 
     bool operator==(const hybrid_vector &rhs) const
     {
-        if (empty() && rhs.empty()) {
-            return true;
-        }
-
         if (dense_dimension() == 0 && rhs.dense_dimension() == 0) {
             return sparse_part() == rhs.sparse_part();
         }
@@ -713,7 +746,6 @@ public:
         if (sparse_empty() && rhs.sparse_empty()) {
             return dense_part() == rhs.dense_part();
         }
-
 
         std::pair<DIMN, bool> dense_part_eq = DENSE::equal_to_min(rhs);
         if (dense_part_eq.first != 0 && !dense_part_eq.second) {
@@ -724,17 +756,24 @@ public:
 
         if (dense_part_eq.first == dense_dimension()
             && dense_part_eq.first == rhs.dense_dimension()) {
+
             return sparse_part() == rhs.sparse_part();
         } else if (dense_part_eq.first == dense_dimension()) {
+            // Case rhs.dense_dimension() > dense_dimension()
+
             cend = SPARSE::end();
 
             for (DIMN i = dense_part_eq.first; i < rhs.dense_dimension(); ++i) {
-                if (rhs.dense_part().value(i) == zero) {
+                if (rhs.dense_value(i) == zero) {
                     continue;
                 }
 
                 cit = SPARSE::find(index_to_key(i));
-                if (cit == cend || cit->value() != rhs.dense_part().value(i)) {
+                if (cit != cend) {
+                    if (cit->value() != rhs.dense_part().value(i)) {
+                        return false;
+                    }
+                } else {
                     return false;
                 }
             }
@@ -748,16 +787,19 @@ public:
 
             return true;
         } else if (dense_part_eq.first == rhs.dense_dimension()) {
-
             cend = rhs.sparse_part().end();
 
             for (DIMN i = dense_part_eq.first; i < dense_dimension(); ++i) {
-                if (DENSE::value(i) == zero) {
+                if (dense_value(i) == zero) {
                     continue;
                 }
 
                 cit = rhs.sparse_part().find(index_to_key(i));
-                if (cit == cend || cit->value() != DENSE::value(i)) {
+                if (cit != cend) {
+                    if (cit->value() != rhs.dense_part().value(i)) {
+                        return false;
+                    }
+                } else {
                     return false;
                 }
             }
@@ -768,6 +810,7 @@ public:
                     return false;
                 }
             }
+
             return true;
 
         }
@@ -826,7 +869,7 @@ public:
 
         DENSE::operator+=(other);
         SPARSE::operator+=(other);
-        incorporate_sparse();
+        maybe_resize();
         return *this;
     }
 
@@ -836,12 +879,11 @@ public:
                 dense_dimension(),
                 other.dense_dimension()
         );
-
         resize_dense_to_dimension(dim);
 
         DENSE::operator-=(other);
         SPARSE::operator-=(other);
-        incorporate_sparse();
+        maybe_resize();
         return *this;
     }
 
@@ -855,7 +897,8 @@ public:
 
         DENSE::operator&=(rhs);
         SPARSE::operator&=(rhs);
-        incorporate_sparse();
+
+        maybe_resize();
         return *this;
     }
 
@@ -869,7 +912,8 @@ public:
 
         DENSE::operator|=(rhs);
         SPARSE::operator|=(rhs);
-        incorporate_sparse();
+
+        maybe_resize();
         return *this;
     }
 
@@ -993,7 +1037,7 @@ private:
                 buf_begin(buffer.begin());
 
         DEG rh_max_deg;
-        if (!dense_empty()) {
+        if (dense_dimension() != 0) {
             for (DEG lhs_deg = 0; lhs_deg <= std::min(dense_degree(), max_depth); ++lhs_deg) {
                 rh_max_deg = max_depth - lhs_deg;
                 for (DIMN i = DENSE::start_of_degree(lhs_deg); i < DENSE::start_of_degree(lhs_deg + 1); ++i) {
@@ -1011,7 +1055,7 @@ private:
             assert(lhs_deg <= max_depth);
             rh_max_deg = max_depth - lhs_deg;
 
-            if (!rhs.dense_empty()) {
+            if (rhs.dense_dimension() != 0) {
                 for (DEG rhs_deg = 0; rhs_deg <= std::min(rh_max_deg, rhs.dense_degree()); ++rhs_deg) {
                     for (DIMN j = DENSE::start_of_degree(rhs_deg); j < DENSE::start_of_degree(rhs_deg + 1); ++j) {
                         key_transform(result, it->key(), it->value(), index_to_key(j), rhs.dense_value(j));
@@ -1025,8 +1069,8 @@ private:
 
         }
 
-        dtl::vector_base_access::convert(result).incorporate_sparse();
-        //dtl::vector_base_access::convert(result).maybe_resize();
+        dtl::vector_base_access::convert(result).maybe_resize();
+
     }
 
     template<typename Vector, typename KeyTransform>
@@ -1089,8 +1133,9 @@ public:
     ) const
     {
 
-        if (!dense_empty() && !rhs.dense_empty()) {
+        if (dense_dimension() != 0 && rhs.dense_dimension() != 0) {
             DEG max_degree = std::min(max_depth, dense_degree() + rhs.dense_degree());
+            dtl::vector_base_access::convert(result).resize_dense_to_degree(max_degree);
             DENSE::triangular_buffered_apply_binary_transform(
                     result, rhs, key_transform, max_degree
             );
@@ -1109,10 +1154,12 @@ public:
             const DEG max_depth
     ) const
     {
-        // The dense part will be resized to accommodate the max_dense_degree
-        DEG max_dense_degree = std::min(max_depth, dense_degree() + rhs.dense_degree());
 
-        if (!dense_empty() && !rhs.dense_empty()) {
+
+        if (dense_dimension() != 0 && rhs.dense_dimension() != 0) {
+            // The dense part will be resized to accommodate the max_dense_degree
+            DEG max_dense_degree = std::min(max_depth, dense_degree() + rhs.dense_degree());
+            dtl::vector_base_access::convert(result).resize_dense_to_degree(max_dense_degree);
             DENSE::triangular_buffered_apply_binary_transform(
                     result, rhs, key_transform, index_transform, max_dense_degree
             );
@@ -1154,7 +1201,7 @@ public:
             KeyTransform key_transform
     ) const
     {
-        if (!dense_empty() && !rhs.dense_empty()) {
+        if (dense_dimension() != 0 && rhs.dense_dimension() != 0) {
             DENSE::square_buffered_apply_binary_transform(result, rhs, key_transform);
         }
 
@@ -1169,7 +1216,7 @@ public:
             IndexTransform index_transform
     ) const
     {
-        if (!dense_empty() && !rhs.dense_empty()) {
+        if (dense_dimension() != 0 && rhs.dense_dimension() != 0) {
             DENSE::square_buffered_apply_binary_transform(result, rhs, key_transform, index_transform);
         }
 
@@ -1187,11 +1234,8 @@ public:
             const DEG max_deg
     ) const
     {
-        if (empty()) {
-            return;
-        }
-
-        if (!dense_empty()) {
+        if (dense_dimension() != 0) {
+            result.resize_dense_to_dimension(transform.dense_resize(dense_dimension()));
             DENSE::buffered_apply_unary_transform(result, transform, max_deg);
         }
 
@@ -1210,7 +1254,8 @@ public:
             return;
         }
 
-        if (!dense_empty()) {
+        if (dense_dimension() != 0) {
+            result.resize_dense_to_dimension(transform.dense_resize(dense_dimension()));
             DENSE::buffered_apply_unary_transform(result, transform);
         }
         SPARSE::buffered_apply_unary_transform(result, transform);

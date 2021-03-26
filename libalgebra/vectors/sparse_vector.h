@@ -797,8 +797,9 @@ public:
     /// Compares the instance to a sparse_vector.
     bool operator==(const sparse_vector &rhs) const
     {
-        if (size() != rhs.size())
+        if (size() != rhs.size()) {
             return false;
+        }
         const_iterator i, j, jend(rhs.end()), iend(end());
         for (i = begin(); i != iend; ++i) {
             j = rhs.find(i->key());

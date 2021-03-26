@@ -86,8 +86,8 @@ public:
     inline Tensor l2t(const InputLie &arg)
     {
         Tensor result;
-        typename InputLie::const_iterator i;
-        for (i = arg.begin(); i != arg.end(); ++i)
+        typename InputLie::const_iterator i, iend(arg.end());
+        for (i = arg.begin(); i != iend; ++i)
             result.add_scal_prod(expand(i->key()), i->value());
         return result;
     }

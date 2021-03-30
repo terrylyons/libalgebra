@@ -865,21 +865,28 @@ public:
         return lhs.first < rhs.first;
     }
 
+protected:
+
+    void print_members(std::ostream& os) const
+    {
+        std::pair<BASIS *, KEY> token;
+        token.first = &dense_vector::basis;
+        for (DIMN i = 0; i < m_dimension; ++i) {
+            if (zero != m_data[i]) {
+                token.second = index_to_key(i);
+                os << ' ' << m_data[i] << '(' << token << ')';
+            }
+        }
+    }
+
 public:
 
     inline friend std::ostream &operator<<(std::ostream &os,
                                            const dense_vector &rhs)
     {
-        std::pair<BASIS *, KEY> token;
-        token.first = &dense_vector::basis;
         assert (rhs.m_dimension == rhs.m_data.size());
         os << '{';
-        for (DIMN i = 0; i < rhs.m_dimension; ++i) {
-            if (zero != rhs.m_data[i]) {
-                token.second = index_to_key(i);
-                os << ' ' << rhs.m_data[i] << '(' << token << ')';
-            }
-        }
+        rhs.print_members(os);
         os << ' ' << '}';
         return os;
     }

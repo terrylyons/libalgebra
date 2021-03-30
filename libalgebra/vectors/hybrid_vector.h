@@ -75,7 +75,7 @@ namespace policy {
 
             //std::cerr << next_dense_size << ' ' << dense_dim << ' ' << sparse_dim << '\n';
 
-            if (sparse_dim > ((next_dense_size - dense_dim) / 2)) {
+            if (sparse_dim > ((next_dense_size - dense_dim) / 3)) {
                 return next_dense_size;
             } else {
                 return dense_dim;
@@ -1006,25 +1006,25 @@ public:
         return std::max(DENSE::NormLInf(deg), SPARSE::NormLInf(deg));
     }
 
-public:
+
+protected:
 
     // Display
+
+    void print_members(std::ostream& os) const
+    {
+        DENSE::print_members(os);
+        SPARSE::print_members(os);
+    }
+
+
+public:
 
     inline friend std::ostream &operator<<(std::ostream &os,
                                            const hybrid_vector &rhs)
     {
-        std::pair<BASIS *, KEY> token;
-        token.first = &basis;
-
         os << '{';
-
-        for (const_iterator cit(rhs.begin()); cit != rhs.end(); ++cit) {
-            if (zero != cit->value()) {
-                token.second = cit->key();
-                os << ' ' << cit->value() << '(' << token << ')';
-            }
-        }
-
+        rhs.print_members(os);
         os << ' ' << '}';
         return os;
     }
@@ -1239,7 +1239,7 @@ public:
     {
         if (dense_dimension() != 0 && rhs.dense_dimension() != 0) {
             DIMN new_size = std::max(dense_dimension(), rhs.dense_dimension());
-            dtl::vector_base_access::convert(result).resize_dense_to_degree(new_size);
+            dtl::vector_base_access::convert(result).resize_dense_to_dimension(new_size);
             DENSE::square_buffered_apply_binary_transform(result, rhs, key_transform);
         }
 
@@ -1256,7 +1256,7 @@ public:
     {
         if (dense_dimension() != 0 && rhs.dense_dimension() != 0) {
             DIMN new_size = std::max(dense_dimension(), rhs.dense_dimension());
-            dtl::vector_base_access::convert(result).resize_dense_to_degree(new_size);
+            dtl::vector_base_access::convert(result).resize_dense_to_dimension(new_size);
             DENSE::square_buffered_apply_binary_transform(result, rhs, key_transform, index_transform);
         }
 

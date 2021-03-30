@@ -905,19 +905,18 @@ public:
         return lhs.first < rhs.first;
     };
 
-    inline friend std::ostream &operator<<(std::ostream &os,
-                                           const sparse_vector &rhs)
-    {
+protected:
 
+    void print_members(std::ostream& os) const
+    {
         std::pair<BASIS *, KEY> token;
         token.first = &sparse_vector::basis;
-        os << '{';
         // create buffer to avoid unnecessary calls to MAP inside loop
 #ifndef ORDEREDMAP
         typename std::vector<std::pair < KEY, SCALAR> > ::const_iterator
-        cit;
+                cit;
         typename std::vector<std::pair < KEY, SCALAR> >
-                buffer(rhs.map_begin(), rhs.map_end());
+                buffer(map_begin(), map_end());
         std::sort(buffer.begin(), buffer.end(), comp);
         for (cit = buffer.begin(); cit != buffer.end(); ++cit) {
             token.second = cit->first;
@@ -928,12 +927,22 @@ public:
         const_iterator cit;
         const sparse_vector &buffer = rhs;
 
-        for (cit = rhs.begin(); cit != rhs.end(); ++cit) {
+        for (cit = begin(); cit != end(); ++cit) {
             token.second = cit->key();
             os << ' ' << cit->value() << '(' << token << ')';
         }
 #endif // ORDEREDMAP
 
+
+    }
+
+public:
+
+    inline friend std::ostream &operator<<(std::ostream &os,
+                                           const sparse_vector &rhs)
+    {
+        os << '{';
+        rhs.print_members(os);
         os << " }";
         return os;
     }

@@ -204,7 +204,10 @@ class maps;
 
 /// Campbell-Baker-Hausdorff formulas.
 template<typename SCA, typename RAT,
-        DEG n_letters, DEG max_degree>
+        DEG n_letters, DEG max_degree,
+        typename Tensor=free_tensor<SCA, RAT, n_letters, max_degree>,
+        typename Lie=lie<SCA, RAT, n_letters, max_degree>
+        >
 class cbh;
 
 /// Multivariate Polynomial Algebra Basis. Associative and Commutative.

@@ -176,7 +176,7 @@ private:
 };
 
 /// Provides Campbell-Baker-Hausdorff formulas.
-template<typename SCA, typename RAT, DEG n_letters, DEG max_degree>
+template<typename SCA, typename RAT, DEG n_letters, DEG max_degree, typename Tensor, typename Lie>
 class cbh
 {
     /// The Free Associative Algebra Basis type.
@@ -188,11 +188,13 @@ class cbh
     /// The Free Associative Algebra Basis KEY type.
     typedef typename TBASIS::KEY TKEY;
     /// The Free Lie Associative Algebra element type.
-    typedef lie <SCA, RAT, n_letters, max_degree> LIE;
+    //typedef lie <SCA, RAT, n_letters, max_degree> LIE;
+    typedef Lie LIE;
     /// The Free Associative Algebra element type.
-    typedef free_tensor <SCA, RAT, n_letters, max_degree> TENSOR;
+    //typedef free_tensor <SCA, RAT, n_letters, max_degree> TENSOR;
+    typedef Tensor TENSOR;
     /// The MAPS type.
-    typedef maps<SCA, RAT, n_letters, max_degree> MAPS;
+    typedef maps<SCA, RAT, n_letters, max_degree, Tensor, Lie> MAPS;
     /// Maps between lie and free_tensor instances.
     mutable MAPS m_maps;//TJL added mutable
 public:

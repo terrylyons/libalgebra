@@ -398,7 +398,7 @@ shuffle_tensor(const free_tensor <SCA, RAT, n_letters, max_degree> &t)
 {
     typename free_tensor<SCA, RAT, n_letters, max_degree>::const_iterator i;
     for (i = t.begin(); i != t.end(); ++i)
-        (*this)[i->first] += i->second;
+        (*this)[i->key()] += i->value();
 }
 
 /// Constructs an instance from an algebra instance.

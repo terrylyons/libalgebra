@@ -8,7 +8,7 @@
 #include "libalgebra/vectors/base_vector.h"
 #include "libalgebra/vectors/sparse_vector.h"
 #include "libalgebra/vectors/dense_vector.h"
-
+#include "libalgebra/utils/order_trait.h"
 
 #define DEFINE_FUSED_OP(NAME, ST, OP1, OP2)                                 \
     hybrid_vector& NAME(const KEY& rhs, const ST s)                         \
@@ -32,6 +32,9 @@
         maybe_resize();                                                     \
         return *this;                                                       \
     }
+
+
+
 
 namespace alg {
 namespace vectors {
@@ -196,6 +199,11 @@ protected:
 
 private:
 
+    static bool sort_by_index(std::pair<DIMN, SCALAR> p1, std::pair<DIMN, SCALAR> p2)
+    {
+        return p1.first < p2.first;
+    }
+
     /// Incorporate the sparse elements that should now be dense
     void incorporate_sparse()
     {
@@ -205,15 +213,27 @@ private:
         }
 
         typename SPARSE::iterator it(SPARSE::begin()), end(SPARSE::end());
+        std::vector<std::pair<DIMN, SCALAR> > buffer;
+        buffer.reserve(sparse_size());
 
         DIMN idx;
         while (it != end) {
             if ((idx = key_to_index(it->key())) < dense_dim) {
-                DENSE::value(idx) += it->value();
+                buffer.push_back(std::pair<DIMN, SCALAR>(idx, it->value()));
+                //DENSE::value(idx) += it->value();
                 SPARSE::erase(it++);
             } else {
                 ++it;
             }
+        }
+
+        if (!utils::is_ordered<SparseMap>::value) {
+            std::sort(buffer.begin(), buffer.end(), sort_by_index);
+        }
+
+        typename std::vector<std::pair<DIMN, SCALAR> >::const_iterator cit;
+        for (cit=buffer.begin(); cit != buffer.end(); ++cit) {
+            dense_value(cit->first) += cit->second;
         }
 
     }
@@ -1218,6 +1238,8 @@ public:
     ) const
     {
         if (dense_dimension() != 0 && rhs.dense_dimension() != 0) {
+            DIMN new_size = std::max(dense_dimension(), rhs.dense_dimension());
+            dtl::vector_base_access::convert(result).resize_dense_to_degree(new_size);
             DENSE::square_buffered_apply_binary_transform(result, rhs, key_transform);
         }
 
@@ -1233,6 +1255,8 @@ public:
     ) const
     {
         if (dense_dimension() != 0 && rhs.dense_dimension() != 0) {
+            DIMN new_size = std::max(dense_dimension(), rhs.dense_dimension());
+            dtl::vector_base_access::convert(result).resize_dense_to_degree(new_size);
             DENSE::square_buffered_apply_binary_transform(result, rhs, key_transform, index_transform);
         }
 
@@ -1266,7 +1290,7 @@ public:
             Transform transform
     ) const
     {
-        if (empty()) {
+        if (dense_dimension() == 0 && sparse_empty()) {
             return;
         }
 

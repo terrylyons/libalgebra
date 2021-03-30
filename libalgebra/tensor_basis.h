@@ -410,18 +410,19 @@ struct vector_type_selector<free_tensor_basis<typename Field::S, typename Field:
     typedef vectors::hybrid_vector <
             BASIS,
             Field,
+            vectors::policy::basic_resize_policy,
+            std::vector<typename Field::S>,
 #ifndef ORDEREDMAP
             MY_UNORDERED_MAP<KEY, typename Field::S, typename KEY::hash>
 #else
             std::map<KEY, typename Field::S>
 #endif
-    ,       std::vector<typename Field::S>
     > hybrid_vect;
 
     typedef typename alg::utils::type_selector<
             boost::is_pod<typename Field::S>::value,
             sparse_vect,
-            dense_vect
+            hybrid_vect
         >::type type;
 
 

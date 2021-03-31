@@ -505,7 +505,7 @@ public:
     using hall_basis<n_letters>::key2string;
     using hall_basis<n_letters>::size;
     using hall_basis<n_letters>::hall_set;
-    using hall_basis<n_letters>::REVERSE_MAP;
+    using typename hall_basis<n_letters>::REVERSE_MAP;
     /// The MAP type.
     typedef std::map<KEY, SCA> MAP;
     /// The Free Lie Associative Algebra element type.

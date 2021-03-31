@@ -105,7 +105,7 @@ public:
 
     static const DEG MAX_DEGREE = BASIS::MAX_DEGREE;
 
-
+    using VECT::basis;
 
 
     // Transformations

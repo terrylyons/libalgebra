@@ -51,7 +51,7 @@ typedef typename ALG::iterator iterator;
 /// Import of the constant iterator type.
 typedef typename ALG::const_iterator const_iterator;
 
-using VECT::basis;
+using ALG::basis;
 public:
 
 /// Default constructor. Zero lie element.

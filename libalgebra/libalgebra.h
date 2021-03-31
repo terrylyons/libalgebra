@@ -145,8 +145,8 @@ struct TrivialCoeffs
 //class sparse_vector;
 /// Generic Associative Algebra.
 template<typename Basis,
-        typename Coeffs=TrivialCoeffs<Basis>,
-        typename VectorType = typename vectors::vector_type_selector<Basis, Coeffs>::type>
+        typename Coeff=TrivialCoeffs<Basis>,
+        typename VectorType = typename vectors::vector_type_selector<Basis, Coeff>::type>
 class algebra;
 
 /// Generic Associative Algebra basis.

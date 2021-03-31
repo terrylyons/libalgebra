@@ -922,7 +922,6 @@ protected:
             token.second = cit->first;
             os << ' ' << cit->second << '(' << token << ')';
         }
-
 #else
         const_iterator cit;
         for (cit = begin(); cit != end(); ++cit) {

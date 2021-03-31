@@ -136,7 +136,8 @@ public:
     * Create a vector with the value corresponding to key k equal
     * to the given coefficient (default +1).
     */
-    explicit vector(const KEY &k, const SCALAR &s = one)
+    explicit
+    vector(const KEY &k, const SCALAR &s = one)
             : UnderlyingVectorType(k, s)
     {}
 
@@ -147,9 +148,13 @@ public:
      * @tparam V Other underlying vector type.
      */
     template<typename F, typename V>
-    explicit vector(const vector<BASIS, F, V> &other)
+    explicit
+    vector(const vector<BASIS, F, V> &other)
     {
-        //TODO: Implement me
+        typename vector<BASIS, F, V>::const_iterator cit;
+        for (cit(other.begin()); cit!=other.end(); ++cit) {
+            operator[](cit->key()) = cit->value();
+        }
     }
 
 protected:
@@ -159,7 +164,6 @@ protected:
         return UnderlyingVectorType::ensure_sized_for_degree(deg);
     }
 
-
 public:
 
     // Swap
@@ -167,7 +171,6 @@ public:
     {
         UnderlyingVectorType::swap(rhs);
     }
-
 
 public:
 
@@ -228,19 +231,61 @@ public:
     /// Scalar multiply
     __DECLARE_BINARY_OPERATOR(vector, *, *=, SCALAR);
     /// Rational divide
-    __DECLARE_BINARY_OPERATOR(vector,
-                              /, /=, RATIONAL);
+    __DECLARE_BINARY_OPERATOR(vector, /, /=, RATIONAL);
     /// Addition
-    __DECLARE_BINARY_OPERATOR(vector,
-                              +, +=, vector);
+    __DECLARE_BINARY_OPERATOR(vector, +, +=, vector);
     /// Subtraction
-    __DECLARE_BINARY_OPERATOR(vector,
-                              -, -=, vector);
+    __DECLARE_BINARY_OPERATOR(vector, -, -=, vector);
     /// Coordinatewise minimum
     __DECLARE_BINARY_OPERATOR(vector, &, &=, vector);
     /// Coordinatewise maximum
-    __DECLARE_BINARY_OPERATOR(vector,
-                              |, |=, vector);
+    __DECLARE_BINARY_OPERATOR(vector, |, |=, vector);
+
+
+public:
+
+    // Arithmetic for compatible vectors
+
+    /// Inplace addition for similar vectors
+    template <typename V>
+    vector& operator+=(const vector<BASIS, Coeffs, V>& rhs)
+    {
+        typename vector<BASIS, Coeffs, V>::const_iterator cit;
+        for (cit(rhs.begin()); cit!=rhs.end(); ++cit) {
+            add_scal_prod(cit->key(), cit->value());
+        }
+        return *this;
+    }
+
+    /// Inplace subraction for similar vectors
+    template <typename V>
+    vector& operator-=(const vector<BASIS, Coeffs, V>& rhs)
+    {
+        typename vector<BASIS, Coeffs, V>::const_iterator cit;
+        for (cit(rhs.begin()); cit!=rhs.end(); ++cit) {
+            sub_scal_prod(cit->key(), cit->value());
+        }
+        return *this;
+    }
+
+    /// Addition for similar vectors
+    template <typename V>
+    vector operator+(const vector<BASIS, Coeffs, V>& rhs) const
+    {
+        vector result (*this);
+        result += rhs;
+        return result;
+    }
+
+    /// Addition for similar vectors
+    template <typename V>
+    vector operator-(const vector<BASIS, Coeffs, V>& rhs) const
+    {
+        vector result (*this);
+        result -= rhs;
+        return result;
+    }
+
 
 public:
 

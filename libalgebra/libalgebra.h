@@ -146,7 +146,7 @@ struct TrivialCoeffs
 /// Generic Associative Algebra.
 template<typename Basis,
         typename Coeffs=TrivialCoeffs<Basis>,
-        typename VectorType = typename vectors::vector_type_selector<Basis, TrivialCoeffs<Basis>>::type>
+        typename VectorType = typename vectors::vector_type_selector<Basis, TrivialCoeffs<Basis> >::type>
 class algebra;
 
 /// Generic Associative Algebra basis.

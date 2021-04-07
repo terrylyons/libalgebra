@@ -925,7 +925,6 @@ protected:
 
 #else
         const_iterator cit;
-        const sparse_vector &buffer = rhs;
 
         for (cit = begin(); cit != end(); ++cit) {
             token.second = cit->key();

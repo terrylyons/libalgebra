@@ -987,8 +987,8 @@ public:
                         &d_result.m_data[start_of_degree(out_deg)],
                         &m_data[start_of_degree(lhs_deg)],
                         &rhs.m_data[start_of_degree(rhs_deg)],
-                        start_of_degree(lhs_deg + 1) - lh_deg_start,
-                        start_of_degree(rhs_deg + 1) - rh_deg_start
+                        alg::DEG(start_of_degree(lhs_deg + 1) - lh_deg_start),
+                        alg::DEG(start_of_degree(rhs_deg + 1) - rh_deg_start)
                 );
             }
         }
@@ -1047,13 +1047,13 @@ public:
         resize_to_degree(max_degree);
         assert(m_data.size() == start_of_degree(max_degree+1));
 
-        if (max_degree == 0) {
+        if (max_degree == alg::DEG(0)) {
             index_transform(
                     &m_data[start_of_degree(0)],
                     &m_data[start_of_degree(0)],
                     &rhs.m_data[start_of_degree(0)],
-                    degree_difference_1_0,
-                    degree_difference_1_0,
+                    alg::DEG(degree_difference_1_0),
+                    alg::DEG(degree_difference_1_0),
                     true
             );
             return;
@@ -1070,7 +1070,7 @@ public:
                 // Basis does not admit a degree 0.
                 offset = 1;
             } else if (degree_difference_1_0 == 1) {
-                if (rhs.m_data[0] == one && out_deg <= old_lhs_deg) {
+                if (rhs.m_data[0] == one && out_deg <= IDEG(old_lhs_deg)) {
                     assign = false;
                     offset = 1;
                 }
@@ -1091,8 +1091,8 @@ public:
                         &m_data[start_of_degree(out_deg)],
                         &m_data[start_of_degree(lhs_deg)],
                         &rhs.m_data[start_of_degree(rhs_deg)],
-                        start_of_degree(lhs_deg + 1) - lh_deg_start,
-                        start_of_degree(rhs_deg + 1) - rh_deg_start,
+                        alg::DEG(start_of_degree(lhs_deg + 1) - lh_deg_start),
+                        alg::DEG(start_of_degree(rhs_deg + 1) - rh_deg_start),
                         assign
                 );
 

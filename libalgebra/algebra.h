@@ -100,12 +100,12 @@ public:
     typedef typename VECT::SCALAR SCALAR;
     /// Import of the RATIONAL type from sparse_vector.
     typedef typename VECT::RATIONAL RATIONAL;
-    using typename VECT::coefficient_field;
+    using VECT::coefficient_field;
 
 
     static const DEG MAX_DEGREE = BASIS::MAX_DEGREE;
 
-    using VECT::basis;
+
 
 
     // Transformations

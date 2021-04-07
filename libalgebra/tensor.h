@@ -223,6 +223,7 @@ private:
 
 
                     for (DIMN i=0; i<rhs_target; ++i) {
+// requires -openmp:experimental switch in windows
 #pragma omp simd
                         for (DIMN j=1; j<=n_letters; ++j) {
                             *(out_ptr++) = factor * deg_m1_ptr[i] * arg_ptr[j]  ;

@@ -33,7 +33,7 @@ namespace dtl {
 template<DEG NoLetters, DEG Depth>
 struct depth_size
 {
-    enum
+    enum : long long
     {
         value = (ConstPower<NoLetters, Depth>::ans - 1) / (NoLetters - 1)
     };
@@ -449,9 +449,9 @@ struct basis_multiplication_selector<free_tensor_basis<Scalar, Rational, n_lette
         {}
 
         void operator()(
-                typename Coeffs::S* __restrict result_ptr,
-                const typename Coeffs::S* __restrict lhs_ptr,
-                const typename Coeffs::S* __restrict rhs_ptr,
+                typename Coeffs::S * __restrict result_ptr,
+                const typename Coeffs::S  * __restrict lhs_ptr,
+                const typename Coeffs::S  * __restrict rhs_ptr,
                 const DEG lhs_target,
                 const DEG rhs_target,
                 const bool assign = false

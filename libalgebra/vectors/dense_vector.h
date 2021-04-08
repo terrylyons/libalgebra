@@ -102,9 +102,8 @@ public:
 
     /// Unidimensional constructor
     explicit dense_vector(const KEY &k, const SCALAR &s = one)
-            : m_dimension(0), m_degree(0)
+            : m_data(), m_dimension(0), m_degree(0)
     {
-        m_data = STORAGE();
         DIMN idx = resize_for_key(k, degree_tag);
         assert (m_dimension == m_data.size());
         assert (m_data.size() > idx);

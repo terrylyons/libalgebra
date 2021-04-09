@@ -90,10 +90,7 @@ because divisors are computed from smallest to largest in order.
 template<typename Divisor, bool= false, Unsigned LastNum = 0>
 struct square_free
 {
-    enum : bool
-    {
-        ans = square_free<typename Divisor::next, (Divisor::divisor == LastNum), Divisor::divisor>::ans
-    };
+    static const bool ans = square_free<typename Divisor::next, (Divisor::divisor == LastNum), Divisor::divisor>::ans;
 };
 
 /*
@@ -103,9 +100,7 @@ last divisor.
 template<Unsigned LastNum>
 struct square_free<divisor_calc<1>, false, LastNum>
 {
-    enum : bool {
-        ans = 1
-    };
+    static const bool ans = true;
 };
 
 /*
@@ -114,9 +109,7 @@ Specialise for the case where a repeated digit is detected.
 template<typename Divisor, Unsigned LastNum>
 struct square_free<Divisor, true, LastNum>
 {
-    enum : bool {
-        ans = 0
-    };
+    static const bool ans = false;
 };
 
 namespace Mobius {

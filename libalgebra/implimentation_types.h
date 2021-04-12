@@ -33,7 +33,7 @@ typedef unsigned long long LET64;
 
 /// Used for dimension of of vector elements and indices in dense vectors
 typedef size_t DIMN;
-
+typedef std::ptrdiff_t IDIMN;
 
 }
 #endif // implimetation_types_h__

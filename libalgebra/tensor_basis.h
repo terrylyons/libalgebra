@@ -422,7 +422,7 @@ struct vector_type_selector<free_tensor_basis<typename Field::S, typename Field:
     typedef typename alg::utils::type_selector<
             boost::is_pod<typename Field::S>::value,
             sparse_vect,
-            hybrid_vect
+            dense_vect
         >::type type;
 
 
@@ -458,16 +458,16 @@ struct basis_multiplication_selector<free_tensor_basis<Scalar, Rational, n_lette
         )
         {
             if (assign) {
-                for (DIMN i = 0; i < lhs_target; ++i) {
+                for (IDIMN i = 0; i < static_cast<IDIMN>(lhs_target); ++i) {
 #pragma omp simd
-                    for (DIMN j = 0; j < rhs_target; ++j) {
+                    for (IDIMN j = 0; j < static_cast<IDIMN>(rhs_target); ++j) {
                         *(result_ptr++) = m_transform(lhs_ptr[i] * rhs_ptr[j]);
                     }
                 }
             } else {
-                for (DIMN i = 0; i < lhs_target; ++i) {
+                for (IDIMN i = 0; i < static_cast<IDIMN>(lhs_target); ++i) {
 #pragma omp simd
-                    for (DIMN j = 0; j < rhs_target; ++j) {
+                    for (IDIMN j = 0; j < static_cast<IDIMN>(rhs_target); ++j) {
                         *(result_ptr++) += m_transform(lhs_ptr[i] * rhs_ptr[j]);
                     }
                 }

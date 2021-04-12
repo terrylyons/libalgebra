@@ -222,10 +222,10 @@ private:
                     factor = VECT::one / static_cast<SCA>(deg);
 
 
-                    for (DIMN i=0; i<rhs_target; ++i) {
+                    for (IDIMN i=0; i<static_cast<IDIMN>(rhs_target); ++i) {
 // requires -openmp:experimental switch in windows
 #pragma omp simd
-                        for (DIMN j=1; j<=n_letters; ++j) {
+                        for (IDIMN j=1; j<=static_cast<IDIMN>(n_letters); ++j) {
                             *(out_ptr++) = factor * deg_m1_ptr[i] * arg_ptr[j]  ;
                         }
                     }

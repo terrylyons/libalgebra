@@ -45,7 +45,10 @@ is not normalised.
 template<DEG NoLetters, DEG Level, DEG Divisor = 1, DEG Remainder = (Level % Divisor)>
 struct hall_set_level_size
 {
-    static const Long value = hall_set_level_size<NoLetters, Level, Divisor + 1>::value;
+ //   static constexpr const Long value = hall_set_level_size<NoLetters, Level, Divisor + 1>::value;
+    enum {
+        value = hall_set_level_size<NoLetters, Level, Divisor + 1>::value
+    };
 };
 
 /*
@@ -55,9 +58,16 @@ divisor term value.
 template<DEG NoLetters, DEG Level, DEG Divisor>
 struct hall_set_level_size<NoLetters, Level, Divisor, 0>
 {
-    static const Long value = mobius_func<Divisor>::value
+    /*
+    static constexpr const Long value = mobius_func<Divisor>::value
                               * ConstPower<NoLetters, Level / Divisor>::ans
                               + hall_set_level_size<NoLetters, Level, Divisor + 1>::value;
+                              */
+    enum {
+        value = mobius_func<Divisor>::value
+                * ConstPower<NoLetters, Level / Divisor>::ans
+                + hall_set_level_size<NoLetters, Level, Divisor + 1>::value
+    };
 };
 
 /*
@@ -66,7 +76,10 @@ Specialisation for divisor = number (terminal case).
 template<DEG NoLetters, DEG Level>
 struct hall_set_level_size<NoLetters, Level, Level, 0>
 {
-    static const Long value = mobius_func<Level>::value * NoLetters;
+    //static constexpr const Long value = mobius_func<Level>::value * NoLetters;
+    enum {
+        value = mobius_func<Level>::value * NoLetters
+    };
 };
 
 /*
@@ -75,7 +88,10 @@ Specialisation for 1
 template<DEG NoLetters>
 struct hall_set_level_size<NoLetters, 1, 1, 0>
 {
-    static const Long value = NoLetters;
+    //static constexpr const Long value = NoLetters;
+    enum {
+        value = NoLetters
+    };
 };
 
 
@@ -86,7 +102,10 @@ Specialisation for 0.
 template<DEG NoLetters, DEG Divisor>
 struct hall_set_level_size<NoLetters, 0, Divisor, 0>
 {
-    static const Long value = NoLetters;
+   // static constexpr const Long value = NoLetters;
+   enum {
+       value = NoLetters
+   };
 };
 
 
@@ -94,26 +113,36 @@ struct hall_set_level_size<NoLetters, 0, Divisor, 0>
 template<DEG NoLetters, DEG MaxLevel>
 struct hall_set_size
 {
-    static const Long value;
-    /*
-    static const Long value = ((hall_set_level_size<NoLetters, MaxLevel - 1>::value / (MaxLevel - 1))
-        + hall_set_size<NoLetters, MaxLevel - 1>::value);
-    */
+    //static const Long value;
+
+    //static constexpr const Long value = ((hall_set_level_size<NoLetters, MaxLevel - 1>::value / (MaxLevel - 1))
+    //    //    + hall_set_size<NoLetters, MaxLevel - 1>::value);
+    enum {
+        value = ((hall_set_level_size<NoLetters, MaxLevel - 1>::value / (MaxLevel - 1))
+            + hall_set_size<NoLetters, MaxLevel - 1>::value)
+    };
+
 };
 
 template<DEG NoLetters>
 struct hall_set_size<NoLetters, 1>
 {
-    static const Long value;
+    //static constexpr const Long value = 0;
+    enum {
+        value = 0
+    };
 };
 
 template<DEG NoLetters>
 struct hall_set_size<NoLetters, 0>
 {
-    static const Long value;
+    //static constexpr const Long value = 0;
+    enum {
+        value = 0
+    };
 };
 
-
+/*
 template < DEG NoLetters, DEG MaxLevel >
 const Long hall_set_size < NoLetters, MaxLevel >::value =
         ((hall_set_level_size<NoLetters, MaxLevel - 1>::value / (MaxLevel - 1))
@@ -124,7 +153,7 @@ const Long hall_set_size < NoLetters, 1 >::value = 0;
 
 template < DEG NoLetters >
 const Long hall_set_size < NoLetters, 0 >::value = 0;
-
+*/
 
 template<DEG NoLetters, DEG MaxDepth>
 struct hall_set_info

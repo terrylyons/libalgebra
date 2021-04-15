@@ -13,6 +13,7 @@ Version 3. (See accompanying file License.txt)
 
 #include "libalgebra/libalgebra.h"
 #include <addons/gmpwrapper.h>
+#include <boost/multiprecision/gmp.hpp>
 //#include "mtl/mtl.h"
 
 #include <vector>
@@ -90,8 +91,10 @@ struct Field;
 template<>
 struct Field<Rational>
 {
-    typedef mpq_class S;
-    typedef mpq_class Q;
+    //typedef mpq_class S;
+    //typedef mpq_class Q;
+    typedef boost::multiprecision::number<boost::multiprecision::gmp_rational, boost::multiprecision::et_off> S;
+    typedef S Q;
 };
 
 template<>

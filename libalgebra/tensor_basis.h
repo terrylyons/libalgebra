@@ -457,18 +457,19 @@ struct basis_multiplication_selector<free_tensor_basis<Scalar, Rational, n_lette
                 const bool assign = false
         )
         {
+            typename Coeffs::S lhs;
             if (assign) {
                 for (IDIMN i = 0; i < static_cast<IDIMN>(lhs_target); ++i) {
-#pragma omp simd
+                    lhs = lhs_ptr[i];
                     for (IDIMN j = 0; j < static_cast<IDIMN>(rhs_target); ++j) {
-                        *(result_ptr++) = m_transform(lhs_ptr[i] * rhs_ptr[j]);
+                        *(result_ptr++) = m_transform(lhs * rhs_ptr[j]);
                     }
                 }
             } else {
                 for (IDIMN i = 0; i < static_cast<IDIMN>(lhs_target); ++i) {
-#pragma omp simd
+                    lhs = lhs_ptr[i];
                     for (IDIMN j = 0; j < static_cast<IDIMN>(rhs_target); ++j) {
-                        *(result_ptr++) += m_transform(lhs_ptr[i] * rhs_ptr[j]);
+                        *(result_ptr++) += m_transform(lhs * rhs_ptr[j]);
                     }
                 }
             }

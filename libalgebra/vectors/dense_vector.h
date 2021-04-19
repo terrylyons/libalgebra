@@ -465,8 +465,9 @@ public:
 
     void clear()
     {
+        SCALAR z = zero;
         for (DIMN i = 0; i < m_dimension; ++i) {
-            m_data[i] = zero;
+            m_data[i] = z;
         }
     }
 

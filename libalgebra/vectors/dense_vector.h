@@ -436,12 +436,12 @@ public:
         return end();
     }
 
-    iterator find(DIMN idx)
+    iterator find_index(DIMN idx)
     {
         return iterator(*this, m_data.begin() + idx);
     }
 
-    const_iterator find(DIMN idx) const
+    const_iterator find_index(DIMN idx) const
     {
         return const_iterator(*this, m_data.begin() + idx);
     }

@@ -647,7 +647,7 @@ public:
     {
         DIMN idx;
         if ((idx = key_to_index(key)) < dense_dimension()) {
-            return const_iterator(*this, DENSE::find(idx));
+            return const_iterator(*this, DENSE::find_index(idx));
         } else {
             return const_iterator(*this, SPARSE::find(key));
         }
@@ -657,7 +657,7 @@ public:
     {
         DIMN idx;
         if ((idx = key_to_index(key)) < dense_dimension()) {
-            return iterator(*this, DENSE::find(idx));
+            return iterator(*this, DENSE::find_index(idx));
         } else {
             return iterator(*this, SPARSE::find(key));
         }

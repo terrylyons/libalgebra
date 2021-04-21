@@ -33,7 +33,7 @@ namespace dtl {
 template<DEG NoLetters, DEG Depth>
 struct depth_size
 {
-    enum : long long
+    enum
     {
         value = (ConstPower<NoLetters, Depth>::ans - 1) / (NoLetters - 1)
     };

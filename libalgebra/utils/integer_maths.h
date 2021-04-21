@@ -10,7 +10,7 @@ namespace integer_maths {
 
 typedef unsigned Unsigned;
 typedef size_t Size;
-typedef long long Long;
+typedef size_t Long;
 
 // Structs for computing (prime) divisors of a number.
 /*

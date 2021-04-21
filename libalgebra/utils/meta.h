@@ -5,6 +5,7 @@
 #ifndef LIBALGEBRA_META_H
 #define LIBALGEBRA_META_H
 
+#pragma warning(once: 4305 4309)
 
 #include <boost/type_traits.hpp>
 
@@ -71,6 +72,7 @@ struct populate_array<Compute, W, 0>
     template<typename Array>
     static inline void fill(Array &arr)
     {
+
         arr[0] = Compute<W, 0>::value;
     }
 };

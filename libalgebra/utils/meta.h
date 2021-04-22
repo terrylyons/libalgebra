@@ -60,9 +60,10 @@ struct populate_array
     template<typename Array>
     static inline void fill(Array &arr)
     {
-        arr[D] = static_cast<typename Array::value_type>(
-                std::max(Compute<W, D>::value, std::numeric_limits<typename Array::value_type>::max())
-                );
+        arr[D] = static_cast<typename Array::value_type>(std::min(
+                static_cast<unsigned long long>(Compute<W, D>::value),
+                static_cast<unsigned long long>(std::numeric_limits<typename Array::value_type>::max())
+        ));
         populate_array<Compute, W, D - 1>::fill(arr);
     }
 
@@ -74,9 +75,10 @@ struct populate_array<Compute, W, 0>
     template<typename Array>
     static inline void fill(Array &arr)
     {
-        arr[0] = static_cast<typename Array::value_type>(
-                std::max(Compute<W, 0>::value, std::numeric_limits<typename Array::value_type>::max())
-                );
+        arr[0] = static_cast<typename Array::value_type>(std::min(
+                static_cast<unsigned long long>(Compute<W, 0>::value),
+                static_cast<unsigned long long>(std::numeric_limits<typename Array::value_type>::max())
+                ));
     }
 };
 

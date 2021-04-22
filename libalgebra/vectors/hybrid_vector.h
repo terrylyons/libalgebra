@@ -601,7 +601,7 @@ public:
                 DENSE::value(idx) = val;
                 rv.second = true;
             }
-            rv.first = iterator(*this, DENSE::find(idx));
+            rv.first = iterator(*this, DENSE::find_index(idx));
         } else {
             std::pair<const KEY, SCALAR> tmp_pair(key, val);
             std::pair<typename SPARSE::iterator, bool> tmp =
@@ -619,7 +619,7 @@ public:
             if (DENSE::value(idx) == zero && p.second != zero) {
                 DENSE::value(idx) = p.second;
                 return std::pair<iterator, bool>(
-                        iterator(*this, DENSE::find(idx)),
+                        iterator(*this, DENSE::find_index(idx)),
                         true);
             }
         } else {

@@ -258,9 +258,9 @@ inline friend free_tensor exp(const free_tensor &arg)
     free_tensor result(kunit), tunit(kunit);
 
     typename VECT::const_iterator unit_it(arg.find(kunit));
-    bool unit_zero = (unit_it == arg.end()) || (unit_it->value() == VECT::zero);
 
 #ifdef LIBALGEBRA_OPTIMISE_TENSOR_EXP
+    bool unit_zero = (unit_it == arg.end()) || (unit_it->value() == VECT::zero);
     if (arg.degree_equals(1) && unit_zero) {
         optimised_exp_deg_1_zero_unit fn;
         arg.buffered_apply_unary_transform(result, fn);

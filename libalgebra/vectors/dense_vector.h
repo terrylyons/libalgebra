@@ -198,7 +198,7 @@ public:
     {
         DEG target_deg = std::min(degree_tag.max_degree, deg);
         DIMN dim = start_of_degree(target_deg + 1);
-        m_data.resize(dim);
+        m_data.resize(dim, zero);
         m_dimension = dim;
         assert (m_dimension == m_data.size());
         m_degree = target_deg;

@@ -60,7 +60,6 @@ struct populate_array
     template<typename Array>
     static inline void fill(Array &arr)
     {
-#pragma warning(suppress: 4305 4309)
         arr[D] = std::max(Compute<W, D>::value, std::numeric_limits<typename Array::value_type>::max());
         populate_array<Compute, W, D - 1>::fill(arr);
     }
@@ -73,7 +72,6 @@ struct populate_array<Compute, W, 0>
     template<typename Array>
     static inline void fill(Array &arr)
     {
-#pragma warning(suppress: 4305 4309)
         arr[0] = std::max(Compute<W, 0>::value, std::numeric_limits<typename Array::value_type>::max());
     }
 };

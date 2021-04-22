@@ -658,7 +658,7 @@ struct vector_type_selector<shuffle_tensor_basis<typename Field::S, typename Fie
     typedef typename BASIS::KEY KEY;
     typedef sparse_vector <BASIS, Field,
 #ifndef ORDEREDMAP
-    std::unordered_map<KEY, typename Field::S, typename KEY::hash>
+    MY_UNORDERED_MAP<KEY, typename Field::S, typename KEY::hash>
 #else
     std::map<KEY, typename Field::S>
 #endif

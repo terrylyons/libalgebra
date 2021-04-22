@@ -25,9 +25,13 @@ namespace vectors {
 
 
 // This is a macro because template aliases are c++11
+#ifndef ORDEREDMAP
+#define LIBALGEBRA_DEFAULT_MAP_TYPE \
+    MY_UNORDERED_MAP<typename Basis::KEY, typename Coeffs::S>
+#else
 #define LIBALGEBRA_DEFAULT_MAP_TYPE \
     std::map<typename Basis::KEY, typename Coeffs::S>
-
+#endif
 /// A class to store and manipulate sparse vectors.
 
 //Unordered and Ordered forms

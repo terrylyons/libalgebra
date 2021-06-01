@@ -101,217 +101,111 @@ explicit free_tensor(const SCA &s)
 {}
 
 public:
+	/// Ensures that the return type is a free_tensor.
+  inline __DECLARE_BINARY_OPERATOR(free_tensor,*,*=,SCA)
+	/// Ensures that the return type is a free_tensor.
+  inline __DECLARE_BINARY_OPERATOR(free_tensor,/,/=,RAT)
+	/// Ensures that the return type is a free_tensor.
+  inline __DECLARE_BINARY_OPERATOR(free_tensor,*,*=,free_tensor)
+	/// Ensures that the return type is a free_tensor.
+  inline __DECLARE_BINARY_OPERATOR(free_tensor,+,+=,free_tensor)
+	/// Ensures that the return type is a free_tensor.
+  inline __DECLARE_BINARY_OPERATOR(free_tensor,-,-=,free_tensor)
+	/// Ensures that the return type is a free_tensor.
+  inline __DECLARE_UNARY_OPERATOR(free_tensor,-,-,ALG)
+	/// Computes the truncated exponential of a free_tensor instance.
+	inline friend free_tensor exp(const free_tensor& arg)
+	{
+		// Computes the truncated exponential of arg
+		// 1 + arg + arg^2/2! + ... + arg^n/n! where n = max_degree
+		KEY kunit;
+		free_tensor result(kunit);
+		for (DEG i = max_degree; i >= 1; --i)
+		{
+			result.mul_scal_div(arg, (RAT)i);
+			result += (free_tensor)kunit;
+		}
+		return result;
+	}
 
-/// Ensures that the return type is a free_tensor.
-inline __DECLARE_BINARY_OPERATOR(free_tensor, *, *=, SCA);
-
-/// Ensures that the return type is a free_tensor.
-inline __DECLARE_BINARY_OPERATOR(free_tensor, /, /=, RAT);
-
-/// Ensures that the return type is a free_tensor.
-inline __DECLARE_BINARY_OPERATOR(free_tensor, *, *=, free_tensor);
-
-/// Ensures that the return type is a free_tensor.
-inline __DECLARE_BINARY_OPERATOR(free_tensor, +, +=, free_tensor);
-
-/// Ensures that the return type is a free_tensor.
-inline __DECLARE_BINARY_OPERATOR(free_tensor, -, -=, free_tensor);
-
-/// Ensures that the return type is a free_tensor.
-inline __DECLARE_UNARY_OPERATOR(free_tensor, -, -, ALG);
-
-private:
-
-
-    struct optimised_exp_deg_1_zero_unit
+	/**
+	 * Fused multiply exponential operation for free tensors.
+	 *
+	 * Computes a*exp(x) using a modified Horner's method for the case when x does not have a
+	 * constant term. If the argument exp_arg has a constant term, it is ignored.
+	 *
+	 * For a real number x, one can expand exp(x) up to degree n as
+	 *
+	 *     1 + b_1 x(1 + b_2 x(1 + ... b_n x(1)) ...)
+	 *
+	 * where each b_i has the value 1/i. This formulae works when x is a free tensor, or indeed any
+	 * element in an unital (associative) algebra. Working through the result of multiplying on the left
+	 * by another element a in the above gives the expansion
+	 *
+	 *     a + b1 (a + b_2 (a + ... b_n (a)x) ... x)x.
+	 *
+	 * This is the result of a*exp(x). In a non-commutative algebra this need not be equal to exp(x)*a.
+	 *
+	 * @param exp_arg free_tensor (const reference) to expentiate (x).
+	 * @return free_tensor containing a*exp(x)
+	 */
+    free_tensor fmexp(const free_tensor& exp_arg) const
     {
+	    free_tensor result(*this), x(exp_arg);
+        KEY kunit;
+        typename free_tensor::iterator unit_elt;
 
-        DIMN dense_resize(const DIMN arg_dense_size) const
-        {
-            if (arg_dense_size <= 1) {
-                return arg_dense_size;
-            }
-            return BASIS::start_of_degree(max_degree+1);
-        }
+        if ((unit_elt = x.find(kunit)) == x.end() || unit_elt.value() != VECT::zero) {
+            x.erase(unit_elt);
+	    }
 
-        struct key_transform {
+	    for (DEG i=max_degree; i >= 1; --i)
+	    {
+	        result.mul_scal_div(x, static_cast<RAT>(i));
+	        result += *this;
+	    }
 
-            template <typename Vector>
-            void operator()(Vector& result, const Vector& arg, const DEG max_deg)
-            {
-                assert (max_deg <= max_degree);
-
-                typedef std::pair<KEY, SCA> value_t;
-                typedef typename std::vector<value_t>::iterator iter;
-
-                std::vector<value_t> last_buffer, next_buffer, arg_buffer;
-
-                if (max_deg == 0) {
-                    return;
-                }
-
-                DIMN n_values = arg.size();
-                arg_buffer.reserve(arg.size());
-                for (typename Vector::const_iterator cit=arg.begin(); cit != arg.end(); ++cit) {
-                    arg_buffer.push_back(value_t(cit->key(), cit->value()));
-                    result[cit->key()] = cit->value();
-                }
-
-                last_buffer = arg_buffer;
-
-                DIMN total_size = n_values;
-                for (DEG d(max_deg); d > 0; --d) {
-                    total_size *= n_values;
-                }
-                last_buffer.reserve(total_size);
-                next_buffer.reserve(total_size);
-
-
-                KEY k;
-                SCA s;
-                SCA factor;
-                for (DEG d(2); d<=max_deg; ++d) {
-                    factor = VECT::one / RAT(d);
-
-                    for (iter lit(last_buffer.begin()); lit != last_buffer.end(); ++lit) {
-                        for (iter rit(arg_buffer.begin()); rit != arg_buffer.end(); ++rit) {
-                            k = (lit->first) * (rit->first);
-                            s = factor * (lit->second) * (rit->second) ;
-                            next_buffer.push_back(value_t(k, s));
-                            result[k] = s;
-                        }
-                    }
-
-                    next_buffer.swap(last_buffer);
-                    next_buffer.clear();
-                }
-
-
-            }
-
-        };
-
-        struct index_transform {
-
-            void operator()(
-                    SCA* __restrict result_ptr,
-                    const DIMN result_target,
-                    const SCA* __restrict arg_ptr,
-                    const DIMN arg_target,
-                    const DEG max_deg
-            )
-            {
-                assert (max_deg <= max_degree);
-
-                if (max_deg == 0) {
-                    return;
-                }
-                DIMN tmp = BASIS::start_of_degree(max_deg+1);
-                assert (result_target == BASIS::start_of_degree(max_deg+1));
-                assert (arg_target == BASIS::start_of_degree(2));
-
-                SCA* __restrict out_ptr = result_ptr;
-
-                out_ptr++; // skip ();
-
-
-                SCA factor;
-                for (DEG deg=1; deg <= max_deg; ++deg) {
-                    SCA* __restrict deg_m1_ptr = result_ptr + BASIS::start_of_degree(deg-1);
-                    DIMN rhs_target = BASIS::start_of_degree(deg) - BASIS::start_of_degree(deg-1);
-                    factor = VECT::one / static_cast<SCA>(deg);
-
-
-                    for (IDIMN i=0; i<static_cast<IDIMN>(rhs_target); ++i) {
-// requires -openmp:experimental switch in windows
-#pragma omp simd
-                        for (IDIMN j=1; j<=static_cast<IDIMN>(n_letters); ++j) {
-                            *(out_ptr++) = factor * deg_m1_ptr[i] * arg_ptr[j]  ;
-                        }
-                    }
-
-                }
-            }
-
-        };
-
-        key_transform get_key_transform()
-        {
-            return key_transform();
-        }
-
-        index_transform get_index_transform()
-        {
-            return index_transform();
-        }
-
-    };
-
-public:
-
-/// Computes the truncated exponential of a free_tensor instance.
-inline friend free_tensor exp(const free_tensor &arg)
-{
-    // Computes the truncated exponential of arg
-    // 1 + arg + arg^2/2! + ... + arg^n/n! where n = max_degree
-    KEY kunit;
-    free_tensor result(kunit), tunit(kunit);
-
-    typename VECT::const_iterator unit_it(arg.find(kunit));
-
-#ifdef LIBALGEBRA_OPTIMISE_TENSOR_EXP
-    bool unit_zero = (unit_it == arg.end()) || (unit_it->value() == VECT::zero);
-    if (arg.degree_equals(1) && unit_zero) {
-        optimised_exp_deg_1_zero_unit fn;
-        arg.buffered_apply_unary_transform(result, fn);
-    } else {
-#endif
-        for (DEG i = max_degree; i >= 1; --i) {
-            result.mul_scal_div(arg, (RAT) i);
-            result += tunit;
-        }
-#ifdef LIBALGEBRA_OPTIMISE_TENSOR_EXP
+	    return result;
     }
-#endif
-    return result;
-}
 
-/// Computes the truncated logarithm of a free_tensor instance.
-inline friend free_tensor log(const free_tensor &arg)
-{
-    // Computes the truncated log of arg up to degree max_degree
-    // The coef. of the constant term (empty word in the monoid) of arg
-    // is forced to 1.
-    // log(arg) = log(1+x) = x - x^2/2 + ... + (-1)^(n+1) x^n/n.
-    // max_degree must be > 0
-    KEY kunit;
-    free_tensor tunit(kunit);
-    free_tensor x(arg);
-    iterator it = x.find(kunit);
-    if (it != x.end())
-        x.erase(it);
-    free_tensor result;
-    for (DEG i = max_degree; i >= 1; --i) {
-        if (i % 2 == 0)
-            result.sub_scal_div(tunit, (RAT) i);
-        else
-            result.add_scal_div(tunit, (RAT) i);
-        result *= x;
-    }
-    return result;
-}
 
-/// Computes the truncated inverse of a free_tensor instance.
-inline friend free_tensor inverse(const free_tensor &arg)
-{
-    // Computes the truncated inverse of arg up to degree max_degree
-    // An exception is thrown if the leading term is zero.
-    // the module assumes
-    // (a+x)^(-1) = (a(1+x/a))^(-1)
-    //  = a^(-1)(1 - x/a + x^2/a^2 + ... + (-1)^(n) x^n/a^n)
-    // = a^(-1) - x/a*[a^(-1)(1 - x/a + x^2/a^2 + ... + (-1)^(n) x^(n-1)/a^(n-1)))].
-    // S_n = a^(-1) + z S_{n-1}; z = - x/a ; S_0 = a^(-1)
-    // max_degree must be > 0
+	/// Computes the truncated logarithm of a free_tensor instance.
+	inline friend free_tensor log(const free_tensor& arg)
+	{
+		// Computes the truncated log of arg up to degree max_degree
+		// The coef. of the constant term (empty word in the monoid) of arg
+		// is forced to 1.
+		// log(arg) = log(1+x) = x - x^2/2 + ... + (-1)^(n+1) x^n/n.
+		// max_degree must be > 0
+		KEY kunit;
+		free_tensor tunit(kunit);
+		free_tensor x(arg);
+		iterator it = x.find(kunit);
+		if (it != x.end())
+			x.erase(it);
+		free_tensor result;
+
+		for (DEG i = max_degree; i >= 1; --i)
+		{
+			if (i % 2 == 0)
+				result.sub_scal_div(tunit, (RAT)i);
+			else
+				result.add_scal_div(tunit, (RAT)i);
+			result *= x;
+		}
+		return result;
+	}
+	/// Computes the truncated inverse of a free_tensor instance.
+	inline friend free_tensor inverse(const free_tensor& arg)
+	{
+		// Computes the truncated inverse of arg up to degree max_degree
+		// An exception is thrown if the leading term is zero.
+		// the module assumes 
+		// (a+x)^(-1) = (a(1+x/a))^(-1)
+		//  = a^(-1)(1 - x/a + x^2/a^2 + ... + (-1)^(n) x^n/a^n)
+		// = a^(-1) - x/a*[a^(-1)(1 - x/a + x^2/a^2 + ... + (-1)^(n) x^(n-1)/a^(n-1)))].
+		// S_n = a^(-1) + z S_{n-1}; z = - x/a ; S_0 = a^(-1)
+		// max_degree must be > 0
 
     static KEY kunit;
     SCA a(0);

@@ -1,0 +1,6 @@
+include(CMakeFindDependencyMacro)
+
+find_dependency(Boost COMPONENTS thread REQUIRED)
+
+
+include("${CMAKE_CURRENT_BINARY_DIR}/LibalgebraTargets.cmake")

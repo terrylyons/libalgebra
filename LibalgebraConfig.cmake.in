@@ -4,7 +4,7 @@ set(LIBALGEBRA_VERSION 1.0.0)
 
 @PACKAGE_INIT@
 
-find_dependency(Boost COMPONENTS thread REQUIRED)
+add_dependency(Boost COMPONENTS thread REQUIRED)
 
 set_and_check(LIBALGEBRA_INCLUDE_DIR "@CMAKE_INSTALL_INCLUDEDIR@")
 

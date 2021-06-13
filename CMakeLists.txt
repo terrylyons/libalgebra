@@ -18,7 +18,7 @@ include(GNUInstallDirs)
 
 set(CMAKE_CXX_STANDARD 98)
 
-find_package(Boost COMPONENTS thread)
+find_package(Boost REQUIRED COMPONENTS thread)
 
 add_library(Libalgebra INTERFACE)
 
@@ -30,7 +30,7 @@ target_include_directories(Libalgebra
 
 add_library(Libalgebra::Libalgebra ALIAS Libalgebra)
 
-target_link_libraries(Libalgebra INTERFACE Boost::Boost)
+target_link_libraries(Libalgebra INTERFACE Boost::boost Boost::thread)
 
 if(NOT_SUBPROJECT)
     install(TARGETS Libalgebra

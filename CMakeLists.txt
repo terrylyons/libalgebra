@@ -20,7 +20,7 @@ target_include_directories(Libalgebra
 
 add_library(Libalgebra::Libalgebra ALIAS Libalgebra)
 
-target_link_libraries(Libalgebra INTERFACE Boost::Boost)
+target_link_libraries(Libalgebra INTERFACE Boost)
 
 
 install(TARGETS Libalgebra

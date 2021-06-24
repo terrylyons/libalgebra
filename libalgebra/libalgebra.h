@@ -32,13 +32,15 @@ typedef unsigned __int32    uint32_t;
 typedef unsigned __int64    uint64_t;
 #endif
 #elif __cplusplus < 201103L
+
 #include <stdint.h>
+
 #else
 #include <cstdint>
 #endif
 
 #include <iostream>
-#include <iomanip> 
+#include <iomanip>
 #include <sstream>
 #include <string>
 #include <deque>
@@ -55,6 +57,15 @@ typedef unsigned __int64    uint64_t;
 
 #include <boost/thread/locks.hpp>
 #include "implimentation_types.h"
+
+
+#if __cplusplus >= 201103L
+#include <array>
+#define LIBALGEBRA_STATIC_ARRAY_TYPE std::array
+#else
+#include <boost/array.hpp>
+#define LIBALGEBRA_STATIC_ARRAY_TYPE boost::array
+#endif
 
 //#define ORDEREDMAP
 #define UNORDEREDMAP
@@ -85,7 +96,7 @@ typedef unsigned __int64    uint64_t;
 #include <type_traits>
 #include <unordered_map>
 #define MY_UNORDERED_MAP std::unordered_map
-#else 
+#else
 #define ORDEREDMAP
 #endif // !UNORDEREDMAP
 #ifndef NOBTREE
@@ -102,26 +113,25 @@ typedef unsigned __int64    uint64_t;
 */
 
 #include "libalgebra/vectors/vectors.h"
+#include "libalgebra/utils/integer_maths.h"
 
-
-namespace alg
-{
+namespace alg {
 
 // Some useful macros to avoid similar codes.
 
 #define __DECLARE_BINARY_OPERATOR(T1, NEWOP, OLDOP, T2) \
-	T1 operator NEWOP(const T2& rhs) const \
-	{ T1 result(*this); return result OLDOP rhs; }
+    T1 operator NEWOP(const T2& rhs) const \
+    { T1 result(*this); result OLDOP rhs; return result; }
 
 #define __DECLARE_UNARY_OPERATOR(NEWT, NEWOP, OLDOP, OLDT) \
-	NEWT operator NEWOP(void) const \
-	{ return OLDT::operator OLDOP (); }
+    NEWT operator NEWOP(void) const \
+    { return OLDT::operator OLDOP (); }
 
 //  End of macros.
 
 
 // Temporary Coefficients declaration
-template <typename B>
+template<typename B>
 struct TrivialCoeffs
 {
     typedef typename B::SCALAR S;
@@ -135,50 +145,75 @@ struct TrivialCoeffs
 //class sparse_vector;
 /// Generic Associative Algebra.
 template<typename Basis,
-        typename Coeffs=TrivialCoeffs<Basis>,
-        typename VectorType = typename vectors::vector_type_selector<Basis, Coeffs>::type>
+        typename Coeff=TrivialCoeffs<Basis>,
+        typename VectorType = typename vectors::vector_type_selector<Basis, TrivialCoeffs<Basis> >::type>
 class algebra;
+
 /// Generic Associative Algebra basis.
 template<typename S, DEG n_letters, DEG max_degree = 0>
 class tensor_basis;
+
 /// Free Associative Algegra Basis. Concatenation product. Non commutative.
 template<typename SCA, typename RAT,
-		 DEG n_letters, DEG max_degree = 0>
+        DEG n_letters, DEG max_degree = 0>
 class free_tensor_basis;
+
 /// Free Shuffle Associative Algebra Basis. Shuffle product. Commutative.
 template<typename SCA, typename RAT,
-		 DEG n_letters, DEG max_degree = 0>
+        DEG n_letters, DEG max_degree = 0>
 class shuffle_tensor_basis;
+
 /// Free Associative Algebra.  Associative and non commutative.
 template<typename SCA, typename RAT,
-		 DEG n_letters, DEG max_degree = 0>
+        DEG n_letters, DEG max_degree = 0,
+        typename VectorType = typename vectors::vector_type_selector<
+                free_tensor_basis<SCA, RAT, n_letters, max_degree>,
+            TrivialCoeffs<free_tensor_basis<SCA, RAT, n_letters, max_degree> >
+        >::type >
 class free_tensor;
+
 /// Free Associative Shuffle Algebra.  Associative and Commutative.
 template<typename SCA, typename RAT,
-		 DEG n_letters, DEG max_degree = 0>
+        DEG n_letters, DEG max_degree = 0>
 class shuffle_tensor;
+
 /// Philip Hall Lie Basis.
 template<DEG n_letters>
 class hall_basis;
+
 /// Free Lie Associative Algebra Basis.  Associative and non commutative.
 template<typename SCA, typename RAT,
-		 DEG n_letters, DEG max_degree = 0>
+        DEG n_letters, DEG max_degree = 0>
 class lie_basis;
+
 /// Free Lie Associative Algebra.  Associative and non commutative.
 template<typename SCA, typename RAT,
-		 DEG n_letters, DEG max_degree = 0>
+        DEG n_letters, DEG max_degree = 0,
+        typename VectorType=typename vectors::vector_type_selector<
+            lie_basis<SCA, RAT, n_letters, max_degree>,
+            TrivialCoeffs<lie_basis<SCA, RAT, n_letters, max_degree> >
+        >::type >
 class lie;
+
 /// Maps between Free Lie and Free Algebra elements.
 template<typename SCA, typename RAT,
-		 DEG n_letters, DEG max_degree = 0>
+        DEG n_letters, DEG max_degree = 0,
+        typename Tensor = free_tensor<SCA, RAT, n_letters, max_degree>,
+        typename Lie = lie<SCA, RAT, n_letters, max_degree> >
 class maps;
+
 /// Campbell-Baker-Hausdorff formulas.
 template<typename SCA, typename RAT,
-		 DEG n_letters, DEG max_degree>
+        DEG n_letters, DEG max_degree,
+        typename Tensor=free_tensor<SCA, RAT, n_letters, max_degree>,
+        typename Lie=lie<SCA, RAT, n_letters, max_degree>
+        >
 class cbh;
+
 /// Multivariate Polynomial Algebra Basis. Associative and Commutative.
 template<typename SCA, typename RAT>
 class poly_basis;
+
 /// Multivariate Polynomial Algebra.  Associative and Commutative.
 template<typename SCA, typename RAT>
 class poly;
@@ -187,9 +222,11 @@ class poly;
 /// II. Multivariate Polynomial Algebra pre Basis. Associative and Commutative
 template<typename SCA, DEG n_letters, DEG max_degree = 0>
 class monomial_basis;
+
 /// II. Multivariate Polynomial Algebra Basis. Associative and Commutative
 template<typename SCA, typename RAT, DEG n_letters, DEG max_degree = 0>
 class free_monomial_basis;
+
 /// II. Multivariate Polynomial Algebra   Associative and Commutative.
 template<typename SCA, typename RAT, DEG n_letters, DEG max_degree = 0>
 class multi_polynomial;

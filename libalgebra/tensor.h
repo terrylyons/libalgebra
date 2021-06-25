@@ -29,19 +29,23 @@ Version 3. (See accompanying file License.txt)
    associative algebra corresponding to the SCALAR type. This is permitted by
    the existence of empty keys in free_tensor_basis.
  */
-template<typename SCA, typename RAT, DEG n_letters, DEG max_degree, typename VectorType>
+template<typename Coeff, DEG n_letters, DEG max_degree, typename VectorType>
 class free_tensor : public algebra<
-        free_tensor_basis < SCA, RAT, n_letters, max_degree>,
-        TrivialCoeffs<free_tensor_basis < SCA, RAT, n_letters, max_degree> >,
+        free_tensor_basis <n_letters, max_degree>,
+        Coeff,
         VectorType
 > {
 public:
 /// The basis type.
-typedef free_tensor_basis <SCA, RAT, n_letters, max_degree> BASIS;
+typedef free_tensor_basis <n_letters, max_degree> BASIS;
 /// Import of the KEY type.
 typedef typename BASIS::KEY KEY;
 /// The algebra type.
-typedef algebra <BASIS, TrivialCoeffs<BASIS>, VectorType> ALG;
+typedef algebra <BASIS, Coeff, VectorType> ALG;
+
+typedef typename Coeff::SCA SCA;
+typedef typename Coeff::RAT RAT;
+
 /// The sparse_vector type.
 typedef typename ALG::VECT VECT;
 
@@ -61,9 +65,9 @@ free_tensor(const free_tensor &t)
 {}
 
 /// Constructs an instance from a shuffle_tensor instance.
-free_tensor(const shuffle_tensor <SCA, RAT, n_letters, max_degree> &t)
+free_tensor(const shuffle_tensor <Coeff, n_letters, max_degree> &t)
 {
-    typename shuffle_tensor<SCA, RAT, n_letters, max_degree>::const_iterator i;
+    typename shuffle_tensor<Coeff, n_letters, max_degree>::const_iterator i;
     for (i = t.begin(); i != t.end(); ++i)
         (*this)[i->first] += i->second;
 }
@@ -261,18 +265,19 @@ inline friend free_tensor reflect(const free_tensor &arg)
    the SCALAR type. This is permitted by the existence of empty keys in
    shuffle_tensor_basis.
  */
-template<typename SCA, typename RAT, DEG n_letters, DEG max_degree>
-class shuffle_tensor : public algebra<shuffle_tensor_basis < SCA, RAT, n_letters, max_degree>
-
->
+template<typename Coeff, DEG n_letters, DEG max_degree>
+class shuffle_tensor : public algebra<shuffle_tensor_basis <n_letters, max_degree>, Coeff>
 {
 public:
 /// The basis type.
-typedef shuffle_tensor_basis <SCA, RAT, n_letters, max_degree> BASIS;
+typedef shuffle_tensor_basis <n_letters, max_degree> BASIS;
 /// Import of the KEY type.
 typedef typename BASIS::KEY KEY;
 /// The algebra type.
-typedef algebra <BASIS> ALG;
+typedef algebra <BASIS, Coeff> ALG;
+
+typedef typename Coeff::SCA SCA;
+typedef typename Coeff::RAT RAT;
 
 /// The sparse_vector type.
 typedef typename ALG::VECT VECT;
@@ -293,9 +298,9 @@ shuffle_tensor(const shuffle_tensor &t)
 {}
 
 /// Constructs an instance from a free_tensor instance.
-shuffle_tensor(const free_tensor <SCA, RAT, n_letters, max_degree> &t)
+shuffle_tensor(const free_tensor <Coeff, n_letters, max_degree> &t)
 {
-    typename free_tensor<SCA, RAT, n_letters, max_degree>::const_iterator i;
+    typename free_tensor<Coeff, n_letters, max_degree>::const_iterator i;
     for (i = t.begin(); i != t.end(); ++i)
         (*this)[i->key()] += i->value();
 }

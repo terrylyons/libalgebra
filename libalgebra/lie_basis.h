@@ -581,33 +581,7 @@ public:
     multiplication table to speed up further calculations. This function
     returns a constant reference to the suitable table element. See Ch4 p93 and 94 Reutenauer
     */
-    inline const LIE &prod(const KEY &k1, const KEY &k2)
-    {
-        static const LIE zero;
-        DEG target_degree = degree(k1) + degree(k2); //degrees[k1] + degrees[k2];
-        if ((max_degree > 0) && (target_degree > max_degree))
-            return zero; // degree truncation
-        // We grow up the basis up to the desired degree.
-        growup(target_degree);
 
-        static boost::recursive_mutex table_access;
-        static std::map<PARENT, LIE> table(prime_prod_cache_table());
-        // get exclusive recursive access for the thread
-        boost::lock_guard<boost::recursive_mutex> lock(table_access);
-        // [A,A] = 0.
-        if (k1 == k2)
-            return table[PARENT(0, 0)];
-        typename std::map<PARENT, LIE>::iterator it;
-        PARENT p(k1, k2);
-        it = table.find(p);
-        if (it == table.end()) {
-            LIE *ptr =
-                    &(table[p] =
-                              ((p.first < p.second) ? _prod(k1, k2) : -_prod(k2, k1)));
-            return *ptr;
-        } else
-            return it->second;
-    }
     /// Replaces letters by lie<> instances in a lie<> instance.
     /**
     Replaces the occurrences of s letters in the expression of k by the lie<>

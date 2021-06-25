@@ -28,17 +28,19 @@ Version 3. (See accompanying file License.txt)
    associative algebra corresponding to the SCALAR type. This is permitted by
    the existence of empty keys in monomial_basis.
  */
-template<typename SCA, typename RAT, DEG n_letters, DEG max_degree>
-class multi_polynomial : public algebra<free_monomial_basis < SCA, RAT, n_letters, max_degree>
-
-> {
+template<typename Coeff, DEG n_letters, DEG max_degree>
+class multi_polynomial : public algebra<free_monomial_basis <n_letters, max_degree>, Coeff > {
 public:
 /// The basis type.
-typedef free_monomial_basis <SCA, RAT, n_letters, max_degree> BASIS;
+typedef free_monomial_basis <n_letters, max_degree> BASIS;
 /// Import of the KEY type.
 typedef typename BASIS::KEY KEY;
+
+typedef typename Coeff::SCA SCA;
+typedef typename Coeff::RAT RAT;
+
 /// The algebra type.
-typedef algebra <BASIS> ALG;
+typedef algebra <BASIS, Coeff> ALG;
 /// The sparse_vector type.
 typedef typename ALG::VECT VECT;
 /// Import of the iterator type.

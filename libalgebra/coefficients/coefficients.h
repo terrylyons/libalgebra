@@ -13,11 +13,11 @@ namespace coefficients {
         return lhs OP rhs;                                              \
     }
 
-    template <typename CoeffType>
+    template <typename Scalar, typename Rational=Scalar>
     struct coefficient_field {
 
-        typedef CoeffType SCA;
-        typedef CoeffType RAT;
+        typedef Scalar   SCA;
+        typedef Rational RAT;
 
         static const SCA one;
         static const SCA zero;
@@ -38,14 +38,14 @@ namespace coefficients {
 
     };
 
-    template <typename CoeffType>
-    const CoeffType coefficient_field<CoeffType>::one(1);
+    template <typename Scalar, typename Rational>
+    const Scalar coefficient_field<Scalar, Rational>::one(1);
 
-    template <typename CoeffType>
-    const CoeffType coefficient_field<CoeffType>::zero(0);
+    template <typename Scalar, typename Rational>
+    const Scalar coefficient_field<Scalar, Rational>::zero(0);
 
-    template <typename CoeffType>
-    const CoeffType coefficient_field<CoeffType>::mone(-1);
+    template <typename Scalar, typename Rational>
+    const Scalar coefficient_field<Scalar, Rational>::mone(-1);
 
 
 

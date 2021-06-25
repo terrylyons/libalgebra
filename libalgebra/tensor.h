@@ -1,7 +1,7 @@
 /* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai, 
-Greg Gyurkó and Arend Janssen. 
+Greg Gyurkï¿½ and Arend Janssen. 
 
 Distributed under the terms of the GNU General Public License, 
 Version 3. (See accompanying file License.txt)
@@ -29,50 +29,77 @@ Version 3. (See accompanying file License.txt)
    associative algebra corresponding to the SCALAR type. This is permitted by
    the existence of empty keys in free_tensor_basis.
  */
-template<typename SCA, typename RAT, DEG n_letters, DEG max_degree>
-class free_tensor : public algebra<free_tensor_basis<SCA, RAT, n_letters, max_degree> >
+template<typename SCA, typename RAT, DEG n_letters, DEG max_degree, typename VectorType>
+class free_tensor : public algebra<
+        free_tensor_basis < SCA, RAT, n_letters, max_degree>,
+        TrivialCoeffs<free_tensor_basis < SCA, RAT, n_letters, max_degree> >,
+        VectorType
+> {
+public:
+/// The basis type.
+typedef free_tensor_basis <SCA, RAT, n_letters, max_degree> BASIS;
+/// Import of the KEY type.
+typedef typename BASIS::KEY KEY;
+/// The algebra type.
+typedef algebra <BASIS, TrivialCoeffs<BASIS>, VectorType> ALG;
+/// The sparse_vector type.
+typedef typename ALG::VECT VECT;
+
+/// Import of the iterator type.
+typedef typename ALG::iterator iterator;
+/// Import of the constant iterator type.
+typedef typename ALG::const_iterator const_iterator;
+public:
+
+/// Default constructor.
+free_tensor(void)
+{}
+
+/// Copy constructor.
+free_tensor(const free_tensor &t)
+        : ALG(t)
+{}
+
+/// Constructs an instance from a shuffle_tensor instance.
+free_tensor(const shuffle_tensor <SCA, RAT, n_letters, max_degree> &t)
 {
-public:
-	/// The basis type.
-	typedef free_tensor_basis<SCA, RAT, n_letters, max_degree> BASIS;
-	/// Import of the KEY type.
-	typedef typename BASIS::KEY KEY;
-	/// The sparse_vector type.
-	typedef sparse_vector<BASIS> VECT;
-	/// The algebra type.
-	typedef algebra<BASIS> ALG;
-	/// Import of the iterator type.
-	typedef typename ALG::iterator iterator;
-	/// Import of the constant iterator type.
-	typedef typename ALG::const_iterator const_iterator;
-public:
-	/// Default constructor.
-	free_tensor(void) {}
-	/// Copy constructor.
-	free_tensor(const free_tensor& t)
-		: ALG(t) {}
-	/// Constructs an instance from a shuffle_tensor instance.
-	free_tensor(const shuffle_tensor<SCA, RAT, n_letters, max_degree>& t)
-	{
-		typename shuffle_tensor<SCA, RAT, n_letters, max_degree>::const_iterator i;
-		for (i = t.begin(); i != t.end(); ++i)
-			(*this)[i->first] += i->second;
-	}
-	/// Constructs an instance from an algebra instance.
-	free_tensor(const ALG& a)
-		: ALG(a) {}
-	/// Constructs an instance from a sparse_vector instance.
-	free_tensor(const VECT& v)
-		: ALG(v) {}	
-	/// Constructs a unidimensional instance from a letter and a scalar.
-	free_tensor(LET letter, const SCA& s)
-		: ALG(VECT::basis.keyofletter(letter), s) {}
-	/// Explicit unidimensional constructor from a given key (basis element).
-	explicit free_tensor(const KEY& k)
-		: ALG(k) {}
-	/// Explicit unidimensional constructor from a given scalar.
-	explicit free_tensor(const SCA& s)
-		: ALG(VECT::basis.empty_key, s) {}
+    typename shuffle_tensor<SCA, RAT, n_letters, max_degree>::const_iterator i;
+    for (i = t.begin(); i != t.end(); ++i)
+        (*this)[i->first] += i->second;
+}
+
+/// Constructs an instance from an algebra instance.
+free_tensor(const ALG &a)
+        : ALG(a)
+{}
+
+/// Constructs an instance from a sparse_vector instance.
+free_tensor(const VECT &v)
+        : ALG(v)
+{}
+
+/// Constructs a unidimensional instance from a letter and a scalar.
+free_tensor(LET
+letter,
+const SCA &s
+)
+:
+ALG(VECT::basis
+.
+keyofletter(letter), s
+) {
+}
+
+/// Explicit unidimensional constructor from a given key (basis element).
+explicit free_tensor(const KEY &k)
+        : ALG(k)
+{}
+
+/// Explicit unidimensional constructor from a given scalar.
+explicit free_tensor(const SCA &s)
+        : ALG(VECT::basis.empty_key, s)
+{}
+
 public:
 	/// Ensures that the return type is a free_tensor.
   inline __DECLARE_BINARY_OPERATOR(free_tensor,*,*=,SCA)
@@ -100,11 +127,53 @@ public:
 		}
 		return result;
 	}
+
+	/**
+	 * Fused multiply exponential operation for free tensors.
+	 *
+	 * Computes a*exp(x) using a modified Horner's method for the case when x does not have a
+	 * constant term. If the argument exp_arg has a constant term, it is ignored.
+	 *
+	 * For a real number x, one can expand exp(x) up to degree n as
+	 *
+	 *     1 + b_1 x(1 + b_2 x(1 + ... b_n x(1)) ...)
+	 *
+	 * where each b_i has the value 1/i. This formulae works when x is a free tensor, or indeed any
+	 * element in an unital (associative) algebra. Working through the result of multiplying on the left
+	 * by another element a in the above gives the expansion
+	 *
+	 *     a + b1 (a + b_2 (a + ... b_n (a)x) ... x)x.
+	 *
+	 * This is the result of a*exp(x). In a non-commutative algebra this need not be equal to exp(x)*a.
+	 *
+	 * @param exp_arg free_tensor (const reference) to expentiate (x).
+	 * @return free_tensor containing a*exp(x)
+	 */
+    free_tensor fmexp(const free_tensor& exp_arg) const
+    {
+	    free_tensor result(*this), x(exp_arg);
+        KEY kunit;
+        typename free_tensor::iterator unit_elt;
+
+        if ((unit_elt = x.find(kunit)) == x.end() || unit_elt.value() != VECT::zero) {
+            x.erase(unit_elt);
+	    }
+
+	    for (DEG i=max_degree; i >= 1; --i)
+	    {
+	        result.mul_scal_div(x, static_cast<RAT>(i));
+	        result += *this;
+	    }
+
+	    return result;
+    }
+
+
 	/// Computes the truncated logarithm of a free_tensor instance.
 	inline friend free_tensor log(const free_tensor& arg)
 	{
 		// Computes the truncated log of arg up to degree max_degree
-		// The coef. of the constant term (empty word in the monoid) of arg 
+		// The coef. of the constant term (empty word in the monoid) of arg
 		// is forced to 1.
 		// log(arg) = log(1+x) = x - x^2/2 + ... + (-1)^(n+1) x^n/n.
 		// max_degree must be > 0
@@ -115,6 +184,7 @@ public:
 		if (it != x.end())
 			x.erase(it);
 		free_tensor result;
+
 		for (DEG i = max_degree; i >= 1; --i)
 		{
 			if (i % 2 == 0)
@@ -137,46 +207,46 @@ public:
 		// S_n = a^(-1) + z S_{n-1}; z = - x/a ; S_0 = a^(-1)
 		// max_degree must be > 0
 
-		static KEY kunit;
-		SCA a(0);
-		free_tensor x, z(a);
+    static KEY kunit;
+    SCA a(0);
+    free_tensor x, z(a);
 
-		const_iterator it(arg.find(kunit));
-		if (it == arg.end())
-			// const term a is 0;
-			throw "divide-by-zero";
-		else
-		{
-			a = (*it).second;
-			x = arg;
-			x.erase(kunit);
-		}
+    const_iterator it(arg.find(kunit));
+    if (it == arg.end())
+        // const term a is 0;
+        throw "divide-by-zero";
+    else {
+        a = (*it).value();
+        x = arg;
+        x.erase(kunit);
+    }
 
-		//S_n = a + z S_{ n - 1 }; z = -x / a; S_0 = a
-		//
-		// the nonzero scalar component a of the tensor arg restored to a tensor
-		free_tensor free_tensor_a_inverse(SCA(1)/a), result(free_tensor_a_inverse);
-		// z := - x/a
-		z.sub_scal_div(x, a);
-		// the iteration
-		for (DEG i = 0; i != max_degree; ++i)
-			result = free_tensor_a_inverse + z * result;
-		return result;
-	}
-	/// Computes the truncated inverse of a free_tensor instance.
-	inline friend free_tensor reflect(const free_tensor& arg)
-	{
-		// Computes the alternating reflection of arg up to degree max_degree
-		// For group-like elements this is the same as the inverse 
-		free_tensor ans(SCA(0));
-		for (const_iterator it = arg.begin(); it != arg.end(); ++it)
-		{
-			KEY old_key = it->first;
-			SCA old_value = it->second;
-			ans[old_key.reverse()] = (old_key.size()%2) ? SCA(0) - old_value : old_value;
-		}
-		return ans;
-	}
+    //S_n = a + z S_{ n - 1 }; z = -x / a; S_0 = a
+    //
+    // the nonzero scalar component a of the tensor arg restored to a tensor
+    free_tensor free_tensor_a_inverse(SCA(1) / a), result(free_tensor_a_inverse);
+    // z := - x/a
+    z.sub_scal_div(x, a);
+    // the iteration
+    for (DEG i = 0; i != max_degree; ++i)
+        result = free_tensor_a_inverse + z * result;
+    return result;
+}
+
+/// Computes the truncated inverse of a free_tensor instance.
+inline friend free_tensor reflect(const free_tensor &arg)
+{
+    // Computes the alternating reflection of arg up to degree max_degree
+    // For group-like elements this is the same as the inverse
+    free_tensor ans(SCA(0));
+    for (const_iterator it = arg.begin(); it != arg.end(); ++it) {
+        KEY old_key = it->key();
+        SCA old_value = it->value();
+        ans[old_key.reverse()] = (old_key.size() % 2) ? SCA(0) - old_value : old_value;
+    }
+    return ans;
+}
+
 };
 
 /// A specialisation of the algebra class with a shuffle tensor basis.
@@ -192,62 +262,96 @@ public:
    shuffle_tensor_basis.
  */
 template<typename SCA, typename RAT, DEG n_letters, DEG max_degree>
-class shuffle_tensor : public algebra<shuffle_tensor_basis<SCA, RAT, n_letters, max_degree> >
+class shuffle_tensor : public algebra<shuffle_tensor_basis < SCA, RAT, n_letters, max_degree>
+
+>
 {
 public:
-	/// The basis type.
-	typedef shuffle_tensor_basis<SCA, RAT, n_letters, max_degree> BASIS;
-	/// Import of the KEY type.
-	typedef typename BASIS::KEY KEY;
-	/// The sparse_vector type.
-	typedef sparse_vector<BASIS> VECT;
-	/// The algebra type.
-	typedef algebra<BASIS> ALG;
-	/// Import of the iterator type.
-	typedef typename ALG::iterator iterator;
-	/// Import of the constant iterator type.
-	typedef typename ALG::const_iterator const_iterator;
+/// The basis type.
+typedef shuffle_tensor_basis <SCA, RAT, n_letters, max_degree> BASIS;
+/// Import of the KEY type.
+typedef typename BASIS::KEY KEY;
+/// The algebra type.
+typedef algebra <BASIS> ALG;
+
+/// The sparse_vector type.
+typedef typename ALG::VECT VECT;
+
+/// Import of the iterator type.
+typedef typename ALG::iterator iterator;
+/// Import of the constant iterator type.
+typedef typename ALG::const_iterator const_iterator;
 public:
-	/// Default constructor.
-	shuffle_tensor(void) {}
-	/// Copy constructor.
-	shuffle_tensor(const shuffle_tensor& t)
-		: ALG(t) {}
-	/// Constructs an instance from a free_tensor instance.
-	shuffle_tensor(const free_tensor<SCA, RAT, n_letters, max_degree>& t)
-	{
-		typename free_tensor<SCA, RAT, n_letters, max_degree>::const_iterator i;
-		for (i = t.begin(); i != t.end(); ++i)
-			(*this)[i->first] += i->second;
-	}
-	/// Constructs an instance from an algebra instance.
-	shuffle_tensor(const ALG& a)
-		: ALG(a) {}
-	/// Constructs an instance from a sparse_vector instance.
-	shuffle_tensor(const VECT& v)
-		: ALG(v) {}	
-	/// Constructs a unidimensional instance from a letter and a scalar.
-	shuffle_tensor(LET letter, const SCA& s)	
-		: ALG(VECT::basis.keyofletter(letter), s) {}
-	/// Constructs a unidimensional instance from a key (basis element).
-	explicit shuffle_tensor(const KEY& k)
-		: ALG(k) {}
-	/// Constructs a unidimensional instance from a scalar.
-	explicit shuffle_tensor(const SCA& s)	
-		: ALG(VECT::basis.empty_key, s) {}
+
+/// Default constructor.
+shuffle_tensor(void)
+{}
+
+/// Copy constructor.
+shuffle_tensor(const shuffle_tensor &t)
+        : ALG(t)
+{}
+
+/// Constructs an instance from a free_tensor instance.
+shuffle_tensor(const free_tensor <SCA, RAT, n_letters, max_degree> &t)
+{
+    typename free_tensor<SCA, RAT, n_letters, max_degree>::const_iterator i;
+    for (i = t.begin(); i != t.end(); ++i)
+        (*this)[i->key()] += i->value();
+}
+
+/// Constructs an instance from an algebra instance.
+shuffle_tensor(const ALG &a)
+        : ALG(a)
+{}
+
+/// Constructs an instance from a sparse_vector instance.
+shuffle_tensor(const VECT &v)
+        : ALG(v)
+{}
+
+/// Constructs a unidimensional instance from a letter and a scalar.
+shuffle_tensor(LET
+letter,
+const SCA &s
+)
+:
+ALG(VECT::basis
+.
+keyofletter(letter), s
+) {
+}
+
+/// Constructs a unidimensional instance from a key (basis element).
+explicit shuffle_tensor(const KEY &k)
+        : ALG(k)
+{}
+
+/// Constructs a unidimensional instance from a scalar.
+explicit shuffle_tensor(const SCA &s)
+        : ALG(VECT::basis.empty_key, s)
+{}
+
 public:
-	/// Ensures that the return type is a shuffle_tensor.
-  inline __DECLARE_BINARY_OPERATOR(shuffle_tensor,*,*=,SCA)
-	/// Ensures that the return type is a shuffle_tensor.
-  inline __DECLARE_BINARY_OPERATOR(shuffle_tensor,/,/=,RAT)
-	/// Ensures that the return type is a shuffle_tensor.
-  inline __DECLARE_BINARY_OPERATOR(shuffle_tensor,*,*=,shuffle_tensor)
-	/// Ensures that the return type is a shuffle_tensor.
-  inline __DECLARE_BINARY_OPERATOR(shuffle_tensor,+,+=,shuffle_tensor)
-	/// Ensures that the return type is a shuffle_tensor.
-  inline __DECLARE_BINARY_OPERATOR(shuffle_tensor,-,-=,shuffle_tensor)
-	/// Ensures that the return type is a shuffle_tensor.
-  inline __DECLARE_UNARY_OPERATOR(shuffle_tensor,-,-,ALG)
+
+/// Ensures that the return type is a shuffle_tensor.
+inline __DECLARE_BINARY_OPERATOR(shuffle_tensor, *, *=, SCA)
+
+/// Ensures that the return type is a shuffle_tensor.
+inline __DECLARE_BINARY_OPERATOR(shuffle_tensor, /, /=, RAT)
+
+/// Ensures that the return type is a shuffle_tensor.
+inline __DECLARE_BINARY_OPERATOR(shuffle_tensor, *, *=, shuffle_tensor)
+
+/// Ensures that the return type is a shuffle_tensor.
+inline __DECLARE_BINARY_OPERATOR(shuffle_tensor, +, +=, shuffle_tensor)
+
+/// Ensures that the return type is a shuffle_tensor.
+inline __DECLARE_BINARY_OPERATOR(shuffle_tensor, -, -=, shuffle_tensor)
+
+/// Ensures that the return type is a shuffle_tensor.
+inline __DECLARE_UNARY_OPERATOR(shuffle_tensor, -, -, ALG)
+
 };
 
 // Include once wrapper

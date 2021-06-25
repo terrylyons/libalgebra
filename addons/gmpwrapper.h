@@ -1,7 +1,7 @@
 /* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai, 
-Greg Gyurkó and Arend Janssen. 
+Greg Gyurkï¿½ and Arend Janssen. 
 
 Distributed under the terms of the GNU General Public License, 
 Version 3. (See accompanying file License.txt)
@@ -129,6 +129,17 @@ public:
 	{
 		mpq_clear(mp);
 	}
+
+	inline operator float() const
+    {
+	    return float(mpq_get_d(mp));
+    }
+
+    inline operator double() const
+    {
+	    return mpq_get_d(mp);
+    }
+
 	inline mpq_class& operator=(const mpq_class& z)
 	{
 		mpq_set(mp, z.mp);

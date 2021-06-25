@@ -4,7 +4,7 @@ const_iterator Where,
 const value_type& Val
 );
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
-Greg Gyurkó and Arend Janssen.
+Greg Gyurkï¿½ and Arend Janssen.
 
 Distributed under the terms of the GNU General Public License,
 Version 3. (See accompanying file License.txt)
@@ -333,7 +333,7 @@ public:
 				break;
 			}
 			case 3: {
-				it->second = ((it->second > cit->second) ? (it->second) : (cit->second));
+			    operator[](it->first) = ((it->second > cit->second) ? (it->second) : (cit->second));
 				++cit;
 				++it;
 				break; }
@@ -512,6 +512,20 @@ public:
 		}
 		return *this;
 	}
+
+	inline sparse_vector& add_scal_div(const KEY& rhs, const RATIONAL& s)
+    {
+	    if (zero == (operator[](rhs) += one / s)) erase(rhs);
+        return *this;
+
+    }
+
+    inline sparse_vector& sub_scal_div(const KEY& rhs, const RATIONAL& s)
+    {
+        if (zero == (operator[](rhs) -= one / s)) erase(rhs);
+        return *this;
+    }
+
 	/// Compares the instance to a sparse_vector.
 	bool operator==(const sparse_vector& rhs) const
 	{

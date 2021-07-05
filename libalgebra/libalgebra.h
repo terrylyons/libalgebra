@@ -36,7 +36,9 @@ typedef unsigned __int64    uint64_t;
 #include <stdint.h>
 
 #else
+
 #include <cstdint>
+
 #endif
 
 #include <iostream>
@@ -52,6 +54,7 @@ typedef unsigned __int64    uint64_t;
 #include <limits>
 #include <stdlib.h>
 #include <cassert>
+
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 
@@ -60,7 +63,9 @@ typedef unsigned __int64    uint64_t;
 
 
 #if __cplusplus >= 201103L
+
 #include <array>
+
 #define LIBALGEBRA_STATIC_ARRAY_TYPE std::array
 #else
 #include <boost/array.hpp>
@@ -95,6 +100,7 @@ typedef unsigned __int64    uint64_t;
 //#define MY_UNORDERED_MAP sized_unordered_map
 #include <type_traits>
 #include <unordered_map>
+
 #define MY_UNORDERED_MAP std::unordered_map
 #else
 #define ORDEREDMAP
@@ -114,6 +120,7 @@ typedef unsigned __int64    uint64_t;
 
 #include "libalgebra/vectors/vectors.h"
 #include "libalgebra/utils/integer_maths.h"
+#include "multiplication_helpers.h"
 
 namespace alg {
 
@@ -136,12 +143,15 @@ namespace alg {
 //template<class BASIS, class MAP = typename BASIS::MAP>
 //class sparse_vector;
 /// Generic Associative Algebra.
-template<typename Basis, typename Coeff,
-        typename VectorType = typename vectors::vector_type_selector<Basis, Coeff>::type>
+template <typename Basis,
+        typename Coeff,
+        typename Multiplication,
+        typename VectorType = typename vectors::vector_type_selector<Basis,
+                                                                     Coeff>::type>
 class algebra;
 
 /// Generic Associative Algebra basis.
-template<DEG n_letters, DEG max_degree = 0>
+template <DEG n_letters, DEG max_degree = 0>
 class tensor_basis;
 
 /// Free Associative Algegra Basis. Concatenation product. Non commutative.
@@ -153,18 +163,18 @@ template <DEG n_letters, DEG max_degree = 0>
 class shuffle_tensor_basis;
 
 /// Free Associative Algebra.  Associative and non commutative.
-template<typename Coeff,
-        DEG n_letters, DEG max_degree = 0,
-        typename VectorType = typename vectors::vector_type_selector<
-                free_tensor_basis<n_letters, max_degree>, Coeff>::type >
+template <typename Coeff, DEG n_letters, DEG max_degree = 0,
+        typename VectorType = typename vectors::vector_type_selector<free_tensor_basis<n_letters,
+                                                                                       max_degree>,
+                                                                     Coeff>::type>
 class free_tensor;
 
 /// Free Associative Shuffle Algebra.  Associative and Commutative.
-template<typename Coeff, DEG n_letters, DEG max_degree = 0>
+template <typename Coeff, DEG n_letters, DEG max_degree = 0>
 class shuffle_tensor;
 
 /// Philip Hall Lie Basis.
-template<DEG n_letters>
+template <DEG n_letters>
 class hall_basis;
 
 /// Free Lie Associative Algebra Basis.  Associative and non commutative.
@@ -172,21 +182,30 @@ template <DEG n_letters, DEG max_degree = 0>
 class lie_basis;
 
 /// Free Lie Associative Algebra.  Associative and non commutative.
-template<typename Coeff, DEG n_letters, DEG max_degree = 0,
-        typename VectorType=typename vectors::vector_type_selector<
-            lie_basis<n_letters, max_degree>, Coeff>::type >
+template <typename Coeff, DEG n_letters, DEG max_degree = 0,
+        typename VectorType=typename vectors::vector_type_selector<lie_basis<n_letters,
+                                                                             max_degree>,
+                                                                   Coeff>::type>
 class lie;
 
 /// Maps between Free Lie and Free Algebra elements.
-template<typename Coeff, DEG n_letters, DEG max_degree = 0,
-        typename Tensor = free_tensor<Coeff, n_letters, max_degree>,
-        typename Lie = lie<Coeff, n_letters, max_degree> >
+template <typename Coeff, DEG n_letters, DEG max_degree = 0,
+        typename Tensor = free_tensor<Coeff,
+                                      n_letters,
+                                      max_degree>,
+        typename Lie = lie<Coeff,
+                           n_letters,
+                           max_degree> >
 class maps;
 
 /// Campbell-Baker-Hausdorff formulas.
-template<typename Coeff, DEG n_letters, DEG max_degree,
-        typename Tensor=free_tensor<Coeff, n_letters, max_degree>,
-        typename Lie=lie<Coeff, n_letters, max_degree> >
+template <typename Coeff, DEG n_letters, DEG max_degree,
+        typename Tensor=free_tensor<Coeff,
+                                    n_letters,
+                                    max_degree>,
+        typename Lie=lie<Coeff,
+                         n_letters,
+                         max_degree> >
 class cbh;
 
 /// Multivariate Polynomial Algebra Basis. Associative and Commutative.
@@ -202,20 +221,20 @@ template <DEG n_letters, DEG max_degree = 0>
 class monomial_basis;
 
 /// II. Multivariate Polynomial Algebra Basis. Associative and Commutative
-template<DEG n_letters, DEG max_degree = 0>
+template <DEG n_letters, DEG max_degree = 0>
 class free_monomial_basis;
 
 /// II. Multivariate Polynomial Algebra   Associative and Commutative.
-template<typename Coeff, DEG n_letters, DEG max_degree = 0>
+template <typename Coeff, DEG n_letters, DEG max_degree = 0>
 class multi_polynomial;
 
 
 ///III. Multivariate Polynomial Lie Algebra Basis. Associative and non commutative
-template<DEG n_letters, DEG max_degree = 0>
+template <DEG n_letters, DEG max_degree = 0>
 class poly_lie_basis;
 
 ///III. Multivariate Polynomial Lie Algebra. Associative and non commutative
-template<typename Coeff, DEG n_letters, DEG max_degree = 0>
+template <typename Coeff, DEG n_letters, DEG max_degree = 0>
 class poly_lie;
 
 #include "sparse_vector.h"

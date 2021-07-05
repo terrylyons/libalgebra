@@ -23,35 +23,27 @@ The product is the Lie bracket of two vector fields.
 */
 
 
-template<typename SCA, typename RAT, DEG n_letters, DEG max_degree>
-class poly_lie_basis : public basis_traits<With_Degree, n_letters, max_degree>
-{
+template <DEG n_letters, DEG max_degree>
+class poly_lie_basis : public basis_traits<With_Degree,
+                                           n_letters,
+                                           max_degree> {
 public:
     /// The basis elements of poly_basis.
-    typedef poly_basis <SCA, RAT> POLYBASIS;
+    typedef poly_basis POLYBASIS;
     /// The key of poly_basis (ie a monomial).
     typedef typename POLYBASIS::KEY POLYBASIS_KEY;
     /// A key is a pair of letter and monomial (ie a monomial in direction letter).
-    typedef std::pair<LET, POLYBASIS_KEY> KEY;
+    typedef std::pair<LET,
+                      POLYBASIS_KEY> KEY;
     /// Polynomial algebra.
-    typedef poly <SCA, RAT> POLY;
-    /// The rationals.
-    typedef RAT RATIONAL;
-    typedef SCA SCALAR;
+
 
     /// The order in the MAP class reflects the degree
-    struct KEY_LESS
-    {
-        bool inline operator()(const KEY &lhs, const KEY &rhs) const
-        {
+    struct KEY_LESS {
+        bool inline operator()(const KEY &lhs, const KEY &rhs) const {
             return ((degree(lhs) < degree(rhs)) || ((degree(lhs) == degree(rhs)) && lhs < rhs));
         }
     };
-
-    /// The MAP type.
-    typedef std::map<KEY, SCA, KEY_LESS> MAP;
-    /// The Multivariate Polynomials Algebra element type.
-    typedef poly_lie <SCA, RAT, n_letters, max_degree> POLY_LIE;
 
 public:
     // Property tags
@@ -61,8 +53,7 @@ public:
 
 public:
     /// Default constructor. Empty basis.
-    poly_lie_basis(void)
-    {}
+    poly_lie_basis(void) {}
 
 public:
 
@@ -75,8 +66,7 @@ public:
     m1*(d/dxi m2)*d/dxj - m2*(d/dxj m1)*d/dxi
     */
 
-    inline static POLY_LIE prod(const KEY &k1, const KEY &k2)
-    {
+    inline static POLY_LIE prod(const KEY &k1, const KEY &k2) {
         POLY poly1 = POLY::prediff(k2.second, k1.first);
         POLY poly2 = POLY::prediff(k1.second, k2.first);
         KEY mon1(k2.first, k1.second);
@@ -87,8 +77,7 @@ public:
     }
 
     /// Multiplication of a polynomial poly1 by a monomial vector field liemon1.
-    inline static POLY_LIE prod2(const POLY &poly1, const KEY &liemon1)
-    {
+    inline static POLY_LIE prod2(const POLY &poly1, const KEY &liemon1) {
         POLY_LIE result;
         for (typename POLY::const_iterator it = poly1.begin(); it != poly1.end(); it++) {
             SCA temp = it->value();
@@ -100,25 +89,23 @@ public:
 
 
     /// Turns a d/dx_i into a polynomial vector field by multiplying the empty monomial by d/dx_i.
-    inline static KEY keyofletter(LET letter)
-    {
+    inline static KEY keyofletter(LET letter) {
         POLYBASIS empty;
         KEY result(letter, empty.empty_key);
         return result;
     }
 
     /// Returns the degree of the monomial in the pair (Let, monomial)
-    inline static DEG degree(const KEY &k)
-    {
+    inline static DEG degree(const KEY &k) {
         return POLYBASIS::degree(k.second);
     }
 
     /// Outputs a std::pair<poly_basis*, KEY> to an std::ostream.
-    inline friend
-    std::ostream &operator<<(std::ostream &os, const std::pair<poly_lie_basis *, KEY> &t)
-    {
+    inline friend std::ostream &operator<<(std::ostream &os, const std::pair<poly_lie_basis *,
+                                                                             KEY> &t) {
         POLYBASIS poly1;
-        std::pair<POLYBASIS *, POLYBASIS_KEY> polypair;
+        std::pair<POLYBASIS *,
+                  POLYBASIS_KEY> polypair;
         polypair.first = &poly1;
         polypair.second = t.second.second;
         os << "{" << polypair << "}" << "d/dx" << t.second.first << "}";
@@ -131,12 +118,15 @@ public:
 
 namespace vectors {
 
-template<DEG n_letters, DEG max_degree, typename Field>
-struct vector_type_selector<poly_lie_basis<typename Field::S, typename Field::Q, n_letters, max_degree>, Field>
-{
-    typedef poly_lie_basis<typename Field::S, typename Field::Q, n_letters, max_degree> BASIS;
-    typedef sparse_vector <BASIS, Field,
-    std::map<typename BASIS::KEY, typename Field::S, typename BASIS::KEY_LESS> > type;
+template <DEG n_letters, DEG max_degree, typename Field>
+struct vector_type_selector<poly_lie_basis<n_letters,
+                                           max_degree>,
+                            Field> {
+    typedef poly_lie_basis<n_letters,
+                           max_degree> BASIS;
+    typedef sparse_vector <BASIS, Field, std::map<typename BASIS::KEY,
+                                                  typename Field::S,
+                                                  typename BASIS::KEY_LESS>> type;
 };
 
 

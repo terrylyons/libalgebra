@@ -19,9 +19,9 @@ Version 3. (See accompanying file License.txt)
 #define DJC_COROPA_LIBALGEBRA_LIEH_SEEN
 
 
+
 template <typename Lie>
 class lie_multiplication {
-
 
 
 public:
@@ -37,8 +37,7 @@ private:
     // Caution Reutenauer only states the induction where the state variable
     // is the whole expression (the tree or the pre lie sum of products...)
     // we do not update that state and start over each time.
-    lie_t _prod(const lie_key_t &k1, const lie_key_t &k2)
-    {
+    lie_t _prod(const lie_key_t &k1, const lie_key_t &k2) {
 #ifdef DEBUG // NO LOOPS IN RECURSION FOR _PROD
         static std::map<PARENT, unsigned> counter;
         PARENT tmp(k1, k2);
@@ -50,10 +49,10 @@ private:
         parent_t parents(k1, k2);
         typename std::map<parent_t, lie_key_t>::const_iterator it;
         it = lie_t::basis.reverse_map.find(parents);
-        if (it != lie_t::basis.reverse_map.end())
+        if (it != lie_t::basis.reverse_map.end()) {
             // [k1,k2] exists in the basis.
             return lie_t(it->second);
-        else
+        } else
             // [k1,k2] does not exists in the basis.
         {
             // Since k1 <= k2, k2 is not a letter because if it was a letter,
@@ -75,12 +74,12 @@ private:
         return rv;
     }
 
-    inline const lie_t &prod(const lie_key_t &k1, const lie_key_t &k2)
-    {
+    inline const lie_t &prod(const lie_key_t &k1, const lie_key_t &k2) {
         static const lie_t zero;
         DEG target_degree = lie_t::basis.degree(k1) + lie_t::basis.degree(k2); //degrees[k1] + degrees[k2];
-        if (target_degree > lie_t::basis.max_degree)
-            return zero; // degree truncation
+        if (target_degree > lie_t::basis.max_degree) {
+            return zero;
+        } // degree truncation
 
         // We grow up the basis up to the desired degree.
         lie_t::basis.growup(target_degree);
@@ -90,8 +89,9 @@ private:
         // get exclusive recursive access for the thread
         boost::lock_guard<boost::recursive_mutex> lock(table_access);
         // [A,A] = 0.
-        if (k1 == k2)
+        if (k1 == k2) {
             return table[parent_t(0, 0)];
+        }
 
         typename std::map<parent_t, lie_t>::iterator it;
         parent_t p(k1, k2);
@@ -99,12 +99,10 @@ private:
         if (it == table.end()) {
             lie_t *ptr = &(table[p] = ((p.first < p.second) ? _prod(k1, k2) : -_prod(k2, k1)));
             return *ptr;
-        } else
+        } else {
             return it->second;
+        }
     }
-
-
-
 
 
 };
@@ -125,11 +123,11 @@ private:
    element of the addition operation. There is no neutral element for the
    product (free Lie product).
  */
-template<typename Coeff, DEG n_letters, DEG max_degree, typename VectorType>
-class lie : public algebra<lie_basis <n_letters, max_degree>,
-                           Coeff,
-                           VectorType>
-{
+template <typename Coeff, DEG n_letters, DEG max_degree, typename VectorType>
+class lie : public algebra<lie_basis < n_letters, max_degree>,
+        Coeff,
+        lie_multiplication < lie<Coeff, n_letters, max_degree, VectorType> >,
+        VectorType> {
 public:
 /// The basis type.
 typedef lie_basis <n_letters, max_degree> BASIS;
@@ -150,48 +148,37 @@ typedef typename ALG::const_iterator const_iterator;
 public:
 
 /// Default constructor. Zero lie element.
-lie(void)
-{}
+lie(void) {}
 
 /// Copy constructor.
-lie(const lie &l)
-        : ALG(l)
-{}
+lie(const lie &l) : ALG(l) {}
 
 /// Constructs an instance from an algebra instance.
-lie(const ALG &a)
-        : ALG(a)
-{}
+lie(const ALG &a) : ALG(a) {}
 
 /// Constructs an instance from a sparse_vector instance.
-lie(const VECT &v)
-        : ALG(v)
-{}
+lie(const VECT &v) : ALG(v) {}
 
 /// Constructs a unidimensional instance from a given key (with scalar one).
-explicit lie(const KEY &k)
-        : ALG(k)
-{}
+explicit lie(const KEY &k) : ALG(k) {}
 
 ///// Constructs a unidimensional instance from a letter and a scalar.
 //explicit lie(LET letter, const SCA& s)
 //	// flawed as basis is possibly not yet constructed
 //	: ALG(VECT::basis.keyofletter(letter), s) {}
 /// Constructs a unidimensional instance from a key and a scalar.
-explicit lie(const KEY &k, const SCA &s)
-        : ALG(k, s)
-{}
+explicit lie(const KEY &k, const SCA &s) : ALG(k, s) {}
 
 public:
 
 /// Replaces the occurrences of letters in s by Lie elements in v.
-inline friend lie replace(const lie &src, const std::vector<LET> &s, const std::vector<const lie *> &v)
-{
+inline friend lie replace(const lie &src, const std::vector<LET> &s, const std::vector<const lie *> &v) {
     lie result;
     std::map<KEY, lie> table;
     const_iterator i;
-    for (i = src.begin(); i != src.end(); ++i)
+    for (i = src.begin(); i != src.end(); ++i) {
         result.add_scal_prod(VECT::basis.replace(i->key(), s, v, table), i->value());
+    }
     return result;
 }
 };

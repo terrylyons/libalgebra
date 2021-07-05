@@ -28,8 +28,11 @@ Version 3. (See accompanying file License.txt)
    associative algebra corresponding to the SCALAR type. This is permitted by
    the existence of empty keys in monomial_basis.
  */
-template<typename Coeff, DEG n_letters, DEG max_degree>
-class multi_polynomial : public algebra<free_monomial_basis <n_letters, max_degree>, Coeff > {
+template <typename Coeff, DEG n_letters, DEG max_degree> class multi_polynomial : public algebra<
+        free_monomial_basis < n_letters,
+        max_degree>, Coeff
+
+> {
 public:
 /// The basis type.
 typedef free_monomial_basis <n_letters, max_degree> BASIS;
@@ -50,23 +53,16 @@ typedef typename ALG::const_iterator const_iterator;
 public:
 
 /// Default constructor.
-multi_polynomial(void)
-{}
+multi_polynomial(void) {}
 
 /// Copy constructor.
-multi_polynomial(const multi_polynomial &t)
-        : ALG(t)
-{}
+multi_polynomial(const multi_polynomial &t) : ALG(t) {}
 
 /// Constructs an instance from an algebra instance.
-multi_polynomial(const ALG &a)
-        : ALG(a)
-{}
+multi_polynomial(const ALG &a) : ALG(a) {}
 
 /// Constructs an instance from a sparse_vector instance.
-multi_polynomial(const VECT &v)
-        : ALG(v)
-{}
+multi_polynomial(const VECT &v) : ALG(v) {}
 
 /// Constructs a unidimensional instance from a letter and a scalar.
 multi_polynomial(LET
@@ -81,14 +77,10 @@ keyofletter(letter), s
 }
 
 /// Explicit unidimensional constructor from a given key (basis element).
-explicit multi_polynomial(const KEY &k)
-        : ALG(k)
-{}
+explicit multi_polynomial(const KEY &k) : ALG(k) {}
 
 /// Explicit unidimensional constructor from a given scalar.
-explicit multi_polynomial(const SCA &s)
-        : ALG(VECT::basis.empty_key, s)
-{}
+explicit multi_polynomial(const SCA &s) : ALG(VECT::basis.empty_key, s) {}
 
 public:
 
@@ -111,8 +103,7 @@ inline __DECLARE_BINARY_OPERATOR(multi_polynomial, -, -=, multi_polynomial)
 inline __DECLARE_UNARY_OPERATOR(multi_polynomial, -, -, ALG)
 
 /// Computes the truncated exponential of a multi_polynomial instance.
-inline friend multi_polynomial exp(const multi_polynomial &arg)
-{
+inline friend multi_polynomial exp(const multi_polynomial &arg) {
     // Computes the truncated exponential of arg
     // 1 + arg + arg^2/2! + ... + arg^n/n! where n = max_degree
     static KEY kunit;
@@ -125,8 +116,7 @@ inline friend multi_polynomial exp(const multi_polynomial &arg)
 }
 
 /// Computes the truncated logarithm of a multi_polynomial instance.
-inline friend multi_polynomial log(const multi_polynomial &arg)
-{
+inline friend multi_polynomial log(const multi_polynomial &arg) {
     // Computes the truncated log of arg up to degree max_degree
     // The coef. of the constant term (empty word in the monoid) of arg
     // is forced to 1.
@@ -136,14 +126,16 @@ inline friend multi_polynomial log(const multi_polynomial &arg)
     multi_polynomial tunit(kunit);
     multi_polynomial x(arg);
     iterator it = x.find(kunit);
-    if (it != x.end())
+    if (it != x.end()) {
         x.erase(it);
+    }
     multi_polynomial result;
     for (DEG i = max_degree; i >= 1; --i) {
-        if (i % 2 == 0)
+        if (i % 2 == 0) {
             result.sub_scal_div(tunit, (RAT) i);
-        else
+        } else {
             result.add_scal_div(tunit, (RAT) i);
+        }
         result *= x;
     }
     return result;

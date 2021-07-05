@@ -52,9 +52,8 @@ namespace iterators {
  *
  */
 
-template<typename ValueType>
-class vector_iterator
-{
+template <typename ValueType>
+class vector_iterator {
 public:
 
     typedef ValueType value_type;
@@ -71,17 +70,15 @@ public:
     // Constructors
 
     /// Default constructor
-    vector_iterator() : m_value()
-    {}
+    vector_iterator() : m_value() {}
 
     /// Copy constructor
-    vector_iterator(const vector_iterator &other) : m_value(other.m_value)
-    {}
+    vector_iterator(const vector_iterator &other) : m_value(other.m_value) {}
 
     /// Vector/iterator constructor
-    template<typename Vector, typename Iterator>
-    vector_iterator(Vector &vect, Iterator it) : m_value(vect, it)
-    {}
+    template <typename Vector,
+            typename Iterator>
+    vector_iterator(Vector &vect, Iterator it) : m_value(vect, it) {}
 
     /*
     vector_iterator& operator=(const vector_iterator& other)
@@ -96,15 +93,13 @@ public:
     // Iterator advance methods
 
     /// Prefix increment
-    vector_iterator &operator++()
-    {
+    vector_iterator &operator++() {
         m_value.advance();
         return *this;
     }
 
     /// Postfix increment
-    vector_iterator operator++(int)
-    {
+    vector_iterator operator++(int) {
         vector_iterator new_it(*this);
         operator++();
         return new_it;
@@ -114,13 +109,11 @@ public:
 
     // Iterator access
 
-    reference operator*()
-    {
+    reference operator*() {
         return m_value;
     }
 
-    pointer operator->()
-    {
+    pointer operator->() {
         return &m_value;
     }
 
@@ -128,13 +121,11 @@ public:
 
     // Comparison operators
 
-    bool operator==(const vector_iterator &other) const
-    {
+    bool operator==(const vector_iterator &other) const {
         return m_value.compare_iterators(other.m_value);
     }
 
-    bool operator!=(const vector_iterator &other) const
-    {
+    bool operator!=(const vector_iterator &other) const {
         return !operator==(other);
     }
 

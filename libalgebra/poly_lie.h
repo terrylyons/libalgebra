@@ -22,19 +22,23 @@ Version 3. (See accompanying file License.txt)
 /// of pairs of monomials and directions). The product is the Lie bracket
 /// for vector fields.
 
-template<typename SCA, typename RAT, DEG n_letters, DEG max_degree>
-class poly_lie : public algebra<poly_lie_basis < SCA, RAT, n_letters, max_degree>
+template <typename Coeff, DEG n_letters, DEG max_degree> class poly_lie : public algebra<poly_lie_basis < n_letters,
+                                                                                         max_degree>, Coeff
 
 > {
 public:
+
+typedef typename Coeff::S SCA;
+typedef typename Coeff::Q RAT;
+
 /// The basis elements for the polynomials (monomials)
-typedef typename poly_basis<SCA, RAT>::KEY POLYBASISKEY;
+typedef typename poly_basis::KEY POLYBASISKEY;
 /// The basis type.
-typedef poly_lie_basis <SCA, RAT, n_letters, max_degree> BASIS;
+typedef poly_lie_basis <n_letters, max_degree> BASIS;
 /// Import of the KEY type.
 typedef typename BASIS::KEY KEY;
 /// The algebra type.
-typedef algebra <BASIS> ALG;
+typedef algebra <BASIS, Coeff> ALG;
 /// The sparse_vector type.
 typedef typename ALG::VECT VECT;
 /// Import of the iterator type.
@@ -45,33 +49,24 @@ typedef typename ALG::const_iterator const_iterator;
 public:
 
 /// Default constructor. Zero lie element.
-poly_lie(void)
-{}
+poly_lie(void) {}
 
 /// Copy constructor.
-poly_lie(const poly_lie &l)
-        : ALG(l)
-{}
+poly_lie(const poly_lie &l) : ALG(l) {}
 
 /// Constructs an instance from an algebra instance.
-poly_lie(const ALG &a)
-        : ALG(a)
-{}
+poly_lie(const ALG &a) : ALG(a) {}
 
 /// Constructs an instance from a sparse_vector instance.
-poly_lie(const VECT &v)
-        : ALG(v)
-{}
+poly_lie(const VECT &v) : ALG(v) {}
 
 /// Constructs a unidimensional instance from a given key (with scalar one).
 explicit poly_lie(LET
 x,
 LET y, DEG
-z)
-:
+z) :
 
-ALG()
-{
+ALG() {
     POLYBASISKEY tempkey;
     tempkey[y] = z;
     ALG tempalg(KEY(x, tempkey));
@@ -79,9 +74,7 @@ ALG()
 }
 
 /// Constructs an instance from a basis element.
-explicit poly_lie(const KEY &k)
-        : ALG(k)
-{}
+explicit poly_lie(const KEY &k) : ALG(k) {}
 
 /// Constructs a unidimensional instance from a letter and a scalar.
 explicit poly_lie(LET
@@ -94,16 +87,18 @@ ALG(VECT::basis
 keyofletter(letter), s
 ) {
 }
+
 public:
 
 /// Replaces the occurrences of letters in s by Lie elements in v.
-inline friend poly_lie replace(const poly_lie &src, const std::vector<LET> &s, const std::vector<const poly_lie *> &v)
-{
+inline friend poly_lie replace(const poly_lie &src, const std::vector<LET> &s, const std::vector<const poly_lie *> &v) {
     poly_lie result;
-    std::map<KEY, poly_lie> table;
+    std::map<KEY,
+             poly_lie> table;
     const_iterator i;
-    for (i = src.begin(); i != src.end(); ++i)
+    for (i = src.begin(); i != src.end(); ++i) {
         result.add_scal_prod(VECT::basis.replace(i->first, s, v, table), i->second);
+    }
     return result;
 }
 

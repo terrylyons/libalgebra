@@ -19,23 +19,16 @@ Version 3. (See accompanying file License.txt)
 /// With_Degree: an algebra with degree(KEY) defined and with the property that 
 /// degree(KEY1) + degree(KEY2) > max_degree => prod(KEY1,KEY2)=0.
 /// No_Product: no product structure.
-enum basis_product_trait
-{
-    Without_Degree,
-    With_Degree,
-    No_Product
+enum basis_product_trait {
+    Without_Degree, With_Degree, No_Product
 };
 
 /// The basis' properties
 
 /// This structure stores the number of letters: NO_LETTERS, maximum degree: MAX_DEGREE 
 /// and the product_trait, either Without_Degree, With_Degree or No_Product.
-template<
-        basis_product_trait trait = Without_Degree,
-        DEG no_letters = 0,
-        DEG max_degree = 0>
-struct basis_traits
-{
+template <basis_product_trait trait = Without_Degree, DEG no_letters = 0, DEG max_degree = 0>
+struct basis_traits {
 
     /// The number of letters used to generate the algebra
     /// zero if there is no well defined finite generating set

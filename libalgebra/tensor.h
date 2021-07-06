@@ -1,39 +1,34 @@
 /* *************************************************************
 
-Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai, 
-Greg Gyurk� and Arend Janssen. 
+Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
+Greg Gyurk� and Arend Janssen.
 
-Distributed under the terms of the GNU General Public License, 
+Distributed under the terms of the GNU General Public License,
 Version 3. (See accompanying file License.txt)
 
 ************************************************************* */
 
-
-
-
 //  tensor.h
-
 
 // Include once wrapper
 #ifndef DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 #define DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 
-
-template <typename Coeff>
-class free_tensor_multiplication {
+template <typename Coeff> class free_tensor_multiplication
+{
 
     typedef typename Coeff::SCA scalar_t;
 
-    template <typename Transform>
-    class index_operator {
+    template <typename Transform> class index_operator
+    {
         Transform m_transform;
 
     public:
-
         index_operator(Transform t) : m_transform(t) {}
 
         void operator()(scalar_t *result_ptr, scalar_t const *lhs_ptr, scalar_t const *rhs_ptr, DIMN const lhs_target,
-                        DIMN const rhs_target, bool assign = false) {
+                        DIMN const rhs_target, bool assign = false)
+        {
             scalar_t lhs;
             if (assign) {
                 for (IDIMN i = 0; i < static_cast<IDIMN>(lhs_target); ++i) {
@@ -53,35 +48,34 @@ class free_tensor_multiplication {
         }
     };
 
-    template <typename Transform>
-    class key_operator {
+    template <typename Transform> class key_operator
+    {
         Transform m_transform;
 
     public:
-
         key_operator(Transform t) : m_transform(t) {}
 
-        template <typename Vector>
-        void operator()(Vector &result, typename Vector::KEY const &lhs_key, scalar_t const &lhs_val,
-                        typename Vector::KEY const &rhs_key, scalar_t const &rhs_val) {
+        template <typename Vector> void
+        operator()(Vector &result, typename Vector::KEY const &lhs_key, scalar_t const &lhs_val,
+                   typename Vector::KEY const &rhs_key, scalar_t const &rhs_val)
+        {
             result.add_scal_prod(lhs_key * rhs_key, m_transform(Coeff::mul(lhs_val, rhs_val)));
         }
     };
 
-
 public:
-
     template <typename Algebra, typename Operator>
-    Algebra &multiply_and_add(Algebra &result, Algebra const &lhs, Algebra const &rhs, Operator op) const {
+    Algebra &multiply_and_add(Algebra &result, Algebra const &lhs, Algebra const &rhs, Operator op) const
+    {
         key_operator <Operator> kt(op);
         index_operator<Operator> it(op);
         lhs.buffered_apply_binary_transform(result, rhs, kt, it);
         return result;
     }
 
-    template <typename Algebra, typename Operator>
-    Algebra &
-    multiply_and_add(Algebra &result, Algebra const &lhs, Algebra const &rhs, Operator op, DEG const max_depth) const {
+    template <typename Algebra, typename Operator> Algebra &
+    multiply_and_add(Algebra &result, Algebra const &lhs, Algebra const &rhs, Operator op, DEG const max_depth) const
+    {
         key_operator <Operator> kt(op);
         index_operator<Operator> it(op);
         lhs.buffered_apply_binary_transform(result, rhs, kt, it, max_depth);
@@ -89,21 +83,24 @@ public:
     }
 
     template <typename Algebra, typename Operator>
-    Algebra multiply(Algebra const &lhs, Algebra const &rhs, Operator op) const {
+    Algebra multiply(Algebra const &lhs, Algebra const &rhs, Operator op) const
+    {
         Algebra result;
         multiply_and_add(result, lhs, rhs, op);
         return result;
     }
 
     template <typename Algebra, typename Operator>
-    Algebra multiply(Algebra const &lhs, Algebra const &rhs, Operator op, DEG const max_depth) const {
+    Algebra multiply(Algebra const &lhs, Algebra const &rhs, Operator op, DEG const max_depth) const
+    {
         Algebra result;
         multiply_and_add(result, lhs, rhs, op, max_depth);
         return result;
     }
 
     template <typename Algebra, typename Operator>
-    Algebra &multiply_inplace(Algebra &lhs, Algebra const &rhs, Operator op) const {
+    Algebra &multiply_inplace(Algebra &lhs, Algebra const &rhs, Operator op) const
+    {
         key_operator <Operator> kt(op);
         index_operator<Operator> it(op);
         lhs.unbuffered_apply_binary_transform(rhs, kt, it);
@@ -111,19 +108,14 @@ public:
     }
 
     template <typename Algebra, typename Operator>
-    Algebra &multiply_inplace(Algebra &lhs, Algebra const &rhs, Operator op, DEG const max_depth) const {
+    Algebra &multiply_inplace(Algebra &lhs, Algebra const &rhs, Operator op, DEG const max_depth) const
+    {
         key_operator <Operator> kt(op);
         index_operator<Operator> it(op);
         lhs.unbuffered_apply_binary_transform(rhs, kt, it, max_depth);
         return lhs;
     }
-
 };
-
-
-
-
-
 
 /// A specialisation of the algebra class with a free tensor basis.
 /**
@@ -141,6 +133,7 @@ template <typename Coeff, DEG n_letters, DEG max_degree, typename VectorType> cl
 
 > {
 typedef free_tensor_multiplication<Coeff> multiplication_t;
+
 public:
 /// The basis type.
 typedef free_tensor_basis <n_letters, max_degree> BASIS;
@@ -159,6 +152,7 @@ typedef typename ALG::VECT VECT;
 typedef typename ALG::iterator iterator;
 /// Import of the constant iterator type.
 typedef typename ALG::const_iterator const_iterator;
+
 public:
 
 /// Default constructor.
@@ -168,7 +162,8 @@ free_tensor(void) {}
 free_tensor(const free_tensor &t) : ALG(t) {}
 
 /// Constructs an instance from a shuffle_tensor instance.
-free_tensor(const shuffle_tensor <Coeff, n_letters, max_degree> &t) {
+free_tensor(const shuffle_tensor <Coeff, n_letters, max_degree> &t)
+{
     typename shuffle_tensor<Coeff, n_letters, max_degree>::const_iterator i;
     for (i = t.begin(); i != t.end(); ++i) {
         (*this)[i->first] += i->second;
@@ -220,7 +215,8 @@ inline __DECLARE_BINARY_OPERATOR(free_tensor, -, -=, free_tensor)
 inline __DECLARE_UNARY_OPERATOR(free_tensor, -, -, ALG)
 
 /// Computes the truncated exponential of a free_tensor instance.
-inline friend free_tensor exp(const free_tensor &arg) {
+inline friend free_tensor exp(const free_tensor &arg)
+{
     // Computes the truncated exponential of arg
     // 1 + arg + arg^2/2! + ... + arg^n/n! where n = max_degree
     KEY kunit;
@@ -236,25 +232,29 @@ inline friend free_tensor exp(const free_tensor &arg) {
 /**
  * Fused multiply exponential operation for free tensors.
  *
- * Computes a*exp(x) using a modified Horner's method for the case when x does not have a
- * constant term. If the argument exp_arg has a constant term, it is ignored.
+ * Computes a*exp(x) using a modified Horner's method for the case when x does
+ * not have a constant term. If the argument exp_arg has a constant term, it
+ * is ignored.
  *
  * For a real number x, one can expand exp(x) up to degree n as
  *
  *     1 + b_1 x(1 + b_2 x(1 + ... b_n x(1)) ...)
  *
- * where each b_i has the value 1/i. This formulae works when x is a free tensor, or indeed any
- * element in an unital (associative) algebra. Working through the result of multiplying on the left
- * by another element a in the above gives the expansion
+ * where each b_i has the value 1/i. This formulae works when x is a free
+ * tensor, or indeed any element in an unital (associative) algebra. Working
+ * through the result of multiplying on the left by another element a in the
+ * above gives the expansion
  *
  *     a + b1 (a + b_2 (a + ... b_n (a)x) ... x)x.
  *
- * This is the result of a*exp(x). In a non-commutative algebra this need not be equal to exp(x)*a.
+ * This is the result of a*exp(x). In a non-commutative algebra this need not
+ * be equal to exp(x)*a.
  *
  * @param exp_arg free_tensor (const reference) to expentiate (x).
  * @return free_tensor containing a*exp(x)
  */
-free_tensor fmexp(const free_tensor &exp_arg) const {
+free_tensor fmexp(const free_tensor &exp_arg) const
+{
     free_tensor result(*this), x(exp_arg);
     KEY kunit;
     typename free_tensor::iterator unit_elt;
@@ -271,9 +271,9 @@ free_tensor fmexp(const free_tensor &exp_arg) const {
     return result;
 }
 
-
 /// Computes the truncated logarithm of a free_tensor instance.
-inline friend free_tensor log(const free_tensor &arg) {
+inline friend free_tensor log(const free_tensor &arg)
+{
     // Computes the truncated log of arg up to degree max_degree
     // The coef. of the constant term (empty word in the monoid) of arg
     // is forced to 1.
@@ -300,14 +300,15 @@ inline friend free_tensor log(const free_tensor &arg) {
 }
 
 /// Computes the truncated inverse of a free_tensor instance.
-inline friend free_tensor inverse(const free_tensor &arg) {
+inline friend free_tensor inverse(const free_tensor &arg)
+{
     // Computes the truncated inverse of arg up to degree max_degree
     // An exception is thrown if the leading term is zero.
     // the module assumes
     // (a+x)^(-1) = (a(1+x/a))^(-1)
     //  = a^(-1)(1 - x/a + x^2/a^2 + ... + (-1)^(n) x^n/a^n)
-    // = a^(-1) - x/a*[a^(-1)(1 - x/a + x^2/a^2 + ... + (-1)^(n) x^(n-1)/a^(n-1)))].
-    // S_n = a^(-1) + z S_{n-1}; z = - x/a ; S_0 = a^(-1)
+    // = a^(-1) - x/a*[a^(-1)(1 - x/a + x^2/a^2 + ... + (-1)^(n)
+    // x^(n-1)/a^(n-1)))]. S_n = a^(-1) + z S_{n-1}; z = - x/a ; S_0 = a^(-1)
     // max_degree must be > 0
 
     static KEY kunit;
@@ -324,9 +325,9 @@ inline friend free_tensor inverse(const free_tensor &arg) {
         x.erase(kunit);
     }
 
-    //S_n = a + z S_{ n - 1 }; z = -x / a; S_0 = a
+    // S_n = a + z S_{ n - 1 }; z = -x / a; S_0 = a
     //
-    // the nonzero scalar component a of the tensor arg restored to a tensor
+    //  the nonzero scalar component a of the tensor arg restored to a tensor
     free_tensor free_tensor_a_inverse(SCA(1) / a), result(free_tensor_a_inverse);
     // z := - x/a
     z.sub_scal_div(x, a);
@@ -338,7 +339,8 @@ inline friend free_tensor inverse(const free_tensor &arg) {
 }
 
 /// Computes the truncated inverse of a free_tensor instance.
-inline friend free_tensor reflect(const free_tensor &arg) {
+inline friend free_tensor reflect(const free_tensor &arg)
+{
     // Computes the alternating reflection of arg up to degree max_degree
     // For group-like elements this is the same as the inverse
     free_tensor ans(SCA(0));
@@ -350,6 +352,144 @@ inline friend free_tensor reflect(const free_tensor &arg) {
     return ans;
 }
 
+};
+
+template <typename Coeff> class shuffle_tensor_multiplication
+{
+
+    typedef typename Coeff::SCA scalar_t;
+
+    /// Computes recursively the shuffle product of two keys
+    template <typename Tensor> static Tensor _prod(typename Tensor::KEY const &k1, typename Tensor::KEY const &k2)
+    {
+        typedef typename Tensor::KEY key_t;
+
+        typedef typename Tensor::BASIS basis_t;
+        typedef free_tensor <Coeff, basis_t::s_no_letters, basis_t::s_max_degree> free_tensor_t;
+
+        Tensor result;
+        // unsigned i, j;
+        const scalar_t one(+1);
+
+        if ((Tensor::basis::max_degree == 0) || (k1.size() + k2.size() <= Tensor::basis::max_degree)) {
+            if (k1.size() == 0) {
+                result[k2] = one;
+                return result;
+            }
+            if (k2.size() == 0) {
+                result[k1] = one;
+                return result;
+            }
+            // k1.size() >= 1 and k2.size() >= 1
+            static_cast<free_tensor_t>(result).add_mul(static_cast<free_tensor_t>(k1.lparent()),
+                                                       static_cast<free_tensor_t>(prod(k1.rparent(), k2)))
+                                              .add_mul(static_cast<free_tensor_t>(k2.lparent()),
+                                                       static_cast<free_tensor_t>(prod(k1, k2.rparent())));
+        }
+        return result;
+    }
+
+    /// The shuffle product of two basis elements.
+    /**
+    Returns the shuffle_tensor obtained by the concatenation product of two
+    keys viewed as words of letters. The result is a unidimensional
+    shuffle_tensor with a unique key (the concatenation of k1 and k2)
+    associated to the +1 scalar. The already computed products are stored in
+    a static mutiplication table to speed up further calculations.
+    */
+    template <typename Tensor> static const Tensor &prod(typename Tensor::KEY const &k1, typename Tensor::KEY const &k2)
+    {
+        typedef typename Tensor::KEY key_t;
+        static boost::recursive_mutex table_access;
+        // get exclusive recursive access for the thread
+        boost::lock_guard<boost::recursive_mutex> lock(table_access);
+
+        typedef std::map<std::pair<key_t, key_t>, Tensor> TABLE_T;
+        static TABLE_T table;
+        typename TABLE_T::iterator it;
+        std::pair<key_t, key_t> p(std::min(k1, k2), std::max(k1, k2));
+        it = table.find(p);
+        if (it == table.end()) {
+            return table[p] = _prod(k1, k2);
+        } else {
+            return it->second;
+        }
+    }
+
+    template <typename Transform> class index_operator
+    {
+        Transform m_transform;
+
+    public:
+        index_operator(Transform t) : m_transform(t) {}
+
+        void operator()(scalar_t *result_ptr, scalar_t const *lhs_ptr, scalar_t const *rhs_ptr, DIMN const lhs_target,
+                        DIMN const rhs_target, bool assign = false) {}
+    };
+
+    template <typename Transform> class key_operator
+    {
+        Transform m_transform;
+
+    public:
+        key_operator(Transform t) : m_transform(t) {}
+
+        template <typename Vector> void
+        operator()(Vector &result, typename Vector::KEY const &lhs_key, scalar_t const &lhs_val,
+                   typename Vector::KEY const &rhs_key, scalar_t const &rhs_val)
+        {
+            result.add_scal_prod(prod<Vector>(lhs_key * rhs_key), m_transform(Coeff::mul(lhs_val, rhs_val)));
+        }
+    };
+
+public:
+    template <typename Algebra, typename Operator>
+    Algebra &multiply_and_add(Algebra &result, Algebra const &lhs, Algebra const &rhs, Operator op) const
+    {
+        key_operator<Operator> kt(op);
+        lhs.buffered_apply_binary_transform(result, rhs, kt);
+        return result;
+    }
+
+    template <typename Algebra, typename Operator> Algebra &
+    multiply_and_add(Algebra &result, Algebra const &lhs, Algebra const &rhs, Operator op, DEG const max_depth) const
+    {
+        key_operator<Operator> kt(op);
+        lhs.buffered_apply_binary_transform(result, rhs, kt, max_depth);
+        return result;
+    }
+
+    template <typename Algebra, typename Operator>
+    Algebra multiply(Algebra const &lhs, Algebra const &rhs, Operator op) const
+    {
+        Algebra result;
+        multiply_and_add(result, lhs, rhs, op);
+        return result;
+    }
+
+    template <typename Algebra, typename Operator>
+    Algebra multiply(Algebra const &lhs, Algebra const &rhs, Operator op, DEG const max_depth) const
+    {
+        Algebra result;
+        multiply_and_add(result, lhs, rhs, op, max_depth);
+        return result;
+    }
+
+    template <typename Algebra, typename Operator>
+    Algebra &multiply_inplace(Algebra &lhs, Algebra const &rhs, Operator op) const
+    {
+        key_operator<Operator> kt(op);
+        lhs.unbuffered_apply_binary_transform(rhs, kt);
+        return lhs;
+    }
+
+    template <typename Algebra, typename Operator>
+    Algebra &multiply_inplace(Algebra &lhs, Algebra const &rhs, Operator op, DEG const max_depth) const
+    {
+        key_operator<Operator> kt(op);
+        lhs.unbuffered_apply_binary_transform(rhs, kt, max_depth);
+        return lhs;
+    }
 };
 
 /// A specialisation of the algebra class with a shuffle tensor basis.
@@ -365,17 +505,18 @@ inline friend free_tensor reflect(const free_tensor &arg) {
    shuffle_tensor_basis.
  */
 template <typename Coeff, DEG n_letters, DEG max_degree> class shuffle_tensor : public algebra<
-        shuffle_tensor_basis < n_letters, max_degree>, Coeff
+        shuffle_tensor_basis < n_letters, max_degree>, Coeff, shuffle_tensor_multiplication<Coeff>
 
->
-{
+> {
+typedef shuffle_tensor_multiplication<Coeff> multiplication_t;
+
 public:
 /// The basis type.
 typedef shuffle_tensor_basis <n_letters, max_degree> BASIS;
 /// Import of the KEY type.
 typedef typename BASIS::KEY KEY;
 /// The algebra type.
-typedef algebra <BASIS, Coeff> ALG;
+typedef algebra <BASIS, Coeff, multiplication_t> ALG;
 
 typedef typename Coeff::SCA SCA;
 typedef typename Coeff::RAT RAT;
@@ -387,6 +528,7 @@ typedef typename ALG::VECT VECT;
 typedef typename ALG::iterator iterator;
 /// Import of the constant iterator type.
 typedef typename ALG::const_iterator const_iterator;
+
 public:
 
 /// Default constructor.
@@ -396,7 +538,8 @@ shuffle_tensor(void) {}
 shuffle_tensor(const shuffle_tensor &t) : ALG(t) {}
 
 /// Constructs an instance from a free_tensor instance.
-shuffle_tensor(const free_tensor <Coeff, n_letters, max_degree> &t) {
+shuffle_tensor(const free_tensor <Coeff, n_letters, max_degree> &t)
+{
     typename free_tensor<Coeff, n_letters, max_degree>::const_iterator i;
     for (i = t.begin(); i != t.end(); ++i) {
         (*this)[i->key()] += i->value();
@@ -452,4 +595,4 @@ inline __DECLARE_UNARY_OPERATOR(shuffle_tensor, -, -, ALG)
 // Include once wrapper
 #endif // DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 
-//EOF.
+// EOF.

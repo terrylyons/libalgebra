@@ -12,47 +12,34 @@
 namespace alg {
 namespace basis {
 
-
-template <DEG D>
-struct with_degree {
-    static const typename alg::utils::enable_if<(D > 0),
-                                                DEG>::type max_degree;
+template <DEG D> struct with_degree
+{
+    static const typename alg::utils::enable_if<(D > 0), DEG>::type max_degree;
 };
 
-template <DEG D> const typename alg::utils::enable_if<(D > 0),
-                                                      DEG>::type with_degree<D>::max_degree = D;
+template <DEG D> const typename alg::utils::enable_if<(D > 0), DEG>::type
+        with_degree<D>::max_degree = D;
 
+struct without_degree {};
 
-struct without_degree {
-};
-
-
-template <typename OrderOperator>
-struct ordered {
+template <typename OrderOperator> struct ordered
+{
     typedef OrderOperator order;
 
-    struct pair_order {
-        template <typename Key,
-                typename Scalar>
-        bool operator()(const std::pair<Key,
-                                        Scalar> &p1, const std::pair<Key,
-                                                                     Scalar> &p2) const {
+    struct pair_order
+    {
+        template <typename Key, typename Scalar>
+        bool operator()(const std::pair<Key, Scalar> &p1, const std::pair<Key, Scalar> &p2) const
+        {
             order o;
             return o(p1.first, p2.first);
         }
     };
-
 };
 
-struct unordered {
-};
-
+struct unordered {};
 
 } // namespace basis
 } // namespace alg
 
-
-
-
-
-#endif //LIBALGEBRA_TAGS_H
+#endif // LIBALGEBRA_TAGS_H

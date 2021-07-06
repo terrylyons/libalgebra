@@ -3,8 +3,7 @@
 #include <unordered_map>
 
 // a class for dense maps that publishes the number of keys in a dense vector: hasher::NoKeys
-template <typename... T>
-class sized_unordered_map : std::unordered_map<T...> {
+template <typename... T> class sized_unordered_map : std::unordered_map<T...> {
 
     typedef sized_unordered_map<T...> my_type;
     typedef std::unordered_map<T...> my_base;
@@ -35,8 +34,7 @@ public:
 
     sized_unordered_map(sized_unordered_map &&v) : my_base((my_base &&) v) {}
 
-    template <class ...T>
-    sized_unordered_map(T... args) : my_base(args...) {
+    template <class ...T> sized_unordered_map(T... args) : my_base(args...) {
         //rehash(NoKeys/.7)
         //max_load_factor(float(.7));
         //reserve(8);// NoKeys);

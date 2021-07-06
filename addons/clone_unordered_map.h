@@ -2,8 +2,7 @@
 // derived from http://en.cppreference.com/w/cpp/container/unordered_map
 #include <unordered_map>
 
-template <typename... T>
-class CLONE_UNORDERED_MAP : std::unordered_map<T...> {
+template <typename... T> class CLONE_UNORDERED_MAP : std::unordered_map<T...> {
     typedef CLONE_UNORDERED_MAP<T...> my_type;
     typedef std::unordered_map<T...> my_base;
 public:
@@ -30,8 +29,7 @@ public:
 
     CLONE_UNORDERED_MAP(CLONE_UNORDERED_MAP &&v) : my_base((my_base &&) v) {}
 
-    template <class ...T>
-    CLONE_UNORDERED_MAP(T... args) : my_base(args...) {}
+    template <class ...T> CLONE_UNORDERED_MAP(T... args) : my_base(args...) {}
     //	  constructs the unordered_map
     //	  (public member function)
 

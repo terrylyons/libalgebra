@@ -47,36 +47,9 @@ private:
         return result;
     }
 
-    template <typename Transform> class index_operator
-    {
-        Transform m_transform;
 
-    public:
-        index_operator(Transform t) : m_transform(t) {}
-
-        void operator()(scalar_t *result_ptr, scalar_t const *lhs_ptr, scalar_t const *rhs_ptr, DIMN const lhs_target,
-                        DIMN const rhs_target, bool assign = false)
-        {
-            scalar_t lhs;
-            if (assign) {
-                for (IDIMN i = 0; i < static_cast<IDIMN>(lhs_target); ++i) {
-                    lhs = lhs_ptr[i];
-                    for (IDIMN j = 0; j < static_cast<IDIMN>(rhs_target); ++j) {
-                        *(result_ptr++) = m_transform(Coeff::mul(lhs, rhs_ptr[j]));
-                    }
-                }
-            } else {
-                for (IDIMN i = 0; i < static_cast<IDIMN>(lhs_target); ++i) {
-                    lhs = lhs_ptr[i];
-                    for (IDIMN j = 0; j < static_cast<IDIMN>(rhs_target); ++j) {
-                        *(result_ptr++) += m_transform(Coeff::mul(lhs, rhs_ptr[j]));
-                    }
-                }
-            }
-        }
-    };
-
-    template <typename Transform> class key_operator
+    template <typename Transform, typename Poly>
+    class key_operator
     {
         Transform m_transform;
 
@@ -87,7 +60,7 @@ private:
         operator()(Vector &result, typename Vector::KEY const &lhs_key, scalar_t const &lhs_val,
                    typename Vector::KEY const &rhs_key, scalar_t const &rhs_val)
         {
-            result.add_scal_prod(lhs_key * rhs_key, m_transform(Coeff::mul(lhs_val, rhs_val)));
+            result.add_scal_prod(prod<Poly>(lhs_key, rhs_key), m_transform(Coeff::mul(lhs_val, rhs_val)));
         }
     };
 
@@ -95,18 +68,16 @@ public:
     template <typename Algebra, typename Operator>
     Algebra &multiply_and_add(Algebra &result, Algebra const &lhs, Algebra const &rhs, Operator op) const
     {
-        key_operator <Operator> kt(op);
-        index_operator <Operator> it(op);
-        lhs.buffered_apply_binary_transform(result, rhs, kt, it);
+        key_operator <Operator, Algebra> kt(op);
+        lhs.buffered_apply_binary_transform(result, rhs, kt);
         return result;
     }
 
     template <typename Algebra, typename Operator> Algebra &
     multiply_and_add(Algebra &result, Algebra const &lhs, Algebra const &rhs, Operator op, DEG const max_depth) const
     {
-        key_operator <Operator> kt(op);
-        index_operator <Operator> it(op);
-        lhs.buffered_apply_binary_transform(result, rhs, kt, it, max_depth);
+        key_operator <Operator, Algebra> kt(op);
+        lhs.buffered_apply_binary_transform(result, rhs, kt, max_depth);
         return result;
     }
 
@@ -129,18 +100,16 @@ public:
     template <typename Algebra, typename Operator>
     Algebra &multiply_inplace(Algebra &lhs, Algebra const &rhs, Operator op) const
     {
-        key_operator <Operator> kt(op);
-        index_operator <Operator> it(op);
-        lhs.unbuffered_apply_binary_transform(rhs, kt, it);
+        key_operator <Operator, Algebra> kt(op);
+        lhs.unbuffered_apply_binary_transform(rhs, kt);
         return lhs;
     }
 
     template <typename Algebra, typename Operator>
     Algebra &multiply_inplace(Algebra &lhs, Algebra const &rhs, Operator op, DEG const max_depth) const
     {
-        key_operator <Operator> kt(op);
-        index_operator <Operator> it(op);
-        lhs.unbuffered_apply_binary_transform(rhs, kt, it, max_depth);
+        key_operator <Operator, Algebra> kt(op);
+        lhs.unbuffered_apply_binary_transform(rhs, kt, max_depth);
         return lhs;
     }
 };

@@ -13,7 +13,8 @@ Version 3. (See accompanying file License.txt)
 
 #include "libalgebra/polynomials.h"
 
-template <typename Coeff> class poly_lie_multiplication : poly_multiplication<Coeff>
+template <typename Coeff>
+class poly_lie_multiplication : poly_multiplication<Coeff>
 {
     typedef typename Coeff::SCA scalar_t;
     typedef poly_multiplication<Coeff> poly_multiplication_t;
@@ -25,35 +26,38 @@ template <typename Coeff> class poly_lie_multiplication : poly_multiplication<Co
     product of m1*d/dxi with m2*d/dxj is equal to m1*(d/dxi m2)*d/dxj - m2*(d/dxj
     m1)*d/dxi
     */
-    template <typename PolyLie> static PolyLie prod(typename PolyLie::KEY const &k1, typename PolyLie::KEY const &k2)
+    template <typename PolyLie>
+    static PolyLie prod(typename PolyLie::KEY const &k1, typename PolyLie::KEY const &k2)
     {
-        typedef typename PolyLie::POLY poly_t;
+        typedef poly<Coeff> poly_t;
         typedef typename PolyLie::KEY key_t;
         poly_t poly1 = poly_t::prediff(k2.second, k1.first);
         poly_t poly2 = poly_t::prediff(k1.second, k2.first);
         key_t mon1(k2.first, k1.second);
         key_t mon2(k1.first, k2.second);
         PolyLie result;
-        result = prod2(poly1, mon1) - prod2(poly2, mon2);
+        result = prod2<PolyLie>(poly1, mon1) - prod2<PolyLie>(poly2, mon2);
         return result;
     }
 
     /// Multiplication of a polynomial poly1 by a monomial vector field liemon1.
     template <typename PolyLie>
-    static PolyLie prod2(typename PolyLie::POLY const &poly1, typename PolyLie::KEY const &liemon1)
+    static PolyLie prod2(poly<Coeff> const &poly1, typename PolyLie::KEY const &liemon1)
     {
-        typedef typename PolyLie::POLY poly_t;
+        typedef poly<Coeff> poly_t;
         typedef typename PolyLie::KEY key_t;
         PolyLie result;
         for (typename poly_t::const_iterator it = poly1.begin(); it != poly1.end(); it++) {
             scalar_t temp = it->value();
-            typename poly_t::BASIS::KEY temp2 = poly_multiplication_t::prod2(liemon1.second, it->key());
+            typename poly_t::BASIS::KEY temp2 = poly_multiplication_t::prod2(liemon1.second, it->key
+            ());
             result[make_pair(liemon1.first, temp2)] = temp;
         }
         return result;
     }
 
-    template <typename PolyLie, typename Transform> class key_operator
+    template <typename Transform, typename Algebra>
+    class key_operator
     {
 
         Transform m_transform;
@@ -74,7 +78,7 @@ template <typename Coeff> class poly_lie_multiplication : poly_multiplication<Co
         operator()(Vector &result, typename Vector::KEY const &lhs_key, scalar_t const &lhs_val,
                    typename Vector::KEY const &rhs_key, scalar_t const &rhs_val)
         {
-            result.add_scal_prod(prod<PolyLie>(lhs_key, rhs_key), m_transform(Coeff::mul(lhs_val, rhs_val)));
+            result.add_scal_prod(prod<Algebra>(lhs_key, rhs_key), m_transform(Coeff::mul(lhs_val, rhs_val)));
         }
     };
 
@@ -82,7 +86,7 @@ public:
     template <typename Algebra, typename Operator>
     Algebra &multiply_and_add(Algebra &result, Algebra const &lhs, Algebra const &rhs, Operator op) const
     {
-        key_operator<Algebra, Operator> kt(op);
+        key_operator<Operator, Algebra> kt(op);
         lhs.buffered_apply_binary_transform(result, rhs, kt);
         return result;
     }
@@ -90,7 +94,7 @@ public:
     template <typename Algebra, typename Operator> Algebra &
     multiply_and_add(Algebra &result, Algebra const &lhs, Algebra const &rhs, Operator op, DEG const max_depth) const
     {
-        key_operator<Algebra, Operator> kt(op);
+        key_operator<Operator, Algebra> kt(op);
         lhs.buffered_apply_binary_transform(result, rhs, kt, max_depth);
         return result;
     }
@@ -114,7 +118,7 @@ public:
     template <typename Algebra, typename Operator>
     Algebra &multiply_inplace(Algebra &lhs, Algebra const &rhs, Operator op) const
     {
-        key_operator<Algebra, Operator> kt(op);
+        key_operator<Operator, Algebra> kt(op);
         lhs.unbuffered_apply_binary_transform(rhs, kt);
         return lhs;
     }
@@ -122,7 +126,7 @@ public:
     template <typename Algebra, typename Operator>
     Algebra &multiply_inplace(Algebra &lhs, Algebra const &rhs, Operator op, DEG const max_depth) const
     {
-        key_operator<Algebra, Operator> kt(op);
+        key_operator<Operator, Algebra> kt(op);
         lhs.unbuffered_apply_binary_transform(rhs, kt, max_depth);
         return lhs;
     }
@@ -135,7 +139,10 @@ public:
 /// for vector fields.
 
 template <typename Coeff, DEG n_letters, DEG max_degree>
-class poly_lie : public algebra<poly_lie_basis<n_letters, max_degree>, Coeff, poly_lie_multiplication<Coeff>>
+class poly_lie : public algebra<
+        poly_lie_basis<n_letters, max_degree>,
+        Coeff,
+        poly_lie_multiplication<Coeff> >
 {
     typedef poly_lie_multiplication<Coeff> multiplication_t;
 

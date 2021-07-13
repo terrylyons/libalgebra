@@ -127,9 +127,9 @@ public:
    polynomial is essentially a sparse vector of monomials with polynomial
    commutative product.
  */
-template <typename Coeff> class poly : public algebra<poly_basis, Coeff, poly_multiplication<Coeff>>
-{
-    typedef poly_multiplication<Coeff> multiplication_t;
+template<typename SCA, typename RAT>
+class poly :
+        public algebra<poly_basis < SCA, RAT>
 
 public:
     typedef typename Coeff::S SCA;
@@ -274,6 +274,18 @@ public:
         }
         return result;
     }
+
+
+private:
+
+    friend class boost::serialization::access;
+
+    template <typename Archive>
+    void serialize(Archive &ar, unsigned int const /* version */) {
+        ar & boost::serialization::base_object<ALG>(*this);
+    }
+
+
 };
 
 // Include once wrapper

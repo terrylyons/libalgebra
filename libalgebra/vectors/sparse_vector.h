@@ -13,6 +13,10 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN
 #define DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN
 
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/base_object.hpp>
+
+
 #include "libalgebra/vectors/base_vector.h"
 #include "libalgebra/vectors/iterators.h"
 
@@ -1036,6 +1040,17 @@ public:
         typename Transform::key_transform kt(transform.get_key_transform());
         kt(result, *this);
     }
+
+private:
+
+    friend class boost::serialization::access;
+
+    template <typename Archive>
+    void serialize(Archive &ar, unsigned int const /* version */)
+    {
+        ar & boost::serialization::base_object<MapType>(*this);
+    }
+
 };
 
 } // namespace vectors

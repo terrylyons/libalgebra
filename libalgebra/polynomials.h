@@ -127,10 +127,10 @@ public:
    polynomial is essentially a sparse vector of monomials with polynomial
    commutative product.
  */
-template<typename SCA, typename RAT>
-class poly :
-        public algebra<poly_basis < SCA, RAT>
-
+template<typename Coeff>
+class poly : public algebra<poly_basis, Coeff, poly_multiplication<Coeff> >
+{
+    typedef poly_multiplication<Coeff> multiplication_t;
 public:
     typedef typename Coeff::S SCA;
     typedef typename Coeff::Q RAT;

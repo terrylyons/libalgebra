@@ -34,13 +34,13 @@ public:
 template <typename Basis, typename Coeff> Basis base_vector<Basis, Coeff>::basis;
 
 /// Static initialisation of the scalar constant +1.
-template <typename Basis, typename Coeff> const typename Coeff::S base_vector<Basis, Coeff>::one(Coeff::one);
+template <typename Basis, typename Coeff> const typename Coeff::S base_vector<Basis, Coeff>::one(1);
 
 /// Static initialisation of the scalar constant 0.
-template <typename Basis, typename Coeff> const typename Coeff::S base_vector<Basis, Coeff>::zero(Coeff::zero);
+template <typename Basis, typename Coeff> const typename Coeff::S base_vector<Basis, Coeff>::zero(0);
 
 /// Static initialisation of the scalar constant -1.
-template <typename Basis, typename Coeff> const typename Coeff::S base_vector<Basis, Coeff>::mone(Coeff::mone);
+template <typename Basis, typename Coeff> const typename Coeff::S base_vector<Basis, Coeff>::mone(-1);
 
 template <typename Basis, typename Coeff> const typename alg::basis::basis_traits<Basis>::degree_tag
         base_vector<Basis, Coeff>::degree_tag;

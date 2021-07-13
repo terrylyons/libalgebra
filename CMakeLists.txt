@@ -18,7 +18,7 @@ include(GNUInstallDirs)
 
 set(CMAKE_CXX_STANDARD 98)
 
-find_package(Boost REQUIRED COMPONENTS thread)
+find_package(Boost REQUIRED COMPONENTS thread serialization)
 
 add_library(Libalgebra INTERFACE)
 

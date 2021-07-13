@@ -8,10 +8,8 @@
 
 #if __cplusplus >= 201103UL
 #define LA_CONSTEXPR constexpr
-#define LA_EXPLICIT explicit
 #else
 #define LA_CONSTEXPR
-#define LA_EXPLICIT
 #endif
 
 

@@ -351,6 +351,8 @@ build/CMakeCache.txt
 build/compile_commands.json
 build/Makefile
 
+cmake-build-*/
+
 *.raw
 
 .vscode

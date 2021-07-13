@@ -9,9 +9,9 @@ namespace alg {
 namespace coefficients {
 
 #define LIBALGEBRA_FIELD_GENERATE_BINARY(NAME, OP, RET_T, LHS_T, RHS_T)        \
-  static RET_T NAME(LHS_T const &lhs, RHS_T const &rhs) { return lhs OP rhs; } \
+  static LA_CONSTEXPR RET_T NAME(LHS_T const &lhs, RHS_T const &rhs) { return lhs OP rhs; } \
                                                                                \
-  static LHS_T &NAME##_inplace(LHS_T &lhs, RHS_T const &rhs) {                 \
+  static LA_CONSTEXPR LHS_T &NAME##_inplace(LHS_T &lhs, RHS_T const &rhs) {                 \
     return (lhs OP## = rhs);                                                   \
   }
 
@@ -27,7 +27,7 @@ template <typename Scalar, typename Rational = Scalar> struct coefficient_field
     static const SCA zero;
     static const SCA mone;
 
-    static SCA uminus(SCA arg) { return -arg; }
+    static LA_CONSTEXPR SCA uminus(SCA arg) { return -arg; }
 
     LIBALGEBRA_FIELD_GENERATE_BINARY(add, +, SCA, SCA, SCA);
 

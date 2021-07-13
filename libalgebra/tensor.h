@@ -380,6 +380,17 @@ inline friend free_tensor reflect(const free_tensor &arg)
     return ans;
 }
 
+
+private:
+
+friend class boost::serialization::access;
+
+template <typename Archive>
+void serialize(Archive &ar, unsigned int const /* version */) {
+    ar & boost::serialization::base_object<ALG>(*this);
+}
+
+
 };
 
 template <typename Coeff> class shuffle_tensor_multiplication
@@ -618,6 +629,14 @@ inline __DECLARE_BINARY_OPERATOR(shuffle_tensor, -, -=, shuffle_tensor)
 /// Ensures that the return type is a shuffle_tensor.
 inline __DECLARE_UNARY_OPERATOR(shuffle_tensor, -, -, ALG)
 
+private:
+
+friend class boost::serialization::access;
+
+template <typename Archive>
+void serialize(Archive &ar, unsigned int const /* version */) {
+    ar & boost::serialization::base_object<ALG>(*this);
+}
 };
 
 // Include once wrapper

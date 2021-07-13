@@ -194,18 +194,26 @@ public:
     explicit poly_lie(LET letter, const SCA &s) : ALG(VECT::basis.keyofletter(letter), s) {}
 
 public:
-    /// Replaces the occurrences of letters in s by Lie elements in v.
-    inline friend poly_lie
-    replace(const poly_lie &src, const std::vector<LET> &s, const std::vector<const poly_lie *> &v)
-    {
-        poly_lie result;
-        std::map<KEY, poly_lie> table;
-        const_iterator i;
-        for (i = src.begin(); i != src.end(); ++i) {
-            result.add_scal_prod(VECT::basis.replace(i->first, s, v, table), i->second);
-        }
-        return result;
-    }
+
+/// Replaces the occurrences of letters in s by Lie elements in v.
+inline friend poly_lie replace(const poly_lie &src, const std::vector<LET> &s, const std::vector<const poly_lie *> &v)
+{
+    poly_lie result;
+    std::map<KEY, poly_lie> table;
+    const_iterator i;
+    for (i = src.begin(); i != src.end(); ++i)
+        result.add_scal_prod(VECT::basis.replace(i->first, s, v, table), i->second);
+    return result;
+}
+private:
+
+friend class boost::serialization::access;
+
+template <typename Archive>
+void serialize(Archive &ar, unsigned int const /* version */) {
+    ar & boost::serialization::base_object<ALG>(*this);
+}
+
 };
 
 #endif

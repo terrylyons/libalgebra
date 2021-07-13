@@ -293,6 +293,18 @@ inline friend lie replace(const lie &src, const std::vector<LET> &s, const std::
     }
     return result;
 }
+
+
+
+private:
+
+    friend class boost::serialization::access;
+
+    template <typename Archive>
+    void serialize(Archive &ar, unsigned int const /* version */) {
+        ar & boost::serialization::base_object<ALG>(*this);
+    }
+
 };
 
 // Include once wrapper

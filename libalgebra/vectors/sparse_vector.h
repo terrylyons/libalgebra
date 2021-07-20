@@ -317,6 +317,19 @@ public:
         }
     }
 
+    /**
+     * @brief Construct from pointer to data
+     * @param begin
+     * @param end
+     */
+    sparse_vector(SCALAR const* begin, SCALAR const* end) : MAP()
+    {
+        KEY k(basis.begin());
+        for (SCALAR const* it(begin); it != end && k != basis.end(); ++it, k = basis.nextkey(k)) {
+            MAP::insert(k, *it);
+        }
+    }
+
 public:
     /// Returns an instance of the additive inverse of the instance.
     inline sparse_vector operator-(void) const

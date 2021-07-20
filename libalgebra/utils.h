@@ -224,19 +224,37 @@ public:
         return m_maps.t2l(log(tmp));
     }
 
+    template <typename InputIt>
+    LIE full(InputIt start, InputIt finish) {
+        if (start == finish) {
+            return empty_lie;
+        }
+
+        InputIt it(start);
+        TENSOR result(exp(m_maps.l2t(*(it++))));
+
+        for (; it != finish; ++it) {
+            result.fmexp(m_maps.l2t(*it));
+        }
+
+        return m_maps.t2l(log(result));
+    }
+
     /// Returns the CBH formula as a free lie element from a vector of lie.
     inline LIE full(const std::vector<const LIE *> &lies) const
     {
-        if (lies.size() == 0) {
-            return empty_lie;
-        }
-        typename std::vector<const LIE *>::size_type i;
-        TENSOR tmp(exp(m_maps.l2t(*lies[0])));
-        for (i = 1; i < lies.size(); ++i) {
-            tmp *= exp(m_maps.l2t(*lies[i]));
-        }
-        return m_maps.t2l(log(tmp));
+            if (lies.size() == 0) {
+                return empty_lie;
+            }
+            typename std::vector<const LIE *>::size_type i;
+            TENSOR tmp(exp(m_maps.l2t(*lies[0])));
+            for (i = 1; i < lies.size(); ++i) {
+                tmp *= exp(m_maps.l2t(*lies[i]));
+            }
+            return m_maps.t2l(log(tmp));
     }
+
+
 };
 
 // Include once wrapper

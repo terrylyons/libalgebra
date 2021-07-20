@@ -119,13 +119,33 @@ public:
      * @tparam F Other field. Scalar types must be convertible to SCALAR.
      * @tparam V Other underlying vector type.
      */
-    template <typename F, typename V> explicit vector(const vector<BASIS, F, V> &other)
+    template <typename F, typename V> explicit vector(const vector<BASIS, F, V> &other) : UnderlyingVectorType()
     {
         typename vector<BASIS, F, V>::const_iterator cit;
         for (cit(other.begin()); cit != other.end(); ++cit) {
             operator[](cit->key()) = cit->value();
         }
     }
+
+    /**
+     * @brief Construct from iterator
+     * @tparam InputIt
+     * @param begin
+     * @param end
+     */
+    template <typename InputIt>
+    vector(InputIt begin, InputIt end) : UnderlyingVectorType()
+    {
+        UnderlyingVectorType::insert(begin, end);
+    }
+
+    /**
+     * @brief Construct from pointer to data.
+     * @param begin
+     * @param end
+     */
+    vector(SCALAR const* begin, SCALAR const* end) : UnderlyingVectorType(begin, end)
+    {}
 
 protected:
     bool ensure_sized_for_degree(const DEG deg)

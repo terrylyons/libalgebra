@@ -123,6 +123,14 @@ public:
 
     hybrid_vector(const hybrid_vector &other) : DENSE(other), SPARSE(other), m_resize_policy() {}
 
+    /**
+     * @brief Construct from pointer to data
+     * @param begin
+     * @param end
+     */
+    hybrid_vector(SCALAR const* begin, SCALAR const* end) : DENSE(begin, end), SPARSE()
+    {}
+
 private:
     hybrid_vector(DENSE dense_vec, SPARSE sparse_vec) : DENSE(dense_vec), SPARSE(sparse_vec), m_resize_policy() {}
 

@@ -92,6 +92,19 @@ public:
         set_degree(degree_tag);
     }
 
+    /**
+     * @brief Construct from pointer to data
+     * @param begin
+     * @param end
+     */
+    dense_vector(SCALAR const* begin, SCALAR const* end)
+        : m_data(begin, end),
+          m_dimension(m_data.size()),
+          m_degree(0)
+    {
+        set_degree(degree_tag);
+    }
+
 private:
     template <DEG D> DIMN resize_for_key(const KEY &key, alg::basis::with_degree<D>)
     {

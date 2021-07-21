@@ -966,16 +966,17 @@ public:
         // create buffers to avoid unnecessary calls to MAP inside loop
         std::vector<std::pair<KEY, SCALAR>> buffer;
         std::vector<typename std::vector<std::pair<KEY, SCALAR>>::const_iterator> iterators;
-        separate_by_degree(buffer, rhs, max_depth, iterators);
+        separate_by_degree(buffer, rhs, degree_tag.max_degree, iterators);
 
         typename std::vector<std::pair<KEY, SCALAR>>::const_iterator j, jEnd;
         const_iterator i(begin()), iEnd(end());
+        DEG rhdegree;
         for (; i != iEnd; ++i) {
             const KEY &k = i->key();
-            size_t rhdegree = max_depth - basis.degree(k);
+            rhdegree = degree_tag.max_degree - basis.degree(k);
             typename std::vector<std::pair<KEY, SCALAR>>::const_iterator &jEnd = iterators[rhdegree];
             for (j = buffer.begin(); j != jEnd; ++j) {
-                key_transform(result, i->key(), i->value(), j->first, j->second);
+                key_transform(result, k, i->value(), j->first, j->second);
             }
         }
     }

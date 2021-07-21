@@ -55,7 +55,41 @@ namespace policy {
 class basic_resize_policy
 {
 public:
-    template <typename Vector> DIMN get_resize_size(const Vector &vect)
+
+    template <typename Vector, DEG MaxDegree>
+    DIMN get_resize_size_impl(Vector const& vect, basis::with_degree<MaxDegree>)
+    {
+        DEG dense_deg = vect.dense_degree();
+        if (dense_deg == MaxDegree) {
+            return vect.max_dense_dimension();
+        }
+
+        std::vector<DIMN> degree_counts;
+        degree_counts.resize(MaxDegree+1);
+
+
+        DEG d;
+        typedef typename Vector::const_iterator citer;
+        for (citer it(vect.sparse_begin()); it != vect.sparse_end(); ++it) {
+            typename Vector::KEY const& key = it->key();
+            d = vect.basis.degree(key);
+            degree_counts[d] += 1;
+        }
+
+        DIMN degree_size;
+        DEG resize_degree = dense_deg;
+        for (d=dense_deg; d<=MaxDegree; ++d) {
+            degree_size = vect.basis.start_of_degree(d + 1) - vect.basis.start_of_degree(d);
+            if (degree_counts[d] >= (degree_size / 3)) {
+                resize_degree = d;
+            }
+        }
+
+        return vect.basis.start_of_degree(resize_degree+1);
+    }
+
+    template <typename Vector>
+    DIMN get_resize_size_impl(Vector const& vect, basis::without_degree)
     {
         DIMN dense_dim(vect.dense_dimension());
         DIMN sparse_dim(vect.sparse_size());
@@ -64,14 +98,16 @@ public:
         assert(next_dense_size <= vect.max_dense_dimension());
         assert(dense_dim <= vect.max_dense_dimension());
 
-        // std::cerr << next_dense_size << ' ' << dense_dim << ' ' << sparse_dim <<
-        // '\n';
-
-        if (sparse_dim > ((next_dense_size - dense_dim) / 3)) {
+        if (sparse_dim > ((next_dense_size - dense_dim) / 4)) {
             return next_dense_size;
         } else {
             return dense_dim;
         }
+    }
+
+    template <typename Vector> DIMN get_resize_size(const Vector &vect)
+    {
+        return get_resize_size_impl(vect, vect.degree_tag);
     }
 };
 
@@ -481,6 +517,9 @@ public:
     const_iterator cbegin() const { return begin(); }
 
     const_iterator cend() const { return end(); }
+
+    const_iterator sparse_begin() const { return const_iterator(*this, SPARSE::begin()); }
+    const_iterator sparse_end() const { return const_iterator(*this, SPARSE::end()); }
 
     iterator insert(iterator it, const std::pair<const KEY, SCALAR> &val)
     {
@@ -899,15 +938,15 @@ private:
 
         std::vector<std::pair<KEY, SCALAR>> buffer;
         std::vector<typename std::vector<std::pair<KEY, SCALAR>>::const_iterator> iterators;
-        SPARSE::separate_by_degree(buffer, rhs, max_depth, iterators);
+        SPARSE::separate_by_degree(buffer, rhs, degree_tag.max_degree, iterators);
 
         // Do the dense * sparse first
         typename std::vector<std::pair<KEY, SCALAR>>::const_iterator cit, buf_begin(buffer.begin());
 
         DEG rh_max_deg;
         if (dense_dimension() != 0) {
-            for (DEG lhs_deg = 0; lhs_deg <= std::min(dense_degree(), max_depth); ++lhs_deg) {
-                rh_max_deg = max_depth - lhs_deg;
+            for (DEG lhs_deg = 0; lhs_deg <= std::min(dense_degree(), degree_tag.max_degree); ++lhs_deg) {
+                rh_max_deg = degree_tag.max_degree - lhs_deg;
                 for (DIMN i = DENSE::start_of_degree(lhs_deg); i < DENSE::start_of_degree(lhs_deg + 1); ++i) {
                     for (cit = buf_begin; cit != iterators[rh_max_deg]; ++cit) {
                         key_transform(result, index_to_key(i), DENSE::value(i), cit->first, cit->second);
@@ -921,7 +960,7 @@ private:
         for (typename SPARSE::const_iterator it(SPARSE::begin()); it != SPARSE::end(); ++it) {
             lhs_deg = basis.degree(it->key());
             assert(lhs_deg <= max_depth);
-            rh_max_deg = max_depth - lhs_deg;
+            rh_max_deg = degree_tag.max_degree - lhs_deg;
 
             if (rhs.dense_dimension() != 0) {
                 for (DEG rhs_deg = 0; rhs_deg <= std::min(rh_max_deg, rhs.dense_degree()); ++rhs_deg) {

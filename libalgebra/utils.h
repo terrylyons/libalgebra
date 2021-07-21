@@ -118,20 +118,34 @@ public:
     static table to speed up further calculus. The function returns a
     constant reference to an element of this table.
     */
-    inline const LIE &rbraketing(const TKEY &k)
+    template <typename TensorKey>
+    inline const LIE &rbraketing(const TensorKey &k)
     {
         static boost::recursive_mutex table_access;
         // get exclusive recursive access for the thread
         boost::lock_guard<boost::recursive_mutex> lock(table_access);
 
-        static std::map<TKEY, LIE> lies;
-        typename std::map<TKEY, LIE>::iterator it;
+        //static boost::container::flat_map<TensorKey, LIE> lies;
+        //typename boost::container::flat_map<TensorKey, LIE>::iterator it;
+        static std::unordered_map<TensorKey, LIE, typename TensorKey::hash> lies;
+        //static std::map<TensorKey, LIE> lies;
+        //typename std::unordered_map<TensorKey, LIE, typename TensorKey::hash>::iterator it;
+        LIE& value = lies[k];
+
+        if (!value.empty()) {
+            return value;
+        }
+        return value = _rbraketing(k);
+
+
+        /*
         it = lies.find(k);
         if (it != lies.end()) {
             return it->second;
         } else {
             return lies[k] = _rbraketing(k);
         }
+         */
     }
     /// Returns the free_tensor corresponding to the Lie key k.
     /**
@@ -145,14 +159,27 @@ public:
         // get exclusive recursive access for the thread
         boost::lock_guard<boost::recursive_mutex> lock(table_access);
 
-        static std::map<LKEY, TENSOR> table;
-        typename std::map<LKEY, TENSOR>::iterator it;
+        //static boost::container::flat_map<LKEY, TENSOR> table;
+        static std::unordered_map<LKEY, TENSOR> table;
+        //static std::map<LKEY, TENSOR> table;
+        //typename std::unordered_map<LKEY, TENSOR>::iterator it;
+        TENSOR& value = table[k];
+
+        if (!value.empty()) {
+            return value;
+        }
+
+        return value = _expand(k);
+
+
+        /*
         it = table.find(k);
         if (it == table.end()) {
             return table[k] = _expand(k);
         } else {
             return it->second;
         }
+         */
     }
 
 private:
@@ -166,12 +193,13 @@ private:
     }
 
     /// a1,a2,...,an is converted into [a1,[a2,[...,an]]] recursively.
-    LIE _rbraketing(const TKEY &k)
+    template <typename TensorKey>
+    LIE _rbraketing(const TensorKey &k)
     {
-        if (TENSOR::basis.letter(k)) {
-            return (LIE) LIE::basis.keyofletter(TENSOR::basis.getletter(k));
+        if (k.size() == 1) {
+            return (LIE) LIE::basis.keyofletter(k.FirstLetter());
         }
-        return rbraketing(TENSOR::basis.lparent(k)) * rbraketing(TENSOR::basis.rparent(k));
+        return rbraketing(k.lparent()) * rbraketing(k.rparent());
     }
 };
 
@@ -234,7 +262,7 @@ public:
         TENSOR result(exp(m_maps.l2t(*(it++))));
 
         for (; it != finish; ++it) {
-            result.fmexp(m_maps.l2t(*it));
+            result.fmexp_inplace(m_maps.l2t(*it));
         }
 
         return m_maps.t2l(log(result));
@@ -249,7 +277,7 @@ public:
             typename std::vector<const LIE *>::size_type i;
             TENSOR tmp(exp(m_maps.l2t(*lies[0])));
             for (i = 1; i < lies.size(); ++i) {
-                tmp *= exp(m_maps.l2t(*lies[i]));
+                tmp.fmexp_inplace(m_maps.l2t(*lies[i]));
             }
             return m_maps.t2l(log(tmp));
     }

@@ -259,17 +259,36 @@ free_tensor fmexp(const free_tensor &exp_arg) const
     KEY kunit;
     typename free_tensor::iterator unit_elt;
 
-    if ((unit_elt = x.find(kunit)) == x.end() || unit_elt.value() != VECT::zero) {
+    if ((unit_elt = x.find(kunit)) != x.end() && unit_elt->value() != VECT::zero) {
         x.erase(unit_elt);
     }
 
     for (DEG i = max_degree; i >= 1; --i) {
-        result.mul_scal_div(x, static_cast<RAT>(i));
+        result.mul_scal_div(x, static_cast<RAT>(i), max_degree - i + 1);
         result += *this;
     }
 
     return result;
 }
+
+free_tensor& fmexp_inplace(const free_tensor &exp_arg)
+{
+    free_tensor self(*this), x(exp_arg);
+    KEY kunit;
+    typename free_tensor::iterator unit_elt;
+
+    if ((unit_elt = x.find(kunit)) != x.end() && unit_elt->value() != VECT::zero) {
+        x.erase(unit_elt);
+    }
+
+    for (DEG i = max_degree; i >= 1; --i) {
+        this->mul_scal_div(x, static_cast<RAT>(i), max_degree - i + 1);
+        *this += self;
+    }
+
+    return *this;
+}
+
 
 /// Computes the truncated logarithm of a free_tensor instance.
 inline friend free_tensor log(const free_tensor &arg)

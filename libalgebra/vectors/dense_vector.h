@@ -428,7 +428,6 @@ public:
 
     DEG degree() const
     {
-        assert(m_degree <= BASIS::MAX_DEGREE);
         return m_degree;
     }
 

@@ -369,8 +369,8 @@ struct vector_type_selector<free_tensor_basis<n_letters, max_depth>, Field>
 #endif
     > hybrid_vect;
 
-    typedef typename alg::utils::type_selector<boost::is_pod<typename Field::S>::value, sparse_vect,
-                                               dense_vect>::type type;
+    typedef typename alg::utils::type_selector<boost::is_pod<typename Field::S>::value, sparse_vect, dense_vect>::type
+    type;
 };
 
 } // namespace vectors

@@ -263,7 +263,7 @@ public:
 
     algebra &mul_scal_div(const algebra &rhs, const RATIONAL &s, const DEG depth)
     {
-        return s_multiplication.multiply_inplace(*this, rhs, rational_post_div(s));
+        return s_multiplication.multiply_inplace(*this, rhs, rational_post_div(s), depth);
     }
 
     /// Returns an instance of the commutator of two algebra instances.
@@ -287,16 +287,7 @@ public:
         return result;
     }
 
-    /// Returns the degree of the instance by using basis:degree()
-    inline DEG degree(void) const
-    {
-        DEG result(0);
-        const_iterator i;
-        for (i = VECT::begin(); i != VECT::end(); ++i) {
-            result = std::max(result, VECT::basis.degree(i->key()));
-        }
-        return result;
-    }
+
 };
 
 template <typename B, typename C, typename M, typename V> M algebra<B, C, M, V>::s_multiplication;

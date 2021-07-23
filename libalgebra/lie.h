@@ -273,12 +273,8 @@ explicit lie(const KEY &k) : ALG(k) {}
 /// Constructs a unidimensional instance from a key and a scalar.
 explicit lie(const KEY &k, const SCA &s) : ALG(k, s) {}
 
-#if __cplusplus >= 201103UL
 
-    template <typename... Args>
-    lie(Args... args) : ALG(std::forward<Args>(args)...) {}
-
-#endif
+lie(SCA const* begin, SCA const* end) : ALG(begin, end) {}
 
 public:
 

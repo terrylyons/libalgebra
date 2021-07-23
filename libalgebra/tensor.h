@@ -189,12 +189,7 @@ keyofletter(letter), s
 }
 
 
-#if __cplusplus >= 201103UL
-
-template <typename... Args>
-free_tensor(Args... args) : ALG(std::forward<Args>(args)...) {}
-
-#endif
+free_tensor(SCA const* begin, SCA const* end) : ALG(begin, end) {}
 
 
 /// Explicit unidimensional constructor from a given key (basis element).

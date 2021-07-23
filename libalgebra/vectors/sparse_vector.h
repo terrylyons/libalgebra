@@ -807,7 +807,7 @@ public:
         for (const_iterator it(begin()); it != end(); ++it) {
             ans = std::max(basis.degree(it->key()), ans);
         }
-        assert(ans <= BASIS::MAX_DEGREE);
+        assert(ans <= degree_tag::max_degree);
         return ans;
     }
 

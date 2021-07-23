@@ -166,7 +166,6 @@ public:
 
     typedef Multiplication multiplication_t;
 
-    static const DEG MAX_DEGREE = BASIS::MAX_DEGREE;
 
 private:
     static multiplication_t s_multiplication;

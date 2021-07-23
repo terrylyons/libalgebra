@@ -234,7 +234,7 @@ public:
 
         void advance() { ++m_iterator; }
 
-    private:
+    public:
         DIMN index() const
         {
             return DIMN(std::distance(m_vector->m_data.begin(), m_iterator));
@@ -283,7 +283,7 @@ public:
 
         void advance() { ++m_iterator; }
 
-    private:
+    public:
         DIMN index() const
         {
             return DIMN(std::distance(m_vector->m_data.begin(), m_iterator));

@@ -366,6 +366,15 @@ public:
             }
         }
 
+        DIMN index() const
+        {
+            if (is_dense()) {
+                return m_dense_iterator->index();
+            } else {
+                return m_dense_iterator->index();
+            }
+        }
+
     private:
         typename DENSE::iterator m_dense_iterator;
         typename DENSE::iterator m_dense_end;
@@ -450,6 +459,15 @@ public:
                 return m_dense_iterator->value();
             } else {
                 return m_sparse_iterator->value();
+            }
+        }
+
+        DIMN index() const
+        {
+            if (is_dense()) {
+                return m_dense_iterator->index();
+            } else {
+                return m_dense_iterator->index();
             }
         }
 

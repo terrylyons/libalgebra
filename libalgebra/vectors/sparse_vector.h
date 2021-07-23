@@ -118,6 +118,8 @@ public:
 
         value_type value() { return m_iterator->second; }
 
+        DIMN index() const { return sparse_vector::basis.key_to_index(m_iterator->first); }
+
         bool operator==(const iterator_item &other) const
         {
             return compare_iterators(other);
@@ -167,6 +169,8 @@ public:
         key_type key() { return m_iterator->first; }
 
         value_type value() { return m_iterator->second; }
+
+        DIMN index() const { return sparse_vector::basis.key_to_index(m_iterator->first); }
 
         bool operator==(const const_iterator_item &other) const
         {

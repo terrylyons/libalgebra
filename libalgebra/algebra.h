@@ -187,6 +187,13 @@ public:
     /// Unidimensional constructor.
     explicit algebra(const KEY &k, const SCALAR &s = VECT::one) : VECT(k, s) {}
 
+#if __cplusplus >= 201103UL
+
+    template <typename... Args>
+    algebra(Args... args) : VECT(std::forward<Args>(args)...) {}
+
+#endif
+
 public:
     /// Multiplies the instance with scalar s.
     inline algebra &operator*=(const SCALAR &s)

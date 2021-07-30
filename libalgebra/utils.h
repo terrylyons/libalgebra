@@ -35,6 +35,17 @@ template <typename Coeff, DEG n_letters, DEG max_degree, typename Tensor, typena
     typedef Lie LIE;
     typedef Tensor TENSOR;
 
+    typedef vectors::sparse_vector<
+            TBASIS, Coeff, std::unordered_map<TKEY, SCA, typename TKEY::hash>
+    > sparse_tensor_vect;
+
+    typedef algebra<
+            TBASIS,
+            Coeff,
+            free_tensor_multiplication<Coeff>,
+            sparse_tensor_vect
+    > sparse_tensor_t;
+
 public:
     /// Default constructor.
     maps(void) {}
@@ -153,17 +164,17 @@ public:
     static table to speed up further calculus. The function returns a
     constant reference to an element of this table.
     */
-    inline const TENSOR &expand(const LKEY &k)
+    inline sparse_tensor_t const& expand(const LKEY &k)
     {
         static boost::recursive_mutex table_access;
         // get exclusive recursive access for the thread
         boost::lock_guard<boost::recursive_mutex> lock(table_access);
 
         //static boost::container::flat_map<LKEY, TENSOR> table;
-        static std::unordered_map<LKEY, TENSOR> table;
+        static std::unordered_map<LKEY, sparse_tensor_t> table;
         //static std::map<LKEY, TENSOR> table;
         //typename std::unordered_map<LKEY, TENSOR>::iterator it;
-        TENSOR& value = table[k];
+        sparse_tensor_t& value = table[k];
 
         if (!value.empty()) {
             return value;
@@ -184,10 +195,10 @@ public:
 
 private:
     /// Computes recursively the free_tensor corresponding to the Lie key k.
-    TENSOR _expand(const LKEY &k)
+    sparse_tensor_t _expand(const LKEY &k)
     {
         if (LIE::basis.letter(k)) {
-            return (TENSOR) TENSOR::basis.keyofletter(LIE::basis.getletter(k));
+            return (sparse_tensor_t) TENSOR::basis.keyofletter(LIE::basis.getletter(k));
         }
         return commutator(expand(LIE::basis.lparent(k)), expand(LIE::basis.rparent(k)));
     }

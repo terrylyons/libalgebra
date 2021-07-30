@@ -37,8 +37,11 @@ template <typename Basis> struct requires_order
       resize_to_dimension(rhs.m_dimension);                                    \
     }                                                                          \
                                                                                \
+    SCALAR* lh_ptr = &m_data[0];                                               \
+    SCALAR const* rh_ptr = &rhs.m_data[0];                                     \
+                                                                               \
     for (DIMN i = 0; i < rhs.m_dimension; ++i) {                               \
-      m_data[i] OP1(rhs.m_data[i] OP2 s);                                      \
+        lh_ptr[i] OP1(rh_ptr[i] OP2 s);                                        \
     }                                                                          \
     return *this;                                                              \
   }
@@ -574,12 +577,12 @@ public:
     /// Inplace addition
     dense_vector &operator+=(const dense_vector &rhs)
     {
-        if (empty()) {
+        if (m_dimension == 0) {
             *this = rhs;
             return *this;
         }
 
-        if (rhs.empty()) {
+        if (rhs.m_dimension == 0) {
             return *this;
         }
 
@@ -590,8 +593,11 @@ public:
         assert(m_dimension == m_data.size());
         assert(m_data.size() >= rhs.m_data.size());
 
+        SCALAR* lh_ptr = &m_data[0];
+        SCALAR const* rh_ptr = &rhs.m_data[0];
+
         for (DIMN i = 0; i < rhs.m_dimension; ++i) {
-            m_data[i] += rhs.m_data[i];
+            lh_ptr[i] += rh_ptr[i];
         }
 
         return *this;
@@ -886,10 +892,10 @@ public:
     triangular_unbuffered_apply_binary_transform(const dense_vector &rhs, KeyTransform key_transform,
                                                  IndexTransform index_transform, const DEG max_depth)
     {
-        if (empty() || rhs.empty()) {
-            clear();
-            return;
-        }
+        //if (empty() || rhs.empty()) {
+        //    clear();
+        //    return;
+        //}
         /*
          * Ok, there are some details to work through here.
          *
@@ -916,7 +922,9 @@ public:
         const DEG old_lhs_deg = degree();
         const DEG max_degree = std::min(max_depth, m_degree + rhs.m_degree);
 
-        resize_to_degree(max_degree);
+        if (max_degree > m_degree) {
+            resize_to_degree(max_degree);
+        }
         assert(m_data.size() == start_of_degree(max_degree + 1));
 
         if (max_degree == alg::DEG(0)) {
@@ -931,6 +939,7 @@ public:
         for (IDEG out_deg = max_degree; out_deg >= 0; --out_deg) {
             lhs_deg_min = std::max(IDEG(0), out_deg - static_cast<IDEG>(rhs.degree()));
             assign = true;
+            lhs_deg_max = std::min(out_deg, static_cast<IDEG>(old_lhs_deg));
 
             if (degree_difference_1_0 == 0) {
                 // Basis does not admit a degree 0.
@@ -939,10 +948,12 @@ public:
                 if (rhs.m_data[0] == one && out_deg <= IDEG(old_lhs_deg)) {
                     assign = false;
                     offset = 1;
+                } else if (rhs.m_data[0] == zero && old_lhs_deg < out_deg) {
+                    assign = true;
+                    offset = 1 ;
                 }
             }
 
-            lhs_deg_max = std::min(out_deg, static_cast<IDEG>(old_lhs_deg));
 
             for (IDEG lhs_deg = lhs_deg_max - offset; lhs_deg >= lhs_deg_min; --lhs_deg) {
                 rhs_deg = out_deg - lhs_deg;

@@ -934,25 +934,28 @@ public:
         }
 
         IDEG lhs_deg_min, lhs_deg_max, rhs_deg, offset = 0;
-        bool assign = true;
+        bool assign, default_assign = true;
 
-        for (IDEG out_deg = max_degree; out_deg >= 0; --out_deg) {
-            lhs_deg_min = std::max(IDEG(0), out_deg - static_cast<IDEG>(rhs.degree()));
-            assign = true;
-            lhs_deg_max = std::min(out_deg, static_cast<IDEG>(old_lhs_deg));
-
-            if (degree_difference_1_0 == 0) {
-                // Basis does not admit a degree 0.
+        if (degree_difference_1_0 == 0) {
+            // Basis does not admit a degree 0.
+            offset = 1;
+        } else if (degree_difference_1_0 == 1) {
+            if (rhs.m_data[0] == one) {
+                default_assign = false;
                 offset = 1;
-            } else if (degree_difference_1_0 == 1) {
-                if (rhs.m_data[0] == one && out_deg <= IDEG(old_lhs_deg)) {
-                    assign = false;
-                    offset = 1;
-                }
+            } else if (rhs.m_data[0] == zero) {
+                offset = 1;
             }
+        }
 
+        const IDEG max_rhs_deg = static_cast<IDEG>(rhs.degree());
 
-            for (IDEG lhs_deg = lhs_deg_max - offset; lhs_deg >= lhs_deg_min; --lhs_deg) {
+        for (IDEG out_deg = max_degree; out_deg >= 1; --out_deg) {
+            lhs_deg_min = std::max(IDEG(0), out_deg - max_rhs_deg);
+            assign = default_assign;
+            lhs_deg_max = std::min(out_deg - offset, static_cast<IDEG>(old_lhs_deg));
+
+            for (IDEG lhs_deg = lhs_deg_max; lhs_deg >= lhs_deg_min; --lhs_deg) {
                 rhs_deg = out_deg - lhs_deg;
                 DIMN lh_deg_start = start_of_degree(static_cast<DEG>(lhs_deg));
                 DIMN rh_deg_start = start_of_degree(static_cast<DEG>(rhs_deg));
@@ -968,6 +971,10 @@ public:
 
                 assign = false;
             }
+        }
+
+        if (degree_difference_1_0 == 1) {
+            m_data[0] *= rhs.m_data[0];
         }
     }
 

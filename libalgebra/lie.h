@@ -72,9 +72,13 @@ template <typename Coeff> class lie_multiplication
         return rv;
     }
 
-    template <typename Lie> static const Lie &prod(typename Lie::KEY const &k1, typename Lie::KEY const &k2)
+    template <typename Lie>
+    static
+    const algebra<typename Lie::BASIS, Coeff, lie_multiplication, vectors::sparse_vector<typename Lie::BASIS, Coeff>> &
+    prod(typename Lie::KEY const &k1, typename Lie::KEY const &k2)
     {
-        typedef Lie lie_t;
+        typedef algebra<typename Lie::BASIS, Coeff, lie_multiplication, vectors::sparse_vector<typename Lie::BASIS, Coeff>> lie_t;
+
         typedef typename Lie::BASIS basis_t;
         typedef typename basis_t::PARENT parent_t;
         typedef typename basis_t::KEY lie_key_t;
@@ -89,7 +93,7 @@ template <typename Coeff> class lie_multiplication
         lie_t::basis.growup(target_degree);
 
         static boost::recursive_mutex table_access;
-        static std::map<parent_t, lie_t> table(prime_prod_cache_table<Lie>());
+        static std::map<parent_t, lie_t> table(prime_prod_cache_table<lie_t>());
         // get exclusive recursive access for the thread
         boost::lock_guard<boost::recursive_mutex> lock(table_access);
         // [A,A] = 0.
@@ -101,7 +105,7 @@ template <typename Coeff> class lie_multiplication
         parent_t p(k1, k2);
         it = table.find(p);
         if (it == table.end()) {
-            lie_t *ptr = &(table[p] = ((p.first < p.second) ? _prod<Lie>(k1, k2) : -_prod<Lie>(k2, k1)));
+            lie_t *ptr = &(table[p] = ((p.first < p.second) ? _prod<lie_t>(k1, k2) : -_prod<lie_t>(k2, k1)));
             return *ptr;
         } else {
             return it->second;

@@ -892,10 +892,10 @@ public:
     triangular_unbuffered_apply_binary_transform(const dense_vector &rhs, KeyTransform key_transform,
                                                  IndexTransform index_transform, const DEG max_depth)
     {
-        //if (empty() || rhs.empty()) {
-        //    clear();
-        //    return;
-        //}
+        if (m_dimension == 0 || rhs.m_dimension == 0) {
+            clear();
+            return;
+        }
         /*
          * Ok, there are some details to work through here.
          *
@@ -948,9 +948,6 @@ public:
                 if (rhs.m_data[0] == one && out_deg <= IDEG(old_lhs_deg)) {
                     assign = false;
                     offset = 1;
-                } else if (rhs.m_data[0] == zero && old_lhs_deg < out_deg) {
-                    assign = true;
-                    offset = 1 ;
                 }
             }
 

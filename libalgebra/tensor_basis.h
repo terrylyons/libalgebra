@@ -359,9 +359,9 @@ struct vector_type_selector<free_tensor_basis<n_letters, max_depth>, Field>
 #endif
     > sparse_vect;
 
-    typedef vectors::dense_vector<BASIS, Field, std::vector<typename Field::S>> dense_vect;
+    typedef vectors::dense_vector<BASIS, Field> dense_vect;
 
-    typedef vectors::hybrid_vector<BASIS, Field, vectors::policy::basic_resize_policy, std::vector<typename Field::S>,
+    typedef vectors::hybrid_vector<BASIS, Field, vectors::policy::basic_resize_policy,
                                    #ifndef ORDEREDMAP
                                    MY_UNORDERED_MAP<KEY, typename Field::S, typename KEY::hash>
 #else

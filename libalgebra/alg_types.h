@@ -46,7 +46,7 @@ template <> struct vector_selector<Dense>
     template <typename Basis, typename Coeffs> struct selector
     {
         typedef std::vector<typename Coeffs::S> storage_type;
-        typedef alg::vectors::dense_vector<Basis, Coeffs, storage_type> type;
+        typedef alg::vectors::dense_vector<Basis, Coeffs> type;
     };
 };
 
@@ -57,7 +57,7 @@ template <> struct vector_selector<Hybrid>
         typedef std::vector<typename Coeffs::S> storage_type;
         typedef LIBALGEBRA_DEFAULT_MAP_TYPE map_type;
         typedef alg::vectors::policy::basic_resize_policy policy_type;
-        typedef alg::vectors::hybrid_vector<Basis, Coeffs, policy_type, storage_type, map_type> type;
+        typedef alg::vectors::hybrid_vector<Basis, Coeffs, policy_type, map_type> type;
     };
 };
 

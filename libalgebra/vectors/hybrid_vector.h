@@ -113,11 +113,10 @@ public:
 
 } // namespace policy
 
-template <typename Basis, typename Coeffs, typename ResizePolicy = policy::basic_resize_policy,
-          typename DenseStorage = std::vector<typename Coeffs::S>, typename SparseMap = LIBALGEBRA_DEFAULT_MAP_TYPE >
-class hybrid_vector : public dense_vector<Basis, Coeffs, DenseStorage>, public sparse_vector<Basis, Coeffs, SparseMap>
+template <typename Basis, typename Coeffs, typename ResizePolicy = policy::basic_resize_policy, typename SparseMap = LIBALGEBRA_DEFAULT_MAP_TYPE >
+class hybrid_vector : public dense_vector<Basis, Coeffs>, public sparse_vector<Basis, Coeffs, SparseMap>
 {
-    typedef dense_vector <Basis, Coeffs, DenseStorage> DENSE;
+    typedef dense_vector <Basis, Coeffs> DENSE;
     typedef sparse_vector <Basis, Coeffs, SparseMap> SPARSE;
     typedef ResizePolicy POLICY;
 

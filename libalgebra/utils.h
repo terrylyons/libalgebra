@@ -46,6 +46,13 @@ template <typename Coeff, DEG n_letters, DEG max_degree, typename Tensor, typena
             sparse_tensor_vect
     > sparse_tensor_t;
 
+    using dense_lie1_t = algebra<
+            lie_basis<n_letters, 1>,
+            Coeff,
+            lie_multiplication<Coeff>,
+            vectors::dense_vector<lie_basis<n_letters, 1>, Coeff>
+    >;
+
 public:
     /// Default constructor.
     maps(void) {}
@@ -102,6 +109,19 @@ public:
         }
         return result;
     }
+
+    Tensor l2t(dense_lie1_t& arg)
+    {
+        SCA const* start = &arg.begin()->value();
+        return Tensor(1, start, start+n_letters);
+    }
+
+    Tensor l2t(dense_lie1_t const& arg)
+    {
+        SCA const* start = &arg.begin()->value();
+        return Tensor(1, start, start+n_letters);
+    }
+
     /// Returns the free lie element corresponding to a tensor_element.
     /**
     This is the Dynkin map obtained by right bracketing. Of course, the

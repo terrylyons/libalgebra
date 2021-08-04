@@ -166,6 +166,15 @@ public:
     hybrid_vector(SCALAR const* begin, SCALAR const* end) : DENSE(begin, end), SPARSE()
     {}
 
+    hybrid_vector(DIMN offset, SCALAR const* begin, SCALAR const* end) : DENSE(offset, begin, end), SPARSE()
+    {}
+
+    hybrid_vector(DIMN offset, SCALAR* begin, SCALAR * end) : DENSE(offset, begin, end), SPARSE()
+    {}
+
+
+
+
 private:
     hybrid_vector(DENSE dense_vec, SPARSE sparse_vec) : DENSE(dense_vec), SPARSE(sparse_vec), m_resize_policy() {}
 

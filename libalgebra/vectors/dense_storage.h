@@ -76,6 +76,12 @@ public:
     dense_storage(const_pointer ptr, size_type size) : m_data{const_cast<pointer>(ptr)}, m_size{size},
                                                        m_type{borrowed} {}
 
+    dense_storage(const_pointer begin, const_pointer end)
+        : m_data{const_cast<pointer>(begin)}, m_size{static_cast<size_type>(end-begin)}, m_type{borrowed_mut}
+    {}
+
+
+
 
     ~dense_storage()
     {

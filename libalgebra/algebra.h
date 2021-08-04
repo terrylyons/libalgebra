@@ -189,6 +189,12 @@ public:
 
     algebra(SCALAR const* begin, SCALAR const* end) : VECT(begin, end) {}
 
+    algebra(DIMN offset, SCALAR const* begin, SCALAR const* end) : VECT(offset, begin, end)
+    {}
+
+    algebra(DIMN offset, SCALAR* begin, SCALAR* end) : VECT(offset, begin, end)
+    {}
+
 public:
     /// Multiplies the instance with scalar s.
     inline algebra &operator*=(const SCALAR &s)

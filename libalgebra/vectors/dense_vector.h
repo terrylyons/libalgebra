@@ -96,22 +96,18 @@ public:
     }
 
     dense_vector(DIMN offset, SCALAR const* begin, SCALAR const* end)
-        : m_data(),
+        : m_data(offset, begin, end),
           m_dimension(0),
           m_degree(0)
     {
-        m_data.resize(offset);
-        m_data.copy_extend(begin, end);
         set_degree(degree_tag);
     }
 
     dense_vector(DIMN offset, SCALAR* begin, SCALAR* end)
-        : m_data(),
+        : m_data(offset, begin, end),
           m_dimension(0),
           m_degree(0)
     {
-        m_data.resize(offset);
-        m_data.move_extend(begin, end);
         set_degree(degree_tag);
     }
 
@@ -591,15 +587,18 @@ public:
             return *this;
         }
 
+        DIMN mid_dim = std::min(rhs.dimension(), dimension());
+
         if (rhs.dimension() > dimension()) {
-            resize_to_dimension(rhs.dimension());
+            //resize_to_dimension(rhs.dimension());
+            m_data.copy_extend(rhs.m_data.begin() + mid_dim, rhs.m_data.end());
         }
 
 
-        SCALAR* lh_ptr = &m_data[0];
-        SCALAR const* rh_ptr = &rhs.m_data[0];
+        SCALAR* lh_ptr = m_data.begin();
+        SCALAR const* rh_ptr = rhs.m_data.cbegin();
 
-        for (DIMN i = 0; i < rhs.dimension(); ++i) {
+        for (DIMN i = 0; i < mid_dim; ++i) {
             lh_ptr[i] += rh_ptr[i];
         }
 

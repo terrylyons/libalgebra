@@ -110,16 +110,16 @@ public:
         return result;
     }
 
-    Tensor l2t(dense_lie1_t& arg)
+    Tensor l2t(dense_lie1_t&& arg)
     {
-        SCA const* start = &arg.begin()->value();
-        return Tensor(1, start, start+n_letters);
+        SCA* start = &arg.begin()->value();
+        return Tensor(DIMN(1), start, start+n_letters);
     }
 
     Tensor l2t(dense_lie1_t const& arg)
     {
         SCA const* start = &arg.begin()->value();
-        return Tensor(1, start, start+n_letters);
+        return Tensor(DIMN(1), &*start, start+n_letters);
     }
 
     /// Returns the free lie element corresponding to a tensor_element.
@@ -152,9 +152,9 @@ public:
     template <typename TensorKey>
     inline const LIE &rbraketing(const TensorKey &k)
     {
-        static boost::recursive_mutex table_access;
+        //static boost::recursive_mutex table_access;
         // get exclusive recursive access for the thread
-        boost::lock_guard<boost::recursive_mutex> lock(table_access);
+        //boost::lock_guard<boost::recursive_mutex> lock(table_access);
 
         //static boost::container::flat_map<TensorKey, LIE> lies;
         //typename boost::container::flat_map<TensorKey, LIE>::iterator it;
@@ -190,10 +190,11 @@ public:
         // get exclusive recursive access for the thread
         boost::lock_guard<boost::recursive_mutex> lock(table_access);
 
-        //static boost::container::flat_map<LKEY, TENSOR> table;
+        //static boost::container::flat_map<LKEY, sparse_tensor_t> table;
         static std::unordered_map<LKEY, sparse_tensor_t> table;
         //static std::map<LKEY, TENSOR> table;
         //typename std::unordered_map<LKEY, TENSOR>::iterator it;
+
         sparse_tensor_t& value = table[k];
 
         if (!value.empty()) {

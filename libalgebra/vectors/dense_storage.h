@@ -80,8 +80,27 @@ public:
         : m_data{const_cast<pointer>(begin)}, m_size{static_cast<size_type>(end-begin)}, m_type{borrowed_mut}
     {}
 
+    dense_storage(size_type offset, const_pointer start, const_pointer end)
+        : m_data{}, m_size{0}, m_type{owned}
+    {
+        size_type size = offset + static_cast<size_type>(end - start);
+        alloc_new(size);
+        fill_range_default_construct(m_data, m_data+offset);
+        std::uninitialized_copy(start, end, m_data+offset);
+    }
 
-
+    dense_storage(size_type offset, pointer start, pointer end)
+        : m_data{}, m_size{0}, m_type{owned}
+    {
+        size_type size = offset + static_cast<size_type>(end - start);
+        alloc_new(size);
+        fill_range_default_construct(m_data, m_data+offset);
+        std::uninitialized_copy(
+                std::make_move_iterator(start),
+                std::make_move_iterator(end),
+                m_data+offset
+                );
+    }
 
     ~dense_storage()
     {
@@ -100,6 +119,16 @@ public:
             alloc_new_and_copy(other.m_data, other.m_size, other.m_size);
         }
         return *this;
+    }
+
+    dense_storage& operator=(dense_storage&& other) noexcept
+    {
+        if (m_type == owned) {
+            destroy(m_data, m_size);
+        }
+        m_data = other.m_data;
+        m_size = other.m_size;
+        m_type = other.m_type;
     }
 
 
@@ -122,7 +151,7 @@ private:
         }
     }
 
-    void realloc_with_copy(pointer old_data, size_type old_size, size_type new_size)
+    void realloc_with_copy(const_pointer old_data, size_type old_size, size_type new_size)
     {
         alloc_new(new_size);
         if (old_data) {

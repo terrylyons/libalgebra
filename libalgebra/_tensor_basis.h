@@ -386,6 +386,30 @@ public:
         return (modf(dMantissa * dShiftPlus1, &ans) + (word_t) 1.) * dPowerOfTwo;
     }
 
+    /// Split the first n letters and return length n subword. Current word is
+    /// updated to the size() - n subword.
+    inline _tensor_basis split_n(unsigned n)
+    {
+        if (size() <= n) {
+            _tensor_basis rv(*this);
+            _word = word_t(1.0);
+            return rv;
+        }
+        word_t dShiftPlus1 = ldexp(word_t(1.), int(n*uBitsInLetter + 1));
+
+        //const word_t dShiftPlus1(uMaxSizeAlphabet*(2 << n));
+        // static const word_t dShift(uMaxSizeAlphabet);
+        // static const word_t dMinusShift = 1 / dShift;
+
+        int iExponent;
+        word_t dMantissa = frexp(_word, &iExponent);
+        word_t ans;
+        word_t dPowerOfTwo = ldexp((word_t) 1., int(iExponent - n*uBitsInLetter));
+        _word = (modf(dMantissa * dShiftPlus1, &ans) + (word_t) 1.) * dPowerOfTwo;
+        return ans;
+    }
+
+
     /// Lexicographically reverses a tensor_basis element
     inline _tensor_basis reverse() const
     {

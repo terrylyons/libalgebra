@@ -152,10 +152,10 @@ public:
     inline LET size(void) const { return LET(_size); }
 
     /// Returns the value of the smallest key in the basis.
-    inline KEY begin(void) const { return empty_key; }
+    inline static KEY begin(void) { return KEY(); }
 
     /// Returns the key next the biggest key of the basis.
-    inline KEY end(void) const
+    inline static KEY end(void)
     {
         // TJL 21/08/2012
         // KEY result; // empty key.
@@ -164,7 +164,7 @@ public:
     }
 
     /// Returns the key next a given key in the basis.
-    inline KEY nextkey(const KEY &k) const
+    inline static KEY nextkey(const KEY &k)
     {
         // tjl  25/08/2012
         size_t i = k.size();
@@ -200,56 +200,89 @@ public:
         return oss.str();
     }
 
+private:
+
+    static DIMN key_to_index_impl(KEY const& key) {
+
+    }
+
 public:
     static DIMN key_to_index(const KEY &key)
     {
         assert(key.valid());
+        DEG size = key.size();
 
-        DIMN idx = 0;
-        if (key.size() == 0) {
-            return idx;
+        if (size == 0) {
+            return 0;
+        } else if (size == 1) {
+            return static_cast<DIMN>(key.FirstLetter());
         }
 
-        KEY tmp(key);
-        while (tmp.size() > 0) {
-            idx *= n_letters;
-            idx += static_cast<DIMN>(tmp.FirstLetter());
-            tmp = tmp.rparent();
-        }
-        return idx;
+        static std::map<KEY, DIMN> table = []() {
+            std::map<KEY, DIMN> t;
+            KEY k(LET(1));
+            k.push_back(LET(1));
+
+            DIMN idx = n_letters;
+            while (k.size() == 2) {
+                t[k] = ++idx;
+                k = nextkey(k);
+            }
+            return t;
+        }();
+
+
+        DEG s2 = size / 2;
+        KEY right(key), left=right.split_n(s2);
+        return key_to_index(left) * (1 << (size - s2)) + key_to_index(right);
+
+
     }
 
     static KEY index_to_key(const DIMN idx)
     {
-        static boost::recursive_mutex __access;
-        boost::lock_guard<boost::recursive_mutex> lock(__access);
+        if (idx == 0) {
+            return KEY();
+        } else if (1 <= idx && idx <= n_letters) {
+            return KEY(LET(idx));
+        }
+
+
+        static boost::recursive_mutex access;
+        boost::lock_guard<boost::recursive_mutex> lock(access);
         // static const std::vector<KEY> __cache = _key_of_index_cache();
         // assert(idx < __cache.size());
         // return __cache[idx];
 
-        static std::map<DIMN, KEY> __cache;
+        //static std::map<DIMN, KEY> cache;
 
-        typename std::map<DIMN, KEY>::iterator it = __cache.find(idx);
-        if (it != __cache.end()) {
-            return it->second;
-        }
+        //typename std::map<DIMN, KEY>::iterator it = cache.find(idx);
 
-        KEY rv;
-        if (idx == 0) {
+        //if (it != cache.end()) {
+        //    return it->second;
+        //}
+
+        std::map<DIMN, KEY> cache;
+
+        KEY& rv = cache[idx];
+
+        if (rv.size() > 0) {
             return rv;
         }
 
-        DIMN pow = n_letters;
         DIMN i = idx;
 
         DIMN l;
+        KEY val;
         while (i) {
             i -= 1;
             l = i % n_letters;
-            rv.push_back(LET(1 + l));
+            val.push_back(LET(1 + l));
             i /= n_letters;
         }
-        return __cache[idx] = rv.reverse();
+
+        return rv = val.reverse();
+
     }
 
     static DIMN start_of_degree(const DEG deg)

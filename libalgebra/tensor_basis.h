@@ -19,6 +19,7 @@ Version 3. (See accompanying file License.txt)
 #include "constlog2.h"
 #include "constpower.h"
 #include <limits>
+#include <cmath>
 
 namespace dtl {
 
@@ -201,15 +202,15 @@ public:
     }
 
 private:
-
+/*
     static DIMN key_to_index_impl(KEY const& key) {
 
     }
-
+*/
 public:
-    static DIMN key_to_index(const KEY &key)
+/*    static DIMN key_to_index(const KEY &key)
     {
-        assert(key.valid());
+        //assert(key.valid());
         DEG size = key.size();
 
         if (size == 0) {
@@ -234,10 +235,32 @@ public:
 
         DEG s2 = size / 2;
         KEY right(key), left=right.split_n(s2);
-        return key_to_index(left) * (1 << (size - s2)) + key_to_index(right);
+        assert(left.size() == s2);
+        assert(right.size() == (size - s2));
+        return key_to_index(left) * pow(n_letters, (size-s2)) + key_to_index(right);
 
 
     }
+*/
+
+    static DIMN key_to_index(const KEY &key)
+    {
+        assert(key.valid());
+
+        DIMN idx = 0;
+        if (key.size() == 0) {
+            return idx;
+        }
+
+        KEY tmp(key);
+        while (tmp.size() > 0) {
+            idx *= n_letters;
+            idx += static_cast<DIMN>(tmp.FirstLetter());
+            tmp = tmp.rparent();
+        }
+        return idx;
+    }
+
 
     static KEY index_to_key(const DIMN idx)
     {

@@ -170,7 +170,11 @@ public:
     /// Reserve to degree
     void reserve_to_degree(const DEG deg)
     {
-        m_data.reserve(start_of_degree(deg + 1));
+        DIMN target_deg = std::min(degree_tag.max_degree, deg);
+        DIMN target_dim = start_of_degree(target_deg + 1);
+        m_data.reserve(target_dim);
+        m_dimension = target_dim;
+        m_degree = target_deg;
     }
 
     /// Resize to dimension
@@ -464,7 +468,7 @@ public:
         if (m_data.empty()) {
             return true;
         }
-        assert(m_dimension == m_data.size());
+
         for (DIMN i = 0; i < dimension(); ++i) {
             if (m_data[i] != zero) {
                 return false;
@@ -518,7 +522,7 @@ public:
     SCALAR &operator[](const KEY &k)
     {
         DIMN idx = key_to_index(k);
-        assert(m_dimension == m_data.size());
+
         if ((idx < dimension())) {
             return value(idx);
         }
@@ -590,17 +594,22 @@ public:
         DIMN mid_dim = std::min(rhs.dimension(), dimension());
 
         if (rhs.dimension() > dimension()) {
-            //resize_to_dimension(rhs.dimension());
-            m_data.copy_extend(rhs.m_data.begin() + mid_dim, rhs.m_data.end());
+            resize_to_dimension(rhs.dimension());
+            //m_data.copy_extend(rhs.m_data.begin() + mid_dim, rhs.m_data.end());
+            assert(dimension() == rhs.dimension());
         }
 
 
         SCALAR* lh_ptr = m_data.begin();
         SCALAR const* rh_ptr = rhs.m_data.cbegin();
 
-        for (DIMN i = 0; i < mid_dim; ++i) {
+        //for (DIMN i = 0; i < mid_dim; ++i) {
+        //   lh_ptr[i] += rh_ptr[i];
+        //}
+        for (DIMN i=0; i<rhs.dimension(); ++i) {
             lh_ptr[i] += rh_ptr[i];
         }
+
 
         return *this;
     }
@@ -1003,7 +1012,8 @@ public:
         const DEG max_degree = std::min(max_depth, m_degree + rhs.m_degree);
 
         if (max_degree > m_degree) {
-            resize_to_degree(max_degree);
+            //resize_to_degree(max_degree);
+            reserve_to_degree(max_degree);
         }
         assert(m_data.size() >= start_of_degree(max_degree + 1));
 
@@ -1032,7 +1042,7 @@ public:
 
         for (IDEG out_deg = max_degree; out_deg >= 1; --out_deg) {
             lhs_deg_min = std::max(IDEG(0), out_deg - max_rhs_deg);
-            assign = default_assign;
+            assign = (out_deg > old_lhs_deg) || default_assign;
             lhs_deg_max = std::min(out_deg - offset, static_cast<IDEG>(old_lhs_deg));
 
             for (IDEG lhs_deg = lhs_deg_max; lhs_deg >= lhs_deg_min; --lhs_deg) {

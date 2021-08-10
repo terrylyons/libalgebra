@@ -390,7 +390,8 @@ public:
     /// updated to the size() - n subword.
     inline _tensor_basis split_n(unsigned n)
     {
-        if (size() <= n) {
+        DIMN sz = size();
+        if (sz <= n) {
             _tensor_basis rv(*this);
             _word = word_t(1.0);
             return rv;
@@ -404,8 +405,11 @@ public:
         int iExponent;
         word_t dMantissa = frexp(_word, &iExponent);
         word_t ans;
-        word_t dPowerOfTwo = ldexp((word_t) 1., int(iExponent - n*uBitsInLetter));
+        word_t dPowerOfTwo = ldexp((word_t) .5, int(iExponent - n*uBitsInLetter));
         _word = (modf(dMantissa * dShiftPlus1, &ans) + (word_t) 1.) * dPowerOfTwo;
+
+        assert(size() == (sz - n));
+        assert(_tensor_basis(ans).size() == n);
         return ans;
     }
 

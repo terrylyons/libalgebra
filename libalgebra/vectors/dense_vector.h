@@ -116,7 +116,7 @@ private:
     template <DEG D> DIMN resize_for_key(const KEY &key, alg::basis::with_degree<D>)
     {
         DEG d = basis.degree(key);
-        if (m_degree < d) {
+        if (m_degree==0 || m_degree < d) {
             resize_to_degree(d);
         }
         return key_to_index(key);

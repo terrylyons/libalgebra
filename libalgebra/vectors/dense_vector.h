@@ -116,14 +116,18 @@ private:
     template <DEG D> DIMN resize_for_key(const KEY &key, alg::basis::with_degree<D>)
     {
         DEG d = basis.degree(key);
-        resize_to_degree(d);
+        if (m_degree < d) {
+            resize_to_degree(d);
+        }
         return key_to_index(key);
     }
 
     DIMN resize_for_key(const KEY &key, alg::basis::without_degree)
     {
         DIMN idx = key_to_index(key);
-        resize_to_dimension(idx + 1);
+        if (m_data.size() < idx) {
+            resize_to_dimension(idx + 1);
+        }
         return idx;
     }
 

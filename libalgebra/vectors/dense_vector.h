@@ -125,7 +125,7 @@ private:
     DIMN resize_for_key(const KEY &key, alg::basis::without_degree)
     {
         DIMN idx = key_to_index(key);
-        if (m_data.size() < idx) {
+        if (m_data.size() == 0 || m_data.size() <= idx) {
             resize_to_dimension(idx + 1);
         }
         return idx;

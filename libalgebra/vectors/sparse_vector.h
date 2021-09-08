@@ -298,6 +298,20 @@ public:
         return (found == cend()) ? zero : found->value();
     }
 
+private:
+
+    void insert_from_pointer(DIMN offset, SCALAR const* begin, SCALAR const* end)
+    {
+        KEY k(basis.begin());
+        while (offset) {
+            --offset;
+            k = basis.nextkey(k);
+        }
+        for (SCALAR const* it(begin); it != end && k != basis.end(); ++it, k = basis.nextkey(k)) {
+            MAP::insert(k, *it);
+        }
+    }
+
 public:
     /// Default constructor.
     /**
@@ -328,11 +342,16 @@ public:
      */
     sparse_vector(SCALAR const* begin, SCALAR const* end) : MAP()
     {
-        KEY k(basis.begin());
-        for (SCALAR const* it(begin); it != end && k != basis.end(); ++it, k = basis.nextkey(k)) {
-            MAP::insert(k, *it);
-        }
+        insert_from_pointer(0, begin, end);
     }
+
+    sparse_vector(DIMN offset, SCALAR const* begin, SCALAR const* end) : MAP()
+    {
+        insert_from_pointer(offset, begin, end);
+    }
+
+
+
 
 public:
     /// Returns an instance of the additive inverse of the instance.

@@ -147,6 +147,14 @@ public:
     vector(SCALAR const* begin, SCALAR const* end) : UnderlyingVectorType(begin, end)
     {}
 
+    vector(DIMN offset, SCALAR const* begin, SCALAR const* end) : UnderlyingVectorType(offset, begin, end)
+    {}
+
+    vector(DIMN offset, SCALAR* begin, SCALAR* end) : UnderlyingVectorType(offset, begin, end)
+    {}
+
+
+
 protected:
     bool ensure_sized_for_degree(const DEG deg)
     {

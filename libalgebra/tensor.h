@@ -198,6 +198,10 @@ explicit free_tensor(const KEY &k) : ALG(k) {}
 /// Explicit unidimensional constructor from a given scalar.
 explicit free_tensor(const SCA &s) : ALG(VECT::basis.empty_key, s) {}
 
+
+free_tensor(DIMN offset, SCA const* begin, SCA const* end) : ALG(offset, begin, end)
+{}
+
 public:
 
 /// Ensures that the return type is a free_tensor.
@@ -319,6 +323,7 @@ inline friend free_tensor log(const free_tensor &arg)
         }
         result *= x;
     }
+
     return result;
 }
 

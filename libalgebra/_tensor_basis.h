@@ -131,6 +131,18 @@ public:
         }
     }
 
+#if __cplusplus >= 201103UL
+
+    _tensor_basis(std::initializer_list<LET> letters) : _word{1.0}
+    {
+        for (auto let : letters) {
+            assert(1<= let && let <= No_Letters);
+            push_back(let);
+        }
+    }
+
+#endif
+
     /// Destructor
     ~_tensor_basis(void) {}
 

@@ -19,6 +19,16 @@ include(GNUInstallDirs)
 set(CMAKE_CXX_STANDARD 98)
 
 find_package(Boost REQUIRED COMPONENTS thread container)
+if(WIN32)
+    # for Windows operating system in general
+    # https://github.com/Microsoft/vcpkg/issues/2979
+    # this picks up the debug verson of mpir - the files have the fix.
+    find_library(Bignum_LIBRARY mpir)
+else()
+    # otherwise
+    find_library(Bignum_LIBRARY gmp)
+endif()
+
 
 add_library(Libalgebra INTERFACE)
 
@@ -30,7 +40,7 @@ target_include_directories(Libalgebra
 
 add_library(Libalgebra::Libalgebra ALIAS Libalgebra)
 
-target_link_libraries(Libalgebra INTERFACE Boost::boost Boost::thread Boost::container)
+target_link_libraries(Libalgebra INTERFACE Boost::boost Boost::thread Boost::container ${Bignum_LIBRARY})
 
 if(NOT_SUBPROJECT)
     install(TARGETS Libalgebra

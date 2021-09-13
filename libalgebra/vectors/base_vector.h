@@ -34,7 +34,7 @@ public:
 template <typename Basis, typename Coeff> Basis base_vector<Basis, Coeff>::basis;
 
 /// Static initialisation of the scalar constant +1.
-template <typename Basis, typename Coeff> const typename Coeff::S base_vector<Basis, Coeff>::one(+1);
+template <typename Basis, typename Coeff> const typename Coeff::S base_vector<Basis, Coeff>::one(1);
 
 /// Static initialisation of the scalar constant 0.
 template <typename Basis, typename Coeff> const typename Coeff::S base_vector<Basis, Coeff>::zero(0);

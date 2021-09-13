@@ -166,6 +166,7 @@ public:
 
     typedef Multiplication multiplication_t;
 
+    static const DEG MAX_DEGREE = BASIS::MAX_DEGREE;
 
 private:
     static multiplication_t s_multiplication;
@@ -186,14 +187,6 @@ public:
 
     /// Unidimensional constructor.
     explicit algebra(const KEY &k, const SCALAR &s = VECT::one) : VECT(k, s) {}
-
-    algebra(SCALAR const* begin, SCALAR const* end) : VECT(begin, end) {}
-
-    algebra(DIMN offset, SCALAR const* begin, SCALAR const* end) : VECT(offset, begin, end)
-    {}
-
-    algebra(DIMN offset, SCALAR* begin, SCALAR* end) : VECT(offset, begin, end)
-    {}
 
 public:
     /// Multiplies the instance with scalar s.
@@ -270,7 +263,7 @@ public:
 
     algebra &mul_scal_div(const algebra &rhs, const RATIONAL &s, const DEG depth)
     {
-        return s_multiplication.multiply_inplace(*this, rhs, rational_post_div(s), depth);
+        return s_multiplication.multiply_inplace(*this, rhs, rational_post_div(s));
     }
 
     /// Returns an instance of the commutator of two algebra instances.
@@ -294,6 +287,26 @@ public:
         return result;
     }
 
+    /// Returns the degree of the instance by using basis:degree()
+    inline DEG degree(void) const
+    {
+        DEG result(0);
+        const_iterator i;
+        for (i = VECT::begin(); i != VECT::end(); ++i) {
+            result = std::max(result, VECT::basis.degree(i->key()));
+        }
+        return result;
+    }
+
+
+private:
+
+    friend class boost::serialization::access;
+
+    template <typename Archive>
+    void serialize(Archive &ar, unsigned int const /* version */) {
+        ar & boost::serialization::base_object<VECT>(*this);
+    }
 
 };
 

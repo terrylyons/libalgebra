@@ -445,6 +445,133 @@ private:
         }
         return oss.str();
     }
+
+
+public:
+
+    struct no_caching_tag {};
+
+    template <DEG CacheDepth>
+    struct lazy_cache_tag {};
+
+    template <DEG CacheDepth>
+    struct lookup_table_tag {};
+
+    template <typename Function, typename BinOp, typename Tag>
+    class extended_function
+    {
+    public:
+        typedef Function function_type;
+        typedef BinOp binary_operation_type;
+        typedef Tag tag_type;
+        typedef decltype(std::declval<function_type>()(std::declval<KEY>())) output_type;
+
+        using table_t = std::unordered_map<KEY, output_type>;
+
+        extended_function(hall_basis& hs) : m_hall_set(hs), m_tag(), m_fn(), m_op()
+        {}
+
+        extended_function(Function fn, BinOp op, hall_basis& hs) : m_hall_set(hs), m_tag(), m_fn(fn), m_op(op)
+        {}
+
+    private:
+
+        output_type eval_impl(const KEY& k) const
+        {
+            if (m_hall_set.letter(k)) {
+                return m_fn(m_hall_set.getletter(k));
+            } else {
+                return m_op(
+                        operator()(m_hall_set.lparent(k)),
+                        operator()(m_hall_set.rparent(k))
+                        );
+            }
+        }
+
+        output_type eval(const KEY& k, no_caching_tag) const
+        {
+            return eval_impl(k);
+        }
+
+        template <DEG CacheDepth>
+        output_type eval(const KEY& k, lazy_cache_tag<CacheDepth>) const
+        {
+            static boost::recursive_mutex table_lock;
+            static table_t table;
+
+            if (m_hall_set.degree(k) <= CacheDepth) {
+                boost::lock_guard<boost::recursive_mutex> access(table_lock);
+
+                typename table_t::iterator it = table.find(k);
+                if (it != table.end()) {
+                    return it->second;
+                }
+
+                return table[k] = eval_impl(k);
+            } else {
+                return eval_impl(k);
+            }
+        }
+
+        output_type eval(const KEY& k, lazy_cache_tag<0>) const
+        {
+            static boost::recursive_mutex table_lock;
+            static table_t table;
+
+            boost::lock_guard<boost::recursive_mutex> access(table_lock);
+
+            typename table_t::iterator it = table.find(k);
+            if (it != table.end()) {
+                return it->second;
+            }
+
+            return table[k] = eval_impl(k);
+        }
+
+        template <DEG Depth>
+        table_t fill_table() const
+        {
+            table_t result;
+
+            KEY k = 1;
+            for (; m_hall_set.degree(k)==1; ++k) {
+                result[k] = m_fn(m_hall_set.getletter(k));
+            }
+
+            for (; m_hall_set.degree(k) <= Depth; ++k) {
+                result[k] = m_op(result[m_hall_set.lparent(k)], result[m_hall_set.rparent(k)]);
+            }
+
+            return result;
+        }
+
+        template <DEG CacheDepth>
+        output_type eval(const KEY& k, lookup_table_tag<CacheDepth>) const
+        {
+            static table_t table = fill_table<CacheDepth>();
+
+            if (m_hall_set.degree(k) <= CacheDepth) {
+                return table[k];
+            } else {
+                return eval_impl(k);
+            }
+        }
+
+
+    public:
+
+        output_type operator()(const KEY& k) const
+        {
+            return eval(k, m_tag);
+        }
+
+    private:
+        hall_basis& m_hall_set;
+        function_type m_fn;
+        binary_operation_type m_op;
+        tag_type m_tag;
+    };
+
 };
 //// if degree is static
 // template<DEG n_letters>

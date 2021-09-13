@@ -1030,16 +1030,8 @@ public:
         IDEG lhs_deg_min, lhs_deg_max, rhs_deg, offset = 0;
         bool assign, default_assign = true;
 
-        if (degree_difference_1_0 == 0) {
-            // Basis does not admit a degree 0.
+        if (degree_difference_1_0 == 1 && rhs.m_data[0] == zero) {
             offset = 1;
-        } else if (degree_difference_1_0 == 1) {
-            if (rhs.m_data[0] == one) {
-                default_assign = false;
-                offset = 1;
-            } else if (rhs.m_data[0] == zero) {
-                offset = 1;
-            }
         }
 
         const IDEG max_rhs_deg = static_cast<IDEG>(rhs.degree());
@@ -1068,7 +1060,9 @@ public:
         }
 
         if (degree_difference_1_0 == 1) {
-            m_data[0] *= rhs.m_data[0];
+            index_transform(
+                    &m_data[0], &m_data[0], &rhs.m_data[0], 1, 1, true
+                    );
         }
     }
 

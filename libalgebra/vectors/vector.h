@@ -5,6 +5,10 @@
 #ifndef LIBALGEBRA_VECTOR_H
 #define LIBALGEBRA_VECTOR_H
 
+
+#include <boost/serialization/serialization.hpp>
+
+
 #include "libalgebra/vectors/sparse_vector.h"
 
 namespace alg {
@@ -460,17 +464,15 @@ public:
         return (os << (const UnderlyingVectorType &) rhs);
     }
 
-#if 0 // Not yet implemented
-    public:
+public:
 
-        // Serialization access and methods
-        friend class boost::serialization::access;
+    // Serialization access and methods
+    friend class boost::serialization::access;
 
-        template<typename Archive>
-        void serialize(Archive &ar, const unsigned int /*version*/) {
-            ar & boost::serialization::base_object<UnderlyingVectorType>(*this);
-        }
-#endif
+    template<typename Archive>
+    void serialize(Archive &ar, const unsigned int /*version*/) {
+        ar & boost::serialization::base_object<UnderlyingVectorType>(*this);
+    }
 
 public:
     // Information methods

@@ -1126,6 +1126,20 @@ public:
 
         it(&result.m_data[0], result.dimension(), &m_data[0], dimension());
     }
+
+private:
+
+    friend class boost::serialization::access;
+
+    template <typename Archive>
+    void serialize(Archive& ar, const unsigned /*version*/)
+    {
+        ar & m_dimension;
+        ar & m_degree;
+        ar & m_data;
+    }
+
+
 };
 
 #undef DECLARE_FUSED_OP

@@ -9,6 +9,9 @@
 #include <cassert>
 #include <iostream>
 
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/array.hpp>
+
 #include "libalgebra/implimentation_types.h"
 
 namespace alg {
@@ -97,6 +100,17 @@ struct dense_storage_base
     {
         return m_type == borrowed_mut;
     }
+
+private:
+
+    friend class boost::serialization::access;
+
+    template <typename Archive>
+    void serialize(Archive &ar, const unsigned /*version*/)
+    {
+        ar & boost::serialization::make_array(m_data, m_size);
+    }
+
 
 };
 
@@ -609,6 +623,15 @@ public:
         return os;
     }
 
+private:
+
+    friend class boost::serialization::access;
+
+    template <typename Archive>
+    void serialize(Archive& ar, const unsigned /* version */)
+    {
+        ar & m_base;
+    }
 
 };
 

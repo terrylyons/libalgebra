@@ -18,64 +18,28 @@ option(LIBALGEBA_TESTING "Enable building test targets" OFF)
 include(GNUInstallDirs)
 
 
-#set(CMAKE_CXX_STANDARD 98)
+set(CMAKE_CXX_STANDARD 98)
 
+## we have a limited binary boost dependency
 find_package(Boost REQUIRED COMPONENTS thread container)
+## we also require the headers only boost-multiprecision so get path and check it is there
+find_path(BOOST_MULTIPRECISION_INCLUDE_DIRS "boost/multiprecision/complex128.hpp")
+# target_include_directories(main PRIVATE ${BOOST_MULTIPRECISION_INCLUDE_DIRS})
+
+
+## we require an arbitrary precision arithmetic package
 if(WIN32)
-    # for Windows operating system in general
-    # https://github.com/Microsoft/vcpkg/issues/2979
-    # this picks up the debug verson of mpir - the files have the fix.
-    find_library(Bignum_LIBRARY mpir)
+find_library(Bignum_LIBRARY mpir)
 else()
-    # otherwise
-    find_library(Bignum_LIBRARY gmp)
+find_library(Bignum_LIBRARY gmp)
 endif()
+find_path(Bignum_INCLUDE_DIR NAMES gmp.h gmpxx.h)
+# include_directories(SYSTEM "${Bignum_INCLUDE_DIR}")
 
+message(STATUS ">>> Bignum library: ${Bignum_LIBRARY}")
+message(STATUS ">>> Bignum INCLUDE_DIRECTORIES: ${Bignum_INCLUDE_DIR}")
 
-add_library(Libalgebra INTERFACE
-        libalgebra/basis/basis.h
-        libalgebra/basis/tags.h
-        libalgebra/coefficients/coefficients.h
-        libalgebra/utils/integer_maths.h
-        libalgebra/utils/iterators.h
-        libalgebra/utils/meta.h
-        libalgebra/utils/order_trait.h
-        libalgebra/vectors/base_vector.h
-        libalgebra/vectors/dense_storage.h
-        libalgebra/vectors/dense_vector.h
-        libalgebra/vectors/hybrid_vector.h
-        libalgebra/vectors/iterators.h
-        libalgebra/vectors/sparse_vector.h
-        libalgebra/vectors/vector.h
-        libalgebra/vectors/vectors.h
-        libalgebra/_tensor_basis.h
-        libalgebra/alg_types.h
-        libalgebra/algebra.h
-        libalgebra/basis_traits.h
-        libalgebra/compat.h
-        libalgebra/constlog2.h
-        libalgebra/constpower.h
-        libalgebra/hall_set.h
-        libalgebra/implementation_types.h
-        libalgebra/libalgebra.h
-        libalgebra/lie.h
-        libalgebra/lie_basis.h
-        libalgebra/monomial_basis.h
-        libalgebra/multi_polynomial.h
-        libalgebra/multiplication_helpers.h
-        libalgebra/poly_basis.h
-        libalgebra/poly_lie.h
-        libalgebra/poly_lie_basis.h
-        libalgebra/polynomials.h
-        libalgebra/tensor.h
-        libalgebra/tensor_basis.h
-        libalgebra/utils.h
-        )
-
-
-
-
-
+add_library(Libalgebra INTERFACE)
 
 target_include_directories(Libalgebra
         INTERFACE
@@ -85,7 +49,7 @@ target_include_directories(Libalgebra
 
 add_library(Libalgebra::Libalgebra ALIAS Libalgebra)
 
-target_link_libraries(Libalgebra INTERFACE Boost::boost Boost::thread Boost::container ${Bignum_LIBRARY})
+target_link_libraries(Libalgebra INTERFACE Boost::boost Boost::thread Boost::container "${Bignum_LIBRARY}")
 
 if(NOT_SUBPROJECT)
     install(TARGETS Libalgebra

@@ -18,7 +18,24 @@ include(GNUInstallDirs)
 
 set(CMAKE_CXX_STANDARD 98)
 
-find_package(Boost REQUIRED COMPONENTS thread)
+## we have a limited binary boost dependency
+find_package(Boost REQUIRED COMPONENTS thread container)
+## we also require the headers only boost-multiprecision so get path and check it is there
+find_path(BOOST_MULTIPRECISION_INCLUDE_DIRS "boost/multiprecision/complex128.hpp")
+# target_include_directories(main PRIVATE ${BOOST_MULTIPRECISION_INCLUDE_DIRS})
+
+
+## we require an arbitrary precision arithmetic package
+if(WIN32)
+find_library(Bignum_LIBRARY mpir)
+else()
+find_library(Bignum_LIBRARY gmp)
+endif()
+find_path(Bignum_INCLUDE_DIR NAMES gmp.h gmpxx.h)
+# include_directories(SYSTEM "${Bignum_INCLUDE_DIR}")
+
+message(STATUS ">>> Bignum library: ${Bignum_LIBRARY}")
+message(STATUS ">>> Bignum INCLUDE_DIRECTORIES: ${Bignum_INCLUDE_DIR}")
 
 add_library(Libalgebra INTERFACE)
 
@@ -30,7 +47,7 @@ target_include_directories(Libalgebra
 
 add_library(Libalgebra::Libalgebra ALIAS Libalgebra)
 
-target_link_libraries(Libalgebra INTERFACE Boost::boost Boost::thread)
+target_link_libraries(Libalgebra INTERFACE Boost::boost Boost::thread Boost::container "${Bignum_LIBRARY}")
 
 if(NOT_SUBPROJECT)
     install(TARGETS Libalgebra

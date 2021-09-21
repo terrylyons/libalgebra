@@ -11,7 +11,6 @@ namespace alg {
 namespace vectors {
 namespace iterators {
 
-
 /*
  * The value type of a vector iterator should have the following format.
  *
@@ -27,7 +26,8 @@ namespace iterators {
  *
  *      vector_iterator_item(); // Default constructor
  *      vector_iterator_item(const vector_iterator_item&); // Copy constructor
- *      vector_iterator_item((const) Vector&, Iterator it); // Vector/iterator initialisation
+ *      vector_iterator_item((const) Vector&, Iterator it); // Vector/iterator
+ * initialisation
  *
  *      // type definitions of output types
  *      typedef Key key_type;
@@ -52,11 +52,9 @@ namespace iterators {
  *
  */
 
-template<typename ValueType>
-class vector_iterator
+template <typename ValueType> class vector_iterator
 {
 public:
-
     typedef ValueType value_type;
     typedef value_type &reference;
     typedef value_type *pointer;
@@ -67,21 +65,16 @@ private:
     value_type m_value;
 
 public:
-
     // Constructors
 
     /// Default constructor
-    vector_iterator() : m_value()
-    {}
+    vector_iterator() : m_value() {}
 
     /// Copy constructor
-    vector_iterator(const vector_iterator &other) : m_value(other.m_value)
-    {}
+    vector_iterator(const vector_iterator &other) : m_value(other.m_value) {}
 
     /// Vector/iterator constructor
-    template<typename Vector, typename Iterator>
-    vector_iterator(Vector &vect, Iterator it) : m_value(vect, it)
-    {}
+    template <typename Vector, typename Iterator> vector_iterator(Vector &vect, Iterator it) : m_value(vect, it) {}
 
     /*
     vector_iterator& operator=(const vector_iterator& other)
@@ -92,7 +85,6 @@ public:
 
      */
 public:
-
     // Iterator advance methods
 
     /// Prefix increment
@@ -111,21 +103,13 @@ public:
     }
 
 public:
-
     // Iterator access
 
-    reference operator*()
-    {
-        return m_value;
-    }
+    reference operator*() { return m_value; }
 
-    pointer operator->()
-    {
-        return &m_value;
-    }
+    pointer operator->() { return &m_value; }
 
 public:
-
     // Comparison operators
 
     bool operator==(const vector_iterator &other) const
@@ -137,14 +121,10 @@ public:
     {
         return !operator==(other);
     }
-
-
 };
-
 
 } // namespace iterators
 } // namespace vectors
 } // namespace alg
 
-
-#endif //LIBALGEBRA_VECTORS_ITERATORS_H
+#endif // LIBALGEBRA_VECTORS_ITERATORS_H

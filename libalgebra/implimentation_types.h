@@ -1,14 +1,12 @@
-
 /* *************************************************************
 
-Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai, 
-Greg Gyurk� and Arend Janssen. 
+Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
+Greg Gyurk� and Arend Janssen.
 
-Distributed under the terms of the GNU General Public License, 
+Distributed under the terms of the GNU General Public License,
 Version 3. (See accompanying file License.txt)
 
 ************************************************************* */
-
 
 #include <stddef.h>
 
@@ -35,5 +33,5 @@ typedef unsigned long long LET64;
 typedef size_t DIMN;
 typedef std::ptrdiff_t IDIMN;
 
-}
+} // namespace alg
 #endif // implimetation_types_h__

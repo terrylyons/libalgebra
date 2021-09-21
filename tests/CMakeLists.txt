@@ -37,7 +37,7 @@ add_subdirectory(integration_tests)
 add_subdirectory(unit_tests)
 
 
-add_executable(all_tests "")
+add_executable(all_tests EXCLUDE_FROM_ALL)
 target_link_libraries(all_tests PRIVATE
         la_unittests::main
         integration_tests

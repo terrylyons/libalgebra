@@ -1,6 +1,6 @@
 
 
-add_library(integration_tests OBJECT
+add_library(integration_tests OBJECT EXCLUDE_FROM_ALL
         alg_framework.h
         brown_path_increments.h
         log2ceil.h
@@ -27,5 +27,7 @@ target_link_libraries(integration_tests PUBLIC
         )
 
 
-add_executable(integration_tests_exe "")
+add_executable(integration_tests_exe EXCLUDE_FROM_ALL)
 target_link_libraries(integration_tests_exe PRIVATE la_unittests::main integration_tests)
+
+add_test(NAME integration_tests COMMAND integration_tests_exe)

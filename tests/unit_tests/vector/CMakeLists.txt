@@ -1,6 +1,6 @@
 
 
-add_library(vector_tests OBJECT
+add_library(vector_tests OBJECT EXCLUDE_FROM_ALL
         test_dense.cpp
         test_dense_storage.cpp
         test_hybrid.cpp
@@ -8,5 +8,7 @@ add_library(vector_tests OBJECT
         )
 target_link_libraries(vector_tests PUBLIC Libalgebra::Libalgebra UnitTest++ la_unittests::utilities)
 
-add_executable(vector_tests_exe "")
+add_executable(vector_tests_exe EXCLUDE_FROM_ALL)
 target_link_libraries(vector_tests_exe PRIVATE la_unittests::main vector_tests)
+
+add_test(NAME vector_tests COMMAND vector_tests_exe)

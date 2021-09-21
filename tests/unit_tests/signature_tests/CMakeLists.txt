@@ -2,7 +2,7 @@
 
 
 
-add_library(signature_tests OBJECT
+add_library(signature_tests OBJECT EXCLUDE_FROM_ALL
         test_brownian_path.cpp
         test_innovative_path.cpp
         )
@@ -11,5 +11,7 @@ target_link_libraries(signature_tests PUBLIC UnitTest++ Libalgebra::Libalgebra l
 
 
 
-add_executable(signature_tests_exe "")
+add_executable(signature_tests_exe EXCLUDE_FROM_ALL)
 target_link_libraries(signature_tests_exe PRIVATE la_unittests::main signature_tests)
+
+add_test(NAME siganture_tests COMMAND signature_tests_exe)

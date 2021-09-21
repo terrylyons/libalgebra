@@ -1,6 +1,6 @@
 
 
-add_library(utilities STATIC
+add_library(utilities STATIC EXCLUDE_FROM_ALL
         reporter.cpp
         memfile.cpp
         reporter.h
@@ -27,7 +27,7 @@ target_link_libraries(utilities PUBLIC
 add_library(la_unittests::utilities ALIAS utilities)
 
 
-add_library(main STATIC run_tests.cpp)
+add_library(main STATIC EXCLUDE_FROM_ALL run_tests.cpp)
 target_link_libraries(main PUBLIC utilities)
 
 add_library(la_unittests::main ALIAS main)

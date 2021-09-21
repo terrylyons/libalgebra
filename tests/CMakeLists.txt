@@ -37,8 +37,9 @@ add_subdirectory(integration_tests)
 add_subdirectory(unit_tests)
 
 
-add_executable(all_tests integration_tests/LibAlgebraUnitTests.cpp)
+add_executable(all_tests "")
 target_link_libraries(all_tests PRIVATE
+        la_unittests::main
         integration_tests
         algebra_tests
         lie_tests

@@ -11,5 +11,5 @@ target_link_libraries(signature_tests PUBLIC UnitTest++ Libalgebra::Libalgebra l
 
 
 
-add_executable(signature_tests_exe run_tests.cpp)
-target_link_libraries(signature_tests_exe PRIVATE signature_tests)
+add_executable(signature_tests_exe "")
+target_link_libraries(signature_tests_exe PRIVATE la_unittests::main signature_tests)

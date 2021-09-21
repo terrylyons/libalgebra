@@ -25,3 +25,7 @@ target_link_libraries(integration_tests PUBLIC
         la_unittests::utilities
         Libalgebra::Libalgebra
         )
+
+
+add_executable(integration_tests_exe "")
+target_link_libraries(integration_tests_exe PRIVATE la_unittests::main integration_tests)

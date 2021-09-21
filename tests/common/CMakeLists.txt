@@ -3,9 +3,6 @@
 add_library(utilities STATIC
         reporter.cpp
         memfile.cpp
-        )
-
-target_sources(utilities PUBLIC
         reporter.h
         compat.h
         rng.h
@@ -14,6 +11,8 @@ target_sources(utilities PUBLIC
         time_and_details.h
         memfile.h
         )
+
+target_include_directories(utilities PUBLIC "${CMAKE_CURRENT_LIST_DIR}")
 
 target_link_libraries(utilities PUBLIC
         Libalgebra::Libalgebra
@@ -26,3 +25,9 @@ target_link_libraries(utilities PUBLIC
         )
 
 add_library(la_unittests::utilities ALIAS utilities)
+
+
+add_library(main STATIC run_tests.cpp)
+target_link_libraries(main PUBLIC utilities)
+
+add_library(la_unittests::main ALIAS main)

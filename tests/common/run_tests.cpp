@@ -3,7 +3,7 @@
 //
 
 #include <UnitTest++/UnitTest++.h>
-#include "../../common/reporter.h"
+#include "reporter.h"
 
 int main()
 {

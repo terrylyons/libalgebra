@@ -18,5 +18,5 @@ target_link_libraries(tensor_tests PUBLIC UnitTest++ Libalgebra::Libalgebra la_u
 
 
 
-add_executable(tensor_tests_exe run_tests.cpp)
-target_link_libraries(tensor_tests_exe PUBLIC tensor_tests)
+add_executable(tensor_tests_exe "")
+target_link_libraries(tensor_tests_exe PUBLIC la_unittests::main tensor_tests)

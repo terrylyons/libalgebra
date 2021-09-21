@@ -7,6 +7,6 @@ add_library(algebra_tests OBJECT
 
 target_link_libraries(algebra_tests PUBLIC UnitTest++ Libalgebra::Libalgebra la_unittests::utilities)
 
-add_executable(algebra_tests_exe run_tests.cpp)
-target_link_libraries(algebra_tests_exe PRIVATE algebra_tests)
+add_executable(algebra_tests_exe "")
+target_link_libraries(algebra_tests_exe PRIVATE la_unittests::main algebra_tests)
 

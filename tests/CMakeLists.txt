@@ -11,7 +11,7 @@ endif()
 
 include(vcpkg OPTIONAL)
 
-find_package(UnitTest++ REQUIRED)
+find_package(UnitTest++ CONFIG REQUIRED)
 
 # include_directories(SYSTEM "${UnitTest++_INCLUDE_DIRS})
 # target_link_libraries(main PRIVATE UnitTest++)

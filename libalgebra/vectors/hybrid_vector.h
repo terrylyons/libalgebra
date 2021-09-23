@@ -113,6 +113,30 @@ public:
 
 } // namespace policy
 
+
+
+/**
+ * @brief Hybrid between a dense vector and a sparse vector.
+ *
+ * A hybrid vector is a combination of a dense vector for earlier keys in the basis and sparse for later elements.
+ * The logic here is that the elements that appear earlier in the basis total order should be those which are
+ * most used in various operations, while those that appear later are both less used and less likely to have
+ * non-zero coefficients. When Basis has a degree, the dense part is resized according to the boundaries between
+ * degrees, so that each degree level in its entirety is either held densely or sparsely.
+ *
+ * The dense part of the vector is dynamically resized, so that when a vector reaches a point at which a new index
+ * or degree range is used frequently often, the dense part is resized to include this index/degree range. This
+ * process is determined by the ResizePolicy template parameter.
+ *
+ * Operations are generally delegated separately to both parts of the vector, but some operations require
+ * special logic to merge differently distributed data. In particular, the methods used to implement multiplication
+ * for algebra types must.
+ *
+ * @tparam Basis Basis of the vector space
+ * @tparam Coeffs Coefficient field
+ * @tparam ResizePolicy Policy object used to determine when a vector should resize
+ * @tparam SparseMap Type to use as the storage for the sparse vector
+ */
 template <typename Basis, typename Coeffs, typename ResizePolicy = policy::basic_resize_policy, typename SparseMap = LIBALGEBRA_DEFAULT_MAP_TYPE >
 class hybrid_vector : public dense_vector<Basis, Coeffs>, public sparse_vector<Basis, Coeffs, SparseMap>
 {
@@ -171,9 +195,6 @@ public:
 
     hybrid_vector(DIMN offset, SCALAR* begin, SCALAR * end) : DENSE(offset, begin, end), SPARSE()
     {}
-
-
-
 
 private:
     hybrid_vector(DENSE dense_vec, SPARSE sparse_vec) : DENSE(dense_vec), SPARSE(sparse_vec), m_resize_policy() {}

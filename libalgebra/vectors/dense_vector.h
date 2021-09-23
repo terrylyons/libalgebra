@@ -30,7 +30,17 @@ template <typename Basis> struct requires_order
 
 
 
-
+/**
+ * @brief Vector type where data is stored in contiguous memory.
+ *
+ * A dense vector stores coefficients in a contiguous block of memory, where the association with
+ * basis element is formed by taking the key corresponding to the index of the coefficient in the
+ * basis total ordering. Consequently, a dense vector is valid if and only if Basis is totally
+ * ordered.
+ *
+ * @tparam Basis
+ * @tparam Coeffs
+ */
 template <typename Basis, typename Coeffs>
 class dense_vector : protected base_vector<Basis, Coeffs>, dtl::requires_order<Basis>
 {

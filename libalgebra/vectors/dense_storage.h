@@ -17,6 +17,15 @@ namespace vectors {
 
 namespace dtl {
 
+/**
+ * @brief Base storage for dense vectors.
+ *
+ * This is the base storage type for dense vectors. It handles allocation and
+ * deallocating space for a dense_storage object.
+ *
+ * @tparam S Scalar type to be held in the vector.
+ * @tparam Alloc Allocator type to use for allocation.
+ */
 template <typename S, typename Alloc>
 struct dense_storage_base
 {
@@ -112,12 +121,14 @@ struct dense_storage_base
  * `owned`, `borrowed_mut`, `borrowed`. This storage type will implement a "copy on resize" for `borrowed`
  * and `borrowed_mut` types, and "copy on modify" for "borrowed" types.
  *
- * For the time being, this is going to use `new` and `delete` to manage it's memory, which I know is bad.
- * However, I want this to be able to allocate without assigning since we can potentially waste a lot of
- * filling a vector only to then replace all the entries by assignment.
+ * Fundamentally, this is a clone of the C++ standard libary vector type, with an internal state which
+ * describes whether the data is owned or borrowed. However, there are some key differences. Most importantly
+ * the reserve member function allocates new memory and resizes the vector but it does not instantiate the
+ * elements within the new memory (unless they are copied/moved from old data). This is useful for situations
+ * where the elements are to be immediately overwritten.
  *
- *
- * @tparam S
+ * @tparam S Scalar type to store.
+ * @tparam Alloc Allocator to use for allocating and deallocating vectors. Default is std::allocator<S>.
  */
 template <typename S, typename Alloc = std::allocator<S> >
 class dense_storage

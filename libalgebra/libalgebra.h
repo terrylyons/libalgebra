@@ -55,8 +55,10 @@ typedef unsigned __int64 uint64_t;
 #include <boost/thread/shared_mutex.hpp>
 
 #include "compat.h"
-#include "implimentation_types.h"
+#include "implementation_types.h"
 #include <boost/thread/locks.hpp>
+#include "hall_set.h"
+
 
 #if __cplusplus >= 201103L
 

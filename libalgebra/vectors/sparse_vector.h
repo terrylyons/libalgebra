@@ -35,6 +35,8 @@ namespace vectors {
 //  normal functions however iterators may be invalidated by any sort of
 //  insertion in the unordered settings
 /**
+ * @brief Sparse vector where elements are stored as key-value pairs
+ *
 An instance of the sparse_vector class is just a(n unordered) MAP between KEY
 and SCALAR, with vector space operators. It is a vector of basis elements of
 type KEY, stored in a MAP class, associated to coefficients given by SCALAR
@@ -57,7 +59,11 @@ For unordered MAP use it is assumed that the follow:
 References and iterators to the erased elements are invalidated.
 Other iterators and references are not invalidated. Moreover (C++2014)
 the internal order of the elements not erased is preserved. However
-insertion causes a rehash which disrupts all iterators
+insertion causes a rehash which disrupts all iterators.
+
+ @tparam Basis Basis of the vector space
+ @tparam Coeffs Coefficient field
+ @tparam MapType The underlying map type in which the data is stored.
 */
 template <typename Basis, typename Coeffs, typename MapType = LIBALGEBRA_DEFAULT_MAP_TYPE >
 class sparse_vector : /*private*/ MapType, protected base_vector<Basis, Coeffs>

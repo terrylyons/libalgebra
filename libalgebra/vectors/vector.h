@@ -31,8 +31,16 @@ public:
 
 /// Main vector interface
 /**
- * Main vector interface for libalgebra.
+ * @brief Main vector interface for libalgebra.
  *
+ * Provides a consistent interface to the underlying storage type. Moreover, it provides some additional
+ * cross-vector-type interactions. For example, it provides an interface for adding a dense vector to a sparse
+ * vector.
+ *
+ * All vectors in libalgebra instances of this class template. The VectorImpl parameter determines the actual
+ * type of the vector. Most operations are simply passed through to the underlying vector type, but some
+ * have additional layers of misdirection to, for example, select the correct implementation to use. This is
+ * especially the case for the functions that are used by algebra types for implementing multiplication.
  *
  * @tparam Basis The basis class for the vector to use
  * @tparam Field The coefficient field to use

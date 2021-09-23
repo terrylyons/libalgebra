@@ -12,7 +12,7 @@ Version 3. (See accompanying file License.txt)
 // fixes integer types alg::LET (for indexing bases etc.) and alg::DEG (for
 // degrees)
 #include "constlog2.h"
-#include "implimentation_types.h"
+#include "implementation_types.h"
 
 // VS2008 valid StaticAssert
 template <bool> struct StaticAssert;

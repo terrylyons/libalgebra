@@ -9,7 +9,7 @@
 #include <cassert>
 #include <iostream>
 
-#include "libalgebra/implimentation_types.h"
+#include "libalgebra/implementation_types.h"
 
 namespace alg {
 namespace vectors {

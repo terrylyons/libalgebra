@@ -712,6 +712,7 @@ public:
 
         if (dimension() < rhs.dimension()) {
             resize_to_dimension(rhs.dimension());
+            assert(dimension() >= rhs.dimension());
         }
         SCALAR *lh_ptr = &m_data[0];
         SCALAR const *rh_ptr = &rhs.m_data[0];

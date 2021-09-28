@@ -44,8 +44,8 @@ template <typename Coeff> class lie_multiplication
         // We look up for the desired product in our basis.
         parent_t parents(k1, k2);
         typename std::map<parent_t, lie_key_t>::const_iterator it;
-        it = lie_t::basis.reverse_map.find(parents);
-        if (it != basis.reverse_map.end()) {
+        it = lie_t::basis.find(parents);
+        if (it != basis.reverse_map_end()) {
             // [k1,k2] exists in the basis.
             return lie_t(it->second);
         } else
@@ -89,8 +89,6 @@ template <typename Coeff> class lie_multiplication
             return zero;
         } // degree truncation
 
-        // We grow up the basis up to the desired degree.
-        lie_t::basis.growup(target_degree);
 
         static boost::recursive_mutex table_access;
         static std::map<parent_t, lie_t> table(prime_prod_cache_table<lie_t>());

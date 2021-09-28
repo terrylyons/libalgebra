@@ -230,7 +230,8 @@ template <DEG NoLetters, DEG MaxDepth> const LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, 
 
 // It would be worthwhile to write a data driven sparse hall basis
 
-template <DEG N_letters> class hall_basis
+template <DEG N_letters, DEG MaxDepth>
+class hall_basis : private hall_set<N_letters>
 {
 public:
     /// The default key has value 0, which is an invalid value
@@ -245,209 +246,82 @@ public:
     /// The number of letters in alphabet
     enum { n_letters = N_letters };
 
-protected:
-    /// Parents, indexed by keys.
-    std::vector<PARENT> hall_set;
+    using hall_set_type = hall_set<N_letters>;
 
-public:
-    /// Reverse map from parents to keys.
-    struct REVERSE_MAP : private std::map<PARENT, KEY>
+    using hall_set_type::extended_function;
+
+    using hall_set_type::parent_type;
+
+private:
+
+    static DEG letter_degree(LET) noexcept
     {
-        using std::map<PARENT, KEY>::operator[];
-        using std::map<PARENT, KEY>::find;
-        using std::map<PARENT, KEY>::end;
+        return 1;
+    }
+
+    struct depth_predicate
+    {
+        bool operator()(const KEY& key) const noexcept
+        {
+            auto bound = hall_set_type::start_of_degree(MaxDepth+1);
+            return key <= bound;
+        }
     };
 
-protected:
-    REVERSE_MAP reverse_map;
-    /// Degrees, indexed by keys.
-    // static struct DEGREE : private
-    struct DEGREE : private std::vector<DEG>
-    {
-        using std::vector<DEG>::operator[];
-        using std::vector<DEG>::push_back;
-        using std::vector<DEG>::begin;
-        using std::vector<DEG>::resize;
-    } degrees;
-    /// Index to basis pointing at the first and one past the last of a given
-    /// degree
-    std::vector<std::pair<size_t, size_t>> hall_set_degree_ranges;
-    /// Letters, indexed by their keys.
-    // std::string letters;
-    std::vector<LET> letters;
-    /// Maps letters to keys.
-    std::map<LET, KEY> ltk;
-    /// Current degree, always > 0 for any valid class instance.
-    DEG curr_degree;
+    using degree_func_type = typename hall_set_type::template extended_function<
+            decltype(&letter_degree),
+            std::plus<DEG>,
+            lookup_table_tag<depth_predicate>
+            >;
 
 public:
+
+    const degree_func_type degree;
+
     /// Constructs the basis with a given number of letters.
-    hall_basis() : curr_degree(0)
+    hall_basis() : hall_set_type(MaxDepth), degree(*this, &letter_degree, std::plus<DEG>())
     {
-        // We put something at position 0 to make indexing more logical
-
-        degrees.push_back(0);
-        hall_set.push_back(PARENT(0, 0));
-        hall_set_degree_ranges.push_back(std::pair<DIMN, DIMN>(0, hall_set.size()));
-
-        for (LET c = 1; c <= n_letters; ++c) {
-            letters.push_back(c);
-        } //+= (char) c;
-
-        // We add the letters to the basis, starting from position 1.
-
-        for (LET i = 1; i <= letters.size(); ++i) {
-            PARENT parents(0, i);
-            hall_set.push_back(parents); // at [i]
-            reverse_map[parents] = hall_set.size() - 1;
-            degrees.push_back(1); // at [i]
-            ltk[letters[i - 1]] = (LET) i;
-        }
-        std::pair<size_t, size_t> range;
-        range.first = hall_set_degree_ranges[curr_degree].second;
-        range.second = hall_set.size();
-        hall_set_degree_ranges.push_back(range);
-        ++curr_degree;
-        // To construct the rest of the basis now, call growup(max_degree) here.
-    }
-    /// Constructs the basis up to a desired degree.
-    /**
-    For performance reasons, max_degree is not checked. So be careful.
-    */
-    inline void growup(DEG desired_degree)
-    {
-        for (DEG d = curr_degree + 1; d <= desired_degree; ++d) {
-            for (DEG e = 1; 2 * e <= d; ++e) {
-                LET i_lower = hall_set_degree_ranges[e].first;
-                LET i_upper = hall_set_degree_ranges[e].second;
-                LET j_lower = hall_set_degree_ranges[d - e].first;
-                LET j_upper = hall_set_degree_ranges[d - e].second;
-                for (LET i = i_lower; i < i_upper; ++i) {
-                    for (LET j = std::max(j_lower, i + 1); j < j_upper; ++j) {
-                        if (hall_set[j].first <= i) {
-                            PARENT parents(i, j);
-                            hall_set.push_back(parents);
-                            degrees.push_back(d);
-                            assert(((degrees[i] + degrees[j]) == degrees[hall_set.size() - 1]));
-                            reverse_map[parents] = hall_set.size() - 1;
-                        }
-                    }
-                }
-            }
-            std::pair<size_t, size_t> range;
-            range.first = hall_set_degree_ranges[curr_degree].second;
-            range.second = hall_set.size();
-            hall_set_degree_ranges.push_back(range);
-            ++curr_degree;
-        }
     }
 
-    /// Returns the degree (ie. weight) of a Lie key.
-    inline DEG degree(const KEY &k) const
-    {
-        assert(k <= size());
-        return degrees[k];
-    }
+    using hall_set_type::keyofletter;
+    using hall_set_type::lparent;
+    using hall_set_type::rparent;
+    using hall_set_type::letter;
+    using hall_set_type::getletter;
+    using hall_set_type::key2string;
+    using hall_set_type::size;
+    using hall_set_type::operator[];
+    using hall_set_type::letters;
+    using hall_set_type::hall_set_degree_ranges;
+    using hall_set_type::l2k;
+    using hall_set_type::find;
+    using hall_set_type::reverse_map_end;
+    using hall_set_type::parents_begin;
+    using hall_set_type::parents_end;
 
-    /// Returns the key corresponding to a letter.
-    inline KEY keyofletter(LET letter) const { return ltk.find(letter)->second; }
+    using hall_set_type::start_of_degree;
 
-    /// Returns the left parent of a key.
-    inline KEY lparent(const KEY &k) const { return hall_set[k].first; }
-
-    /// Returns the right parent of a key.
-    inline KEY rparent(const KEY &k) const { return hall_set[k].second; }
-
-    /// Tells if a key corresponds to a letter.
-    inline bool letter(const KEY &k) const
-    {
-        return ((k > 0) && (k <= letters.size()));
-    }
-
-    /// Returns the letter of a key corresponding to a letter.
-    inline LET getletter(const KEY &k) const { return letters[k - 1]; }
 
     /// Returns the value of the smallest key in the basis.
-    inline KEY begin(void) const { return 1; }
+    using hall_set_type::begin;
 
     /// Returns the key next the biggest key of the basis.
-    inline KEY end(void) const { return 0; }
+    using hall_set_type::end;
 
     /// Returns the key next a given key in the basis. No implicit growup made.
     inline KEY nextkey(const KEY &k) const
     {
-        if (k < (hall_set.size() - 1)) {
+        if (k < (hall_set_type::start_of_degree(MaxDepth+1) - 1)) {
             return (k + 1);
         } else {
             return 0;
         }
     }
 
-    /// Returns the position of a key in the basis total order.
-    inline DEG keypos(const KEY &k) const { return k; }
-
-    /// Returns the size of the basis.
-    inline KEY size(void) const { return (hall_set.size() - 1); }
-
-    /// Outputs the Hall basis to an std::ostream.
-    inline friend std::ostream &operator<<(std::ostream &os, const hall_basis &b)
+    friend std::ostream& operator<<(std::ostream& os, const hall_basis& b)
     {
-        for (KEY k = b.begin(); k != b.end(); k = b.nextkey(k)) {
-            os << b.key2string(k) << ' ';
-        }
-        return os;
+        return os << static_cast<const hall_set_type&>(b);
     }
-
-    // inline const std::string& key2string(const KEY& k) const
-    // BUG//TJL//24/08/2012 - returned reference invalidated if vector grows!!
-    // BUG//TJL//25/08/2012 - not templated but has static member so this is
-    // shared across all dimensions regardless of no letters etc!!
-private:
-    mutable std::vector<std::string> table; // move to instance per class
-public:
-    // ShortFix return a value not a reference
-    // TODO check performance of fix 24/08/2012
-    /// Converts a key to an std::string of letters.
-
-    inline const std::string key2string(const KEY &k) const
-    {
-        static boost::recursive_mutex table_access;
-        //// get exclusive recursive access for the thread
-        boost::lock_guard<boost::recursive_mutex> lock(table_access);
-
-        // BUG//TJL//09/04/2017 - non static member added to class but not commented
-        // out here!!
-        //		static std::vector<std::string> table;
-
-        if (k > table.size()) {
-            for (KEY i = (KEY) table.size() + 1; i <= k; ++i) {
-                table.push_back(_key2string(i));
-            }
-        }
-        return table[k - 1];
-    }
-
-private:
-    /// Recursively constructs the string associated to the Lie key k.
-    std::string _key2string(const KEY &k) const
-    {
-        std::ostringstream oss;
-        if (k > 0) {
-            if (letter(k)) {
-                oss << getletter(k);
-            } else {
-                oss << '[';
-                oss << key2string(lparent(k));
-                oss << ',';
-                oss << key2string(rparent(k));
-                oss << ']';
-            }
-        }
-        return oss.str();
-    }
-
-
-public:
 
 };
 //// if degree is static
@@ -462,33 +336,37 @@ public:
 */
 
 template <DEG n_letters, DEG max_degree>
-class lie_basis : protected hall_basis<n_letters>, dtl::hall_set_info<n_letters, max_degree>
+class lie_basis : protected hall_basis<n_letters, max_degree>, dtl::hall_set_info<n_letters, max_degree>
 {
     typedef dtl::hall_set_info<n_letters, max_degree> SIZE_INFO;
 
+    using hall_basis_type = hall_basis<n_letters, max_degree>;
 public:
     /// Import of the KEY type.
-    typedef typename hall_basis<n_letters>::KEY KEY;
+    typedef typename hall_basis_type::KEY KEY;
     /// Import of the PARENT type.
-    typedef typename hall_basis<n_letters>::PARENT PARENT;
+    typedef typename hall_basis_type::PARENT PARENT;
     /// Import member functions.
-    using hall_basis<n_letters>::letter;
-    using hall_basis<n_letters>::getletter;
-    using hall_basis<n_letters>::lparent;
-    using hall_basis<n_letters>::rparent;
-    // using hall_basis<n_letters>::degrees;
-    using hall_basis<n_letters>::growup;
-    using hall_basis<n_letters>::reverse_map;
-    using hall_basis<n_letters>::degree;
-    using hall_basis<n_letters>::keyofletter;
-    using hall_basis<n_letters>::begin;
-    using hall_basis<n_letters>::end;
-    using hall_basis<n_letters>::nextkey;
-    using hall_basis<n_letters>::key2string;
-    using hall_basis<n_letters>::size;
-    using hall_basis<n_letters>::hall_set;
+    using hall_basis_type::letter;
+    using hall_basis_type::getletter;
+    using hall_basis_type::lparent;
+    using hall_basis_type::rparent;
 
-    using typename hall_basis<n_letters>::REVERSE_MAP;
+
+    using hall_basis_type::degree;
+    using hall_basis_type::keyofletter;
+    using hall_basis_type::begin;
+    using hall_basis_type::end;
+    using hall_basis_type::nextkey;
+    using hall_basis_type::key2string;
+    using hall_basis_type::size;
+
+    using hall_basis_type::operator[];
+    using hall_basis_type::find;
+    using hall_basis_type::reverse_map_end;
+    using hall_basis_type::parents_begin;
+    using hall_basis_type::parents_end;
+
 
 public:
     typedef basis::with_degree<max_degree> degree_tag;
@@ -496,11 +374,8 @@ public:
 
 public:
     /// Constructs the basis for a finite number of letters.
-    lie_basis(void) : hall_basis<n_letters>()
+    lie_basis(void) : hall_basis_type()
     {
-        // bug: tjl : 08 04 2017 without the following line the basis would not
-        // remain const and sharing it between threads would cause errors
-        hall_basis<n_letters>::growup(max_degree);
     }
 
     /// Returns the product of two key.
@@ -544,7 +419,7 @@ public:
     /// Outputs the lie basis to an std::ostream.
     inline friend std::ostream &operator<<(std::ostream &os, const lie_basis &b)
     {
-        return os << (const hall_basis<n_letters> &) b;
+        return os << (const hall_basis_type &) b;
     }
 
     /// Outupts an std::pair<lie_basis*, KEY> to an std::ostream.
@@ -565,6 +440,9 @@ public:
     static DIMN start_of_degree(const DEG d)
     {
         assert(d <= max_degree + 1);
+        auto& r = SIZE_INFO::degree_sizes;
+        auto p = hall_basis_type::start_of_degree(d);
+        assert(p == r[d]);
         return SIZE_INFO::degree_sizes[d];
     }
 };

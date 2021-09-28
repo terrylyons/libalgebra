@@ -57,6 +57,53 @@ constexpr std::make_signed_t<Unsigned> mobius(Unsigned N)
 
 
 } // namespace integer_maths
+
+template <typename Int>
+constexpr Int mobius(Int n) noexcept;
+
+
+
+namespace dtl {
+
+    template<typename Int>
+    constexpr bool is_squarefree_impl(Int n, Int base)
+    {
+        return (n%(base*base))!=0 &&
+            (base*base>=n || is_squarefree_impl(static_cast<Int>(n), static_cast<Int>(base+1)));
+    }
+
+    template <typename Int>
+    constexpr Int mobius_impl(Int n, Int divisor) noexcept
+    {
+        return (divisor == n) ? -1 :
+               (n % divisor == 0) ? mobius(divisor) * mobius(n / divisor)
+                                  : mobius_impl(n, divisor+1);
+    }
+
+}
+
+template<typename Int>
+constexpr bool is_squarefree(Int n) noexcept
+{
+    return dtl::is_squarefree_impl(n, static_cast<Int>(2));
+}
+
+template <typename Int>
+constexpr Int mobius(Int n) noexcept
+{
+    return (n == 1) ? 1 : (!is_squarefree(n) ? 0 : dtl::mobius_impl(n, static_cast<Int>(2)));
+}
+
+
+template <typename Int, typename PowerInt>
+constexpr Int power(Int base, PowerInt exponent) noexcept
+{
+    return (exponent == 0) ? 1
+            : (exponent == 1) ? base :
+              ((exponent % 2 != 0) ? base : 1) * power(base, exponent / 2) * power(base, exponent /2);
+}
+
+
 } // namespace alg
 
 #endif // LIBALGEBRAUNITTESTS_INTEGER_MATHS_H

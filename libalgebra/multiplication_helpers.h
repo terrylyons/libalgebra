@@ -10,7 +10,6 @@ namespace mult {
 
 struct scalar_passthrough
 {
-
     template <typename S> LA_CONSTEXPR S operator()(S val) const { return val; }
 };
 

@@ -19,7 +19,7 @@ struct generic_coefficient
     Integer numerator;
     Integer denominator;
 
-    typedef alg_types<2, 2, Rational>::SCA rational_t;
+    typedef typename alg_types<2, 2, Rational>::SCA rational_t;
 
     generic_coefficient() : numerator(0), denominator(1)
     {}

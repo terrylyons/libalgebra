@@ -187,7 +187,7 @@ public:
 
     using hall_set_type::extended_function;
 
-    using hall_set_type::parent_type;
+    using typename hall_set_type::parent_type;
 
 private:
 
@@ -226,7 +226,6 @@ public:
     using hall_set_type::letter;
     using hall_set_type::getletter;
     using hall_set_type::key2string;
-    using hall_set_type::size;
     using hall_set_type::operator[];
     using hall_set_type::letters;
     using hall_set_type::hall_set_degree_ranges;
@@ -257,8 +256,17 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const hall_basis& b)
     {
-        return os << static_cast<const hall_set_type&>(b);
+        for (KEY k = b.begin(); k!=b.end(); k = b.next_key(k)) {
+            os << b.key2string(k) << ' ';
+        }
+        return os;
     }
+
+    DIMN size() const
+    {
+        return start_of_degree(MaxDepth+1);
+    }
+
 
 };
 //// if degree is static

@@ -100,7 +100,7 @@ public:
 
 private:
 
-    using signed_size_t = std::make_signed_t<size_type>;
+    using signed_size_t = std::make_signed<size_type>::type;
 
     static constexpr signed_size_t
     level_term(signed_size_t degree, signed_size_t divisor)
@@ -205,7 +205,7 @@ public:
 
     const parent_type& operator[](const key_type& key) const noexcept
     {
-        return content.data[key-1];
+        return content.data[key];
     }
 
     const key_type& operator[](const parent_type& parents) const
@@ -365,19 +365,7 @@ public:
 
     const key2string_type key2string;
 
-
-public:
-
-    friend std::ostream& operator<<(std::ostream& os, const hall_set& b)
-    {
-        for (key_type k = b.begin(); k != b.end(); k = b.next_key(k)) {
-            os << b.key2string(k) << ' ';
-        }
-        return os;
-    }
-
 };
-
 
 template <DEG Width>
 class hall_set_content

@@ -1,13 +1,24 @@
 // HallSetTests.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
+#include <iostream>
+
 // the libalgebra framework
 #include "alg_framework.h"
+#include <libalgebra/libalgebra.h>
 
 // the unit test framework
 #include <UnitTest++/UnitTest++.h>
 #include "../common/time_and_details.h"
 #include "../common/compat.h"
+
+using alg::LET;
+
+std::ostream& operator<<(std::ostream& os, std::pair<LET, LET> k)
+{
+    return os << "(" + std::to_string(k.first) << ", " << std::to_string(k.second) << ")";
+}
+
 
 // validates the hall set and lie multiplication over it
 SUITE(hallset)
@@ -38,11 +49,11 @@ SUITE(hallset)
 			// check the axioms of a hall set https://www.encyclopediaofmath.org/index.php/Hall_set
 
 			// contains the god element
-			CHECK(parents_t(0, 0) ==  hall_set[0]);
+			CHECK_EQUAL(parents_t(0, 0) ,  hall_set[0]);
 			
 			// contains A
 			for (LET i = 1; i <= ALPHABET_SIZE; ++i)
-				CHECK((parents_t(0, i))==(hall_set[i]));
+				CHECK_EQUAL(parents_t(0, i), hall_set[i]);
 
 			// order property
 			for (typename std::vector<parents_t>::const_iterator it(hall_set.parents_begin());
@@ -69,7 +80,7 @@ SUITE(hallset)
 				CHECK_EQUAL(1, basis.degree(i));
 			// additivity
 			for (LET i = 1; i < hall_set.size(); ++i)
-				CHECK(basis.degree(hall_set[i].first) + basis.degree(hall_set[i].second) == basis.degree(i));
+				CHECK_EQUAL(basis.degree(hall_set[i].first) + basis.degree(hall_set[i].second), basis.degree(i));
 			// monotonicity
 			for (LET i = 1; i < hall_set.size(); ++i)
 				CHECK(basis.degree(i - 1) <= basis.degree(i));

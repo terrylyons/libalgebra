@@ -137,7 +137,7 @@ namespace {
 		l2 += l1;
 		cout << l1 << " and " << l2 << endl;
 		cout << maps.l2t(l2) << endl;
-		cout << LIE::basis << endl;
+
 		l2 = LIE(2, 3);
 		TENSOR t1(maps.l2t(l1)), t2(maps.l2t(l2)), t(t1 + t2 + t1 * t2 - t2 * t1);
 		cout << "t: " << t << endl;

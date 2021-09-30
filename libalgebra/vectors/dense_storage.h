@@ -183,33 +183,89 @@ private:
 
 public:
 
-
+    /**
+     * @brief Constructor for blank data with given size
+     *
+     * Creates a new storage with the given size. Elements are default initialised.
+     *
+     * @param size Size of buffer to allocate
+     */
     explicit dense_storage(size_type size = 0) : m_base{size}
     {
         fill_range_default_construct(m_base.m_data, m_base.m_data + m_base.m_size);
     }
 
+    /**
+     * @brief Copy constructor
+     *
+     * Makes a new copy of other. The resulting storage owns its data even if other does not.
+     *
+     * @param other Storage to copy data from
+     */
     dense_storage(dense_storage const &other) : m_base{other.size()}
     {
         std::uninitialized_copy(other.begin(), other.end(), m_base.m_data);
     }
 
+    /**
+     * @brief Constructor from mutable pointer to existing data
+     *
+     * Creates a new mutably borrowed storage pointing to the range provided.
+     *
+     * @param ptr Start of data range to borrow
+     * @param size Size of data range to borrow
+     */
     dense_storage(pointer ptr, size_type size) : m_base{ptr, ptr + size}
     {
     }
 
+    /**
+     * @brief Constructor from const pointer to existing data
+     *
+     * Creates a new borrowed storage pointing to the range provided.
+     *
+     * @param ptr Start of data range to borrow
+     * @param size Size of data range to borrow
+     */
     dense_storage(const_pointer ptr, size_type size) : m_base{ptr, ptr + size}
     {
     }
 
+    /**
+     * @brief Constructor from mutable pointer to existing data range
+     *
+     * Construct a new mutably borrowed storage from pointers to range [begin, end).
+     *
+     * @param begin Pointer to beginning of range to borrow
+     * @param end Pointer to one past end of the range to borrow.
+     */
     dense_storage(pointer begin, pointer end) : m_base{begin, end}
     {
     }
 
+    /**
+     * @brief Constructor from const pointer to existing data range
+     *
+     * Construct a new borrowed storage from pointers to range [begin, end).
+     *
+     * @param begin Pointer to beginning of range to borrow
+     * @param end Pointer to one past end of the range to borrow.
+     */
     dense_storage(const_pointer begin, const_pointer end) : m_base{begin, end}
     {
     }
 
+    /**
+     * @brief Constructor for new owned storage with offset followed by existing data
+     *
+     * Create a new owned storage of size offset + (end - start) where the first offset
+     * elements are default initialised and the remaining buffer is filled with the
+     * values from [start, end).
+     *
+     * @param offset Size of offset to prepend to storage
+     * @param start start of data range to copy data from
+     * @param end One past end of data range to copy data range from
+     */
     dense_storage(size_type offset, const_pointer start, const_pointer end)
         : m_base{offset + static_cast<size_type>(end - start)}
     {
@@ -217,6 +273,17 @@ public:
         std::uninitialized_copy(start, end, m_base.m_data+offset);
     }
 
+    /**
+     * @brief Constructor for new owned storage with offset followed by existing data
+     *
+     * Create a new owned storage of size offset + (end - start) where the first offset
+     * elements are default initialised and the remaining buffer is filled with the
+     * values from [start, end).
+     *
+     * @param offset Size of offset to prepend to storage
+     * @param start start of data range to copy data from
+     * @param end One past end of data range to copy data range from
+     */
     dense_storage(size_type offset, pointer start, pointer end)
         : m_base{offset + static_cast<size_type>(end - start)}
     {
@@ -231,6 +298,7 @@ public:
         }
     }
 
+    /// Copy constructor - the new storage owns its data even if other borrows data.
     dense_storage &operator=(dense_storage const &other)
     {
         dense_storage tmp(other);
@@ -238,6 +306,7 @@ public:
         return *this;
     }
 
+    /// Move constructor
     dense_storage &operator=(dense_storage &&other)
     {
         if (m_base.is_owned()) {
@@ -248,6 +317,15 @@ public:
     }
 
 
+    /**
+     * @brief Copy stored data to owned data into a new buffer
+     *
+     * Allocates new owned storage copies a range of existing data into the new buffer.
+     *
+     * @param ptr Pointer to start of existing data.
+     * @param sz Size of existing data buffer buffer.
+     * @return New owned dense_storage containing a copy of the data
+     */
     static dense_storage make_owned(const_pointer ptr, size_type sz)
     {
         dense_storage result(ptr, sz);
@@ -355,26 +433,31 @@ private:
 
 public:
 
+    /// Const pointer to beginning of storage
     const_iterator begin() const
     {
         return m_base.m_data;
     }
 
+    /// Const pointer to one past end of storage
     const_iterator end() const
     {
         return m_base.m_data + m_base.m_size;
     }
 
+    /// Const pointer to beginning of storage
     const_iterator cbegin() const
     {
         return begin();
     }
 
+    /// Const pointer to one past end of storage
     const_iterator cend() const
     {
         return end();
     }
 
+    /// Index access to const data
     const_reference operator[](size_type index) const
     {
         assert(index < size());
@@ -383,6 +466,15 @@ public:
 
 public:
 
+    /**
+     * @brief Pointer to beginning of storage
+     *
+     * For owned or mutably-borrowed data this simply returns a pointer to the
+     * start of the storage range. For const borrowed storage, the data is first
+     * copied into an owned buffer.
+     *
+     * @return (mutable) pointer to beginning of storage
+     */
     iterator begin()
     {
         if (m_base.is_borrowed()) {
@@ -391,6 +483,15 @@ public:
         return m_base.m_data;
     }
 
+    /**
+     * @brief Pointer to one past end of storage
+     *
+     * For owned or mutably-borrowed data this simply returns a pointer to one past
+     * the end of the storage range. For const borrowed storage, the data is first
+     * copied into an owned buffer.
+     *
+     * @return (mutable) pointer to one past the end of storage
+     */
     iterator end()
     {
         if (m_base.is_borrowed()) {
@@ -399,6 +500,18 @@ public:
         return m_base.m_data + m_base.m_size;
     }
 
+    /**
+     * @brief Mutable index access
+     *
+     * For owned or mutably-borrowed data this simply returns a pointer to the
+     * element at index of the storage range. For const borrowed storage, the
+     * data is first copied into an owned buffer.
+     *
+     * Index bounds are not checked for performance.
+     *
+     * @param index index in storage of element to access
+     * @return mutable reference to element at index in storage.
+     */
     reference operator[](size_type index)
     {
         assert (index < size());
@@ -410,16 +523,23 @@ public:
 
 public:
 
+    /// Get the size of storage
     constexpr size_type size() const
     {
         return m_base.m_size;
     }
 
+    /// Check if storage is empty
     constexpr bool empty() const
     {
         return size() == 0;
     }
 
+    /**
+     * @brief Get the type of storage
+     *
+     * @return one of borrowed, borrowed_mut, or owned.
+     */
     constexpr vec_type type() const
     {
         return m_base.m_type;
@@ -461,6 +581,14 @@ private:
 
 public:
 
+    /**
+     * @brief Resize the storage to new size.
+     *
+     * Converts the storage to owned data and resizes to new size.
+     * If the new size is larger, the new elements are default initialised.
+     *
+     * @param sz new size for the storage
+     */
     void resize(size_type sz)
     {
         size_type csz = size();
@@ -472,6 +600,15 @@ public:
         assert(size() == sz);
     }
 
+    /**
+     * @brief Resize the storage to new size with specified fill value
+     *
+     * Converts the storage to owned data and resizes to new size.
+     * If the new storage is larger, the new elements are initialised to val.
+     *
+     * @param sz new size for the storage
+     * @param val value to fill new elements (if any) with
+     */
     void resize(size_type sz, const_reference val)
     {
         size_type csz = size();
@@ -486,6 +623,16 @@ public:
 
 public:
 
+    /**
+     * @brief Grow the storage without initialising new values
+     *
+     * Converts the data to owned if it wasn't already, where the new buffer
+     * has the target size. The excess buffer space is not filled with any values
+     * and it is assumed that you will initialise these values very shortly after
+     * performing a reserve.
+     *
+     * @param sz new target size
+     */
     void reserve(size_type sz)
     {
         assert (sz > size());
@@ -498,11 +645,18 @@ public:
         //reserve_fill(old_size, is_pod_t());
     }
 
+    /**
+     * @brief Clear the storage
+     *
+     * For borrowed data, this is simply "forgetting" the data that it points to.
+     * For owned data, the storage is cleared and deallocated.
+     */
     void clear()
     {
         resize(0);
     }
 
+    /// Swap this storage with another
     void swap(dense_storage &other)
     {
         std::swap(m_base, other.m_base);
@@ -534,6 +688,15 @@ private:
 
 public:
 
+    /**
+     * @brief Extend the storage by copying data from the range [start_ptr, end_ptr)
+     *
+     * Make the storage owned and grow the allocated space by (end_ptr - start_ptr).
+     * New space is filled by copying the data from the range [start_ptr, end_ptr).
+     *
+     * @param start_ptr Start of range to copy into new storage
+     * @param end_ptr One past end of range to copy into new storage
+     */
     void copy_extend(const_pointer start_ptr, const_pointer end_ptr)
     {
         if (start_ptr == end_ptr) {
@@ -562,6 +725,15 @@ public:
         m_base = std::move(new_base);
     }
 
+    /**
+     * @brief Extend the storage by moving the data from the range [start_ptr, end_ptr)
+     *
+     * Make the storage owned and grow the allocated space by (end_ptr - start_ptr).
+     * New space is filled by moving the data from the range [start_ptr, end_ptr).
+     *
+     * @param start_ptr Start of range to move into new storage
+     * @param end_ptr one past end of range to move into new storage
+     */
     void move_extend(pointer start_ptr, pointer end_ptr)
     {
         if (start_ptr == end_ptr) {

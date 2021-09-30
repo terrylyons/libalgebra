@@ -10,6 +10,14 @@
 namespace alg {
 namespace vectors {
 
+/**
+ * @brief Base class for vectors
+ *
+ *
+ *
+ * @tparam Basis Basis type
+ * @tparam Coeff
+ */
 template <typename Basis, typename Coeff>
 class base_vector
 {

@@ -105,6 +105,17 @@ public:
         set_degree(degree_tag);
     }
 
+    /**
+     * @brief Create a new dense vector from data with an initial offset
+     *
+     * Construct a new vector in which the first offset elements are zero,
+     * and fill the next (end - begin) values by copying from the range
+     * [begin, end).
+     *
+     * @param offset Number of terms in the basis before the data starts
+     * @param begin start of data range to construct
+     * @param end first past last of data range to
+     */
     dense_vector(DIMN offset, SCALAR const* begin, SCALAR const* end)
         : m_data(offset, begin, end),
           m_dimension(0),
@@ -113,6 +124,17 @@ public:
         set_degree(degree_tag);
     }
 
+    /**
+     * @brief Create a new dense vector from data with an initial offset
+     *
+     * Construct a new vector in which the first offset elements are zero,
+     * and fill the next (end - begin) values by copying from the range
+     * [begin, end).
+     *
+     * @param offset Number of terms in the basis before the data starts
+     * @param begin start of data range to construct
+     * @param end first past last of data range to
+     */
     dense_vector(DIMN offset, SCALAR* begin, SCALAR* end)
         : m_data(offset, begin, end),
           m_dimension(0),
@@ -211,6 +233,7 @@ public:
         m_degree = target_deg;
     }
 
+    /// Get the next valid size of a vector
     DIMN next_resize_size() const
     {
         return adjust_dimension(dimension() + 1, degree_tag);
@@ -318,21 +341,32 @@ public:
 
     // iterator methods
 
+    /// Iterator at start of vector
     iterator begin() { return iterator(*this, m_data.begin()); }
 
+    /// Iterator at (one past) end of vector
     iterator end() { return iterator(*this, m_data.end()); }
 
+    /// Const iterator at start of vector
     const_iterator begin() const { return const_iterator(*this, m_data.begin()); }
 
+    /// Const iterator at (one past) end of vector
     const_iterator end() const { return const_iterator(*this, m_data.end()); }
 
+    /// Const iterator at start of vector
     const_iterator cbegin() const
     {
         return const_iterator(*this, m_data.begin());
     }
 
+    /// Const iterator at (one past) end of vector
     const_iterator cend() const { return const_iterator(*this, m_data.end()); }
 
+    /**
+     * @brief Insert a new value at key
+     * @param key key position at which to insert new value
+     * @param val new value to insert
+     */
     void insert(const KEY &key, SCALAR val)
     {
         DIMN idx = key_to_index(key);
@@ -342,6 +376,12 @@ public:
         m_data[idx] = val;
     }
 
+    /**
+     * @brief Insert a new value by providing a key-value pair
+     * @param arg key value pair with position and value to insert into the vector
+     * @return pair of iterator to place where value was inserted and bool indicating whether a value was inserted.
+     *        Currently this is always true.
+     */
     std::pair<iterator, bool> insert(std::pair<const KEY, SCALAR> &arg)
     {
         DIMN idx = key_to_index(arg.first);
@@ -363,6 +403,13 @@ public:
         return rv;
     }
 
+    /**
+     * @brief Insert new values from iterator
+     * @tparam InputIterator Iterator type (any class supporting InputIterator trait)
+     * with value_type is a pair of KEY and SCALAR.
+     * @param begin start of range to insert
+     * @param end one past end of range to insert
+     */
     template <typename InputIterator> void insert(InputIterator begin, InputIterator end)
     {
         typedef std::vector<std::pair<DIMN, SCALAR>> TMPVEC;
@@ -384,6 +431,11 @@ public:
         }
     }
 
+    /**
+     * @brief Get a const iterator to value corresponding to key
+     * @param key Key to find value for
+     * @return const iterator pointing to the value
+     */
     const_iterator find(const KEY &key) const
     {
         DIMN idx;
@@ -393,6 +445,11 @@ public:
         return end();
     }
 
+    /**
+     * @brief Get a iterator to value corresponding to key
+     * @param key Key to find value for
+     * @return iterator pointing to the value
+     */
     iterator find(const KEY &key)
     {
         DIMN idx;
@@ -402,16 +459,30 @@ public:
         return end();
     }
 
+    /**
+     * @brief Get an iterator to a specific index in the vector.
+     * @param idx Index of value to find
+     * @return iterator pointing to the value
+     */
     iterator find_index(DIMN idx)
     {
         return iterator(*this, m_data.begin() + idx);
     }
 
+    /**
+     * @brief Get a const iterator to a specific index in the vector.
+     * @param idx Index of value to find
+     * @return const iterator pointing to the value
+     */
     const_iterator find_index(DIMN idx) const
     {
         return const_iterator(*this, m_data.begin() + idx);
     }
 
+    /**
+     * @brief Erase (set to zero) the value corresponding to key
+     * @param key key to erase
+     */
     void erase(const KEY &key)
     {
         DIMN idx;
@@ -420,6 +491,10 @@ public:
         }
     }
 
+    /**
+     * @brief Erase the value at the iterator position
+     * @param it iterator to value to erase
+     */
     void erase(iterator &it)
     {
         assert(it != end());
@@ -427,6 +502,9 @@ public:
     }
 
 public:
+    /**
+     * @brief Clear (set to zero) all values in the vector.
+     */
     void clear()
     {
         SCALAR z = zero;
@@ -447,27 +525,39 @@ public:
 public:
     // Access to information about the vector and coefficients
 
+    /// get the dimension of the vector
     DIMN dimension() const { return m_data.size(); }
 
+    /// get the maximum degree element represented by the vector
     DEG degree() const
     {
         return m_degree;
     }
 
+    /// Check if the degree of the vector is equal to given vector
     bool degree_equals(const DEG degree) const { return m_degree == degree; }
 
+    /// Get a reference to the value at index
     SCALAR &value(const DIMN dim)
     {
         assert(dim < m_data.size());
         return m_data[dim];
     }
 
+    /// Get a const reference to the value at index
     const SCALAR &value(const DIMN dim) const
     {
         assert(dim < m_data.size());
         return m_data[dim];
     }
 
+    /**
+     * @brief Get the number of non-zero elements in the vector
+     *
+     * This is a fairly slow operation since it must check every element in the vector.
+     *
+     * @return Number of non-zero elements.
+     */
     DIMN size() const
     {
         DIMN sz = 0;
@@ -477,6 +567,13 @@ public:
         return sz;
     }
 
+    /**
+     * @brief Check if the vector contains only zero elements.
+     *
+     * This is a fairly slow operation, especially if there are a large number of zeros.
+     *
+     * @return true if vector is empty (only has zeros) and false otherwise
+     */
     bool empty() const
     {
         if (m_data.empty()) {
@@ -492,29 +589,34 @@ public:
     }
 
 protected:
-    // Index of key and key of index
+    /// Index of key and key of index
     static KEY index_to_key(const DIMN index)
     {
         return basis.index_to_key(index);
     }
 
+    /// Get the index corresponding to a key
     static DIMN key_to_index(const KEY &key) { return basis.key_to_index(key); }
 
+    /// Get the degree of the key at an index
     static DEG index_to_degree(const DIMN idx)
     {
         return basis.degree(index_to_key(idx));
     }
 
+    /// Get the index at which the elements of degree start
     static DIMN start_of_degree(const DEG deg)
     {
         return basis.start_of_degree(deg);
     }
 
+    /// Get he maximum feasible dimension for bases with degree
     template <DEG D> static DIMN max_dimension(alg::basis::with_degree<D>)
     {
         return basis.start_of_degree(degree_tag.max_degree + 1);
     }
 
+    /// Get the maximum feasible dimension for a basis without degree
     static DIMN max_dimension(alg::basis::without_degree)
     {
         return basis.max_dimension();
@@ -839,6 +941,13 @@ protected:
 public:
     // Norms
 
+    /**
+     * @brief Compute the L1 norm of the vector
+     *
+     * The L1 norm here is the sum of absolute values of members of the vector.
+     *
+     * @return the L1 norm
+     */
     SCALAR NormL1() const
     {
         SCALAR ans(zero);
@@ -848,6 +957,11 @@ public:
         return ans;
     }
 
+    /**
+     * @brief Compute the L1 norm of elements with degree at most deg
+     * @param deg maximum degree of elements
+     * @return the L1 norm of elements
+     */
     SCALAR NormL1(const DEG deg) const
     {
         SCALAR ans(zero);
@@ -857,6 +971,13 @@ public:
         return ans;
     }
 
+    /**
+     * @brief Compute the L-infinity norm of the the vector
+     *
+     * The L-infinity norm is the maximum absolute value of elements in the vector.
+     *
+     * @return the L-infinity norm of the vector
+     */
     SCALAR NormLInf() const
     {
         SCALAR ans(zero);
@@ -867,6 +988,11 @@ public:
         return ans;
     }
 
+    /**
+     * @brief Compute the L-infinity norm of elements in the vector of degree at most deg
+     * @param deg maximum degree of elements
+     * @return the L-infinity norm of elements
+     */
     SCALAR NormLInf(const DEG deg) const
     {
         SCALAR ans(zero);
@@ -908,6 +1034,15 @@ public:
 public:
     // Transform methods
 
+    /**
+     * @brief
+     * @tparam Vector
+     * @tparam KeyTransform
+     * @param result
+     * @param rhs
+     * @param key_transform
+     * @param max_depth
+     */
     template <typename Vector, typename KeyTransform> void
     triangular_buffered_apply_binary_transform(Vector &result, const dense_vector &rhs, KeyTransform key_transform,
                                                const DEG max_depth) const

@@ -141,7 +141,7 @@ swap() member function.
 */
 template <typename Basis, typename Coeff, typename Multiplication,
           template<typename, typename> class VectorType = alg::vectors::template_vector_type_selector<Basis, Coeff>::template type>
-class algebra : public vectors::vector<Basis, Coeff, VectorType<Basis, Coeff> >
+class algebra : public vectors::vector<Basis, Coeff, VectorType>
 {
 
     typedef mult::scalar_passthrough scalar_passthrough;
@@ -152,7 +152,7 @@ class algebra : public vectors::vector<Basis, Coeff, VectorType<Basis, Coeff> >
 public:
     typedef Basis BASIS;
     /// The inherited sparse vector type.
-    typedef vectors::vector <Basis, Coeff, VectorType<Basis, Coeff> > VECT;
+    typedef vectors::vector <Basis, Coeff, VectorType> VECT;
     /// Import of the iterator type from sparse_vector.
     typedef typename VECT::iterator iterator;
     /// Import of the constant iterator type from sparse_vector.

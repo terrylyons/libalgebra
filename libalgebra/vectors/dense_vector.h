@@ -1078,6 +1078,17 @@ public:
         }
     }
 
+    /**
+     * @brief
+     * @tparam Vector
+     * @tparam KeyTransform
+     * @tparam IndexTransform
+     * @param result
+     * @param rhs
+     * @param key_transform
+     * @param index_transform
+     * @param max_depth
+     */
     template <typename Vector, typename KeyTransform, typename IndexTransform> void
     triangular_buffered_apply_binary_transform(Vector &result, const dense_vector &rhs, KeyTransform key_transform,
                                                IndexTransform index_transform, const DEG max_depth) const
@@ -1116,6 +1127,13 @@ public:
         }
     }
 
+    /**
+     * @brief
+     * @tparam KeyTransform
+     * @param rhs
+     * @param key_transform
+     * @param max_depth
+     */
     template <typename KeyTransform> void
     triangular_unbuffered_apply_binary_transform(const dense_vector &rhs, KeyTransform key_transform,
                                                  const DEG max_depth)
@@ -1125,6 +1143,15 @@ public:
         swap(result);
     }
 
+    /**
+     * @brief
+     * @tparam KeyTransform
+     * @tparam IndexTransform
+     * @param rhs
+     * @param key_transform
+     * @param index_transform
+     * @param max_depth
+     */
     template <typename KeyTransform, typename IndexTransform> void
     triangular_unbuffered_apply_binary_transform(const dense_vector &rhs, KeyTransform key_transform,
                                                  IndexTransform index_transform, const DEG max_depth)
@@ -1210,6 +1237,14 @@ public:
         }
     }
 
+    /**
+     * @brief
+     * @tparam Vector
+     * @tparam KeyTransform
+     * @param result
+     * @param rhs
+     * @param key_transform
+     */
     template <typename Vector, typename KeyTransform> void
     square_buffered_apply_binary_transform(Vector &result, const dense_vector &rhs, KeyTransform key_transform) const
     {
@@ -1229,6 +1264,15 @@ public:
         }
     }
 
+    /**
+     * @brief
+     * @tparam Vector
+     * @tparam KeyTransform
+     * @tparam IndexTransform
+     * @param result
+     * @param rhs
+     * @param index_transform
+     */
     template <typename Vector, typename KeyTransform, typename IndexTransform> void
     square_buffered_apply_binary_transform(Vector &result, const dense_vector &rhs, KeyTransform /*key_transform*/,
                                            IndexTransform index_transform) const
@@ -1246,6 +1290,13 @@ public:
     }
 
 public:
+    /**
+     * @brief
+     * @tparam Transform
+     * @param result
+     * @param transform
+     * @param max_deg
+     */
     template <typename Transform>
     void buffered_apply_unary_transform(dense_vector &result, Transform transform, const DEG max_deg) const
     {
@@ -1259,6 +1310,12 @@ public:
         it(&result.m_data[0], result.dimension(), &m_data[0], dimension(), max_deg);
     }
 
+    /**
+     * @brief
+     * @tparam Transform
+     * @param result
+     * @param transform
+     */
     template <typename Transform> void buffered_apply_unary_transform(dense_vector &result, Transform transform) const
     {
         if (empty()) {

@@ -160,6 +160,14 @@ template <typename Coeff> struct vector_type_selector<poly_basis, Coeff>
                                                   typename BASIS::KEY_LESS>> type;
 };
 
+template <typename Coeff>
+struct template_vector_type_selector<poly_basis, Coeff>
+{
+    typedef poly_basis BASIS;
+    template <typename B, typename C>
+    using type = sparse_vector<B, C, std::map<typename B::KEY, typename C::S, typename B::KEY_LESS> >;
+};
+
 } // namespace vectors
 
 // Include once wrapper

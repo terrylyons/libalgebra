@@ -139,8 +139,9 @@ use as the first arg of sparse_vector::add_scal_prod(); it can be a key or a
 sparse vector for example (3) The sparse_vector::MAP class must provide the
 swap() member function.
 */
-template <typename Basis, typename Coeff, typename Multiplication, typename VectorType>
-class algebra : public vectors::vector<Basis, Coeff, VectorType>
+template <typename Basis, typename Coeff, typename Multiplication,
+          template<typename, typename> class VectorType = alg::vectors::template_vector_type_selector<Basis, Coeff>::template type>
+class algebra : public vectors::vector<Basis, Coeff, VectorType<Basis, Coeff> >
 {
 
     typedef mult::scalar_passthrough scalar_passthrough;
@@ -151,7 +152,7 @@ class algebra : public vectors::vector<Basis, Coeff, VectorType>
 public:
     typedef Basis BASIS;
     /// The inherited sparse vector type.
-    typedef vectors::vector <Basis, Coeff, VectorType> VECT;
+    typedef vectors::vector <Basis, Coeff, VectorType<Basis, Coeff> > VECT;
     /// Import of the iterator type from sparse_vector.
     typedef typename VECT::iterator iterator;
     /// Import of the constant iterator type from sparse_vector.
@@ -297,7 +298,8 @@ public:
 
 };
 
-template <typename B, typename C, typename M, typename V> M algebra<B, C, M, V>::s_multiplication;
+template <typename B, typename C, typename M, template<typename, typename> class V>
+M algebra<B, C, M, V>::s_multiplication;
 
 // Include once wrapper
 #endif // DJC_COROPA_LIBALGEBRA_ALGEBRAH_SEEN

@@ -15,7 +15,14 @@ Version 3. (See accompanying file License.txt)
 #define DJC_COROPA_LIBALGEBRA_UTILSH_SEEN
 
 /// Provides maps between lie<> and free_tensor<> instances.
-template <typename Coeff, DEG n_letters, DEG max_degree, typename Tensor, typename Lie> class maps
+template <
+        typename Coeff,
+        DEG n_letters,
+        DEG max_degree,
+        typename Tensor = free_tensor<Coeff, n_letters, max_degree>,
+        typename Lie = lie<Coeff, n_letters, max_degree>
+        >
+class maps
 {
     typedef typename Coeff::S SCA;
     typedef typename Coeff::Q RAT;
@@ -43,14 +50,14 @@ template <typename Coeff, DEG n_letters, DEG max_degree, typename Tensor, typena
             TBASIS,
             Coeff,
             free_tensor_multiplication<Coeff>,
-            sparse_tensor_vect
+            vectors::sparse_vector
     > sparse_tensor_t;
 
     using dense_lie1_t = algebra<
             lie_basis<n_letters, 1>,
             Coeff,
             lie_multiplication<Coeff>,
-            vectors::dense_vector<lie_basis<n_letters, 1>, Coeff>
+            vectors::dense_vector
     >;
 
 public:
@@ -236,7 +243,14 @@ private:
 };
 
 /// Provides Campbell-Baker-Hausdorff formulas.
-template <typename Coeff, DEG n_letters, DEG max_degree, typename Tensor, typename Lie> class cbh
+template <
+        typename Coeff,
+        DEG n_letters,
+        DEG max_degree,
+        typename Tensor = free_tensor<Coeff, n_letters, max_degree>,
+        typename Lie = lie<Coeff, n_letters, max_degree>
+    >
+class cbh
 {
     typedef typename Coeff::S SCA;
     typedef typename Coeff::Q RAT;

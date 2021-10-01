@@ -124,10 +124,11 @@ typedef unsigned __int64 uint64_t;
 #include "multiplication_helpers.h"
 
 
-namespace alg {
 
+namespace alg {
 #include "constlog2.h"
 #include "constpower.h"
+}
 // Some useful macros to avoid similar codes.
 
 #define __DECLARE_BINARY_OPERATOR(T1, NEWOP, OLDOP, T2)                        \
@@ -147,89 +148,36 @@ namespace alg {
 /// Sparse vectors with default MAP typename from BASIS typename.
 // template<class BASIS, class MAP = typename BASIS::MAP>
 // class sparse_vector;
-/// Generic Associative Algebra.
-template <typename Basis, typename Coeff, typename Multiplication, typename VectorType =
-typename vectors::vector_type_selector<Basis, Coeff>::type> class algebra;
 
-/// Generic Associative Algebra basis.
-template <DEG n_letters, DEG max_degree = 0> class tensor_basis;
-
-/// Free Associative Algegra Basis. Concatenation product. Non commutative.
-template <DEG n_letters, DEG max_degree = 0> class free_tensor_basis;
-
-/// Free Shuffle Associative Algebra Basis. Shuffle product. Commutative.
-template <DEG n_letters, DEG max_degree = 0> class shuffle_tensor_basis;
-
-/// Free Associative Algebra.  Associative and non commutative.
-template <typename Coeff, DEG n_letters, DEG max_degree = 0,
-          typename VectorType = typename vectors::vector_type_selector<free_tensor_basis<n_letters, max_degree>,
-                                                                       Coeff>::type> class free_tensor;
-
-/// Free Associative Shuffle Algebra.  Associative and Commutative.
-template <typename Coeff, DEG n_letters, DEG max_degree = 0> class shuffle_tensor;
-
-/// Philip Hall Lie Basis.
-template <DEG n_letters> class hall_basis;
-
-/// Free Lie Associative Algebra Basis.  Associative and non commutative.
-template <DEG n_letters, DEG max_degree = 0> class lie_basis;
-
-/// Free Lie Associative Algebra.  Associative and non commutative.
-template <typename Coeff, DEG n_letters, DEG max_degree = 0,
-          typename VectorType = typename vectors::vector_type_selector<lie_basis<n_letters, max_degree>, Coeff>::type>
-class lie;
-
-/// Maps between Free Lie and Free Algebra elements.
-template <typename Coeff, DEG n_letters, DEG max_degree = 0,
-          typename Tensor = free_tensor<Coeff, n_letters, max_degree>, typename Lie = lie<Coeff, n_letters, max_degree>>
-class maps;
-
-/// Campbell-Baker-Hausdorff formulas.
-template <typename Coeff, DEG n_letters, DEG max_degree, typename Tensor = free_tensor<Coeff, n_letters, max_degree>,
-          typename Lie = lie<Coeff, n_letters, max_degree>> class cbh;
-
-/// Multivariate Polynomial Algebra Basis. Associative and Commutative.
-class poly_basis;
-
-/// Multivariate Polynomial Algebra.  Associative and Commutative.
-template <typename Coeff> class poly;
-
-/// II. Multivariate Polynomial Algebra pre Basis. Associative and Commutative
-template <DEG n_letters, DEG max_degree = 0> class monomial_basis;
-
-/// II. Multivariate Polynomial Algebra Basis. Associative and Commutative
-template <DEG n_letters, DEG max_degree = 0> class free_monomial_basis;
-
-/// II. Multivariate Polynomial Algebra   Associative and Commutative.
-template <typename Coeff, DEG n_letters, DEG max_degree = 0> class multi_polynomial;
-
-/// III. Multivariate Polynomial Lie Algebra Basis. Associative and non
-/// commutative
-template <DEG n_letters, DEG max_degree = 0> class poly_lie_basis;
-
-/// III. Multivariate Polynomial Lie Algebra. Associative and non commutative
-template <typename Coeff, DEG n_letters, DEG max_degree = 0> class poly_lie;
-
+namespace alg {
 #include "algebra.h"
-#include "lie.h"
+
 #include "lie_basis.h"
 #include "monomial_basis.h"
-#include "multi_polynomial.h"
 #include "poly_basis.h"
-#include "poly_lie.h"
 #include "poly_lie_basis.h"
-#include "polynomials.h"
-#include "sparse_vector.h"
-#include "tensor.h"
-#include "tensor_basis.h"
-#include "utils.h"
+}
 
+#include "tensor_basis.h"
+
+
+namespace alg {
+#include "lie.h"
+#include "multi_polynomial.h"
+#include "poly_lie.h"
+#include "polynomials.h"
+#include "tensor.h"
+
+
+
+#include "utils.h"
+}
 // Undeclaring local macros in reverse order of declaration.
 #undef __DECLARE_UNARY_OPERATOR
 #undef __DECLARE_BINARY_OPERATOR
 // End of undeclaration of local macros.
 
-} // namespace alg
+
 
 // Include once wrapper
 #endif // DJC_COROPA_LIBALGEBRAH_SEEN

@@ -68,6 +68,23 @@ template <typename T1, typename T2> struct type_selector<true, T1, T2>
     typedef T2 type;
 };
 
+template <bool Cond, template<typename, typename> class T1, template<typename, typename> class T2>
+struct template_selector
+{
+    template <typename B, typename C>
+    using type = T1<B, C>;
+};
+
+template <template<typename, typename> class T1, template<typename, typename> class T2>
+struct template_selector<true, T1, T2>
+{
+    template <typename B, typename C>
+    using type = T2<B, C>;
+};
+
+
+
+
 } // namespace utils
 } // namespace alg
 

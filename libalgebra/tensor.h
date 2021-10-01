@@ -14,7 +14,15 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 #define DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 
-template <typename Coeff> class free_tensor_multiplication
+template<typename Coeff>
+class shuffle_tensor_multiplication;
+
+template<typename Coeff, DEG n_letters, DEG max_degree>
+class shuffle_tensor;
+
+
+template <typename Coeff>
+class free_tensor_multiplication
 {
 
     typedef typename Coeff::SCA scalar_t;
@@ -128,9 +136,10 @@ public:
    associative algebra corresponding to the SCALAR type. This is permitted by
    the existence of empty keys in free_tensor_basis.
  */
-template <typename Coeff, DEG n_letters, DEG max_degree, typename VectorType> class free_tensor : public algebra<
+template <typename Coeff, DEG n_letters, DEG max_degree,
+          template<typename, typename> class VectorType = vectors::template_vector_type_selector<free_tensor_basis<n_letters, max_degree>, Coeff>::template type>
+class free_tensor : public algebra<
         free_tensor_basis < n_letters, max_degree>, Coeff, free_tensor_multiplication<Coeff>, VectorType
-
 > {
 typedef free_tensor_multiplication<Coeff> multiplication_t;
 
@@ -382,7 +391,8 @@ inline friend free_tensor reflect(const free_tensor &arg)
 
 };
 
-template <typename Coeff> class shuffle_tensor_multiplication
+template <typename Coeff>
+class shuffle_tensor_multiplication
 {
 
     typedef typename Coeff::SCA scalar_t;
@@ -534,7 +544,6 @@ public:
  */
 template <typename Coeff, DEG n_letters, DEG max_degree> class shuffle_tensor : public algebra<
         shuffle_tensor_basis < n_letters, max_degree>, Coeff, shuffle_tensor_multiplication<Coeff>
-
 > {
 typedef shuffle_tensor_multiplication<Coeff> multiplication_t;
 

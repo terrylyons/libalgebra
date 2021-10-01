@@ -84,6 +84,17 @@ struct vector_type_selector<poly_lie_basis<n_letters, max_degree>, Field>
                                                   typename BASIS::KEY_LESS>> type;
 };
 
+template <DEG n_letters, DEG max_degree, typename Field>
+struct template_vector_type_selector<poly_lie_basis<n_letters, max_degree>, Field>
+{
+    typedef poly_lie_basis<n_letters, max_degree> BASIS;
+
+    template <typename B, typename C>
+    using type = sparse_vector<B, C, std::map<typename B::KEY, typename C::S, typename B::KEY_LESS> >;
+};
+
+
+
 } // namespace vectors
 
 #endif

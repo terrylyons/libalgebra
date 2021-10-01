@@ -43,7 +43,7 @@ type KEY, stored in a MAP class, associated to coefficients given by SCALAR
 instances. Each basis element refers to the static instance of type BASIS.
 
 The MAP class must comes with a std::map<KEY, SCALAR> interface.
-The scalar type SCALAR correponds to MAP::mapped_type.
+The scalar type SCALAR corresponds to MAP::mapped_type.
 By default, the MAP class is taken from the BASIS via the BASIS::MAP
 type, cf. forward declaration of the sparse_vector class in libalgebra.h.
 

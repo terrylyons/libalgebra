@@ -166,7 +166,7 @@ free_tensor(const shuffle_tensor <Coeff, n_letters, max_degree> &t)
 {
     typename shuffle_tensor<Coeff, n_letters, max_degree>::const_iterator i;
     for (i = t.begin(); i != t.end(); ++i) {
-        (*this)[i->first] += i->second;
+        (*this)[i->key()] += i->value();
     }
 }
 
@@ -388,7 +388,8 @@ template <typename Coeff> class shuffle_tensor_multiplication
     typedef typename Coeff::SCA scalar_t;
 
     /// Computes recursively the shuffle product of two keys
-    template <typename Tensor> static Tensor _prod(typename Tensor::KEY const &k1, typename Tensor::KEY const &k2)
+    template <typename Tensor>
+    static Tensor _prod(typename Tensor::KEY const &k1, typename Tensor::KEY const &k2)
     {
         //typedef typename Tensor::KEY key_t;
 
@@ -399,7 +400,7 @@ template <typename Coeff> class shuffle_tensor_multiplication
         // unsigned i, j;
         const scalar_t one(+1);
 
-        if ((Tensor::basis::max_degree == 0) || (k1.size() + k2.size() <= Tensor::basis::max_degree)) {
+        if ((basis_t::degree_tag::max_degree == 0) || (k1.size() + k2.size() <= basis_t::degree_tag::max_degree)) {
             if (k1.size() == 0) {
                 result[k2] = one;
                 return result;
@@ -410,9 +411,9 @@ template <typename Coeff> class shuffle_tensor_multiplication
             }
             // k1.size() >= 1 and k2.size() >= 1
             static_cast<free_tensor_t>(result).add_mul(static_cast<free_tensor_t>(k1.lparent()),
-                                                       static_cast<free_tensor_t>(prod(k1.rparent(), k2)))
+                                                       static_cast<free_tensor_t>(prod<Tensor>(k1.rparent(), k2)))
                                               .add_mul(static_cast<free_tensor_t>(k2.lparent()),
-                                                       static_cast<free_tensor_t>(prod(k1, k2.rparent())));
+                                                       static_cast<free_tensor_t>(prod<Tensor>(k1, k2.rparent())));
         }
         return result;
     }
@@ -425,7 +426,8 @@ template <typename Coeff> class shuffle_tensor_multiplication
     associated to the +1 scalar. The already computed products are stored in
     a static mutiplication table to speed up further calculations.
     */
-    template <typename Tensor> static const Tensor &prod(typename Tensor::KEY const &k1, typename Tensor::KEY const &k2)
+    template <typename Tensor>
+    static const Tensor &prod(typename Tensor::KEY const &k1, typename Tensor::KEY const &k2)
     {
         typedef typename Tensor::KEY key_t;
         static boost::recursive_mutex table_access;
@@ -438,7 +440,7 @@ template <typename Coeff> class shuffle_tensor_multiplication
         std::pair<key_t, key_t> p(std::min(k1, k2), std::max(k1, k2));
         it = table.find(p);
         if (it == table.end()) {
-            return table[p] = _prod(k1, k2);
+            return table[p] = _prod<Tensor>(k1, k2);
         } else {
             return it->second;
         }
@@ -466,7 +468,7 @@ template <typename Coeff> class shuffle_tensor_multiplication
         operator()(Vector &result, typename Vector::KEY const &lhs_key, scalar_t const &lhs_val,
                    typename Vector::KEY const &rhs_key, scalar_t const &rhs_val)
         {
-            result.add_scal_prod(prod<Vector>(lhs_key * rhs_key), m_transform(Coeff::mul(lhs_val, rhs_val)));
+            result.add_scal_prod(prod<Vector>(lhs_key, rhs_key), m_transform(Coeff::mul(lhs_val, rhs_val)));
         }
     };
 

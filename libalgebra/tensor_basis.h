@@ -23,47 +23,32 @@ Version 3. (See accompanying file License.txt)
 
 namespace dtl {
 
+using alg::integer_maths::power;
+
 template <DEG NoLetters, DEG Depth> struct depth_size
 {
     enum { value = (ConstPower<NoLetters, Depth>::ans - 1) / (NoLetters - 1) };
 };
-/*
-template <DEG NoLetters>
-struct depth_size<NoLetters, 1>
-{
-    enum : DIMN {
-        value = 1 + NoLetters
-    };
-};
 
-template <DEG NoLetters>
-struct depth_size<NoLetters, 0>
-{
-    enum : DIMN {
-        value = 0
-    };
-};
-*/
 
 template <DEG NoLetters> struct tensor_size_info
 {
-    static const DEG bits_per_letter = ConstLog2<NoLetters - 1>::ans + 1;
-    static const DEG mantissa_bits_stored = std::numeric_limits<word_t>::digits - 1;
-    static const DEG max_depth = mantissa_bits_stored / bits_per_letter;
+    static constexpr DEG bits_per_letter = ConstLog2<NoLetters - 1>::ans + 1;
+    static constexpr DEG mantissa_bits_stored = std::numeric_limits<word_t>::digits - 1;
+    static constexpr DEG max_depth = mantissa_bits_stored / bits_per_letter;
 
-    static const LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, max_depth + 2> degree_sizes;
+    template <DIMN Depth>
+    struct helper
+    {
+        static constexpr DIMN value = (power(NoLetters, Depth + 1) - 1) / (NoLetters - 1);
+    };
+
+    using holder = typename alg::utils::generate_array<max_depth+1, helper>::result;
+
+    static constexpr std::array<DIMN, max_depth + 2> degree_sizes = holder::data;
 };
 
-template <DEG NoLetters>
-LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, tensor_size_info<NoLetters>::max_depth + 2> populate_tensor_size_info_array()
-{
-    LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, tensor_size_info<NoLetters>::max_depth + 2> tmp;
-    alg::utils::populate_array<depth_size, NoLetters, tensor_size_info<NoLetters>::max_depth + 1>::fill(tmp);
-    return tmp;
-}
 
-template <DEG NoLetters> const LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, tensor_size_info<NoLetters>::max_depth + 2>
-        tensor_size_info<NoLetters>::degree_sizes = populate_tensor_size_info_array<NoLetters>();
 
 } // namespace dtl
 
@@ -311,7 +296,7 @@ public:
     static DIMN start_of_degree(const DEG deg)
     {
         assert(deg <= max_degree + 1);
-        return SIZE_INFO::degree_sizes[deg];
+        return (deg == 0) ? 0 : SIZE_INFO::degree_sizes[deg-1];
     }
 
 public:

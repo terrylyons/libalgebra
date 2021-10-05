@@ -13,10 +13,11 @@ endif()
 project(Libalgebra VERSION 1.0.0)
 
 
+
 include(GNUInstallDirs)
 
 
-set(CMAKE_CXX_STANDARD 98)
+#set(CMAKE_CXX_STANDARD 98)
 
 find_package(Boost REQUIRED COMPONENTS thread container)
 if(WIN32)
@@ -80,3 +81,6 @@ if(NOT_SUBPROJECT)
             DESTINATION lib/cmake/Libalgebra
             )
 endif()
+
+
+add_subdirectory(tests)

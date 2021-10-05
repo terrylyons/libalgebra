@@ -100,6 +100,7 @@ template <size_t D, size_t W, coefficient_t F = Rational, vector_t VectorType = 
     static const unsigned ALPHABET_SIZE = W;
     typedef alg::poly<COEFF> MULTIPOLY1;
     typedef alg::free_tensor<COEFF, ALPHABET_SIZE, DEPTH> TENSOR;
+    typedef alg::shuffle_tensor<COEFF, ALPHABET_SIZE, DEPTH> SHUFFLE_TENSOR;
     typedef alg::lie<COEFF, ALPHABET_SIZE, DEPTH> LIE;
     typedef alg::maps<COEFF, ALPHABET_SIZE, DEPTH> MAPS;
     typedef alg::cbh<COEFF, ALPHABET_SIZE, DEPTH> CBH;

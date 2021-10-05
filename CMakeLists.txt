@@ -12,6 +12,7 @@ endif()
 
 project(Libalgebra VERSION 1.0.0)
 
+option(LIBALGEBA_TESTING "Enable building test targets" OFF)
 
 
 include(GNUInstallDirs)
@@ -31,7 +32,7 @@ else()
 endif()
 
 
-add_library(Libalgebra INTERFACE)
+add_library(Libalgebra INTERFACE libalgebra/vectors/giles_dense.h)
 
 target_include_directories(Libalgebra
         INTERFACE
@@ -82,5 +83,6 @@ if(NOT_SUBPROJECT)
             )
 endif()
 
-
-add_subdirectory(tests)
+if (LIBALGEBRA_TESTING)
+    add_subdirectory(tests)
+endif()

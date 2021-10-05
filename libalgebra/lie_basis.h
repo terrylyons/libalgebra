@@ -15,14 +15,12 @@ Version 3. (See accompanying file License.txt)
 #define DJC_COROPA_LIBALGEBRA_LIEBASISH_SEEN
 
 #include "libalgebra/basis/basis.h"
-#include "libalgebra/utils/integer_maths.h"
+#include "utils/integer_maths.h"
 
 namespace dtl {
 
-using alg::integer_maths::divisor_calc;
-using alg::integer_maths::mobius_func;
-
-typedef long long Long;
+using alg::integer_maths::mobius;
+using alg::integer_maths::power;
 
 /**
  * The size of the Hall set with n letters has number of members at level k
@@ -33,119 +31,58 @@ typedef long long Long;
  * where \mu is the Mobius function and the sum is taken over all divisors of d.
  */
 
-/*
-Struct for computing the size of a layer in the Hall set.
 
-We recurse down through divisors, adding on the corresponding
-term from the formula for the size of the layer. This quantity
-is not normalised.
-*/
-template <DEG NoLetters, DEG Level, DEG Divisor = 1, DEG Remainder = (Level % Divisor)> struct hall_set_level_size
+template <typename Unsigned>
+constexpr std::make_signed_t<Unsigned> hall_set_level_term(Unsigned width, Unsigned level, Unsigned divisor)
 {
-    //   static constexpr const Long value = hall_set_level_size<NoLetters, Level,
-    //   Divisor + 1>::value;
-    enum { value = hall_set_level_size<NoLetters, Level, Divisor + 1>::value };
-};
+    using Int = std::make_signed_t<Unsigned>;
+    return mobius(divisor)*power(static_cast<Int>(width), level/divisor)/ static_cast<Int>(level);
+}
 
-/*
-Specialisation for divisors: multiply mobius by exponent and add to next
-divisor term value.
-*/
-template <DEG NoLetters, DEG Level, DEG Divisor> struct hall_set_level_size<NoLetters, Level, Divisor, 0>
+template <typename Unsigned>
+constexpr std::make_signed_t<Unsigned> hall_set_level_size_impl(Unsigned width, Unsigned level, Unsigned divisor)
 {
-    /*
-    static constexpr const Long value = mobius_func<Divisor>::value
-                              * ConstPower<NoLetters, Level / Divisor>::ans
-                              + hall_set_level_size<NoLetters, Level, Divisor +
-    1>::value;
-                              */
-    enum
-    {
-        value = mobius_func<Divisor>::value * ConstPower<NoLetters, Level / Divisor>::ans +
-                hall_set_level_size<NoLetters, Level, Divisor + 1>::value
-    };
-};
+    return (
+            (level%divisor==0) ? hall_set_level_term(width, level, divisor) : 0
+    )+((divisor<level) ? hall_set_level_size_impl(width, level, divisor+1) : 0);
+}
 
-/*
-Specialisation for divisor = number (terminal case).
-*/
-template <DEG NoLetters, DEG Level> struct hall_set_level_size<NoLetters, Level, Level, 0>
+template <typename Unsigned>
+constexpr Unsigned hall_set_level_size(Unsigned width, Unsigned level)
 {
-    // static constexpr const Long value = mobius_func<Level>::value * NoLetters;
-    enum { value = mobius_func<Level>::value * NoLetters };
-};
+    return static_cast<Unsigned>(hall_set_level_size_impl(width, level, static_cast<Unsigned>(1)));
+}
 
-/*
-Specialisation for 1
-*/
-template <DEG NoLetters> struct hall_set_level_size<NoLetters, 1, 1, 0>
+template <typename Unsigned>
+constexpr Unsigned hall_set_size_impl(Unsigned width, Unsigned depth, Unsigned level)
 {
-    // static constexpr const Long value = NoLetters;
-    enum { value = NoLetters };
-};
+    return hall_set_level_size(width, level)+
+            (level<depth ? hall_set_size_impl(width, depth, level+1) : 0);
+}
 
-/*
-Specialisation for 0.
-*/
-template <DEG NoLetters, DEG Divisor> struct hall_set_level_size<NoLetters, 0, Divisor, 0>
+template <typename Unsigned>
+constexpr Unsigned hall_set_size(Unsigned width, Unsigned depth)
 {
-    // static constexpr const Long value = NoLetters;
-    enum { value = NoLetters };
-};
+    return (depth==static_cast<Unsigned>(0))
+        ? static_cast<Unsigned>(0)
+        : hall_set_size_impl(width, depth, static_cast<Unsigned>(1));
+}
 
-template <DEG NoLetters, DEG MaxLevel> struct hall_set_size
+template <DIMN Width, DIMN Depth>
+struct hall_set_array_helper
 {
-    // static const Long value;
-
-    // static constexpr const Long value = ((hall_set_level_size<NoLetters,
-    // MaxLevel - 1>::value / (MaxLevel - 1))
-    //     //    + hall_set_size<NoLetters, MaxLevel - 1>::value);
-    enum
-    {
-        value = ((hall_set_level_size<NoLetters, MaxLevel - 1>::value / (MaxLevel - 1)) +
-                 hall_set_size<NoLetters, MaxLevel - 1>::value)
-    };
+    static constexpr DIMN value = hall_set_size(Width, Depth);
 };
-
-template <DEG NoLetters> struct hall_set_size<NoLetters, 1>
-{
-    // static constexpr const Long value = 0;
-    enum { value = 0 };
-};
-
-template <DEG NoLetters> struct hall_set_size<NoLetters, 0>
-{
-    // static constexpr const Long value = 0;
-    enum { value = 0 };
-};
-
-/*
-template < DEG NoLetters, DEG MaxLevel >
-const Long hall_set_size < NoLetters, MaxLevel >::value =
-        ((hall_set_level_size<NoLetters, MaxLevel - 1>::value / (MaxLevel - 1))
-          + hall_set_size<NoLetters, MaxLevel - 1>::value);
-
-template < DEG NoLetters >
-const Long hall_set_size < NoLetters, 1 >::value = 0;
-
-template < DEG NoLetters >
-const Long hall_set_size < NoLetters, 0 >::value = 0;
-*/
 
 template <DEG NoLetters, DEG MaxDepth> struct hall_set_info
 {
-    static const LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, MaxDepth + 2> degree_sizes;
+    template <DIMN Level>
+    using helper = hall_set_array_helper<NoLetters, Level>;
+
+    using holder = typename alg::utils::generate_array<MaxDepth+1, helper>::result;
+    static constexpr std::array<DIMN, MaxDepth + 2> degree_sizes = holder::data;
 };
 
-template <DEG NoLetters, DEG MaxDepth> LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, MaxDepth + 2> populate_hall_set_size_array()
-{
-    LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, MaxDepth + 2> tmp;
-    utils::populate_array<hall_set_size, NoLetters, MaxDepth + 1>::fill(tmp);
-    return tmp;
-}
-
-template <DEG NoLetters, DEG MaxDepth> const LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, MaxDepth + 2>
-        hall_set_info<NoLetters, MaxDepth>::degree_sizes = populate_hall_set_size_array<NoLetters, MaxDepth>();
 
 } // namespace dtl
 
@@ -561,7 +498,7 @@ public:
     static DIMN start_of_degree(const DEG d)
     {
         assert(d <= max_degree + 1);
-        return SIZE_INFO::degree_sizes[d];
+        return (d == 0) ? 0 : SIZE_INFO::degree_sizes[d-1];
     }
 };
 

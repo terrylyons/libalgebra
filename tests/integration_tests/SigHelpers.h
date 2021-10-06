@@ -46,7 +46,7 @@ typename FRAMEWORK::TENSOR o_signature(ITERATOR_T begin, ITERATOR_T end, const F
 	typedef typename FRAMEWORK::LIE LIE;
 	typedef typename FRAMEWORK::S S;
 	typename FRAMEWORK::MAPS& maps = context.maps;
-	typename FRAMEWORK::CBH& cbh = context.cbh;
+	//typename FRAMEWORK::CBH& cbh = context.cbh;
 	//#undef  _OPENMP
 //#ifndef _OPENMP
 #if 0

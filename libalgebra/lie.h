@@ -81,7 +81,7 @@ template <typename Coeff> class lie_multiplication
 
         typedef typename Lie::BASIS basis_t;
         typedef typename basis_t::PARENT parent_t;
-        typedef typename basis_t::KEY lie_key_t;
+        //typedef typename basis_t::KEY lie_key_t;
 
         static const lie_t zero;
         DEG target_degree = lie_t::basis.degree(k1) + lie_t::basis.degree(k2); // degrees[k1] + degrees[k2];

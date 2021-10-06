@@ -32,7 +32,7 @@ else()
 endif()
 
 
-add_library(Libalgebra INTERFACE libalgebra/vectors/giles_dense.h)
+add_library(Libalgebra INTERFACE)
 
 target_include_directories(Libalgebra
         INTERFACE

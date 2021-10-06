@@ -45,7 +45,7 @@ class poly_lie_multiplication : poly_multiplication<Coeff>
     static PolyLie prod2(poly<Coeff> const &poly1, typename PolyLie::KEY const &liemon1)
     {
         typedef poly<Coeff> poly_t;
-        typedef typename PolyLie::KEY key_t;
+        //typedef typename PolyLie::KEY key_t;
         PolyLie result;
         for (typename poly_t::const_iterator it = poly1.begin(); it != poly1.end(); it++) {
             scalar_t temp = it->value();

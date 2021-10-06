@@ -386,8 +386,8 @@ public:
     private:
         typename DENSE::iterator m_dense_iterator;
         typename DENSE::iterator m_dense_end;
-        typename SPARSE::iterator m_sparse_iterator;
         typename SPARSE::iterator m_sparse_begin;
+        typename SPARSE::iterator m_sparse_iterator;
 
     private:
         bool compare_iterators(const iterator_item &other) const
@@ -482,8 +482,8 @@ public:
     private:
         typename DENSE::const_iterator m_dense_iterator;
         typename DENSE::const_iterator m_dense_end;
-        typename SPARSE::const_iterator m_sparse_iterator;
         typename SPARSE::const_iterator m_sparse_begin;
+        typename SPARSE::const_iterator m_sparse_iterator;
 
     private:
         bool compare_iterators(const const_iterator_item &other) const

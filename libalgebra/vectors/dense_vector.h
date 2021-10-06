@@ -595,8 +595,6 @@ public:
             return *this;
         }
 
-        DIMN mid_dim = std::min(rhs.dimension(), dimension());
-
         if (rhs.dimension() > dimension()) {
             resize_to_dimension(rhs.dimension());
             //m_data.copy_extend(rhs.m_data.begin() + mid_dim, rhs.m_data.end());
@@ -1038,7 +1036,7 @@ public:
 
         for (IDEG out_deg = max_degree; out_deg >= 1; --out_deg) {
             lhs_deg_min = std::max(IDEG(0), out_deg - max_rhs_deg);
-            assign = (out_deg > old_lhs_deg) || default_assign;
+            assign = (out_deg > static_cast<IDEG>(old_lhs_deg)) || default_assign;
             lhs_deg_max = std::min(out_deg - offset, static_cast<IDEG>(old_lhs_deg));
 
             for (IDEG lhs_deg = lhs_deg_max; lhs_deg >= lhs_deg_min; --lhs_deg) {

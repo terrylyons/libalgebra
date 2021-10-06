@@ -258,7 +258,7 @@ public:
 
         operator LET()
         {
-            word_t dBottom, dMiddle, dTop;
+            word_t /*dBottom,*/ dMiddle, dTop;
             int iExponent;
             word_t dTemp, dMantissa;
             dMantissa = frexp(m_parent._word, &iExponent);
@@ -267,7 +267,7 @@ public:
             dTemp = dMiddle + (word_t) 1.;
             dMantissa = frexp(dTemp, &iExponent);
             dTemp = ldexp(dMantissa, int(iExponent + uBitsInLetter));
-            dBottom = modf(dTemp, &dMiddle);
+            /*dBottom =*/ modf(dTemp, &dMiddle);
             _tensor_basis middle(dMiddle);
             return middle.FirstLetter(); // adds a one implicitly
         }

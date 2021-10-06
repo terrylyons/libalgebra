@@ -622,6 +622,15 @@ inline __DECLARE_UNARY_OPERATOR(shuffle_tensor, -, -, ALG)
 
 };
 
+
+
+template <DEG Width, DEG Depth, typename Coeffs>
+class dual_pairing<shuffle_tensor_basis<Width, Depth>, free_tensor_basis<Width, Depth>, Coeffs>
+        : public dot_product_pairing<shuffle_tensor_basis<Width, Depth>, free_tensor_basis<Width, Depth>, Coeffs>
+{};
+
+
+
 // Include once wrapper
 #endif // DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 

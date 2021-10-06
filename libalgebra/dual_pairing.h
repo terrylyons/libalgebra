@@ -41,7 +41,24 @@ template <typename FunctionalBasis, typename VectorBasis, typename Coeffs>
 class dual_pairing;
 
 
-
+/**
+ * @brief Simple implementation of a dual pairing where the action is effectively a dot product
+ *
+ * This class provides an implementation for a dual pairing where the action is given by the
+ * first using the canonical isomorphism of a vector space with dimension n into R^n and then
+ * using the dot product. Consequently, the vector spaces of functionals and vectors are assumed
+ * to have equal dimension. Moreover, the ordering on the bases must be compatible.
+ *
+ * This is intended as a utility for quickly implementing a dual pairing without the need to
+ * write the dense implementation by hand. To implement, one needs only create a specialisation
+ * of the dual_pairing class for the relevant template arguments, and derive the specialisation
+ * from this class publically. This will make the action available in the correct way. (See
+ * the implementation in tensor.h for an example.)
+ *
+ * @tparam FunctionalBasis Basis for the vector space of functionals
+ * @tparam VectorBasis Basis for the vector space
+ * @tparam Coeffs Coefficient field over which to work
+ */
 template <typename FunctionalBasis, typename VectorBasis, typename Coeffs>
 class dot_product_pairing
 {
@@ -98,12 +115,23 @@ public:
 /**
  * @brief Apply a functional (via a dual pairing) to a vector from a vector space.
  *
+ * This function evaluates, via a dual pairing, the action of an element of a dual
+ * space on an element of a vector space. More precisely, if U and V are vector
+ * spaces, represented as the types Functional and Vector, respectively, then this
+ * function returns the result of evaluating the pairing \<u, v\> for specific
+ * elements u of U and v of V.
  *
- * @tparam Functional
- * @tparam Vector
- * @param functional
- * @param vector
- * @return
+ * The types Functional and Vector should implement the same interface as
+ * vectors::vector and must have the same coefficient_field type. The actual
+ * implementation is deferred to the relevant dual_pairing template class
+ * which should provide the right implementation for the different types
+ * representing elements from the respective vector spaces.
+ *
+ * @tparam Functional Type of elements of the vector space of functionals
+ * @tparam Vector Type of elements of vector space
+ * @param functional Element of space of functionals
+ * @param vector Element of vector space
+ * @return Scalar value of evaluating the functional at the vector.
  */
 template <typename Functional, typename Vector>
 std::enable_if<std::is_same<typename Functional::coefficient_field, typename Vector::coefficient_field>::value,

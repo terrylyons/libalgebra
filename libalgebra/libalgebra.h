@@ -219,7 +219,6 @@ template <typename Coeff, DEG n_letters, DEG max_degree = 0> class poly_lie;
 #include "poly_lie.h"
 #include "poly_lie_basis.h"
 #include "polynomials.h"
-
 #include "tensor.h"
 #include "tensor_basis.h"
 #include "utils.h"

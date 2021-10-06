@@ -31,7 +31,7 @@ else()
 endif()
 
 
-add_library(Libalgebra INTERFACE)
+add_library(Libalgebra INTERFACE libalgebra/dual_pairing.h)
 
 target_include_directories(Libalgebra
         INTERFACE

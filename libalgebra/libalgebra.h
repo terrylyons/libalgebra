@@ -122,7 +122,7 @@ typedef unsigned __int64 uint64_t;
 #include "libalgebra/utils/integer_maths.h"
 #include "libalgebra/vectors/vectors.h"
 #include "multiplication_helpers.h"
-
+#include "dual_pairing.h"
 
 namespace alg {
 

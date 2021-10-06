@@ -20,8 +20,8 @@ namespace alg {
 // moved from  libalgebra.h
 
 /// Used to store degrees.
-typedef unsigned DEG;
-typedef int IDEG; // signed integer same size as degree
+typedef std::size_t DEG;
+typedef typename std::make_signed<DEG>::type IDEG; // signed integer same size as degree
 
 /// Used to index letters, and basis elements. The value 0 may be special.
 typedef size_t LET;

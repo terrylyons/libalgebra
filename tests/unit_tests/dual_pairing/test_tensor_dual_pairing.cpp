@@ -2,6 +2,8 @@
 // Created by sam on 06/10/2021.
 //
 
+#include <vector>
+
 #include <libalgebra/libalgebra.h>
 #include <UnitTest++/UnitTest++.h>
 #include <libalgebra/alg_types.h>
@@ -17,7 +19,23 @@ SUITE(tensor_dual_pairing) {
         SHUFFLE_TENSOR stensor;
 
         CHECK_EQUAL(0.0, alg::apply_functional(stensor, ftensor));
+    }
 
+    TEST_FIXTURE(fixture55double, test_bracket_identity) {
+        TENSOR ftensor(S(1));
+        SHUFFLE_TENSOR stensor(S(1));
+
+        CHECK_EQUAL(1.0, alg::apply_functional(stensor, ftensor));
+    }
+
+    TEST_FIXTURE(fixture55double, test_bracket_deg1) {
+        std::vector<double> fdata { 0.0, 1.0, 2.0, 3.0 };
+        std::vector<double> sdata { 0.0, 1.0, 1.0, 1.0 };
+
+        TENSOR ftensor(&*fdata.begin(), &*fdata.end());
+        SHUFFLE_TENSOR stensor(&*sdata.begin(), &*sdata.end());
+
+        CHECK_EQUAL(6.0, alg::apply_functional(stensor, ftensor));
     }
 
 

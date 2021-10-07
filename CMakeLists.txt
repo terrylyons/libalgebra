@@ -32,8 +32,8 @@ endif()
 
 
 add_library(Libalgebra INTERFACE
-        libalgebra/basis/basis.h
         libalgebra/basis/tags.h
+        libalgebra/basis/basis.h
         libalgebra/coefficients/coefficients.h
         libalgebra/utils/integer_maths.h
         libalgebra/utils/iterators.h
@@ -66,15 +66,11 @@ add_library(Libalgebra INTERFACE
         libalgebra/poly_lie.h
         libalgebra/poly_lie_basis.h
         libalgebra/polynomials.h
+        libalgebra/sparse_vector.h
         libalgebra/tensor.h
         libalgebra/tensor_basis.h
         libalgebra/utils.h
         )
-
-
-
-
-
 
 target_include_directories(Libalgebra
         INTERFACE

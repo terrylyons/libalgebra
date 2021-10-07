@@ -533,13 +533,28 @@ struct vector_type_selector<shuffle_tensor_basis<n_letters, max_depth>, Field>
 {
     typedef shuffle_tensor_basis<n_letters, max_depth> BASIS;
     typedef typename BASIS::KEY KEY;
-    typedef sparse_vector <BASIS, Field,
-#ifndef ORDEREDMAP
-    MY_UNORDERED_MAP<KEY, typename Field::S, typename KEY::hash>
+
+    typedef vectors::sparse_vector<BASIS, Field,
+                                   #ifndef ORDEREDMAP
+                                   MY_UNORDERED_MAP<KEY, typename Field::S, typename KEY::hash>
 #else
-    std::map<KEY, typename Field::S>
+            std::map<KEY, typename Field::S>
 #endif
-    > type;
+    > sparse_vect;
+
+    typedef vectors::dense_vector<BASIS, Field> dense_vect;
+
+    typedef vectors::hybrid_vector<BASIS, Field, vectors::policy::basic_resize_policy,
+                                   #ifndef ORDEREDMAP
+                                   MY_UNORDERED_MAP<KEY, typename Field::S, typename KEY::hash>
+#else
+            std::map<KEY, typename Field::S>
+#endif
+    > hybrid_vect;
+
+    typedef typename alg::utils::type_selector<boost::is_pod<typename Field::S>::value, sparse_vect, dense_vect>::type
+            type;
+
 };
 
 } // namespace vectors

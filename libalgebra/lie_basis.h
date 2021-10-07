@@ -130,7 +130,9 @@ public:
     enum { n_letters = N_letters };
 
     /// Bring up the extended_function class - see also extend_function method
-    using hall_set_type::extended_function;
+    template <typename Function, typename BinOp, typename Tag>
+    using extended_function = typename hall_set_type::template
+            extended_function<Function, BinOp, Tag>;
 
     /// For external compatibility, define KEY = key_type
     typedef LET KEY; // size_t
@@ -288,7 +290,11 @@ public:
         return ext_fn_t(*this, fn, op);
     }
 
-
+    template <typename ExtendedFunction>
+    ExtendedFunction extend_function() const
+    {
+        return ExtendedFunction(*this);
+    }
 
 
 };
@@ -335,6 +341,14 @@ public:
     using hall_basis_type::parents_begin;
     using hall_basis_type::parents_end;
 
+
+    /// Bring up the extended_function class - see also extend_function method
+    template<typename Function, typename BinOp, typename Tag>
+    using extended_function = typename hall_basis_type::template
+    extended_function<Function, BinOp, Tag>;
+
+    using hall_basis_type::extend_function;
+    using hall_basis_type::extend_function_lazy_cache;
 
 public:
     typedef basis::with_degree<max_degree> degree_tag;

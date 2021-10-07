@@ -39,7 +39,45 @@ find_path(Bignum_INCLUDE_DIR NAMES gmp.h gmpxx.h)
 message(STATUS ">>> Bignum library: ${Bignum_LIBRARY}")
 message(STATUS ">>> Bignum INCLUDE_DIRECTORIES: ${Bignum_INCLUDE_DIR}")
 
-add_library(Libalgebra INTERFACE)
+add_library(Libalgebra INTERFACE
+        libalgebra/basis/tags.h
+        libalgebra/basis/basis.h
+        libalgebra/coefficients/coefficients.h
+        libalgebra/utils/integer_maths.h
+        libalgebra/utils/iterators.h
+        libalgebra/utils/meta.h
+        libalgebra/utils/order_trait.h
+        libalgebra/vectors/base_vector.h
+        libalgebra/vectors/dense_storage.h
+        libalgebra/vectors/dense_vector.h
+        libalgebra/vectors/hybrid_vector.h
+        libalgebra/vectors/iterators.h
+        libalgebra/vectors/sparse_vector.h
+        libalgebra/vectors/vector.h
+        libalgebra/vectors/vectors.h
+        libalgebra/_tensor_basis.h
+        libalgebra/alg_types.h
+        libalgebra/algebra.h
+        libalgebra/basis_traits.h
+        libalgebra/compat.h
+        libalgebra/constlog2.h
+        libalgebra/constpower.h
+        libalgebra/implimentation_types.h
+        libalgebra/libalgebra.h
+        libalgebra/lie.h
+        libalgebra/lie_basis.h
+        libalgebra/monomial_basis.h
+        libalgebra/multi_polynomial.h
+        libalgebra/multiplication_helpers.h
+        libalgebra/poly_basis.h
+        libalgebra/poly_lie.h
+        libalgebra/poly_lie_basis.h
+        libalgebra/polynomials.h
+        libalgebra/sparse_vector.h
+        libalgebra/tensor.h
+        libalgebra/tensor_basis.h
+        libalgebra/utils.h
+        )
 
 target_include_directories(Libalgebra
         INTERFACE

@@ -561,6 +561,8 @@ typedef typename ALG::const_iterator const_iterator;
 
 public:
 
+    using ALG::ALG;
+
 /// Default constructor.
 shuffle_tensor(void) {}
 

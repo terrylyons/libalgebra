@@ -494,7 +494,20 @@ public:
 
 public:
 
-
+    /**
+     * @brief A wrapper around a function from letters into some set with a binary operation
+     *
+     * This is a wrapper around a function-like type and a binary operation type that is used
+     * to extend a function to the Hall set by recursively computing the result of
+     * f([k1, k2]) = f(k1)*f(k2), where f is the extended function and * is the binary operation.
+     * This recursion eventually terminates on letters, where the function is initially defined,
+     * so this process works and results in the desired extension.
+     *
+     * @tparam Function Function type
+     * @tparam BinOp Binary operation type
+     * @tparam Tag Cache type indicator tag
+     * @see hall_basis::extend_function
+     */
     template<typename Function, typename BinOp, typename Tag>
     class extended_function {
     public:

@@ -33,8 +33,129 @@ struct lookup_table_tag {
 };
 
 
-template <DEG Width>
-class hall_set_content;
+
+
+/**
+ * @brief Data content of a Hall set
+ *
+ * The Hall sets will almost always be instantiated as part of the Lie basis,
+ * which is usually a static member of a vector. For this reason, it makes it
+ * tricky to include these data as part of the Hall set object itself. Instead
+ * we make use of a container class which can be instantiated as a static variable
+ * in a function, and thus be instantiated only once per width, and the main Hall
+ * set class can get store a reference to this static object. This model also
+ * greatly simplifies the growing policy, since we can build in the grow_up call
+ * into the function that generates the instance.
+ *
+ * In terms of content, this class contains seven individual members: a vector
+ * of letters; a vector of parents (key to parents); a reverse map from parents
+ * to keys; the current degree held; a map from letters to keys; a vector of
+ * degree ranges; a vector of sizes (size of the Hall set up to degree).
+ * These are all public members.
+ *
+ * @tparam Width The alphabet size of the Hall set.
+ */
+template<DEG Width>
+class hall_set_content {
+public:
+    using degree_type = DEG;
+    using letter_type = LET;
+    using key_type = letter_type;
+    using size_type = DIMN;
+    using parent_type = std::pair<key_type, key_type>;
+
+    using degree_range_type = std::pair<size_type, size_type>;
+    using reverse_map_type = std::map<parent_type, key_type>;
+    using data_type = std::vector<parent_type>;
+    using letter_vec_type = std::vector<letter_type>;
+    using l2k_map_type = std::vector<key_type>;
+    using degree_ranges_map_type = std::vector<degree_range_type>;
+    using size_map_type = std::vector<size_type>;
+
+    letter_vec_type letters;
+    data_type data;
+    reverse_map_type reverse_map;
+    degree_type current_degree;
+    l2k_map_type l2k;
+    degree_ranges_map_type degree_ranges;
+    std::vector<size_type> sizes;
+
+    static constexpr degree_type n_letters = Width;
+
+private:
+
+    hall_set_content() : current_degree{0}
+    {
+        data.reserve(1+n_letters);
+        sizes.reserve(2);
+        l2k.reserve(n_letters);
+        data.push_back(parent_type(0, 0));
+        degree_ranges.reserve(2);
+        degree_ranges.push_back(degree_range_type(0, 1));
+        sizes.push_back(0);
+
+        for (letter_type l = 1; l<=n_letters; ++l) {
+            parent_type parents(key_type(0), key_type(l));
+            letters.push_back(l);
+            data.push_back(parents);
+            reverse_map.insert(std::pair<parent_type, key_type>(parents, data.size()-1));
+            l2k.push_back(l);
+        }
+
+        degree_range_type range;
+        range.first = degree_ranges[current_degree].second;
+        range.second = data.size();
+        degree_ranges.push_back(range);
+        sizes.push_back(n_letters);
+        ++current_degree;
+    }
+
+    void grow_up(degree_type degree)
+    {
+        for (degree_type d = current_degree+1; d<=degree; ++d) {
+            for (degree_type e = 1; 2*e<=d; ++e) {
+                letter_type i_lower, i_upper, j_lower, j_upper;
+                i_lower = degree_ranges[e].first;
+                i_upper = degree_ranges[e].second;
+                j_lower = degree_ranges[d-e].first;
+                j_upper = degree_ranges[d-e].second;
+
+                for (letter_type i = i_lower; i<i_upper; ++i) {
+                    for (letter_type j = std::max(j_lower, i+1); j<j_upper; ++j) {
+                        if (data[j].first<=i) {
+                            parent_type parents(i, j);
+                            data.push_back(parents);
+                            reverse_map[parents] = data.size()-1;
+                        }
+                    }
+                }
+            }
+
+            degree_range_type range;
+            range.first = degree_ranges[current_degree].second;
+            range.second = data.size();
+            degree_ranges.push_back(range);
+
+            ++current_degree;
+        }
+    }
+
+public:
+
+    static hall_set_content& instance(degree_type degree = 0) noexcept
+    {
+        static std::mutex lock;
+        std::lock_guard<std::mutex> access(lock);
+
+        static hall_set_content content;
+        if (degree>=2) {
+            content.grow_up(degree);
+        }
+
+        return content;
+    }
+
+};
 
 
 template <DEG Width>

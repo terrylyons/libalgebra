@@ -268,7 +268,7 @@ public:
  * H_1,...,H_i. Such an element is added to the set Hi+1 if and only if the
  * right parent of r is \<= l.
  *
- * @tparam Width
+ * @tparam Width Size of alphabet
  */
 template <DEG Width>
 class hall_set

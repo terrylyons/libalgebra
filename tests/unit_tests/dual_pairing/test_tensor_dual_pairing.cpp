@@ -38,6 +38,26 @@ SUITE(tensor_dual_pairing) {
         CHECK_EQUAL(6.0, alg::apply_functional(stensor, ftensor));
     }
 
+    TEST_FIXTURE(fixture55double, test_bracket_deg1_mismatch) {
+        std::vector<double> fdata { 0.0, 1.0, 2.0, 3.0 };
+        std::vector<double> sdata { 0.0, 0.0, 1.0, 0.0 };
+
+        TENSOR ftensor(&*fdata.begin(), &*fdata.end());
+        SHUFFLE_TENSOR stensor(&*sdata.begin(), &*sdata.end());
+
+        CHECK_EQUAL(2.0, alg::apply_functional(stensor, ftensor));
+    }
+
+    TEST_FIXTURE(fixture55double, test_bracket_deg1_complete_mismatch) {
+        std::vector<double> fdata { 0.0, 1.0, 2.0, 3.0 };
+        std::vector<double> sdata { 1.0, 0.0, 0.0, 0.0 };
+
+        TENSOR ftensor(&*fdata.begin(), &*fdata.end());
+        SHUFFLE_TENSOR stensor(&*sdata.begin(), &*sdata.end());
+
+        CHECK_EQUAL(0.0, alg::apply_functional(stensor, ftensor));
+    }
+
 
 
 

@@ -86,11 +86,6 @@ template <DEG NoLetters, DEG MaxDepth> struct hall_set_info
 
 } // namespace dtl
 
-/// The Hall Basis class.
-/**
-
-
-*/
 // Hall basis provides a fully populated (i.e. dense) basis for the lie elements
 // has the ability to extend the basis by degrees. This is not protected or
 // thread safe. To avoid error in multi-threaded code it is essential that it is
@@ -98,7 +93,20 @@ template <DEG NoLetters, DEG MaxDepth> struct hall_set_info
 // been modified to do this and avoid a subtle error.
 
 // It would be worthwhile to write a data driven sparse hall basis
-
+/**
+ * @brief The Hall basis class
+ *
+ * The Hall basis is a specific realisation of a Hall set, with N_letters
+ * and including elements up to and including MaxDepth. This class is a
+ * thin wrapper around the more general hall_set class and exposes some
+ * functionality of this underlying class. However, one cannot access
+ * information about the underlying hall_set beyond the MaxDepth set in
+ * the template parameter, even if the underlying hall_set object does
+ * include these data.
+ *
+ * @tparam N_letters Size of alphabet
+ * @tparam MaxDepth Maximum degree of elements to consider
+ */
 template <DEG N_letters, DEG MaxDepth>
 class hall_basis : private hall_set<N_letters>
 {
@@ -150,6 +158,8 @@ public:
     /// Constructs the basis with a given number of letters.
     hall_basis() : hall_set_type(MaxDepth), degree(*this, &letter_degree, std::plus<DEG>())
     {
+        // Instantiate the degree function table.
+        degree(KEY(size() - 1));
     }
 
     using hall_set_type::keyofletter;

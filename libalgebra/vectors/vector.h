@@ -26,6 +26,12 @@ public:
     {
         return arg;
     }
+
+    template <typename Basis, typename Coeffs, typename Vector>
+    static const Vector &convert(const vector<Basis, Coeffs, Vector> &arg)
+    {
+        return arg;
+    }
 };
 } // namespace dtl
 

@@ -173,41 +173,52 @@ template <DEG NoLetters, DEG MaxDepth> const LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, 
 template <DEG N_letters, DEG MaxDepth>
 class hall_basis : private hall_set<N_letters>
 {
+    /// Base class - privately derived, so keep private
+    using hall_set_type = hall_set<N_letters>;
 public:
+
+    using typename hall_set_type::letter_type;
+
     /// The default key has value 0, which is an invalid value
     /// and occurs as a parent key of any letter.
     ///
     /// keys can get large - but in the dense case this is not likely
     /// Make a choice for the length of a key in 64 bit.
-    // typedef DEG KEY; // unsigned int
-    typedef LET KEY; // size_t
+    using typename hall_set_type::key_type;
+
     /// The parents of a key are a pair of prior keys. Invalid 0 keys for letters.
-    typedef std::pair<KEY, KEY> PARENT;
+    using typename hall_set_type::parent_type;
+
     /// The number of letters in alphabet
     enum { n_letters = N_letters };
 
-    using hall_set_type = hall_set<N_letters>;
-
+    /// Bring up the extended_function class - see also extend_function method
     using hall_set_type::extended_function;
 
-    using typename hall_set_type::parent_type;
+    /// For external compatibility, define KEY = key_type
+    typedef LET KEY; // size_t
+    /// For external compatibility, define PARENT = parent_type
+    typedef parent_type PARENT;
 
 private:
 
-    static DEG letter_degree(LET) noexcept
+    /// Key level function for getting the degree
+    static DEG letter_degree(letter_type) noexcept
     {
         return 1;
     }
 
+    /// Predicate for forming the lookup table for degree
     struct depth_predicate
     {
-        bool operator()(const KEY& key) const noexcept
+        bool operator()(const key_type& key) const noexcept
         {
             auto bound = hall_set_type::start_of_degree(MaxDepth+1);
             return key <= bound;
         }
     };
 
+    /// Extended function for computing degree
     using degree_func_type = typename hall_set_type::template extended_function<
             decltype(&letter_degree),
             std::plus<DEG>,
@@ -216,13 +227,14 @@ private:
 
 public:
 
+    /// Function returning the degree of a given key
     const degree_func_type degree;
 
     /// Constructs the basis with a given number of letters.
     hall_basis() : hall_set_type(MaxDepth), degree(*this, &letter_degree, std::plus<DEG>())
     {
         // Instantiate the degree function table.
-        degree(KEY(size() - 1));
+        degree(letter_type(1));
     }
 
     using hall_set_type::keyofletter;
@@ -239,7 +251,6 @@ public:
     using hall_set_type::reverse_map_end;
     using hall_set_type::parents_begin;
     using hall_set_type::parents_end;
-
     using hall_set_type::start_of_degree;
 
 
@@ -249,7 +260,12 @@ public:
     /// Returns the key next the biggest key of the basis.
     using hall_set_type::end;
 
-    /// Returns the key next a given key in the basis. No implicit growup made.
+
+    /**
+     * @brief Returns the key next a given key in the basis.
+     * @param k current key
+     * @return key that immediately follows k in the Hall set order
+     */
     inline KEY nextkey(const KEY &k) const
     {
         if (k < (hall_set_type::start_of_degree(MaxDepth+1) - 1)) {
@@ -259,6 +275,7 @@ public:
         }
     }
 
+    /// Print the basis to an output stream
     friend std::ostream& operator<<(std::ostream& os, const hall_basis& b)
     {
         for (KEY k = b.begin(); k!=b.end(); k = b.next_key(k)) {
@@ -267,24 +284,28 @@ public:
         return os;
     }
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "HidingNonVirtualFunction"
+    /// The size of the Hall set up to degree MaxDepth
     DIMN size() const
     {
         return start_of_degree(MaxDepth+1);
     }
+#pragma clang diagnostic pop
 
 
 };
-//// if degree is static
-// template<DEG n_letters>
-// typename hall_basis<n_letters>::DEGREE hall_basis<n_letters>::degrees;
 
-/// The Lie basis class.
 /**
- This is the basis used to implement the lie class as a specialisation of
- the algebra class. In the current implementation, the Lie basis class is a
- wrapper for the hall_basis class, with a prod() member function.
-*/
-
+ * @brief The Lie basis class.
+ *
+ * This is the basis used to implement the lie class as a specialisation of
+ * the algebra class. In the current implementation, the Lie basis class is a
+ * wrapper for the hall_basis class, with a prod() member function.
+ *
+ * @tparam n_letters Size of alphabet
+ * @tparam max_degree maximum degree of elements
+ */
 template <DEG n_letters, DEG max_degree>
 class lie_basis : protected hall_basis<n_letters, max_degree>, dtl::hall_set_info<n_letters, max_degree>
 {

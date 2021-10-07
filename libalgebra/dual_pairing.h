@@ -134,8 +134,8 @@ public:
  * @return Scalar value of evaluating the functional at the vector.
  */
 template <typename Functional, typename Vector>
-std::enable_if<std::is_same<typename Functional::coefficient_field, typename Vector::coefficient_field>::value,
-               typename Functional::SCALAR>
+typename std::enable_if<std::is_same<typename Functional::coefficient_field, typename Vector::coefficient_field>::value,
+               typename Functional::SCALAR>::type
 apply_functional(const Functional& functional, const Vector& vector) {
     using f_basis_t = typename Functional::BASIS;
     using v_basis_t = typename Vector::BASIS;

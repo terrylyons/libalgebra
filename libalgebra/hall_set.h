@@ -316,16 +316,19 @@ public:
 
 public:
 
+    /// Get a const reference to vector of letters
     const letter_vec_type& letters() const noexcept
     {
         return content.letters;
     }
 
+    /// Get a const reference to vector of degree ranges
     const degree_ranges_map_type& hall_set_degree_ranges() const noexcept
     {
         return content.degree_ranges;
     }
 
+    /// return a const reference to letter to key map
     const l2k_map_type& l2k() const noexcept
     {
         return content.l2k;
@@ -355,21 +358,25 @@ private:
 
 public:
 
+    /// Get the index in the basis at which the elements of given degree start
     static constexpr size_type start_of_degree(degree_type degree) noexcept
     {
         return (degree == 0 || degree == 1) ? 0 : (level_size(degree-1) + start_of_degree(degree-1));
     }
 
+    /// Get the first element of the Hall set
     key_type begin() const noexcept
     {
         return key_type(1);
     }
 
+    /// Get the "end" of the hall set - this is the invalid key 0
     key_type end() const noexcept
     {
         return key_type(0);
     }
 
+    /// Get the key that follows in the basis order
     key_type next_key(const key_type& key) const noexcept
     {
         if (key < size()) {
@@ -394,53 +401,63 @@ private:
 
 public:
 
-
+    /// Get the key that corresponds to a letter
     key_type keyofletter(letter_type let) const
     {
         assert(letter(let));
         return content.l2k[let-1];
     }
 
+    /// Get the left parent of a key
     key_type lparent(const key_type& key) const noexcept
     {
         return content.data[key].first;
     }
 
+    /// Get the right parent of a key
     key_type rparent(const key_type& key) const noexcept
     {
         return content.data[key].second;
     }
 
+    /// Test if a key corresponds to a letter
     bool letter(const key_type& key) const noexcept
     {
         return ((key > 0) && (key <= Width));
     }
 
+    /// Get the letter that corresponds to a key.
     letter_type getletter(const key_type& key) const
     {
+        assert(letter(key));
         return content.letters[key - 1];
     }
 
+    /// Get the current size of the Hall set
     size_type size() const noexcept
     {
         return content.data.size() - 1;
     }
 
+    /// Get the index at which a key appears in the basis order
     size_type key_to_index(const key_type& key) const noexcept
     {
         return static_cast<size_type>(key - 1);
     }
 
+    /// Get the key that appears at a given index
     key_type index_to_key(size_type index) const noexcept
     {
         return static_cast<key_type>(index + 1);
     }
 
+    /// Retrieve the parents of a key
     const parent_type& operator[](const key_type& key) const noexcept
     {
         return content.data[key];
     }
 
+    /// Retrieve the key that is formed from the bracket of parents - throws an exception if invalid
     const key_type& operator[](const parent_type& parents) const
     {
         typename reverse_map_type::const_iterator it;
@@ -451,21 +468,25 @@ public:
         }
     }
 
+    /// Retrieve the key that is formed from the bracket of parents
     typename reverse_map_type::const_iterator find(const parent_type& parents) const noexcept
     {
         return content.reverse_map.find(parents);
     }
 
+    /// Get the iterator end of the reverse map
     typename reverse_map_type::const_iterator reverse_map_end() const noexcept
     {
         return content.reverse_map.end();
     }
 
+    /// Get the iterator at the start of the Hall set data
     typename data_type::const_iterator parents_begin() const noexcept
     {
         return content.data.cbegin();
     }
 
+    /// Get the pointer to the end of the Hall set data
     typename data_type::const_iterator parents_end() const noexcept
     {
         return content.data.cend();
@@ -596,6 +617,7 @@ public:
             lazy_cache_tag<void>
     >;
 
+    /// Write out a key as a (nested) bracket of its parents
     const key2string_type key2string;
 
 };

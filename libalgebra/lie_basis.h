@@ -209,11 +209,12 @@ private:
     }
 
     /// Predicate for forming the lookup table for degree
+    template <DEG D=MaxDepth>
     struct depth_predicate
     {
         bool operator()(const key_type& key) const noexcept
         {
-            auto bound = hall_set_type::start_of_degree(MaxDepth+1);
+            auto bound = hall_set_type::start_of_degree(D+1);
             return key <= bound;
         }
     };
@@ -222,7 +223,7 @@ private:
     using degree_func_type = typename hall_set_type::template extended_function<
             decltype(&letter_degree),
             std::plus<DEG>,
-            lookup_table_tag<depth_predicate>
+            lookup_table_tag<depth_predicate<MaxDepth> >
             >;
 
 public:
@@ -293,19 +294,78 @@ public:
     }
 #pragma clang diagnostic pop
 
+    /**
+     * @brief Extend a function on letters to a function on the Hall set
+     *
+     * Given a function f from letters into some set M with a binary operation
+     * * we can define an extension of f to the Hall set H by taking
+     * f([k1, k2]) = f(k1) * f(k2) for keys k1 and k2. By the definition of the
+     * Hall set, this recursion will terminate when k1 and k2 are letters.\n\n
+     *
+     * An easy example of this process is the degree function d, which maps
+     * letters to the integer 1. The binary operation here is +, and the
+     * extension d([k1, k2]) = d(k1) + d(k2) defines the extension to the
+     * whole Hall set.\n\n
+     *
+     * This function is a convenience for constructing such an extension. Given
+     * a function-like object Function, a binary operation BinOp, and a tag to
+     * indicate the type of caching to use, we construct an extended function
+     * object that behaves like the Function on letters.\n\n
+     *
+     * The tag object can be one three different options: no_caching_tag for no
+     * caching; lazy_caching_tag for lazy (cache on first compute) caching; and
+     * lookup_table_tag for precomputed lookup table caching.
+     *
+     * @tparam Function Function-like type on letters
+     * @tparam BinOp Binary operation type
+     * @tparam Tag Caching indicator tag
+     * @param fn Function-like instance
+     * @param op Binary operation object
+     * @return extended_function instance
+     */
+    template <typename Tag, typename Function, typename BinOp>
+    typename hall_set_type::template extended_function<Function, BinOp, Tag>
+    extend_function(Function fn, BinOp op) const
+    {
+        using ext_fn_t = typename hall_set_type::template extended_function<Function, BinOp, Tag>;
+        return ext_fn_t(*this, fn, op);
+    }
+
+    /**
+     * @brief Extend a function on letters to a function on the Hall set with lazy caching based on depth
+     *
+     * @tparam Depth Maximum degree of keys to include in cache
+     * @tparam Function Function-like type on letters
+     * @tparam BinOp Binary operation type
+     * @param fn Function-like instance
+     * @param op Binary operation object
+     * @return extended_function instance
+     */
+    template <DEG Depth, typename Function, typename BinOp>
+    typename hall_set_type::template
+            extended_function<Function, BinOp, lazy_cache_tag<depth_predicate<Depth> > >
+    extend_function_lazy_cache(Function fn, BinOp op) const
+    {
+        using tag_type = lazy_cache_tag<depth_predicate<Depth> >;
+        using ext_fn_t = typename hall_set_type::template extended_function<Function, BinOp, tag_type>;
+        return ext_fn_t(*this, fn, op);
+    }
+
+
+
 
 };
 
 /**
- * @brief The Lie basis class.
- *
- * This is the basis used to implement the lie class as a specialisation of
- * the algebra class. In the current implementation, the Lie basis class is a
- * wrapper for the hall_basis class, with a prod() member function.
- *
- * @tparam n_letters Size of alphabet
- * @tparam max_degree maximum degree of elements
- */
+* @brief The Lie basis class.
+*
+* This is the basis used to implement the lie class as a specialisation of
+* the algebra class. In the current implementation, the Lie basis class is a
+* wrapper for the hall_basis class, with a prod() member function.
+*
+* @tparam n_letters Size of alphabet
+* @tparam max_degree maximum degree of elements
+*/
 template <DEG n_letters, DEG max_degree>
 class lie_basis : protected hall_basis<n_letters, max_degree>, dtl::hall_set_info<n_letters, max_degree>
 {

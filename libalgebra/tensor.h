@@ -117,16 +117,17 @@ public:
     }
 };
 
-/// A specialisation of the algebra class with a free tensor basis.
 /**
-   Mathematically, the algebra of free_tensor instances is a free associative
-   algebra. With respect to the inherited algebra class, the essential
-   distinguishing feature of this class is the basis class used, and in
-   particular the basis::prod() member function. Thus, the most important
-   information is in the definition of free_tensor_basis. Notice that this
-   associative algebra of free tensors includes as a sub-algebra the
-   associative algebra corresponding to the SCALAR type. This is permitted by
-   the existence of empty keys in free_tensor_basis.
+ * @brief A specialisation of the algebra class with a free tensor basis.
+ *
+ * Mathematically, the algebra of free_tensor instances is a free associative
+ * algebra. With respect to the inherited algebra class, the essential
+ * distinguishing feature of this class is the basis class used, and in
+ * particular the basis::prod() member function. Thus, the most important
+ * information is in the definition of free_tensor_basis. Notice that this
+ * associative algebra of free tensors includes as a sub-algebra the
+ * associative algebra corresponding to the SCALAR type. This is permitted by
+ * the existence of empty keys in free_tensor_basis.
  */
 template <typename Coeff, DEG n_letters, DEG max_degree, typename VectorType> class free_tensor : public algebra<
         free_tensor_basis < n_letters, max_degree>, Coeff, free_tensor_multiplication<Coeff>, VectorType
@@ -188,7 +189,7 @@ keyofletter(letter), s
 ) {
 }
 
-
+/// Constructor from pointers to data range
 free_tensor(SCA const* begin, SCA const* end) : ALG(begin, end) {}
 
 
@@ -198,7 +199,7 @@ explicit free_tensor(const KEY &k) : ALG(k) {}
 /// Explicit unidimensional constructor from a given scalar.
 explicit free_tensor(const SCA &s) : ALG(VECT::basis.empty_key, s) {}
 
-
+/// Constructor from pointers to data range with offset
 free_tensor(DIMN offset, SCA const* begin, SCA const* end) : ALG(offset, begin, end)
 {}
 
@@ -279,6 +280,7 @@ free_tensor fmexp(const free_tensor &exp_arg) const
     return result;
 }
 
+/// Inplace version of fmexp
 free_tensor& fmexp_inplace(const free_tensor &exp_arg)
 {
     free_tensor self(*this), x(exp_arg);
@@ -520,17 +522,19 @@ public:
     }
 };
 
-/// A specialisation of the algebra class with a shuffle tensor basis.
+
 /**
-   Mathematically, the algebra of shuffle_tensor instances is a shuffle
-   associative algebra associated to a free associative algebra. With respect
-   to the inherited algebra class, the essential distinguishing feature of
-   this class is the basis class used, and in particular the basis::prod()
-   member function. Thus, the most important information is in the definition
-   of shuffle_tensor_basis. Notice that this associative algebra of free
-   tensors includes as a sub-algebra the associative algebra corresponding to
-   the SCALAR type. This is permitted by the existence of empty keys in
-   shuffle_tensor_basis.
+ * @brief A specialisation of the algebra class with a shuffle tensor basis.
+ *
+ * Mathematically, the algebra of shuffle_tensor instances is a shuffle
+ * associative algebra associated to a free associative algebra. With respect
+ * to the inherited algebra class, the essential distinguishing feature of
+ * this class is the basis class used, and in particular the basis::prod()
+ * member function. Thus, the most important information is in the definition
+ * of shuffle_tensor_basis. Notice that this associative algebra of free
+ * tensors includes as a sub-algebra the associative algebra corresponding to
+ * the SCALAR type. This is permitted by the existence of empty keys in
+ * shuffle_tensor_basis.
  */
 template <typename Coeff, DEG n_letters, DEG max_degree> class shuffle_tensor : public algebra<
         shuffle_tensor_basis < n_letters, max_degree>, Coeff, shuffle_tensor_multiplication<Coeff>

@@ -8,6 +8,7 @@
 namespace alg {
 namespace utils {
 
+/// Trait indicating whether a map type is ordered
 template <typename Map> struct is_ordered { static const bool value = false; };
 
 template <typename K, typename V> struct is_ordered<std::map<K, V>>

@@ -1035,13 +1035,16 @@ public:
     // Transform methods
 
     /**
-     * @brief
-     * @tparam Vector
-     * @tparam KeyTransform
-     * @param result
-     * @param rhs
-     * @param key_transform
-     * @param max_depth
+     * @brief Apply a buffered binary transform using only key transform up to max depth
+     *
+     * This is applied to the vector using the degree optimisation.
+     *
+     * @tparam Vector Result vector type
+     * @tparam KeyTransform Key transform type
+     * @param result Vector in which to place the result
+     * @param rhs right hand side buffer
+     * @param key_transform transform to apply
+     * @param max_depth maximum depth of elements to compute
      */
     template <typename Vector, typename KeyTransform> void
     triangular_buffered_apply_binary_transform(Vector &result, const dense_vector &rhs, KeyTransform key_transform,
@@ -1079,15 +1082,18 @@ public:
     }
 
     /**
-     * @brief
-     * @tparam Vector
-     * @tparam KeyTransform
-     * @tparam IndexTransform
-     * @param result
-     * @param rhs
-     * @param key_transform
-     * @param index_transform
-     * @param max_depth
+     * @brief Apply a buffered binary transform with separate transforms up to max depth
+     *
+     * This is applied to the vector using the degree optimisation.
+     *
+     * @tparam Vector Result vector type
+     * @tparam KeyTransform Key transform type
+     * @tparam IndexTransform Index transform type
+     * @param result Vector in which to place the result
+     * @param rhs Right hand side buffer
+     * @param key_transform transform to apply by keys (sparse elements)
+     * @param index_transform transform to apply by index (dense elements)
+     * @param max_depth Maximum depth to compute
      */
     template <typename Vector, typename KeyTransform, typename IndexTransform> void
     triangular_buffered_apply_binary_transform(Vector &result, const dense_vector &rhs, KeyTransform key_transform,
@@ -1128,11 +1134,12 @@ public:
     }
 
     /**
-     * @brief
-     * @tparam KeyTransform
-     * @param rhs
-     * @param key_transform
-     * @param max_depth
+     * @brief Apply an unbuffered binary transform using only key transform
+     *
+     * @tparam KeyTransform Key transform type
+     * @param rhs Right hand side buffer
+     * @param key_transform Key transform
+     * @param max_depth maximum depth of elements to compute
      */
     template <typename KeyTransform> void
     triangular_unbuffered_apply_binary_transform(const dense_vector &rhs, KeyTransform key_transform,
@@ -1144,13 +1151,13 @@ public:
     }
 
     /**
-     * @brief
-     * @tparam KeyTransform
-     * @tparam IndexTransform
-     * @param rhs
-     * @param key_transform
-     * @param index_transform
-     * @param max_depth
+     * @brief Apply an unbuffered binary transform with separate transforms
+     * @tparam KeyTransform Key transform type
+     * @tparam IndexTransform Index transform type
+     * @param rhs Right hand side buffer
+     * @param key_transform transform to apply by key (sparse)
+     * @param index_transform transform to apply by index (dense)
+     * @param max_depth Maximum depth of elements to compute
      */
     template <typename KeyTransform, typename IndexTransform> void
     triangular_unbuffered_apply_binary_transform(const dense_vector &rhs, KeyTransform key_transform,
@@ -1238,12 +1245,12 @@ public:
     }
 
     /**
-     * @brief
-     * @tparam Vector
-     * @tparam KeyTransform
-     * @param result
-     * @param rhs
-     * @param key_transform
+     * @brief Apply buffered binary transform with no degree optimisation
+     * @tparam Vector Output vector type
+     * @tparam KeyTransform Key transform type
+     * @param result buffer in which to place result
+     * @param rhs Right hand side buffer
+     * @param key_transform Transform to apply by key (sparse)
      */
     template <typename Vector, typename KeyTransform> void
     square_buffered_apply_binary_transform(Vector &result, const dense_vector &rhs, KeyTransform key_transform) const
@@ -1265,13 +1272,13 @@ public:
     }
 
     /**
-     * @brief
-     * @tparam Vector
-     * @tparam KeyTransform
-     * @tparam IndexTransform
-     * @param result
-     * @param rhs
-     * @param index_transform
+     * @brief Apply buffered binary transform with separate transforms and no degree optimisation
+     * @tparam Vector Output vector type
+     * @tparam KeyTransform Key transform type
+     * @tparam IndexTransform Index transform type
+     * @param result buffer in which to place result
+     * @param rhs right hand side buffer
+     * @param index_transform transform to apply by index (dense)
      */
     template <typename Vector, typename KeyTransform, typename IndexTransform> void
     square_buffered_apply_binary_transform(Vector &result, const dense_vector &rhs, KeyTransform /*key_transform*/,
@@ -1291,11 +1298,11 @@ public:
 
 public:
     /**
-     * @brief
-     * @tparam Transform
-     * @param result
-     * @param transform
-     * @param max_deg
+     * @brief  Apply a transform inplace with buffering
+     * @tparam Transform Transform type
+     * @param result buffer in which to place result (temporarily)
+     * @param transform transform to apply
+     * @param max_deg Maximum degree
      */
     template <typename Transform>
     void buffered_apply_unary_transform(dense_vector &result, Transform transform, const DEG max_deg) const
@@ -1311,10 +1318,10 @@ public:
     }
 
     /**
-     * @brief
-     * @tparam Transform
-     * @param result
-     * @param transform
+     * @brief  Apply a transform inplace with buffering
+     * @tparam Transform Transform type
+     * @param result buffer in which to place result (temporarily)
+     * @param transform transform to apply
      */
     template <typename Transform> void buffered_apply_unary_transform(dense_vector &result, Transform transform) const
     {

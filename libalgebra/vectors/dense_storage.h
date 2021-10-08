@@ -36,6 +36,12 @@ struct dense_storage_base
     using const_pointer  = S const*;
     using size_type      = typename allocator_type::size_type;
 
+    /**
+     * The vector can be owned where the container is responsible for the
+     * data it points to; borrowed where the container points to some data
+     * in a const way; or borrowed_mut where data is borrowed in a non const
+     * way.
+     */
     enum vec_type
     {
         owned, borrowed_mut, borrowed
@@ -46,6 +52,7 @@ struct dense_storage_base
     size_type m_size;
     vec_type m_type;
 
+    /// Create new storage (default initialised) with size
     explicit dense_storage_base(size_type sz=0)
         : m_alloc{},
         m_data{(sz > 0) ? alloc_traits::allocate(m_alloc, sz) : nullptr},
@@ -60,10 +67,12 @@ struct dense_storage_base
         }
     }
 
+    /// Create a new mutably borrowed vector from data
     dense_storage_base(pointer begin, pointer end)
         : m_alloc{}, m_data{begin}, m_size{static_cast<size_type>(end - begin)}, m_type{borrowed_mut}
     {}
 
+    /// Create a new borrowed data from data
     dense_storage_base(const_pointer begin, const_pointer end)
         : m_alloc{},
           m_data{const_cast<pointer>(begin)},
@@ -71,9 +80,11 @@ struct dense_storage_base
           m_type{borrowed}
     {}
 
+    // No copy operations
     dense_storage_base(dense_storage_base const&) = delete;
     dense_storage_base& operator=(dense_storage_base const&) = delete;
 
+    /// Move constructor
     dense_storage_base(dense_storage_base&& other) noexcept
         : m_alloc{other.m_alloc}, m_data{other.m_data}, m_size{other.m_size}, m_type{other.m_type}
     {
@@ -82,6 +93,7 @@ struct dense_storage_base
         other.m_type = owned;
     }
 
+    /// Move assignment
     dense_storage_base& operator=(dense_storage_base&& other) noexcept
     {
         std::swap(m_alloc, other.m_alloc);
@@ -91,17 +103,19 @@ struct dense_storage_base
         return *this;
     }
 
-
+    /// Test if storage is owned
     bool is_owned() const
     {
         return m_type == owned;
     }
 
+    /// Test if storage is borrowed
     bool is_borrowed() const
     {
         return m_type == borrowed;
     }
 
+    /// Test if storage is borrowed mutably
     bool is_borrowed_mut() const
     {
         return m_type == borrowed_mut;
@@ -767,6 +781,7 @@ public:
 
 public:
 
+    /// Equality operator
     bool operator==(dense_storage const &other) const
     {
         if (size() != other.size()) {
@@ -782,6 +797,7 @@ public:
         return true;
     }
 
+    /// Print data to stream (useful for debugging)
     friend std::ostream &operator<<(std::ostream &os, dense_storage const &arg)
     {
         os << '{';

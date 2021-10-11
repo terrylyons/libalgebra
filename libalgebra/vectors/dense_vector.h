@@ -206,7 +206,7 @@ public:
     /// Reserve to degree
     void reserve_to_degree(const DEG deg)
     {
-        DIMN target_deg = std::min(degree_tag.max_degree, deg);
+        DEG target_deg = std::min(degree_tag.max_degree, deg);
         DIMN target_dim = start_of_degree(target_deg + 1);
         m_data.reserve(target_dim);
         m_dimension = target_dim;
@@ -1192,8 +1192,8 @@ public:
             return;
         }
 
-        const DEG old_lhs_deg = degree();
-        const DEG max_degree = std::min(max_depth, m_degree + rhs.m_degree);
+        const IDEG old_lhs_deg = static_cast<IDEG>(degree());
+        const IDEG max_degree = static_cast<IDEG>(std::min(max_depth, m_degree + rhs.m_degree));
 
         if (max_degree > m_degree) {
             //resize_to_degree(max_degree);

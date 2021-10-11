@@ -35,30 +35,36 @@ namespace vectors {
 //  normal functions however iterators may be invalidated by any sort of
 //  insertion in the unordered settings
 /**
-An instance of the sparse_vector class is just a(n unordered) MAP between KEY
-and SCALAR, with vector space operators. It is a vector of basis elements of
-type KEY, stored in a MAP class, associated to coefficients given by SCALAR
-instances. Each basis element refers to the static instance of type BASIS.
-
-The MAP class must comes with a std::map<KEY, SCALAR> interface.
-The scalar type SCALAR correponds to MAP::mapped_type.
-By default, the MAP class is taken from the BASIS via the BASIS::MAP
-type, cf. forward declaration of the sparse_vector class in libalgebra.h.
-
-The SCALAR type must come with operators making it an associative
-algebra (non necessarily commutative) containing the integers (via a
-suitable constructor). Thus, operators *,+,- must be implemented.
-It is necessary that the class can be initialized from 0, +1, -1.
-
-There is a compatibility condition between the BASIS and MAP classes
-since the MAP::key_type type and the BASIS::KEY must be the same.
-
-For unordered MAP use it is assumed that the follow:
-References and iterators to the erased elements are invalidated.
-Other iterators and references are not invalidated. Moreover (C++2014)
-the internal order of the elements not erased is preserved. However
-insertion causes a rehash which disrupts all iterators
-*/
+ * @brief Sparse vector where elements are stored as key-value pairs
+ *
+ * An instance of the sparse_vector class is just a(n unordered) MAP between KEY
+ * and SCALAR, with vector space operators. It is a vector of basis elements of
+ * type KEY, stored in a MAP class, associated to coefficients given by SCALAR
+ * instances. Each basis element refers to the static instance of type BASIS.
+ *
+ * The MAP class must comes with a std::map<KEY, SCALAR> interface.
+ * The scalar type SCALAR corresponds to MAP::mapped_type.
+ * By default, the MAP class is taken from the BASIS via the BASIS::MAP
+ * type, cf. forward declaration of the sparse_vector class in libalgebra.h.
+ *
+ * The SCALAR type must come with operators making it an associative
+ * algebra (non necessarily commutative) containing the integers (via a
+ * suitable constructor). Thus, operators *,+,- must be implemented.
+ * It is necessary that the class can be initialized from 0, +1, -1.
+ *
+ * There is a compatibility condition between the BASIS and MAP classes
+ * since the MAP::key_type type and the BASIS::KEY must be the same.
+ *
+ * For unordered MAP use it is assumed that the follow:
+ * References and iterators to the erased elements are invalidated.
+ * Other iterators and references are not invalidated. Moreover (C++2014)
+ * the internal order of the elements not erased is preserved. However
+ * insertion causes a rehash which disrupts all iterators.
+ *
+ * @tparam Basis Basis of the vector space
+ * @tparam Coeffs Coefficient field
+ * @tparam MapType The underlying map type in which the data is stored.
+ */
 template <typename Basis, typename Coeffs, typename MapType = LIBALGEBRA_DEFAULT_MAP_TYPE >
 class sparse_vector : /*private*/ MapType, protected base_vector<Basis, Coeffs>
 {
@@ -216,6 +222,7 @@ private:
 public:
     // Iterator methods
 
+    /// Iterator to start of vector
     iterator begin()
     {
         if (empty()) {
@@ -224,8 +231,10 @@ public:
         return iterator(*this, map_begin());
     }
 
+    /// Iterator to end of vector
     iterator end() { return iterator(*this, map_end()); }
 
+    /// Const iterator to start of vector
     const_iterator begin() const
     {
         if (empty()) {
@@ -234,14 +243,19 @@ public:
         return const_iterator(*this, map_begin());
     }
 
+    /// Const iterator to end of vector
     const_iterator end() const { return const_iterator(*this, map_end()); }
 
+    /// Const iterator to start of vector
     const_iterator cbegin() const { return begin(); }
 
+    /// Const iterator to the end of vector
     const_iterator cend() const { return end(); }
 
+    /// Get the iterator corresponding to key
     iterator find(const KEY &key) { return iterator(*this, map_find(key)); }
 
+    /// Get the const iterator corresponding to key
     const_iterator find(const KEY &key) const
     {
         return const_iterator(*this, map_find(key));
@@ -251,6 +265,7 @@ public:
     using MAP::insert;
 
     // Redefine the other inserts
+    /// Insert an element from key-value pair
     std::pair<iterator, bool> insert(const std::pair<const KEY, SCALAR> &value)
     {
         if (zero == value.second) {
@@ -261,6 +276,7 @@ public:
     }
 
     // Redefine the other inserts
+    /// Insert an element from key-value pair
     std::pair<iterator, bool> insert(std::pair<const KEY, SCALAR> &value)
     {
         if (zero == value.second) {
@@ -270,6 +286,7 @@ public:
         return std::pair<iterator, bool>(iterator(*this, p.first), p.second);
     }
 
+    /// Insert an element with using hint to position
     iterator insert(iterator position, const std::pair<const KEY, SCALAR> &value)
     {
         typename MAP::iterator it = MAP::insert(position->m_iterator, value);
@@ -280,8 +297,10 @@ public:
     using MAP::erase;
 
     // Redefine the erases involving iterators
+    /// Erase the value pointed to by iterator
     void erase(iterator position) { MAP::erase(position->m_iterator); }
 
+    /// Erase a range of elements
     void erase(iterator first, iterator last)
     {
         MAP::erase(first->m_iterator, last->m_iterator);
@@ -337,14 +356,21 @@ public:
 
     /**
      * @brief Construct from pointer to data
-     * @param begin
-     * @param end
+     * @param begin Pointer to start of data
+     * @param end Pointer to end of data
      */
     sparse_vector(SCALAR const* begin, SCALAR const* end) : MAP()
     {
         insert_from_pointer(0, begin, end);
     }
 
+    /**
+     * @brief Construct from pointer to data with offset
+     *
+     * @param offset Offset from beginning of basis order
+     * @param pointer to start of data
+     * @param end Pointer to end of data
+     */
     sparse_vector(DIMN offset, SCALAR const* begin, SCALAR const* end) : MAP()
     {
         insert_from_pointer(offset, begin, end);
@@ -783,6 +809,7 @@ public:
         return *this;
     }
 
+    /// Fused inplace addition with scalar division
     inline sparse_vector &add_scal_div(const KEY &rhs, const RATIONAL &s)
     {
         if (zero == (operator[](rhs) += one / s)) {
@@ -791,6 +818,7 @@ public:
         return *this;
     }
 
+    /// Fused inplace subtraction with rational division
     inline sparse_vector &sub_scal_div(const KEY &rhs, const RATIONAL &s)
     {
         if (zero == (operator[](rhs) -= one / s)) {
@@ -824,6 +852,7 @@ public:
     /// Boolean negation of operator==()
     bool operator!=(const sparse_vector &rhs) const { return !operator==(rhs); }
 
+    /// Get the current maximum degree of elements in the vector
     DEG degree() const
     {
         DEG ans(0);
@@ -833,6 +862,7 @@ public:
         return ans;
     }
 
+    /// Check if the current maximum degree is equal to given value
     bool degree_equals(const DEG degree) const
     {
         bool result(false);
@@ -910,6 +940,7 @@ public:
     };
 
 protected:
+    /// Print members to output stream
     void print_members(std::ostream &os) const
     {
         std::pair<BASIS *, KEY> token;
@@ -935,6 +966,7 @@ protected:
     }
 
 public:
+    /// Stream out operator
     inline friend std::ostream &operator<<(std::ostream &os, const sparse_vector &rhs)
     {
         os << '{';
@@ -980,7 +1012,18 @@ protected:
 
 public:
     // Transform methods
-
+    /**
+     * @brief Apply a buffered binary transform using only key transform up to max depth
+     *
+     * This is applied to the vector using the degree optimisation.
+     *
+     * @tparam Vector Result vector type
+     * @tparam KeyTransform Key transform type
+     * @param result Vector in which to place the result
+     * @param rhs right hand side buffer
+     * @param key_transform transform to apply
+     * @param max_depth maximum depth of elements to compute
+     */
     template <typename Vector, typename KeyTransform> void
     triangular_buffered_apply_binary_transform(Vector &result, const sparse_vector &rhs, KeyTransform key_transform,
                                                const DEG max_depth) const
@@ -1003,6 +1046,20 @@ public:
         }
     }
 
+    /**
+     * @brief Apply a buffered binary transform with separate transforms up to max depth
+     *
+     * This is applied to the vector using the degree optimisation.
+     *
+     * @tparam Vector Result vector type
+     * @tparam KeyTransform Key transform type
+     * @tparam IndexTransform Index transform type
+     * @param result Vector in which to place the result
+     * @param rhs Right hand side buffer
+     * @param key_transform transform to apply by keys (sparse elements)
+     * @param index_transform transform to apply by index (dense elements)
+     * @param max_depth Maximum depth to compute
+     */
     template <typename Vector, typename KeyTransform, typename IndexTransform> void
     triangular_buffered_apply_binary_transform(Vector &result, const sparse_vector &rhs, KeyTransform key_transform,
                                                IndexTransform /* index_transform */, const DEG max_depth) const
@@ -1010,6 +1067,14 @@ public:
         triangular_buffered_apply_binary_transform(result, rhs, key_transform, max_depth);
     }
 
+    /**
+     * @brief Apply buffered binary transform with no degree optimisation
+     * @tparam Vector Output vector type
+     * @tparam KeyTransform Key transform type
+     * @param result buffer in which to place result
+     * @param rhs Right hand side buffer
+     * @param key_transform Transform to apply by key (sparse)
+     */
     template <typename Vector, typename KeyTransform> void
     square_buffered_apply_binary_transform(Vector &result, const sparse_vector &rhs, KeyTransform key_transform) const
     {
@@ -1026,6 +1091,15 @@ public:
         }
     }
 
+    /**
+     * @brief Apply an unbuffered binary transform with separate transforms
+     * @tparam KeyTransform Key transform type
+     * @tparam IndexTransform Index transform type
+     * @param rhs Right hand side buffer
+     * @param key_transform transform to apply by key (sparse)
+     * @param index_transform transform to apply by index (dense)
+     * @param max_depth Maximum depth of elements to compute
+     */
     template <typename KeyTransform, typename IndexTransform> void
     triangular_unbuffered_apply_binary_transform(const sparse_vector &rhs, KeyTransform key_transform,
                                                  IndexTransform index_transform, const DEG max_depth)
@@ -1035,6 +1109,14 @@ public:
         swap(result);
     }
 
+    /**
+     * @brief Apply an unbuffered binary transform using only key transform
+     *
+     * @tparam KeyTransform Key transform type
+     * @param rhs Right hand side buffer
+     * @param key_transform Key transform
+     * @param max_depth maximum depth of elements to compute
+     */
     template <typename KeyTransform> void
     triangular_unbuffered_apply_binary_transform(const sparse_vector &rhs, KeyTransform key_transform,
                                                  const DEG max_depth)
@@ -1044,6 +1126,15 @@ public:
         swap(result);
     }
 
+    /**
+     * @brief Apply buffered binary transform with separate transforms and no degree optimisation
+     * @tparam Vector Output vector type
+     * @tparam KeyTransform Key transform type
+     * @tparam IndexTransform Index transform type
+     * @param result buffer in which to place result
+     * @param rhs right hand side buffer
+     * @param index_transform transform to apply by index (dense)
+     */
     template <typename Vector, typename KeyTransform, typename IndexTransform> void
     square_buffered_apply_binary_transform(Vector &result, const sparse_vector &rhs, KeyTransform key_transform,
                                            IndexTransform /* index_transform */) const
@@ -1052,6 +1143,14 @@ public:
     }
 
 public:
+
+    /**
+     * @brief  Apply a transform inplace with buffering
+     * @tparam Transform Transform type
+     * @param result buffer in which to place result (temporarily)
+     * @param transform transform to apply
+     * @param max_deg Maximum degree
+     */
     template <typename Transform>
     void buffered_apply_unary_transform(sparse_vector &result, Transform transform, const DEG max_deg) const
     {
@@ -1063,6 +1162,12 @@ public:
         kt(result, *this, max_deg);
     }
 
+    /**
+     * @brief  Apply a transform inplace with buffering
+     * @tparam Transform Transform type
+     * @param result buffer in which to place result (temporarily)
+     * @param transform transform to apply
+     */
     template <typename Transform> void buffered_apply_unary_transform(sparse_vector &result, Transform transform) const
     {
         if (empty()) {

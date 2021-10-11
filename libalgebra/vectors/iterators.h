@@ -52,6 +52,17 @@ namespace iterators {
  *
  */
 
+
+/**
+ * @brief Iterator implementation for vector types
+ *
+ * This is a generic wrapper that provides a unified iterator object for vector types.
+ * The vector must define a ValueType, which has member functions to get the key and value
+ * of the corresponding element in the vector. This class then wraps the value type
+ * and implements all the standard iterator methods.
+ *
+ * @tparam ValueType Item type of the iterator.
+ */
 template <typename ValueType> class vector_iterator
 {
 public:

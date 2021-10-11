@@ -323,17 +323,19 @@ public:
 
 };
 
-/// The monoid of words of a finite number of letters with concat product.
+
 /**
-This is the basis used to implement the free_tensor class as a
-specialisation of the algebra class. This basis is the Free Associative
-Algebra basis with a finite number of letters, with the usual
-concatenation product. The free_tensor_basis is a container of keys. A key
-is the implementation of a word of letters. The prod() member function
-corresponds to the concatenation of the two keys given as arguments. This
-product is associative but not commutative. Letters can be seen as
-particular basis keys, i.e. words of length one. The empty word is a
-special key used for the imbedding of letters (words of length one).
+ * @brief The monoid of words of a finite number of letters with concat product.
+ *
+ * This is the basis used to implement the free_tensor class as a
+ * specialisation of the algebra class. This basis is the Free Associative
+ * Algebra basis with a finite number of letters, with the usual
+ * concatenation product. The free_tensor_basis is a container of keys. A key
+ * is the implementation of a word of letters. The prod() member function
+ * corresponds to the concatenation of the two keys given as arguments. This
+ * product is associative but not commutative. Letters can be seen as
+ * particular basis keys, i.e. words of length one. The empty word is a
+ * special key used for the imbedding of letters (words of length one).
 */
 template <DEG n_letters, DEG max_degree> class free_tensor_basis : public tensor_basis<n_letters, max_degree>,
                                                                    public basis_traits<With_Degree, n_letters,
@@ -491,17 +493,18 @@ template <DEG n_letters, DEG max_depth> struct basis_multiplication_selector<fre
     };
 };
 
-/// The monoid of words of a finite number of letters with shuffle product.
 /**
-This is the basis used to implement the shuffle_tensor class as a
-specialisation of the algebra class. This basis is the Free Associative
-Algebra basis with a finite number of letters, with the shuffle product.
-The shuffle_tensor_basis is a container of keys. A key is the
-implementation of a word of letters. The prod() member function
-corresponds to the shuffle product of the two keys given as arguments.
-This product is associative and commutative. Letters can be seen as
-particular basis keys, i.e. words of length one. The empty word is a
-special key used for the imbedding of letters (words of length one).
+ * @brief The monoid of words of a finite number of letters with shuffle product.
+ *
+ * This is the basis used to implement the shuffle_tensor class as a
+ * specialisation of the algebra class. This basis is the Free Associative
+ * Algebra basis with a finite number of letters, with the shuffle product.
+ * The shuffle_tensor_basis is a container of keys. A key is the
+ * implementation of a word of letters. The prod() member function
+ * corresponds to the shuffle product of the two keys given as arguments.
+ * This product is associative and commutative. Letters can be seen as
+ * particular basis keys, i.e. words of length one. The empty word is a
+ * special key used for the embedding of letters (words of length one).
 */
 template <DEG n_letters, DEG max_degree> class shuffle_tensor_basis : public tensor_basis<n_letters, max_degree>,
                                                                       public basis_traits<With_Degree, n_letters,

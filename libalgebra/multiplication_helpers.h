@@ -8,11 +8,15 @@
 namespace alg {
 namespace mult {
 
+
+/// Identity function on scalars
 struct scalar_passthrough
 {
     template <typename S> LA_CONSTEXPR S operator()(S val) const { return val; }
 };
 
+
+/// Scalar minus function on scalars
 template <typename Coeff> struct scalar_minus
 {
     typedef typename Coeff::SCA scalar_t;
@@ -23,6 +27,7 @@ template <typename Coeff> struct scalar_minus
     }
 };
 
+/// Post multiply scalar by fixed scalar
 template <typename Coeff> struct scalar_post_mult
 {
     typedef typename Coeff::SCA scalar_t;
@@ -38,6 +43,7 @@ private:
     scalar_t m_factor;
 };
 
+/// Post divide scalar by fixed rational
 template <typename Coeff> struct rational_post_div
 {
     typedef typename Coeff::SCA scalar_t;

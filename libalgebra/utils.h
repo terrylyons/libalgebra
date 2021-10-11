@@ -14,7 +14,7 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_UTILSH_SEEN
 #define DJC_COROPA_LIBALGEBRA_UTILSH_SEEN
 
-/// Provides maps between lie<> and free_tensor<> instances.
+/// Provides maps between lie and free_tensor instances.
 template <typename Coeff, DEG n_letters, DEG max_degree, typename Tensor, typename Lie> class maps
 {
     typedef typename Coeff::S SCA;
@@ -74,7 +74,12 @@ private:
     extended_function<expand_letter, commutator_type, lazy_cache_tag<void> >;
 
 public:
-    /// Returns the free_tensor corresponding to the Lie key k.
+    /**
+     * @brief Returns the free_tensor corresponding to the Lie key k.
+     * For performance reasons, the already computed expressions are stored in a
+     * static table to speed up further calculus. The function returns a
+     * constant reference to an element of this table.
+     */
     expand_function_t expand;
 
     /// Default constructor.
@@ -134,23 +139,25 @@ public:
         return result;
     }
 
+    /// Convert lie to tensor
     Tensor l2t(dense_lie1_t&& arg)
     {
         SCA* start = &arg.begin()->value();
         return Tensor(DIMN(1), start, start+n_letters);
     }
 
+    /// Convert tensor to lie
     Tensor l2t(dense_lie1_t const& arg)
     {
         SCA const* start = &arg.begin()->value();
         return Tensor(DIMN(1), &*start, start+n_letters);
     }
 
-    /// Returns the free lie element corresponding to a tensor_element.
     /**
-    This is the Dynkin map obtained by right bracketing. Of course, the
-    result makes sense only if the given free_tensor is the tensor expression
-    of some free lie element.
+     * @brief Returns the free lie element corresponding to a tensor_element.
+    * This is the Dynkin map obtained by right bracketing. Of course, the
+    * result makes sense only if the given free_tensor is the tensor expression
+    * of some free lie element.
     */
     template <typename InputTensor> inline Lie t2l(const InputTensor &arg)
     {
@@ -167,12 +174,13 @@ public:
         }
         return result;
     }
-    /// For a1,a2,...,an, return the expression [a1,[a2,[...,an]]].
+
     /**
-    For performance reasons, the already computed expressions are stored in a
-    static table to speed up further calculus. The function returns a
-    constant reference to an element of this table.
-    */
+     * @brief For a1,a2,...,an, return the expression [a1,[a2,[...,an]]].
+     * For performance reasons, the already computed expressions are stored in a
+     * static table to speed up further calculus. The function returns a
+     * constant reference to an element of this table.
+     */
     template <typename TensorKey>
     inline const LIE &rbraketing(const TensorKey &k)
     {
@@ -203,17 +211,7 @@ public:
          */
     }
 
-
-
-    /**
-For performance reasons, the already computed expressions are stored in a
-static table to speed up further calculus. The function returns a
-constant reference to an element of this table.
-*/
-public:
-
-    /*
-
+/*
     inline sparse_tensor_t const& expand(const LKEY &k)
     {
         static boost::recursive_mutex table_access;
@@ -305,6 +303,7 @@ public:
         return m_maps.t2l(log(tmp));
     }
 
+    /// Returns the CBH formula as a free lie element from an iterator to lie objects
     template <typename InputIt>
     LIE full(InputIt start, InputIt finish) {
         if (start == finish) {

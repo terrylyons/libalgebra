@@ -482,6 +482,7 @@ public:
     /// Convert an index to key
     static KEY index_to_key(const DIMN idx) { return KEY(idx + 1); }
 
+    /// Get the index at which elements of given degree start
     static DIMN start_of_degree(const DEG d)
     {
         assert(d <= max_degree + 1);

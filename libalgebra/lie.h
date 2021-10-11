@@ -214,18 +214,19 @@ public:
     }
 };
 
-/// A specialisation of the algebra class with a Lie basis.
 /**
-   Mathematically, the algebra of Lie instances is a free Lie associative
-   algebra. With respect to the inherited algebra class, the essential
-   distinguishing feature of this class is the basis class used, and in
-   particular the basis::prod() member function. Thus, the most important
-   information is in the definition of lie_basis. Notice that this associative
-   algebra of lie elements does not includes as a sub-algebra the associative
-   algebra corresponding to the SCALAR type. In other words, only the scalar
-   zero corresponds to a Lie element (the zero one) which is the neutral
-   element of the addition operation. There is no neutral element for the
-   product (free Lie product).
+ * @brief  A specialisation of the algebra class with a Lie basis.
+ *
+ * Mathematically, the algebra of Lie instances is a free Lie associative
+ * algebra. With respect to the inherited algebra class, the essential
+ * distinguishing feature of this class is the basis class used, and in
+ * particular the basis::prod() member function. Thus, the most important
+ * information is in the definition of lie_basis. Notice that this associative
+ * algebra of lie elements does not includes as a sub-algebra the associative
+ * algebra corresponding to the SCALAR type. In other words, only the scalar
+ * zero corresponds to a Lie element (the zero one) which is the neutral
+ * element of the addition operation. There is no neutral element for the
+ * product (free Lie product).
  */
 template <typename Coeff, DEG n_letters, DEG max_degree, typename VectorType> class lie : public algebra<
         lie_basis < n_letters, max_degree>, Coeff, lie_multiplication<Coeff>, VectorType
@@ -268,14 +269,13 @@ lie(const VECT &v) : ALG(v) {}
 /// Constructs a unidimensional instance from a given key (with scalar one).
 explicit lie(const KEY &k) : ALG(k) {}
 
-///// Constructs a unidimensional instance from a letter and a scalar.
 // explicit lie(LET letter, const SCA& s)
 //	// flawed as basis is possibly not yet constructed
 //	: ALG(VECT::basis.keyofletter(letter), s) {}
 /// Constructs a unidimensional instance from a key and a scalar.
 explicit lie(const KEY &k, const SCA &s) : ALG(k, s) {}
 
-
+/// Construct an instance from pointers to data range
 lie(SCA const* begin, SCA const* end) : ALG(begin, end) {}
 
 public:

@@ -15,6 +15,27 @@ namespace coefficients {
     return (lhs OP## = rhs);                                                   \
   }
 
+/**
+ * @brief A field (or more generally, ring) that can be used as coefficients in a vector
+ *
+ * A coefficient field type encapsulates the properties that are required to build
+ * a valid vector space (or module if the coefficients do not actually form a field).
+ *
+ * The most important items are, of course, the declaration of the scalar type S
+ * and rational type Q. These should be the same if the coefficients do form a field,
+ * but can be different in general. The class also hold static members that store
+ * the basic elements: one, minus one, and zero. Currently these are also stored by
+ * the vector classes, but in the future the plan is to remove those static members
+ * and use these values instead.
+ *
+ * Finally, the class contains some wrapper functions around the arithmetic operations
+ * for the field. At the moment, these simply invoke the underlying operations but in
+ * the future this mechanism can be changed to allow for different operations beyond
+ * the built in arithmetic for type like floats and doubles.
+ *
+ * @tparam Scalar Type for scalar (coefficient) values
+ * @tparam Rational Type of rational values in the field (ring). Default: Scalar
+ */
 template <typename Scalar, typename Rational = Scalar> struct coefficient_field
 {
 

@@ -1190,8 +1190,8 @@ public:
             return;
         }
 
-        const DEG old_lhs_deg = degree();
-        const DEG max_degree = std::min(max_depth, m_degree + rhs.m_degree);
+        const IDEG old_lhs_deg = static_cast<IDEG>(degree());
+        const IDEG max_degree = static_cast<IDEG>(std::min(max_depth, m_degree + rhs.m_degree));
 
         if (max_degree > m_degree) {
             //resize_to_degree(max_degree);

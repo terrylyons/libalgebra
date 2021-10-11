@@ -18,16 +18,10 @@ option(LIBALGEBA_TESTING "Enable building test targets" OFF)
 include(GNUInstallDirs)
 
 
-set(CMAKE_CXX_STANDARD 98)
+#set(CMAKE_CXX_STANDARD 98)
 
 ## we have a limited binary boost dependency
 find_package(Boost REQUIRED COMPONENTS thread container)
-## we also require the headers only boost-multiprecision so get path and check it is there
-find_path(BOOST_MULTIPRECISION_INCLUDE_DIRS "boost/multiprecision/complex128.hpp")
-# target_include_directories(main PRIVATE ${BOOST_MULTIPRECISION_INCLUDE_DIRS})
-
-
-## we require an arbitrary precision arithmetic package
 if(WIN32)
 find_library(Bignum_LIBRARY mpir)
 else()
@@ -62,7 +56,8 @@ add_library(Libalgebra INTERFACE
         libalgebra/compat.h
         libalgebra/constlog2.h
         libalgebra/constpower.h
-        libalgebra/implimentation_types.h
+        libalgebra/hall_set.h
+        libalgebra/implementation_types.h
         libalgebra/libalgebra.h
         libalgebra/lie.h
         libalgebra/lie_basis.h

@@ -114,7 +114,6 @@ SUITE(dense_storage) {
         CHECK_EQUAL(types::borrowed_mut, val.type());
     }
 
-
     TEST_FIXTURE(fixture, test_borrowed_ctor_ptr_size) {
         dstorage val(data1_cbegin(), data1.size());
 

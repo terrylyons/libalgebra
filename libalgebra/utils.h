@@ -74,7 +74,12 @@ private:
     extended_function<expand_letter, commutator_type, lazy_cache_tag<void> >;
 
 public:
-    /// Returns the free_tensor corresponding to the Lie key k.
+    /**
+     * @brief Returns the free_tensor corresponding to the Lie key k.
+     * For performance reasons, the already computed expressions are stored in a
+     * static table to speed up further calculus. The function returns a
+     * constant reference to an element of this table.
+     */
     expand_function_t expand;
 
     /// Default constructor.
@@ -208,45 +213,7 @@ public:
 
 
 
-    /**
-For performance reasons, the already computed expressions are stored in a
-static table to speed up further calculus. The function returns a
-constant reference to an element of this table.
-*/
-public:
-
-    /*
-
-    inline sparse_tensor_t const& expand(const LKEY &k)
-    {
-        static boost::recursive_mutex table_access;
-        // get exclusive recursive access for the thread
-        boost::lock_guard<boost::recursive_mutex> lock(table_access);
-
-        //static boost::container::flat_map<LKEY, sparse_tensor_t> table;
-        static std::unordered_map<LKEY, sparse_tensor_t> table;
-        //static std::map<LKEY, TENSOR> table;
-        //typename std::unordered_map<LKEY, TENSOR>::iterator it;
-
-        sparse_tensor_t& value = table[k];
-
-        if (!value.empty()) {
-            return value;
-        }
-
-        return value = _expand(k);
-
-    }
-    */
 private:
-    /// Computes recursively the free_tensor corresponding to the Lie key k.
-    sparse_tensor_t _expand(const LKEY &k)
-    {
-        if (LIE::basis.letter(k)) {
-            return (sparse_tensor_t) TENSOR::basis.keyofletter(LIE::basis.getletter(k));
-        }
-        return commutator(expand(LIE::basis.lparent(k)), expand(LIE::basis.rparent(k)));
-    }
 
     /// a1,a2,...,an is converted into [a1,[a2,[...,an]]] recursively.
     template <typename TensorKey>

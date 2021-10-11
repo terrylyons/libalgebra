@@ -1,5 +1,4 @@
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "cert-err58-cpp"
+
 //
 // Created by sam on 07/10/2021.
 //
@@ -147,4 +146,3 @@ SUITE (hall_set_properties) {
     }
 
 }
-#pragma clang diagnostic pop

@@ -16,8 +16,6 @@ Version 3. (See accompanying file License.txt)
 
 #include "_tensor_basis.h"
 #include "basis_traits.h"
-#include "constlog2.h"
-#include "constpower.h"
 #include <limits>
 #include <cmath>
 
@@ -25,10 +23,6 @@ namespace dtl {
 
 using alg::integer_maths::power;
 
-template <DEG NoLetters, DEG Depth> struct depth_size
-{
-    enum { value = (ConstPower<NoLetters, Depth>::ans - 1) / (NoLetters - 1) };
-};
 
 
 template <DEG NoLetters> struct tensor_size_info

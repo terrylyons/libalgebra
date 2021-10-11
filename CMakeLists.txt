@@ -68,7 +68,6 @@ add_library(Libalgebra INTERFACE
         libalgebra/poly_lie.h
         libalgebra/poly_lie_basis.h
         libalgebra/polynomials.h
-        libalgebra/sparse_vector.h
         libalgebra/tensor.h
         libalgebra/tensor_basis.h
         libalgebra/utils.h

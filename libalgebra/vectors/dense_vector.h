@@ -206,7 +206,7 @@ public:
     /// Reserve to degree
     void reserve_to_degree(const DEG deg)
     {
-        DIMN target_deg = std::min(degree_tag.max_degree, deg);
+        DEG target_deg = std::min(degree_tag.max_degree, deg);
         DIMN target_dim = start_of_degree(target_deg + 1);
         m_data.reserve(target_dim);
         m_dimension = target_dim;

@@ -287,14 +287,11 @@ public:
         return os;
     }
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "HidingNonVirtualFunction"
     /// The size of the Hall set up to degree MaxDepth
     DIMN size() const
     {
         return start_of_degree(MaxDepth+1);
     }
-#pragma clang diagnostic pop
 
     /**
      * @brief Extend a function on letters to a function on the Hall set

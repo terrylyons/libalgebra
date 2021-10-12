@@ -15,6 +15,8 @@ Version 3. (See accompanying file License.txt)
 #define DJC_COROPA_LIBALGEBRA_ALGEBRAH_SEEN
 
 /// Temporary implementation of a basis-level key_transform for multiplication.
+namespace alg {
+
 
 struct one_method_multiplication_tag {};
 struct two_method_multiplication_tag {};
@@ -308,6 +310,8 @@ public:
 
 template <typename B, typename C, typename M, typename V> M algebra<B, C, M, V>::s_multiplication;
 
+
+} // namespace alg
 // Include once wrapper
 #endif // DJC_COROPA_LIBALGEBRA_ALGEBRAH_SEEN
 

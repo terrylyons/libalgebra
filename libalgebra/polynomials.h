@@ -13,6 +13,8 @@ Version 3. (See accompanying file License.txt)
 // Include once wrapper
 #ifndef DJC_COROPA_LIBALGEBRA_POLYNOMIALSH_SEEN
 #define DJC_COROPA_LIBALGEBRA_POLYNOMIALSH_SEEN
+namespace alg {
+
 
 template <typename Coeff> class poly_multiplication
 {
@@ -276,6 +278,7 @@ public:
     }
 };
 
+} // namespace alg
 // Include once wrapper
 #endif // DJC_COROPA_LIBALGEBRA_POLYNOMIALSH_SEEN
 

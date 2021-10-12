@@ -14,6 +14,8 @@ Version 3. (See accompanying file License.txt)
 #ifndef monomial_basisH_SEEN
 #define monomial_basisH_SEEN
 
+namespace alg {
+
 /// Implements an interface for the set of words of a finite number of letters.
 /**
 
@@ -40,8 +42,8 @@ Version 3. (See accompanying file License.txt)
         The implementation of the prod() member function constitutes the
    essential difference between monomial_basis and shuffle_tensor_basis.
 */
-template <DEG n_letters, DEG max_degree> class monomial_basis
-{
+template<DEG n_letters, DEG max_degree>
+class monomial_basis {
 public:
     /// A key is an STD dual ended queue of letters.
     typedef std::deque<LET> KEY;
@@ -63,8 +65,8 @@ public:
         // We statically compute the size (n^{d+1}-1)/(n-1)
         // where n == n_letters and d == max_degree.
         _size = 1;
-        for (DEG i = 1; i <= max_degree; ++i) {
-            _size += _size * n_letters;
+        for (DEG i = 1; i<=max_degree; ++i) {
+            _size += _size*n_letters;
         }
     }
 
@@ -78,13 +80,13 @@ public:
     }
 
     /// Tells if a key is a letter (i.e. word of length one).
-    inline bool letter(const KEY &k) const { return k.size() == 1; }
+    inline bool letter(const KEY& k) const { return k.size()==1; }
 
     /// Returns the first letter of a key.
-    inline LET getletter(const KEY &k) const { return k[0]; }
+    inline LET getletter(const KEY& k) const { return k[0]; }
 
     /// Returns the first letter of a key. For compatibility with lie_basis.
-    inline KEY lparent(const KEY &k) const
+    inline KEY lparent(const KEY& k) const
     {
         KEY result;
         result.push_back(k[0]);
@@ -92,7 +94,7 @@ public:
     }
 
     /// Returns the key which corresponds to the sub-word after the first letter.
-    inline KEY rparent(const KEY &k) const
+    inline KEY rparent(const KEY& k) const
     {
         KEY result(k);
         result.pop_front();
@@ -100,17 +102,17 @@ public:
     }
 
     /// Returns the length of the key viewed as a word of letters.
-    inline DEG degree(const KEY &k) const { return k.size(); }
+    inline DEG degree(const KEY& k) const { return k.size(); }
 
     /// Returns the size of the basis.
     inline DEG size(void) const { return _size; }
 
     /// Computes the position of a key in the basis total order (it has a cost).
-    inline DEG keypos(const KEY &k) const
+    inline DEG keypos(const KEY& k) const
     {
         DEG pos = 1;
-        for (DEG i = 0; i < k.size(); ++i) {
-            pos += n_letters * (k[i] - 1);
+        for (DEG i = 0; i<k.size(); ++i) {
+            pos += n_letters*(k[i]-1);
         }
         return pos;
     }
@@ -127,12 +129,12 @@ public:
     }
 
     /// Returns the key next a given key in the basis.
-    inline KEY nextkey(const KEY &k) const
+    inline KEY nextkey(const KEY& k) const
     {
         KEY::size_type i;
         // TJL: error - i never gets negative
-        for (i = k.size() - 1; i /*>= 0*/ < k.size(); --i) {
-            if (k[i] < n_letters) {
+        for (i = k.size()-1; i /*>= 0*/ <k.size(); --i) {
+            if (k[i]<n_letters) {
                 KEY result(k);
                 result[i] += 1;
                 return result;
@@ -142,14 +144,14 @@ public:
     }
 
     /// Outputs a key as a string of letters to an std::ostringstream.
-    std::string key2string(const KEY &k) const
+    std::string key2string(const KEY& k) const
     {
         std::ostringstream oss;
         KEY::size_type i;
         if (!k.empty()) {
             oss << k[0];
         }
-        for (i = 1; i < k.size(); ++i) {
+        for (i = 1; i<k.size(); ++i) {
             oss << "," << k[i];
         }
         return oss.str();
@@ -168,8 +170,8 @@ public:
         particular basis keys, i.e. words of length one. The empty word is a
         special key used for the imbedding of letters (words of length one).
 */
-template <DEG n_letters, DEG max_degree> class free_monomial_basis : public monomial_basis<n_letters, max_degree>
-{
+template<DEG n_letters, DEG max_degree>
+class free_monomial_basis : public monomial_basis<n_letters, max_degree> {
 public:
     /// The monomial_basis type.
     typedef monomial_basis<n_letters, max_degree> PBASIS;
@@ -183,16 +185,17 @@ public:
 
 public:
     /// Default constructor.
-    free_monomial_basis(void) {}
+    free_monomial_basis(void) { }
 
 public:
     /// Outputs an std::pair<free_monomial_basis*, KEY> to an std::ostream.
-    inline friend std::ostream &operator<<(std::ostream &os, const std::pair<free_monomial_basis *, KEY> &t)
+    inline friend std::ostream& operator<<(std::ostream& os, const std::pair<free_monomial_basis*, KEY>& t)
     {
         return os << (t.first)->key2string(t.second);
     }
 };
 
+} // namespace alg
 // Include once wrapper
 #endif
 

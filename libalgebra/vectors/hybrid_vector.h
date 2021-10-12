@@ -2,8 +2,6 @@
 // Created by sam on 12/02/2021.
 //
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "HidingNonVirtualFunction"
 #ifndef LIBALGEBRA_HYBRID_VECTOR_H
 #define LIBALGEBRA_HYBRID_VECTOR_H
 
@@ -1343,5 +1341,3 @@ public:
 } // namespace alg
 
 #endif // LIBALGEBRA_HYBRID_VECTOR_H
-
-#pragma clang diagnostic pop

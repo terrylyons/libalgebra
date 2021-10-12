@@ -5,7 +5,7 @@
 #ifndef LIBALGEBRA_BASIS_H
 #define LIBALGEBRA_BASIS_H
 
-#include "libalgebra/implimentation_types.h"
+#include "libalgebra/implementation_types.h"
 
 #include "libalgebra/basis/tags.h"
 

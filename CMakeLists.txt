@@ -54,7 +54,7 @@ add_library(Libalgebra INTERFACE
         libalgebra/compat.h
         libalgebra/constlog2.h
         libalgebra/constpower.h
-        libalgebra/implimentation_types.h
+        libalgebra/implementation_types.h
         libalgebra/libalgebra.h
         libalgebra/lie.h
         libalgebra/lie_basis.h

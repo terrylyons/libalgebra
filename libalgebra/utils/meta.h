@@ -6,6 +6,7 @@
 #define LIBALGEBRA_META_H
 
 #include <boost/type_traits.hpp>
+#include <array>
 
 namespace alg {
 namespace utils {

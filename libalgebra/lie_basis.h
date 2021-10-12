@@ -143,6 +143,25 @@ public:
     /// For external compatibility, define PARENT = parent_type
     typedef parent_type PARENT;
 
+    struct reverse_map_type
+    {
+        using const_iterator = typename hall_set_type::reverse_map_type::const_iterator;
+
+        key_type operator[](const parent_type& parents) const {
+            return hall_set_type::operator[](parents);
+        }
+
+        const_iterator find(const parent_type& parent) const {
+            return hall_set_type::find(parent);
+        }
+
+        const_iterator end() const
+        {
+            return hall_set_type::reverse_map_end();
+        }
+
+    };
+
 private:
 
     /// Key level function for getting the degree
@@ -171,11 +190,13 @@ private:
 
 public:
 
+    reverse_map_type reverse_map;
+
     /// Function returning the degree of a given key
     const degree_func_type degree;
 
     /// Constructs the basis with a given number of letters.
-    hall_basis() : hall_set_type(MaxDepth), degree(*this, &letter_degree, std::plus<DEG>())
+    hall_basis() : hall_set_type(MaxDepth), degree(*this, &letter_degree, std::plus<DEG>()), reverse_map()
     {
         // Instantiate the degree function table.
         degree(letter_type(1));

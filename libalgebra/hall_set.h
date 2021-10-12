@@ -281,7 +281,7 @@ public:
     using size_type                 = DIMN;
     using parent_type               = std::pair<key_type, key_type>;
 
-private:
+protected:
     using hall_set_content_type     = hall_set_content<Width>;
     using degree_range_type         = std::pair<size_type, size_type>;
     using reverse_map_type          = std::map<parent_type, key_type>;

@@ -15,6 +15,13 @@ project(Libalgebra VERSION 1.0.0)
 option(LIBALGEBA_TESTING "Enable building test targets" OFF)
 
 
+add_compile_options(
+        "-Wpedantic"
+        "-Wconversion"
+        "-Wsign-compare"
+)
+
+
 include(GNUInstallDirs)
 
 

@@ -822,7 +822,6 @@ public:
 
         if (dimension() < rhs.dimension()) {
             resize_to_dimension(rhs.dimension());
-            assert(dimension() >= rhs.dimension());
         }
         SCALAR *lh_ptr = &m_data[0];
         SCALAR const *rh_ptr = &rhs.m_data[0];
@@ -1121,14 +1120,16 @@ public:
                 DIMN lh_deg_start = start_of_degree(static_cast<DEG>(lhs_deg));
                 DIMN rh_deg_start = start_of_degree(static_cast<DEG>(rhs_deg));
 
-                assert(start_of_degree(lhs_deg + 1) <= m_data.size());
-                assert(start_of_degree(rhs_deg + 1) <= rhs.m_data.size());
-                assert(d_result.m_data.size() >= start_of_degree(out_deg + 1));
+                assert(start_of_degree(static_cast<DEG>(lhs_deg + 1)) <= m_data.size());
+                assert(start_of_degree(static_cast<DEG>(rhs_deg + 1)) <= rhs.m_data.size());
+                assert(d_result.m_data.size() >= start_of_degree(static_cast<DEG>(out_deg + 1)));
 
-                index_transform(&d_result.m_data[start_of_degree(out_deg)], &m_data[start_of_degree(lhs_deg)],
-                                &rhs.m_data[start_of_degree(rhs_deg)],
-                                alg::DEG(start_of_degree(lhs_deg + 1) - lh_deg_start),
-                                alg::DEG(start_of_degree(rhs_deg + 1) - rh_deg_start));
+                index_transform(
+                        &d_result.m_data[start_of_degree(static_cast<DEG>(out_deg))],
+                        &m_data[lh_deg_start],
+                        &rhs.m_data[rh_deg_start],
+                        start_of_degree(static_cast<DEG>(lhs_deg + 1)) - lh_deg_start,
+                        start_of_degree(static_cast<DEG>(rhs_deg + 1)) - rh_deg_start);
             }
         }
     }
@@ -1199,9 +1200,14 @@ public:
         }
         assert(m_data.size() >= start_of_degree(max_degree + 1));
 
-        if (max_degree == alg::DEG(0)) {
-            index_transform(&m_data[start_of_degree(0)], &m_data[start_of_degree(0)], &rhs.m_data[start_of_degree(0)],
-                            alg::DEG(degree_difference_1_0), alg::DEG(degree_difference_1_0), true);
+        if (max_degree == DEG(0)) {
+            index_transform(
+                    &m_data[start_of_degree(0)],
+                    &m_data[start_of_degree(0)],
+                    &rhs.m_data[start_of_degree(0)],
+                    degree_difference_1_0,
+                    degree_difference_1_0,
+                    true);
             return;
         }
 
@@ -1216,22 +1222,26 @@ public:
 
         for (IDEG out_deg = max_degree; out_deg >= 1; --out_deg) {
             lhs_deg_min = std::max(IDEG(0), out_deg - max_rhs_deg);
-            assign = (out_deg > static_cast<IDEG>(old_lhs_deg)) || default_assign;
-            lhs_deg_max = std::min(out_deg - offset, static_cast<IDEG>(old_lhs_deg));
+            assign = (out_deg > old_lhs_deg) || default_assign;
+            lhs_deg_max = std::min(out_deg - offset, old_lhs_deg);
 
             for (IDEG lhs_deg = lhs_deg_max; lhs_deg >= lhs_deg_min; --lhs_deg) {
                 rhs_deg = out_deg - lhs_deg;
                 DIMN lh_deg_start = start_of_degree(static_cast<DEG>(lhs_deg));
                 DIMN rh_deg_start = start_of_degree(static_cast<DEG>(rhs_deg));
 
-                assert(start_of_degree(lhs_deg + 1) <= m_data.size());
-                assert(start_of_degree(rhs_deg + 1) <= rhs.m_data.size());
-                assert(m_data.size() >= start_of_degree(out_deg + 1));
+                assert(start_of_degree(static_cast<DEG>(lhs_deg + 1)) <= m_data.size());
+                assert(start_of_degree(static_cast<DEG>(rhs_deg + 1)) <= rhs.m_data.size());
+                assert(m_data.size() >= start_of_degree(static_cast<DEG>(out_deg + 1)));
 
-                index_transform(&m_data[start_of_degree(out_deg)], &m_data[start_of_degree(lhs_deg)],
-                                &rhs.m_data[start_of_degree(rhs_deg)],
-                                alg::DEG(start_of_degree(lhs_deg + 1) - lh_deg_start),
-                                alg::DEG(start_of_degree(rhs_deg + 1) - rh_deg_start), assign);
+                index_transform(
+                        &m_data[start_of_degree(static_cast<DEG>(out_deg))],
+                        &m_data[lh_deg_start],
+                        &rhs.m_data[rh_deg_start],
+                        start_of_degree(static_cast<DEG>(lhs_deg + 1)) - lh_deg_start,
+                        start_of_degree(static_cast<DEG>(rhs_deg + 1)) - rh_deg_start,
+                        assign
+                        );
 
                 assign = false;
             }
@@ -1239,7 +1249,7 @@ public:
 
         if (degree_difference_1_0 == 1) {
             index_transform(
-                    &m_data[0], &m_data[0], &rhs.m_data[0], 1, 1, true
+                    &m_data[0], &m_data[0], &rhs.m_data[0], DIMN(1), DIMN(1), true
                     );
         }
     }

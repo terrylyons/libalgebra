@@ -16,6 +16,10 @@ Version 3. (See accompanying file License.txt)
 
 #include "libalgebra/basis/basis.h"
 #include "utils/integer_maths.h"
+#include "constpower.h"
+
+
+namespace alg {
 
 namespace dtl {
 
@@ -206,11 +210,12 @@ public:
      * @param k current key
      * @return key that immediately follows k in the Hall set order
      */
-    inline KEY nextkey(const KEY &k) const
+    inline KEY nextkey(const KEY& k) const
     {
         if (k < (hall_set_type::start_of_degree(MaxDepth+1) - 1)) {
-            return (k + 1);
-        } else {
+            return (k+1);
+        }
+        else {
             return 0;
         }
     }
@@ -307,7 +312,7 @@ public:
 * @tparam n_letters Size of alphabet
 * @tparam max_degree maximum degree of elements
 */
-template <DEG n_letters, DEG max_degree>
+template<DEG n_letters, DEG max_degree>
 class lie_basis : protected hall_basis<n_letters, max_degree>, dtl::hall_set_info<n_letters, max_degree>
 {
     typedef dtl::hall_set_info<n_letters, max_degree> SIZE_INFO;
@@ -374,36 +379,38 @@ public:
     elements in v, and returns the recursively expanded result. The already
     computed replacements are stored in table.
     */
-    template <typename Lie>
-    Lie replace(const KEY &k, const std::vector<LET> &s, const std::vector<const Lie *> &v, std::map<KEY, Lie> &table)
+    template<typename Lie>
+    Lie replace(const KEY& k, const std::vector<LET>& s, const std::vector<const Lie*>& v, std::map<KEY, Lie>& table)
     {
         typename std::map<KEY, Lie>::iterator it;
         it = table.find(k);
-        if (it != table.end()) {
+        if (it!=table.end()) {
             return it->second;
-        } else {
+        }
+        else {
             if (letter(k)) {
                 typename std::vector<LET>::size_type i;
-                for (i = 0; i < s.size(); ++i) {
-                    if (s[i] == getletter(k)) {
+                for (i = 0; i<s.size(); ++i) {
+                    if (s[i]==getletter(k)) {
                         return table[k] = *(v[i]);
                     }
                 }
-                return (table[k] = (Lie) k);
-            } else {
-                return (table[k] = replace(lparent(k), s, v, table) * replace(rparent(k), s, v, table));
+                return (table[k] = (Lie)k);
+            }
+            else {
+                return (table[k] = replace(lparent(k), s, v, table)*replace(rparent(k), s, v, table));
             }
         }
     }
 
     /// Outputs the lie basis to an std::ostream.
-    inline friend std::ostream &operator<<(std::ostream &os, const lie_basis &b)
+    inline friend std::ostream& operator<<(std::ostream& os, const lie_basis& b)
     {
         return os << (const hall_basis_type &) b;
     }
 
     /// Outupts an std::pair<lie_basis*, KEY> to an std::ostream.
-    inline friend std::ostream &operator<<(std::ostream &os, const std::pair<lie_basis *, KEY> &t)
+    inline friend std::ostream& operator<<(std::ostream& os, const std::pair<lie_basis*, KEY>& t)
     {
         return os << t.first->key2string(t.second);
     }
@@ -412,18 +419,20 @@ public:
     // index_to_key and friends
 
     /// Convert a key to index in basis order
-    static DIMN key_to_index(const KEY k) { return DIMN(k - 1); }
+    static DIMN key_to_index(const KEY k) { return DIMN(k-1); }
 
     /// Convert an index to key
-    static KEY index_to_key(const DIMN idx) { return KEY(idx + 1); }
+    static KEY index_to_key(const DIMN idx) { return KEY(idx+1); }
 
     /// Get the index at which elements of given degree start
     static DIMN start_of_degree(const DEG d)
     {
-        assert(d <= max_degree + 1);
+        assert(d<=max_degree+1);
         return (d == 0) ? 0 : SIZE_INFO::degree_sizes[d-1];
     }
 };
+
+} // namespace alg
 
 // Include once wrapper
 #endif // DJC_COROPA_LIBALGEBRA_LIEBASISH_SEEN

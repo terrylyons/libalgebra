@@ -483,17 +483,6 @@ class shuffle_tensor_multiplication {
         }
     }
 
-    template<typename Transform>
-    class index_operator {
-        Transform m_transform;
-
-    public:
-        index_operator(Transform t)
-                :m_transform(t) { }
-
-        void operator()(scalar_t* result_ptr, scalar_t const* lhs_ptr, scalar_t const* rhs_ptr, DIMN const lhs_target,
-                DIMN const rhs_target, bool assign = false) { }
-    };
 
     template<typename Transform>
     class key_operator {

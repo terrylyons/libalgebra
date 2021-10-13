@@ -41,9 +41,11 @@ template <DEG NoLetters> struct tensor_size_info
 
     using holder = typename alg::utils::generate_array<max_depth+1, helper>::result;
 
-    static constexpr std::array<DIMN, max_depth + 2> degree_sizes = holder::data;
+    static const std::array<DIMN, max_depth + 2> degree_sizes;
 };
 
+template <DEG N>
+const std::array<DIMN, tensor_size_info<N>::max_depth+2> tensor_size_info<N>::degree_sizes = tensor_size_info<N>::holder::data;
 
 
 } // namespace dtl

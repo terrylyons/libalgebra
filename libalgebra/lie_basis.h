@@ -84,8 +84,12 @@ template <DEG NoLetters, DEG MaxDepth> struct hall_set_info
     using helper = hall_set_array_helper<NoLetters, Level>;
 
     using holder = typename alg::utils::generate_array<MaxDepth+1, helper>::result;
-    static constexpr std::array<DIMN, MaxDepth + 2> degree_sizes = holder::data;
+    static const std::array<DIMN, MaxDepth + 2> degree_sizes;
 };
+
+template <DEG NoLetters, DEG MaxDepth>
+const std::array<DIMN, MaxDepth+2> hall_set_info<NoLetters, MaxDepth>::degree_sizes
+    = hall_set_info<NoLetters, MaxDepth>::holder::data;
 
 
 } // namespace dtl

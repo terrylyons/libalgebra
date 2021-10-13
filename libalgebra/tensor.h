@@ -436,10 +436,20 @@ class shuffle_tensor_multiplication {
                 return result;
             }
             // k1.size() >= 1 and k2.size() >= 1
-            static_cast<free_tensor_t>(result).add_mul(static_cast<free_tensor_t>(k1.lparent()),
-                            static_cast<free_tensor_t>(prod<Tensor>(k1.rparent(), k2)))
-                    .add_mul(static_cast<free_tensor_t>(k2.lparent()),
-                            static_cast<free_tensor_t>(prod<Tensor>(k1, k2.rparent())));
+            // let's just implement the multiplication
+            const Tensor& first = prod<Tensor>(k1.rparent(), k2);
+            const Tensor& second = prod<Tensor>(k1, k2.rparent());
+            const key_t k1l{k1.lparent()}, k2l{k2.lparent()};
+
+            typename Tensor::const_iterator cit;
+
+            for (cit = first.begin(); cit!=first.end(); ++cit) {
+                result[k1l*cit->key()] += Coeff::one;
+            }
+            for (cit = second.begin(); cit!=second.end(); ++cit) {
+                result[k2l*cit->key()] += Coeff::one;
+            }
+
         }
         return result;
     }

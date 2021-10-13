@@ -14,39 +14,8 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_ALGEBRAH_SEEN
 #define DJC_COROPA_LIBALGEBRA_ALGEBRAH_SEEN
 
-/// Temporary implementation of a basis-level key_transform for multiplication.
 namespace alg {
 
-
-struct one_method_multiplication_tag {};
-struct two_method_multiplication_tag {};
-
-template <typename SelectBasis> struct basis_multiplication_selector
-{
-    typedef one_method_multiplication_tag tag;
-
-    template <typename Basis, typename Coeffs, typename Transform> struct key_operator
-    {
-
-        typedef typename Basis::KEY KEY;
-        typedef typename Coeffs::S S;
-
-        /// Trivial constructor
-        key_operator() : m_transform() {}
-
-        /// Passthrough constructor for transform
-        template <typename Arg> key_operator(Arg a) : m_transform(a) {}
-
-        template <typename Vector> inline void
-        operator()(Vector &result, const KEY &lhs_key, const S &lhs_val, const KEY &rhs_key, const S &rhs_val)
-        {
-            result.add_scal_prod(Vector::basis.prod(lhs_key, rhs_key), m_transform(lhs_val * rhs_val));
-        }
-
-    private:
-        Transform m_transform;
-    };
-};
 
 /* The algebra is a vector with an additional multiplication operation which is
  * "compatible" with the addition and scalar multiplication. We attempt to mimic

@@ -6,6 +6,7 @@
 #define LIBALGEBRA_META_H
 
 #include <boost/type_traits.hpp>
+#include <array>
 
 namespace alg {
 namespace utils {
@@ -67,6 +68,37 @@ template <typename T1, typename T2> struct type_selector<true, T1, T2>
 {
     typedef T2 type;
 };
+
+
+// This pattern is for filling an array at compiletime based on template arguments
+// Credit to https://stackoverflow.com/a/2981617/9225581. Slightly modified from
+// the original.
+template <DIMN... Args>
+struct array_holder
+{
+    static constexpr std::array<DIMN, sizeof...(Args)> data = {Args...};
+};
+
+
+template <DIMN N, template<DIMN> class F, DIMN... Past>
+struct generate_array_impl
+{
+    using result = typename generate_array_impl<N-1, F, F<N>::value, Past...>::result;
+};
+
+template <template<DIMN> class F, DIMN... Past>
+struct generate_array_impl<static_cast<DIMN>(0), F, Past...>
+{
+    using result = array_holder<F<static_cast<DIMN>(0)>::value, Past...>;
+};
+
+template <DIMN N, template <DIMN> class F>
+struct generate_array
+{
+    using result = typename generate_array_impl<N, F>::result;
+};
+
+
 
 } // namespace utils
 } // namespace alg

@@ -201,7 +201,7 @@ TEST_FIXTURE(Fixture, test_triangular_apply_binary_transform_key_only_empty_lhs)
 
     TVECT lhs, rhs(rand_tvec(2)), expected, result;
 
-    typename alg::basis_multiplication_selector<TBASIS>::key_operator<TBASIS, FIELD, ident> kt;
+    ft_key_operator<ident> kt {ident()};
     lhs.triangular_buffered_apply_binary_transform(result, rhs, kt, TBASIS::MAX_DEGREE);
 
     CHECK_EQUAL(expected.size(), result.size());
@@ -213,9 +213,9 @@ TEST_FIXTURE(Fixture, test_triangular_apply_binary_transform_key_index_empty_lhs
 
     TVECT lhs, rhs(rand_tvec(2)), expected, result;
 
-    typename alg::basis_multiplication_selector<TBASIS>::key_operator<TBASIS, FIELD, ident> kt;
-    typename alg::basis_multiplication_selector<TBASIS>::index_operator<TBASIS, FIELD, ident> it;
-    lhs.triangular_buffered_apply_binary_transform(result, rhs, kt, it,  TBASIS::MAX_DEGREE);
+    ft_key_operator<ident> kt {ident()};
+    ft_index_operator<ident> it{ident()};
+    lhs.triangular_buffered_apply_binary_transform(result, rhs, kt, it, TBASIS::MAX_DEGREE);
 
     CHECK_EQUAL(expected.size(), result.size());
     CHECK_EQUAL(expected, result);
@@ -226,8 +226,8 @@ TEST_FIXTURE(Fixture, test_triangular_apply_binary_transform_key_only_empty_rhs)
 
     TVECT lhs(rand_tvec(2)), rhs, expected, result;
 
-    typename alg::basis_multiplication_selector<TBASIS>::key_operator<TBASIS, FIELD, ident> kt;
-    lhs.triangular_buffered_apply_binary_transform(result, rhs, kt,  TBASIS::MAX_DEGREE);
+    ft_key_operator<ident> kt{ident()};
+    lhs.triangular_buffered_apply_binary_transform(result, rhs, kt, TBASIS::MAX_DEGREE);
 
     CHECK_EQUAL(expected.size(), result.size());
     CHECK_EQUAL(expected, result);
@@ -238,8 +238,8 @@ TEST_FIXTURE(Fixture, test_triangular_apply_binary_transform_key_index_empty_rhs
 
     TVECT lhs(rand_tvec(2)), rhs, expected, result;
 
-    typename alg::basis_multiplication_selector<TBASIS>::key_operator<TBASIS, FIELD, ident> kt;
-    typename alg::basis_multiplication_selector<TBASIS>::index_operator<TBASIS, FIELD, ident> it;
+    ft_key_operator<ident> kt{ident()};
+    ft_index_operator<ident> it{ident()};
     lhs.triangular_buffered_apply_binary_transform(result, rhs, kt, it,  TBASIS::MAX_DEGREE);
 
     CHECK_EQUAL(expected.size(), result.size());
@@ -260,8 +260,7 @@ TEST_FIXTURE(Fixture, test_triangular_apply_binary_transform_key_only_random) {
         k = result.basis.nextkey(k);
     }
 
-
-    typename alg::basis_multiplication_selector<TBASIS>::key_operator<TBASIS, FIELD, ident> kt;
+    ft_key_operator<ident> kt{ident()};
     lhs.triangular_buffered_apply_binary_transform(result, rhs, kt, TBASIS::MAX_DEGREE);
 
     CHECK_EQUAL(expected.size(), result.size());
@@ -283,8 +282,8 @@ TEST_FIXTURE(Fixture, test_triangular_apply_binary_transform_key_index_random) {
         k = result.basis.nextkey(k);
     }
 
-    typename alg::basis_multiplication_selector<TBASIS>::key_operator<TBASIS, FIELD, ident> kt;
-    typename alg::basis_multiplication_selector<TBASIS>::index_operator<TBASIS, FIELD, ident> it;
+    ft_key_operator<ident> kt{ident()};
+    ft_index_operator<ident> it{ident()};
     lhs.triangular_buffered_apply_binary_transform(result, rhs, kt, it, TBASIS::MAX_DEGREE);
 
     CHECK_EQUAL(expected.size(), result.size());
@@ -298,7 +297,7 @@ TEST_FIXTURE(Fixture, test_triangular_apply_binary_transform_key_only_unidim_dif
 
     expected[TKEY(LET(1)) * TKEY(LET(2))] = lhs[TKEY(LET(1))] * rhs[TKEY(LET(2))];
 
-    typename alg::basis_multiplication_selector<TBASIS>::key_operator<TBASIS, FIELD, ident> kt;
+    ft_key_operator<ident> kt{ident()};
     lhs.triangular_buffered_apply_binary_transform(result, rhs, kt,  TBASIS::MAX_DEGREE);
 
     CHECK_EQUAL(expected.size(), result.size());
@@ -311,7 +310,7 @@ TEST_FIXTURE(Fixture, test_triangular_apply_binary_transform_key_only_unidim_sam
     TVECT lhs(TKEY(LET(1)), rand_scalar()), rhs(TKEY(LET(1)), rand_scalar()), result, expected;
     expected[TKEY(LET(1))*TKEY(LET(1))] = lhs[TKEY(LET(1))] * rhs[TKEY(LET(1))];
 
-    typename alg::basis_multiplication_selector<TBASIS>::key_operator<TBASIS, FIELD, ident> kt;
+    ft_key_operator<ident> kt{ident()};
     lhs.triangular_buffered_apply_binary_transform(result, rhs, kt, TBASIS::MAX_DEGREE);
 
     CHECK_EQUAL(expected.size(), result.size());
@@ -324,8 +323,8 @@ TEST_FIXTURE(Fixture, test_triangular_apply_binary_transform_key_index_unidim_di
     TVECT lhs(TKEY(LET(1)), rand_scalar()), rhs(TKEY(LET(2)), rand_scalar()), result, expected;
     expected[TKEY(LET(1))*TKEY(LET(2))] = lhs[TKEY(LET(1))] * rhs[TKEY(LET(2))];
 
-    typename alg::basis_multiplication_selector<TBASIS>::key_operator<TBASIS, FIELD, ident> kt;
-    typename alg::basis_multiplication_selector<TBASIS>::index_operator<TBASIS, FIELD, ident> it;
+    ft_key_operator<ident> kt{ident()};
+    ft_index_operator<ident> it{ident()};
     lhs.triangular_buffered_apply_binary_transform(result, rhs, kt, it, TBASIS::MAX_DEGREE);
 
     CHECK_EQUAL(expected.size(), result.size());
@@ -338,8 +337,8 @@ TEST_FIXTURE(Fixture, test_triangular_apply_binary_transform_key_index_unidim_sa
     TVECT lhs(TKEY(LET(1)), rand_scalar()), rhs(TKEY(LET(1)), rand_scalar()), result, expected;
     expected[TKEY(LET(1))*TKEY(LET(1))] = lhs[TKEY(LET(1))] * rhs[TKEY(LET(1))];
 
-    typename alg::basis_multiplication_selector<TBASIS>::key_operator<TBASIS, FIELD, ident> kt;
-    typename alg::basis_multiplication_selector<TBASIS>::index_operator<TBASIS, FIELD, ident> it;
+    ft_key_operator<ident> kt{ident()};
+    ft_index_operator<ident> it{ident()};
     lhs.triangular_buffered_apply_binary_transform(result, rhs, kt, it, TBASIS::MAX_DEGREE);
 
     CHECK_EQUAL(expected.size(), result.size());
@@ -361,7 +360,7 @@ TEST_FIXTURE(Fixture, test_triangular_apply_binary_transform_key_only_existing_d
         k = result.basis.nextkey(k);
     }
 
-    typename alg::basis_multiplication_selector<TBASIS>::key_operator<TBASIS, FIELD, ident> kt;
+    ft_key_operator<ident> kt{ident()};
     lhs.triangular_buffered_apply_binary_transform(result, rhs, kt, TBASIS::MAX_DEGREE);
 
 
@@ -384,8 +383,8 @@ TEST_FIXTURE(Fixture, test_triangular_apply_binary_transform_key_index_existing_
         k = result.basis.nextkey(k);
     }
 
-    typename alg::basis_multiplication_selector<TBASIS>::key_operator<TBASIS, FIELD, ident> kt;
-    typename alg::basis_multiplication_selector<TBASIS>::index_operator<TBASIS, FIELD, ident> it;
+    ft_key_operator<ident> kt{ident()};
+    ft_index_operator<ident> it{ident()};
     lhs.triangular_buffered_apply_binary_transform(result, rhs, kt, it, TBASIS::MAX_DEGREE);
 
     CHECK_EQUAL(expected.size(), result.size());

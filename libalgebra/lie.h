@@ -47,8 +47,8 @@ class lie_multiplication {
         // We look up for the desired product in our basis.
         parent_t parents(k1, k2);
         typename std::map<parent_t, lie_key_t>::const_iterator it;
-        it = lie_t::basis.reverse_map.find(parents);
-        if (it!=basis.reverse_map.end()) {
+        it = lie_t::basis.find(parents);
+        if (it != basis.reverse_map_end()) {
             // [k1,k2] exists in the basis.
             return lie_t(it->second);
         }
@@ -89,7 +89,7 @@ class lie_multiplication {
 
         typedef typename Lie::BASIS basis_t;
         typedef typename basis_t::PARENT parent_t;
-        typedef typename basis_t::KEY lie_key_t;
+        //typedef typename basis_t::KEY lie_key_t;
 
         static const lie_t zero;
         DEG target_degree = lie_t::basis.degree(k1)+lie_t::basis.degree(k2); // degrees[k1] + degrees[k2];
@@ -97,8 +97,6 @@ class lie_multiplication {
             return zero;
         } // degree truncation
 
-        // We grow up the basis up to the desired degree.
-        lie_t::basis.growup(target_degree);
 
         static boost::recursive_mutex table_access;
         static std::map<parent_t, lie_t> table(prime_prod_cache_table<lie_t>());

@@ -12,6 +12,14 @@ endif()
 
 project(Libalgebra VERSION 1.0.0)
 
+option(LIBALGEBA_TESTING "Enable building test targets" OFF)
+
+
+add_compile_options(
+        "-Wpedantic"
+        "-Wconversion"
+        "-Wsign-compare"
+)
 
 
 include(GNUInstallDirs)
@@ -19,17 +27,18 @@ include(GNUInstallDirs)
 
 #set(CMAKE_CXX_STANDARD 98)
 
+## we have a limited binary boost dependency
 find_package(Boost REQUIRED COMPONENTS thread container)
 if(WIN32)
-    # for Windows operating system in general
-    # https://github.com/Microsoft/vcpkg/issues/2979
-    # this picks up the debug verson of mpir - the files have the fix.
-    find_library(Bignum_LIBRARY mpir)
+find_library(Bignum_LIBRARY mpir)
 else()
-    # otherwise
-    find_library(Bignum_LIBRARY gmp)
+find_library(Bignum_LIBRARY gmp)
 endif()
+find_path(Bignum_INCLUDE_DIR NAMES gmp.h gmpxx.h)
+# include_directories(SYSTEM "${Bignum_INCLUDE_DIR}")
 
+message(STATUS ">>> Bignum library: ${Bignum_LIBRARY}")
+message(STATUS ">>> Bignum INCLUDE_DIRECTORIES: ${Bignum_INCLUDE_DIR}")
 
 add_library(Libalgebra INTERFACE
         libalgebra/basis/tags.h
@@ -54,6 +63,7 @@ add_library(Libalgebra INTERFACE
         libalgebra/compat.h
         libalgebra/constlog2.h
         libalgebra/constpower.h
+        libalgebra/hall_set.h
         libalgebra/implementation_types.h
         libalgebra/libalgebra.h
         libalgebra/lie.h
@@ -65,7 +75,6 @@ add_library(Libalgebra INTERFACE
         libalgebra/poly_lie.h
         libalgebra/poly_lie_basis.h
         libalgebra/polynomials.h
-        libalgebra/sparse_vector.h
         libalgebra/tensor.h
         libalgebra/tensor_basis.h
         libalgebra/utils.h
@@ -79,7 +88,7 @@ target_include_directories(Libalgebra
 
 add_library(Libalgebra::Libalgebra ALIAS Libalgebra)
 
-target_link_libraries(Libalgebra INTERFACE Boost::boost Boost::thread Boost::container ${Bignum_LIBRARY})
+target_link_libraries(Libalgebra INTERFACE Boost::boost Boost::thread Boost::container "${Bignum_LIBRARY}")
 
 if(NOT_SUBPROJECT)
     install(TARGETS Libalgebra
@@ -120,5 +129,6 @@ if(NOT_SUBPROJECT)
             )
 endif()
 
-
-add_subdirectory(tests)
+if (LIBALGEBRA_TESTING)
+    add_subdirectory(tests)
+endif()

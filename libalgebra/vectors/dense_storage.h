@@ -47,10 +47,10 @@ struct dense_storage_base
         owned, borrowed_mut, borrowed
     };
 
-    vec_type m_type;
+    allocator_type m_alloc;
     pointer m_data;
     size_type m_size;
-    allocator_type m_alloc;
+    vec_type m_type;
 
     /// Create new storage (default initialised) with size
     explicit dense_storage_base(size_type sz=0)

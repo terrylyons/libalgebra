@@ -57,6 +57,8 @@ typedef unsigned __int64 uint64_t;
 #include "compat.h"
 #include "implementation_types.h"
 #include <boost/thread/locks.hpp>
+#include "hall_set.h"
+
 
 #if __cplusplus >= 201103L
 
@@ -166,7 +168,7 @@ template <typename Coeff, DEG n_letters, DEG max_degree = 0,
 template <typename Coeff, DEG n_letters, DEG max_degree = 0> class shuffle_tensor;
 
 /// Philip Hall Lie Basis.
-template <DEG n_letters> class hall_basis;
+template <DEG n_letters, DEG MaxDegree> class hall_basis;
 
 /// Free Lie Associative Algebra Basis.  Associative and non commutative.
 template <DEG n_letters, DEG max_degree = 0> class lie_basis;
@@ -218,7 +220,6 @@ template <typename Coeff, DEG n_letters, DEG max_degree = 0> class poly_lie;
 #include "poly_lie.h"
 #include "poly_lie_basis.h"
 #include "polynomials.h"
-#include "sparse_vector.h"
 #include "tensor.h"
 #include "tensor_basis.h"
 #include "utils.h"

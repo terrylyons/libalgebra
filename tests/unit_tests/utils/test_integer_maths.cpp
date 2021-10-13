@@ -9,9 +9,9 @@
 
 #include "../../common/time_and_details.h"
 
-using alg::integer_maths::divisor_calc;
-using alg::integer_maths::square_free;
 
+using alg::integer_maths::is_squarefree;
+/*
 
 SUITE(divisor_calculation) {
 
@@ -52,15 +52,13 @@ SUITE(divisor_calculation) {
 #undef TEST_FIRST_DIVISOR
 
 }
-
+*/
 
 SUITE(square_free) {
 
 #define TEST_SQUARE_FREE(NUMBER, EXPECTED)                                  \
     TEST(test_square_free_ ## NUMBER) {                                     \
-        TEST_DETAILS();                                                     \
-        typedef square_free<divisor_calc<NUMBER> > SF;                       \
-        CHECK_EQUAL(EXPECTED, (bool)SF::ans);                                   \
+        CHECK_EQUAL(EXPECTED, is_squarefree(NUMBER));                       \
     }
 // there is a potential for error here unless square free returns bool does true == 3 ? No if true converts to an integer!
     TEST_SQUARE_FREE(2, true);

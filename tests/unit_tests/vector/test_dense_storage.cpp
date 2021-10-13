@@ -12,70 +12,63 @@
 
 SUITE(dense_storage) {
 
-struct fixture {
-    using dstorage = alg::vectors::dense_storage<double>;
-    using dvector = std::vector<double>;
+    struct fixture
+            {
+        using dstorage = alg::vectors::dense_storage<double>;
+        using dvector = std::vector<double>;
+        using size_type = typename dstorage::size_type;
 
-    using types = typename dstorage::vec_type;
+        using types = typename dstorage::vec_type;
 
-    dvector data1, data2;
+        dvector data1, data2;
 
-    fixture()
-            :data1(), data2()
-    {
-        mt19937 rng(12345);
-        NORMAL_DIST<double> dist(0.0, 1.0);
+        fixture() : data1(), data2()
+        {
+            mt19937 rng(12345);
+            NORMAL_DIST<double> dist(0.0, 1.0);
 
-        data1.reserve(10);
-        for (int i = 0; i<10; ++i) {
-            data1.push_back(dist(rng));
+            data1.reserve(10);
+            for (int i=0; i<10; ++i) {
+                data1.push_back(dist(rng));
+            }
+
+            data2.reserve(10);
+            for (int i=0; i<10; ++i) {
+                data2.push_back(dist(rng));
+            }
         }
 
-        data2.reserve(10);
-        for (int i = 0; i<10; ++i) {
-            data2.push_back(dist(rng));
+        double const* data1_cbegin() const {
+            return &data1[0];
         }
-    }
 
-    double const* data1_cbegin() const
-    {
-        return &data1[0];
-    }
+        double const* data1_cend() const {
+            return &data1[0] + 10;
+        }
 
-    double const* data1_cend() const
-    {
-        return &data1[0]+10;
-    }
+        double const* data2_cbegin() const {
+            return &data2[0];
+        }
 
-    double const* data2_cbegin() const
-    {
-        return &data2[0];
-    }
+        double const* data2_cend() const {
+            return &data2[0] + 10;
+        }
 
-    double const* data2_cend() const
-    {
-        return &data2[0]+10;
-    }
+        double* data1_begin() {
+            return &data1[0];
+        }
 
-    double* data1_begin()
-    {
-        return &data1[0];
-    }
+        double* data1_end() {
+            return &data1[0] + 10;
+        }
 
-    double* data1_end()
-    {
-        return &data1[0]+10;
-    }
+        double* data2_begin() {
+            return &data2[0];
+        }
 
-    double* data2_begin()
-    {
-        return &data2[0];
-    }
-
-    double* data2_end()
-    {
-        return &data2[0]+10;
-    }
+        double* data2_end() {
+            return &data2[0] + 10;
+        }
 
 
 };
@@ -182,7 +175,7 @@ struct fixture {
         double const* ptr1(val1.cbegin());
         double const* ptr2(val2.cbegin());
 
-        for (int i=0; i<val1.size(); ++i) {
+        for (size_type i=0; i<val1.size(); ++i) {
             CHECK_EQUAL(*(ptr1++), *(ptr2++));
         }
 
@@ -199,7 +192,7 @@ struct fixture {
         double const* ptr1(val1.cbegin());
         double const* ptr2(val2.cbegin());
 
-        for (int i=0; i<val1.size(); ++i) {
+        for (size_type i=0; i<val1.size(); ++i) {
             CHECK_EQUAL(*(ptr1++), *(ptr2++));
         }
     }
@@ -215,7 +208,7 @@ struct fixture {
         double const* ptr1(data1_cbegin());
         double const* ptr2(val2.cbegin());
 
-        for (int i=0; i<data1.size(); ++i) {
+        for (size_type i=0; i<data1.size(); ++i) {
             CHECK_EQUAL(*(ptr1++), *(ptr2++));
         }
     }
@@ -436,11 +429,11 @@ struct fixture {
         CHECK_EQUAL(types::owned, val.type());
         CHECK_EQUAL(data1.size() + data2.size(), val.size());
 
-        for (int i = 0; i<data1.size(); ++i) {
+        for (size_type i = 0; i<data1.size(); ++i) {
             CHECK_EQUAL(data1[i], val[i]);
         }
 
-        for (int i=0; i<data2.size(); ++i) {
+        for (size_type i=0; i<data2.size(); ++i) {
             CHECK_EQUAL(data2[i], val[data1.size() + i]);
         }
 
@@ -458,7 +451,7 @@ struct fixture {
         CHECK_EQUAL(types::owned, val.type());
         CHECK_EQUAL(data1.size() + 5, val.size());
 
-        for (int i = 0; i<data1.size(); ++i) {
+        for (size_type i = 0; i<data1.size(); ++i) {
             CHECK_EQUAL(data1[i], val[i]);
         }
 

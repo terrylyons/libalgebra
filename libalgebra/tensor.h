@@ -417,7 +417,7 @@ class shuffle_tensor_multiplication {
     template<typename Tensor>
     static Tensor _prod(typename Tensor::KEY const& k1, typename Tensor::KEY const& k2)
     {
-        typedef typename Tensor::KEY key_t;
+        //typedef typename Tensor::KEY key_t;
 
         typedef typename Tensor::BASIS basis_t;
         typedef free_tensor<Coeff, basis_t::s_no_letters, basis_t::s_max_degree> free_tensor_t;
@@ -449,8 +449,8 @@ class shuffle_tensor_multiplication {
             for (cit = second.begin(); cit!=second.end(); ++cit) {
                 result[k2l*cit->key()] += Coeff::one;
             }
-
         }
+
         return result;
     }
 
@@ -483,17 +483,6 @@ class shuffle_tensor_multiplication {
         }
     }
 
-    template<typename Transform>
-    class index_operator {
-        Transform m_transform;
-
-    public:
-        index_operator(Transform t)
-                :m_transform(t) { }
-
-        void operator()(scalar_t* result_ptr, scalar_t const* lhs_ptr, scalar_t const* rhs_ptr, DIMN const lhs_target,
-                DIMN const rhs_target, bool assign = false) { }
-    };
 
     template<typename Transform>
     class key_operator {

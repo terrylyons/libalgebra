@@ -334,7 +334,7 @@ public:
 * @tparam max_degree maximum degree of elements
 */
 template<DEG n_letters, DEG max_degree>
-class lie_basis : protected hall_basis<n_letters, max_degree>, dtl::hall_set_info<n_letters, max_degree>
+class lie_basis : public hall_basis<n_letters, max_degree>, dtl::hall_set_info<n_letters, max_degree>
 {
     typedef dtl::hall_set_info<n_letters, max_degree> SIZE_INFO;
 
@@ -364,6 +364,7 @@ public:
     using hall_basis_type::reverse_map_end;
     using hall_basis_type::parents_begin;
     using hall_basis_type::parents_end;
+
 
 
     /// Bring up the extended_function class - see also extend_function method

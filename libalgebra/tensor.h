@@ -449,8 +449,8 @@ class shuffle_tensor_multiplication {
             for (cit = second.begin(); cit!=second.end(); ++cit) {
                 result[k2l*cit->key()] += Coeff::one;
             }
-
         }
+
         return result;
     }
 

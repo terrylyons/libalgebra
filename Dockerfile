@@ -13,15 +13,14 @@ RUN cmake --build ./
 RUN cmake --build ./ --target install
 
 # libalgebra_tests build
-RUN mkdir libalgebra_tests
-WORKDIR /libalgebra_tests
+WORKDIR /libalgebra
 COPY . .
-WORKDIR /libalgebra_tests/build
-ENTRYPOINT cmake -DCMAKE_BUILD_TYPE=Release "$@" .. && cmake --build .
+WORKDIR /libalgebra/build
+ENTRYPOINT cmake -DCMAKE_BUILD_TYPE=Release -DLIBALGEBRA_TESTING=ON .. && cmake --build .
 
 # Run the tests
 FROM builder AS tester
-ENTRYPOINT cmake -DCMAKE_BUILD_TYPE=Release "$@" .. && cmake --build . && ./test
+# ENTRYPOINT cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build . && ./test
 
 # docker volume create libalgebra_volume
 # docker build -t libalgebra . --target builder

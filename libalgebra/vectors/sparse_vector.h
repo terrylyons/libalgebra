@@ -69,10 +69,11 @@ template <typename Basis, typename Coeffs, typename MapType = LIBALGEBRA_DEFAULT
 class sparse_vector : /*private*/ MapType, protected base_vector<Basis, Coeffs>
 {
     typedef MapType MAP;
-    typedef Basis BASIS;
+
     typedef base_vector <Basis, Coeffs> BASE_VEC;
 
 public:
+    typedef Basis BASIS;
     using MAP::operator[];
     /// Import of set this instance to the zero instance
     using MAP::clear;

@@ -48,4 +48,5 @@ target_link_libraries(all_tests PRIVATE
         utils_tests
         vector_tests
         hall_set_tests
+        shuffle_tensor_tests
         )

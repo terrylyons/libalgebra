@@ -46,6 +46,7 @@ add_custom_target(Libalgebra.headers SOURCES
         libalgebra/basis/tags.h
         libalgebra/basis/basis.h
         libalgebra/coefficients/coefficients.h
+        libalgebra/coefficients/complex.h
         libalgebra/utils/integer_maths.h
         libalgebra/utils/iterators.h
         libalgebra/utils/meta.h

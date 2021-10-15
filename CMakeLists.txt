@@ -31,7 +31,7 @@ set(LIBALGEBRA_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Libalgebr
 find_package(Boost REQUIRED COMPONENTS thread container)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules/)
-find_package(Bignum REQUIRED)
+find_package(Bignum)
 
 
 
@@ -82,7 +82,15 @@ target_include_directories(Libalgebra
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
         )
-target_link_libraries(Libalgebra INTERFACE Boost::boost Boost::thread Boost::container Bignum::Bignum)
+target_link_libraries(Libalgebra INTERFACE
+        Boost::boost
+        Boost::thread
+        Boost::container)
+
+if (TARGET Bignum::Bignum)
+    target_link_libraries(Libalgebra INTERFACE Bignum::Bignum)
+    target_compile_definitions(Libalgebra INTERFACE LIBALGEBRA_USE_GMP)
+endif()
 
 
 
@@ -98,7 +106,6 @@ if(NOT_SUBPROJECT)
 
     include(CMakePackageConfigHelpers)
 
-    get_target_property(LIBALGEBRA_HEADER_SOURCES Libalgebra.headers SOURCES)
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/libalgebra/
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libalgebra)
 
@@ -120,7 +127,6 @@ if(NOT_SUBPROJECT)
     )
 
     message(STATUS "Installing config files to ${LIBALGEBRA_CMAKE_CONFIG_DESTINATION}")
-
 
     install(EXPORT LibalgebraTargets
             FILE LibalgebraTargets.cmake

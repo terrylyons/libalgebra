@@ -3,7 +3,7 @@ include(CMakeFindDependencyMacro)
 set(LIBALGEBRA_VERSION 1.0.0)
 
 find_dependency(Boost COMPONENTS thread REQUIRED)
-find_dependency(Bignum)
+find_dependency(Bignum REQUIRED)
 
 
 @PACKAGE_INIT@

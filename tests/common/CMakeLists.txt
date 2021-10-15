@@ -10,7 +10,7 @@ add_library(utilities STATIC EXCLUDE_FROM_ALL
         small_vector.h
         time_and_details.h
         memfile.h
-        )
+        random_vector_generator.h)
 
 target_include_directories(utilities PUBLIC "${CMAKE_CURRENT_LIST_DIR}")
 

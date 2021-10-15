@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.1)
 
 # I took this from CATCH2's (V2.0) CMakeList.txt because
 # this seems to be close to our use case here.
@@ -23,22 +23,17 @@ add_compile_options(
 
 
 include(GNUInstallDirs)
-
+set(LIBALGEBRA_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Libalgebra")
 
 #set(CMAKE_CXX_STANDARD 98)
 
 ## we have a limited binary boost dependency
 find_package(Boost REQUIRED COMPONENTS thread container)
-if(WIN32)
-find_library(Bignum_LIBRARY mpir)
-else()
-find_library(Bignum_LIBRARY gmp)
-endif()
-find_path(Bignum_INCLUDE_DIR NAMES gmp.h gmpxx.h)
-# include_directories(SYSTEM "${Bignum_INCLUDE_DIR}")
 
-message(STATUS ">>> Bignum library: ${Bignum_LIBRARY}")
-message(STATUS ">>> Bignum INCLUDE_DIRECTORIES: ${Bignum_INCLUDE_DIR}")
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules/)
+find_package(Bignum REQUIRED)
+
+
 
 add_library(Libalgebra INTERFACE)
 
@@ -87,19 +82,26 @@ target_include_directories(Libalgebra
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
         )
+target_link_libraries(Libalgebra INTERFACE Boost::boost Boost::thread Boost::container Bignum::Bignum)
+
+
 
 add_library(Libalgebra::Libalgebra ALIAS Libalgebra)
 
-target_link_libraries(Libalgebra INTERFACE Boost::boost Boost::thread Boost::container "${Bignum_LIBRARY}")
 
 if(NOT_SUBPROJECT)
     install(TARGETS Libalgebra
             EXPORT LibalgebraTargets
+            PUBLIC_HEADER
             INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
             )
 
     include(CMakePackageConfigHelpers)
-    set(LIBALGEBRA_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Libalgebra")
+
+    get_target_property(LIBALGEBRA_HEADER_SOURCES Libalgebra.headers SOURCES)
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/libalgebra/
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libalgebra)
+
 
     message(STATUS "Writing cmake config file")
     configure_package_config_file(
@@ -118,19 +120,24 @@ if(NOT_SUBPROJECT)
     )
 
     message(STATUS "Installing config files to ${LIBALGEBRA_CMAKE_CONFIG_DESTINATION}")
-    install(FILES   ${CMAKE_CURRENT_BINARY_DIR}/LibalgebraConfig.cmake
-                    ${CMAKE_CURRENT_BINARY_DIR}/LibalgebraConfigVersion.cmake
-            DESTINATION ${LIBALGEBRA_CMAKE_CONFIG_DESTINATION}
-            )
 
 
     install(EXPORT LibalgebraTargets
             FILE LibalgebraTargets.cmake
             NAMESPACE Libalgebra::
-            DESTINATION lib/cmake/Libalgebra
+            DESTINATION ${LIBALGEBRA_CMAKE_CONFIG_DESTINATION}
             )
+
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/LibalgebraConfig.cmake
+            ${CMAKE_CURRENT_BINARY_DIR}/LibalgebraConfigVersion.cmake
+            ${CMAKE_SOURCE_DIR}/cmake/Modules/FindBignum.cmake
+            DESTINATION ${LIBALGEBRA_CMAKE_CONFIG_DESTINATION}
+            )
+
+
 endif()
 
 if (LIBALGEBRA_TESTING)
+    enable_testing()
     add_subdirectory(tests)
 endif()

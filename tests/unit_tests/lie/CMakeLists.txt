@@ -9,7 +9,7 @@ add_library(lie_tests OBJECT EXCLUDE_FROM_ALL
 
 target_link_libraries(lie_tests PUBLIC UnitTest++ Libalgebra::Libalgebra la_unittests::utilities)
 
-add_executable(lie_tests_exe EXCLUDE_FROM_ALL)
+add_executable(lie_tests_exe)
 target_link_libraries(lie_tests_exe PRIVATE la_unittests::main lie_tests)
 
 add_test(NAME lie_tests COMMAND lie_tests_exe)

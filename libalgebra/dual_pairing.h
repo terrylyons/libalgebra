@@ -5,7 +5,7 @@
 #ifndef LIBALGEBRA_DUAL_PAIRING_H
 #define LIBALGEBRA_DUAL_PAIRING_H
 
-#include "implimentation_types.h"
+#include "implementation_types.h"
 #include "vectors/vector.h"
 #include "vectors/dense_vector.h"
 

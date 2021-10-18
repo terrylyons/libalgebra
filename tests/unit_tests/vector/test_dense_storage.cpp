@@ -16,6 +16,7 @@ SUITE(dense_storage) {
             {
         using dstorage = alg::vectors::dense_storage<double>;
         using dvector = std::vector<double>;
+        using size_type = typename dstorage::size_type;
 
         using types = typename dstorage::vec_type;
 
@@ -113,7 +114,6 @@ SUITE(dense_storage) {
         CHECK_EQUAL(types::borrowed_mut, val.type());
     }
 
-
     TEST_FIXTURE(fixture, test_borrowed_ctor_ptr_size) {
         dstorage val(data1_cbegin(), data1.size());
 
@@ -175,7 +175,7 @@ SUITE(dense_storage) {
         double const* ptr1(val1.cbegin());
         double const* ptr2(val2.cbegin());
 
-        for (int i=0; i<val1.size(); ++i) {
+        for (size_type i=0; i<val1.size(); ++i) {
             CHECK_EQUAL(*(ptr1++), *(ptr2++));
         }
 
@@ -192,7 +192,7 @@ SUITE(dense_storage) {
         double const* ptr1(val1.cbegin());
         double const* ptr2(val2.cbegin());
 
-        for (int i=0; i<val1.size(); ++i) {
+        for (size_type i=0; i<val1.size(); ++i) {
             CHECK_EQUAL(*(ptr1++), *(ptr2++));
         }
     }
@@ -208,7 +208,7 @@ SUITE(dense_storage) {
         double const* ptr1(data1_cbegin());
         double const* ptr2(val2.cbegin());
 
-        for (int i=0; i<data1.size(); ++i) {
+        for (size_type i=0; i<data1.size(); ++i) {
             CHECK_EQUAL(*(ptr1++), *(ptr2++));
         }
     }
@@ -429,11 +429,11 @@ SUITE(dense_storage) {
         CHECK_EQUAL(types::owned, val.type());
         CHECK_EQUAL(data1.size() + data2.size(), val.size());
 
-        for (int i = 0; i<data1.size(); ++i) {
+        for (size_type i = 0; i<data1.size(); ++i) {
             CHECK_EQUAL(data1[i], val[i]);
         }
 
-        for (int i=0; i<data2.size(); ++i) {
+        for (size_type i=0; i<data2.size(); ++i) {
             CHECK_EQUAL(data2[i], val[data1.size() + i]);
         }
 
@@ -451,7 +451,7 @@ SUITE(dense_storage) {
         CHECK_EQUAL(types::owned, val.type());
         CHECK_EQUAL(data1.size() + 5, val.size());
 
-        for (int i = 0; i<data1.size(); ++i) {
+        for (size_type i = 0; i<data1.size(); ++i) {
             CHECK_EQUAL(data1[i], val[i]);
         }
 

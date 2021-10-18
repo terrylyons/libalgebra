@@ -30,7 +30,17 @@ template <typename Basis> struct requires_order
 
 
 
-
+/**
+ * @brief Vector type where data is stored in contiguous memory.
+ *
+ * A dense vector stores coefficients in a contiguous block of memory, where the association with
+ * basis element is formed by taking the key corresponding to the index of the coefficient in the
+ * basis total ordering. Consequently, a dense vector is valid if and only if Basis is totally
+ * ordered.
+ *
+ * @tparam Basis
+ * @tparam Coeffs
+ */
 template <typename Basis, typename Coeffs>
 class dense_vector : protected base_vector<Basis, Coeffs>, dtl::requires_order<Basis>
 {
@@ -95,6 +105,17 @@ public:
         set_degree(degree_tag);
     }
 
+    /**
+     * @brief Create a new dense vector from data with an initial offset
+     *
+     * Construct a new vector in which the first offset elements are zero,
+     * and fill the next (end - begin) values by copying from the range
+     * [begin, end).
+     *
+     * @param offset Number of terms in the basis before the data starts
+     * @param begin start of data range to construct
+     * @param end first past last of data range to
+     */
     dense_vector(DIMN offset, SCALAR const* begin, SCALAR const* end)
         : m_data(offset, begin, end),
           m_dimension(0),
@@ -103,6 +124,17 @@ public:
         set_degree(degree_tag);
     }
 
+    /**
+     * @brief Create a new dense vector from data with an initial offset
+     *
+     * Construct a new vector in which the first offset elements are zero,
+     * and fill the next (end - begin) values by copying from the range
+     * [begin, end).
+     *
+     * @param offset Number of terms in the basis before the data starts
+     * @param begin start of data range to construct
+     * @param end first past last of data range to
+     */
     dense_vector(DIMN offset, SCALAR* begin, SCALAR* end)
         : m_data(offset, begin, end),
           m_dimension(0),
@@ -174,7 +206,7 @@ public:
     /// Reserve to degree
     void reserve_to_degree(const DEG deg)
     {
-        DIMN target_deg = std::min(degree_tag.max_degree, deg);
+        DEG target_deg = std::min(degree_tag.max_degree, deg);
         DIMN target_dim = start_of_degree(target_deg + 1);
         m_data.reserve(target_dim);
         m_dimension = target_dim;
@@ -201,6 +233,7 @@ public:
         m_degree = target_deg;
     }
 
+    /// Get the next valid size of a vector
     DIMN next_resize_size() const
     {
         return adjust_dimension(dimension() + 1, degree_tag);
@@ -308,21 +341,32 @@ public:
 
     // iterator methods
 
+    /// Iterator at start of vector
     iterator begin() { return iterator(*this, m_data.begin()); }
 
+    /// Iterator at (one past) end of vector
     iterator end() { return iterator(*this, m_data.end()); }
 
+    /// Const iterator at start of vector
     const_iterator begin() const { return const_iterator(*this, m_data.begin()); }
 
+    /// Const iterator at (one past) end of vector
     const_iterator end() const { return const_iterator(*this, m_data.end()); }
 
+    /// Const iterator at start of vector
     const_iterator cbegin() const
     {
         return const_iterator(*this, m_data.begin());
     }
 
+    /// Const iterator at (one past) end of vector
     const_iterator cend() const { return const_iterator(*this, m_data.end()); }
 
+    /**
+     * @brief Insert a new value at key
+     * @param key key position at which to insert new value
+     * @param val new value to insert
+     */
     void insert(const KEY &key, SCALAR val)
     {
         DIMN idx = key_to_index(key);
@@ -332,6 +376,12 @@ public:
         m_data[idx] = val;
     }
 
+    /**
+     * @brief Insert a new value by providing a key-value pair
+     * @param arg key value pair with position and value to insert into the vector
+     * @return pair of iterator to place where value was inserted and bool indicating whether a value was inserted.
+     *        Currently this is always true.
+     */
     std::pair<iterator, bool> insert(std::pair<const KEY, SCALAR> &arg)
     {
         DIMN idx = key_to_index(arg.first);
@@ -353,6 +403,13 @@ public:
         return rv;
     }
 
+    /**
+     * @brief Insert new values from iterator
+     * @tparam InputIterator Iterator type (any class supporting InputIterator trait)
+     * with value_type is a pair of KEY and SCALAR.
+     * @param begin start of range to insert
+     * @param end one past end of range to insert
+     */
     template <typename InputIterator> void insert(InputIterator begin, InputIterator end)
     {
         typedef std::vector<std::pair<DIMN, SCALAR>> TMPVEC;
@@ -374,6 +431,11 @@ public:
         }
     }
 
+    /**
+     * @brief Get a const iterator to value corresponding to key
+     * @param key Key to find value for
+     * @return const iterator pointing to the value
+     */
     const_iterator find(const KEY &key) const
     {
         DIMN idx;
@@ -383,6 +445,11 @@ public:
         return end();
     }
 
+    /**
+     * @brief Get a iterator to value corresponding to key
+     * @param key Key to find value for
+     * @return iterator pointing to the value
+     */
     iterator find(const KEY &key)
     {
         DIMN idx;
@@ -392,16 +459,30 @@ public:
         return end();
     }
 
+    /**
+     * @brief Get an iterator to a specific index in the vector.
+     * @param idx Index of value to find
+     * @return iterator pointing to the value
+     */
     iterator find_index(DIMN idx)
     {
         return iterator(*this, m_data.begin() + idx);
     }
 
+    /**
+     * @brief Get a const iterator to a specific index in the vector.
+     * @param idx Index of value to find
+     * @return const iterator pointing to the value
+     */
     const_iterator find_index(DIMN idx) const
     {
         return const_iterator(*this, m_data.begin() + idx);
     }
 
+    /**
+     * @brief Erase (set to zero) the value corresponding to key
+     * @param key key to erase
+     */
     void erase(const KEY &key)
     {
         DIMN idx;
@@ -410,6 +491,10 @@ public:
         }
     }
 
+    /**
+     * @brief Erase the value at the iterator position
+     * @param it iterator to value to erase
+     */
     void erase(iterator &it)
     {
         assert(it != end());
@@ -417,6 +502,9 @@ public:
     }
 
 public:
+    /**
+     * @brief Clear (set to zero) all values in the vector.
+     */
     void clear()
     {
         SCALAR z = zero;
@@ -437,27 +525,39 @@ public:
 public:
     // Access to information about the vector and coefficients
 
+    /// get the dimension of the vector
     DIMN dimension() const { return m_data.size(); }
 
+    /// get the maximum degree element represented by the vector
     DEG degree() const
     {
         return m_degree;
     }
 
+    /// Check if the degree of the vector is equal to given vector
     bool degree_equals(const DEG degree) const { return m_degree == degree; }
 
+    /// Get a reference to the value at index
     SCALAR &value(const DIMN dim)
     {
         assert(dim < m_data.size());
         return m_data[dim];
     }
 
+    /// Get a const reference to the value at index
     const SCALAR &value(const DIMN dim) const
     {
         assert(dim < m_data.size());
         return m_data[dim];
     }
 
+    /**
+     * @brief Get the number of non-zero elements in the vector
+     *
+     * This is a fairly slow operation since it must check every element in the vector.
+     *
+     * @return Number of non-zero elements.
+     */
     DIMN size() const
     {
         DIMN sz = 0;
@@ -467,6 +567,13 @@ public:
         return sz;
     }
 
+    /**
+     * @brief Check if the vector contains only zero elements.
+     *
+     * This is a fairly slow operation, especially if there are a large number of zeros.
+     *
+     * @return true if vector is empty (only has zeros) and false otherwise
+     */
     bool empty() const
     {
         if (m_data.empty()) {
@@ -482,29 +589,34 @@ public:
     }
 
 protected:
-    // Index of key and key of index
+    /// Index of key and key of index
     static KEY index_to_key(const DIMN index)
     {
         return basis.index_to_key(index);
     }
 
+    /// Get the index corresponding to a key
     static DIMN key_to_index(const KEY &key) { return basis.key_to_index(key); }
 
+    /// Get the degree of the key at an index
     static DEG index_to_degree(const DIMN idx)
     {
         return basis.degree(index_to_key(idx));
     }
 
+    /// Get the index at which the elements of degree start
     static DIMN start_of_degree(const DEG deg)
     {
         return basis.start_of_degree(deg);
     }
 
+    /// Get he maximum feasible dimension for bases with degree
     template <DEG D> static DIMN max_dimension(alg::basis::with_degree<D>)
     {
         return basis.start_of_degree(degree_tag.max_degree + 1);
     }
 
+    /// Get the maximum feasible dimension for a basis without degree
     static DIMN max_dimension(alg::basis::without_degree)
     {
         return basis.max_dimension();
@@ -594,8 +706,6 @@ public:
         if (rhs.dimension() == 0) {
             return *this;
         }
-
-        DIMN mid_dim = std::min(rhs.dimension(), dimension());
 
         if (rhs.dimension() > dimension()) {
             resize_to_dimension(rhs.dimension());
@@ -830,6 +940,13 @@ protected:
 public:
     // Norms
 
+    /**
+     * @brief Compute the L1 norm of the vector
+     *
+     * The L1 norm here is the sum of absolute values of members of the vector.
+     *
+     * @return the L1 norm
+     */
     SCALAR NormL1() const
     {
         SCALAR ans(zero);
@@ -839,6 +956,11 @@ public:
         return ans;
     }
 
+    /**
+     * @brief Compute the L1 norm of elements with degree at most deg
+     * @param deg maximum degree of elements
+     * @return the L1 norm of elements
+     */
     SCALAR NormL1(const DEG deg) const
     {
         SCALAR ans(zero);
@@ -848,6 +970,13 @@ public:
         return ans;
     }
 
+    /**
+     * @brief Compute the L-infinity norm of the the vector
+     *
+     * The L-infinity norm is the maximum absolute value of elements in the vector.
+     *
+     * @return the L-infinity norm of the vector
+     */
     SCALAR NormLInf() const
     {
         SCALAR ans(zero);
@@ -858,6 +987,11 @@ public:
         return ans;
     }
 
+    /**
+     * @brief Compute the L-infinity norm of elements in the vector of degree at most deg
+     * @param deg maximum degree of elements
+     * @return the L-infinity norm of elements
+     */
     SCALAR NormLInf(const DEG deg) const
     {
         SCALAR ans(zero);
@@ -899,6 +1033,18 @@ public:
 public:
     // Transform methods
 
+    /**
+     * @brief Apply a buffered binary transform using only key transform up to max depth
+     *
+     * This is applied to the vector using the degree optimisation.
+     *
+     * @tparam Vector Result vector type
+     * @tparam KeyTransform Key transform type
+     * @param result Vector in which to place the result
+     * @param rhs right hand side buffer
+     * @param key_transform transform to apply
+     * @param max_depth maximum depth of elements to compute
+     */
     template <typename Vector, typename KeyTransform> void
     triangular_buffered_apply_binary_transform(Vector &result, const dense_vector &rhs, KeyTransform key_transform,
                                                const DEG max_depth) const
@@ -934,6 +1080,20 @@ public:
         }
     }
 
+    /**
+     * @brief Apply a buffered binary transform with separate transforms up to max depth
+     *
+     * This is applied to the vector using the degree optimisation.
+     *
+     * @tparam Vector Result vector type
+     * @tparam KeyTransform Key transform type
+     * @tparam IndexTransform Index transform type
+     * @param result Vector in which to place the result
+     * @param rhs Right hand side buffer
+     * @param key_transform transform to apply by keys (sparse elements)
+     * @param index_transform transform to apply by index (dense elements)
+     * @param max_depth Maximum depth to compute
+     */
     template <typename Vector, typename KeyTransform, typename IndexTransform> void
     triangular_buffered_apply_binary_transform(Vector &result, const dense_vector &rhs, KeyTransform key_transform,
                                                IndexTransform index_transform, const DEG max_depth) const
@@ -960,18 +1120,28 @@ public:
                 DIMN lh_deg_start = start_of_degree(static_cast<DEG>(lhs_deg));
                 DIMN rh_deg_start = start_of_degree(static_cast<DEG>(rhs_deg));
 
-                assert(start_of_degree(lhs_deg + 1) <= m_data.size());
-                assert(start_of_degree(rhs_deg + 1) <= rhs.m_data.size());
-                assert(d_result.m_data.size() >= start_of_degree(out_deg + 1));
+                assert(start_of_degree(static_cast<DEG>(lhs_deg + 1)) <= m_data.size());
+                assert(start_of_degree(static_cast<DEG>(rhs_deg + 1)) <= rhs.m_data.size());
+                assert(d_result.m_data.size() >= start_of_degree(static_cast<DEG>(out_deg + 1)));
 
-                index_transform(&d_result.m_data[start_of_degree(out_deg)], &m_data[start_of_degree(lhs_deg)],
-                                &rhs.m_data[start_of_degree(rhs_deg)],
-                                alg::DEG(start_of_degree(lhs_deg + 1) - lh_deg_start),
-                                alg::DEG(start_of_degree(rhs_deg + 1) - rh_deg_start));
+                index_transform(
+                        &d_result.m_data[start_of_degree(static_cast<DEG>(out_deg))],
+                        &m_data[lh_deg_start],
+                        &rhs.m_data[rh_deg_start],
+                        start_of_degree(static_cast<DEG>(lhs_deg + 1)) - lh_deg_start,
+                        start_of_degree(static_cast<DEG>(rhs_deg + 1)) - rh_deg_start);
             }
         }
     }
 
+    /**
+     * @brief Apply an unbuffered binary transform using only key transform
+     *
+     * @tparam KeyTransform Key transform type
+     * @param rhs Right hand side buffer
+     * @param key_transform Key transform
+     * @param max_depth maximum depth of elements to compute
+     */
     template <typename KeyTransform> void
     triangular_unbuffered_apply_binary_transform(const dense_vector &rhs, KeyTransform key_transform,
                                                  const DEG max_depth)
@@ -981,6 +1151,15 @@ public:
         swap(result);
     }
 
+    /**
+     * @brief Apply an unbuffered binary transform with separate transforms
+     * @tparam KeyTransform Key transform type
+     * @tparam IndexTransform Index transform type
+     * @param rhs Right hand side buffer
+     * @param key_transform transform to apply by key (sparse)
+     * @param index_transform transform to apply by index (dense)
+     * @param max_depth Maximum depth of elements to compute
+     */
     template <typename KeyTransform, typename IndexTransform> void
     triangular_unbuffered_apply_binary_transform(const dense_vector &rhs, KeyTransform key_transform,
                                                  IndexTransform index_transform, const DEG max_depth)
@@ -1012,7 +1191,7 @@ public:
             return;
         }
 
-        const DEG old_lhs_deg = degree();
+        const IDEG old_lhs_deg = static_cast<IDEG>(degree());
         const DEG max_degree = std::min(max_depth, m_degree + rhs.m_degree);
 
         if (max_degree > m_degree) {
@@ -1021,9 +1200,14 @@ public:
         }
         assert(m_data.size() >= start_of_degree(max_degree + 1));
 
-        if (max_degree == alg::DEG(0)) {
-            index_transform(&m_data[start_of_degree(0)], &m_data[start_of_degree(0)], &rhs.m_data[start_of_degree(0)],
-                            alg::DEG(degree_difference_1_0), alg::DEG(degree_difference_1_0), true);
+        if (max_degree == DEG(0)) {
+            index_transform(
+                    &m_data[start_of_degree(0)],
+                    &m_data[start_of_degree(0)],
+                    &rhs.m_data[start_of_degree(0)],
+                    degree_difference_1_0,
+                    degree_difference_1_0,
+                    true);
             return;
         }
 
@@ -1036,24 +1220,28 @@ public:
 
         const IDEG max_rhs_deg = static_cast<IDEG>(rhs.degree());
 
-        for (IDEG out_deg = max_degree; out_deg >= 1; --out_deg) {
+        for (IDEG out_deg = static_cast<IDEG>(max_degree); out_deg >= 1; --out_deg) {
             lhs_deg_min = std::max(IDEG(0), out_deg - max_rhs_deg);
             assign = (out_deg > old_lhs_deg) || default_assign;
-            lhs_deg_max = std::min(out_deg - offset, static_cast<IDEG>(old_lhs_deg));
+            lhs_deg_max = std::min(out_deg - offset, old_lhs_deg);
 
             for (IDEG lhs_deg = lhs_deg_max; lhs_deg >= lhs_deg_min; --lhs_deg) {
                 rhs_deg = out_deg - lhs_deg;
                 DIMN lh_deg_start = start_of_degree(static_cast<DEG>(lhs_deg));
                 DIMN rh_deg_start = start_of_degree(static_cast<DEG>(rhs_deg));
 
-                assert(start_of_degree(lhs_deg + 1) <= m_data.size());
-                assert(start_of_degree(rhs_deg + 1) <= rhs.m_data.size());
-                assert(m_data.size() >= start_of_degree(out_deg + 1));
+                assert(start_of_degree(static_cast<DEG>(lhs_deg + 1)) <= m_data.size());
+                assert(start_of_degree(static_cast<DEG>(rhs_deg + 1)) <= rhs.m_data.size());
+                assert(m_data.size() >= start_of_degree(static_cast<DEG>(out_deg + 1)));
 
-                index_transform(&m_data[start_of_degree(out_deg)], &m_data[start_of_degree(lhs_deg)],
-                                &rhs.m_data[start_of_degree(rhs_deg)],
-                                alg::DEG(start_of_degree(lhs_deg + 1) - lh_deg_start),
-                                alg::DEG(start_of_degree(rhs_deg + 1) - rh_deg_start), assign);
+                index_transform(
+                        &m_data[start_of_degree(static_cast<DEG>(out_deg))],
+                        &m_data[lh_deg_start],
+                        &rhs.m_data[rh_deg_start],
+                        start_of_degree(static_cast<DEG>(lhs_deg + 1)) - lh_deg_start,
+                        start_of_degree(static_cast<DEG>(rhs_deg + 1)) - rh_deg_start,
+                        assign
+                        );
 
                 assign = false;
             }
@@ -1061,11 +1249,19 @@ public:
 
         if (degree_difference_1_0 == 1) {
             index_transform(
-                    &m_data[0], &m_data[0], &rhs.m_data[0], 1, 1, true
+                    &m_data[0], &m_data[0], &rhs.m_data[0], DIMN(1), DIMN(1), true
                     );
         }
     }
 
+    /**
+     * @brief Apply buffered binary transform with no degree optimisation
+     * @tparam Vector Output vector type
+     * @tparam KeyTransform Key transform type
+     * @param result buffer in which to place result
+     * @param rhs Right hand side buffer
+     * @param key_transform Transform to apply by key (sparse)
+     */
     template <typename Vector, typename KeyTransform> void
     square_buffered_apply_binary_transform(Vector &result, const dense_vector &rhs, KeyTransform key_transform) const
     {
@@ -1085,6 +1281,15 @@ public:
         }
     }
 
+    /**
+     * @brief Apply buffered binary transform with separate transforms and no degree optimisation
+     * @tparam Vector Output vector type
+     * @tparam KeyTransform Key transform type
+     * @tparam IndexTransform Index transform type
+     * @param result buffer in which to place result
+     * @param rhs right hand side buffer
+     * @param index_transform transform to apply by index (dense)
+     */
     template <typename Vector, typename KeyTransform, typename IndexTransform> void
     square_buffered_apply_binary_transform(Vector &result, const dense_vector &rhs, KeyTransform /*key_transform*/,
                                            IndexTransform index_transform) const
@@ -1102,6 +1307,13 @@ public:
     }
 
 public:
+    /**
+     * @brief  Apply a transform inplace with buffering
+     * @tparam Transform Transform type
+     * @param result buffer in which to place result (temporarily)
+     * @param transform transform to apply
+     * @param max_deg Maximum degree
+     */
     template <typename Transform>
     void buffered_apply_unary_transform(dense_vector &result, Transform transform, const DEG max_deg) const
     {
@@ -1115,6 +1327,12 @@ public:
         it(&result.m_data[0], result.dimension(), &m_data[0], dimension(), max_deg);
     }
 
+    /**
+     * @brief  Apply a transform inplace with buffering
+     * @tparam Transform Transform type
+     * @param result buffer in which to place result (temporarily)
+     * @param transform transform to apply
+     */
     template <typename Transform> void buffered_apply_unary_transform(dense_vector &result, Transform transform) const
     {
         if (empty()) {

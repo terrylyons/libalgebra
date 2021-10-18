@@ -313,7 +313,6 @@ namespace {
 		using std::cout;
 		using std::endl;
 		using std::vector;
-		cout << LIE::basis << endl;
 
 		LIE l1(1, 1), l2(2, 3);
 		cout << "xxx" << (((l2 *= (S)4) *= (l1 * l2 + l1)), l2 = l2 * l2, (l2 += l1)) << endl;

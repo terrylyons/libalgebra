@@ -37,8 +37,16 @@ public:
 
 /// Main vector interface
 /**
- * Main vector interface for libalgebra.
+ * @brief Main vector interface for libalgebra.
  *
+ * Provides a consistent interface to the underlying storage type. Moreover, it provides some additional
+ * cross-vector-type interactions. For example, it provides an interface for adding a dense vector to a sparse
+ * vector.
+ *
+ * All vectors in libalgebra instances of this class template. The VectorImpl parameter determines the actual
+ * type of the vector. Most operations are simply passed through to the underlying vector type, but some
+ * have additional layers of misdirection to, for example, select the correct implementation to use. This is
+ * especially the case for the functions that are used by algebra types for implementing multiplication.
  *
  * @tparam Basis The basis class for the vector to use
  * @tparam Field The coefficient field to use
@@ -168,7 +176,7 @@ protected:
     }
 
 public:
-    // Swap
+    /// Swap the data in this instance with another
     void swap(vector &rhs) { UnderlyingVectorType::swap(rhs); }
 
 public:
@@ -403,7 +411,7 @@ public:
 
     // Templated versions of the fused operations. For cross-vector type
     // application.
-
+    /// A version of += fused with scalar multiplication
     template <typename VectorType> vector &add_scal_prod(const vector<Basis, Coeffs, VectorType> &rhs, const SCALAR &s)
     {
         typename VectorType::const_iterator cit;
@@ -413,6 +421,7 @@ public:
         return *this;
     }
 
+    /// A version of -= fused with scalar multiplication
     template <typename VectorType> vector &sub_scal_prod(const vector<Basis, Coeffs, VectorType> &rhs, const SCALAR &s)
     {
         typename VectorType::const_iterator cit;
@@ -422,6 +431,7 @@ public:
         return *this;
     }
 
+    /// A version of += fused with rational division
     template <typename VectorType> vector &add_scal_div(const vector<Basis, Coeffs, VectorType> &rhs, const RATIONAL &s)
     {
         typename VectorType::const_iterator cit;
@@ -431,6 +441,7 @@ public:
         return *this;
     }
 
+    /// A version of -= fused with rational division
     template <typename VectorType> vector &sub_scal_div(const vector<Basis, Coeffs, VectorType> &rhs, const RATIONAL &s)
     {
         typename VectorType::const_iterator cit;
@@ -461,6 +472,7 @@ public:
 public:
     // Display
 
+    /// Print the vector to an output stream
     inline friend std::ostream &operator<<(std::ostream &os, const vector &rhs)
     {
         return (os << (const UnderlyingVectorType &) rhs);
@@ -481,8 +493,10 @@ public:
 public:
     // Information methods
 
+    /// Get the maximum degree held by this vector
     DEG degree() const { return degree_impl(degree_tag); }
 
+    /// Test if the maximum degree held by this vector is equal to given value
     bool degree_equals(const DEG degree) const
     {
         return UnderlyingVectorType::degree_equals(degree);
@@ -499,8 +513,9 @@ private:
 public:
     // Apply transform methods
 
-    /// Buffered apply transform with separate transforms
     /**
+     * @brief Buffered apply transform with separate transforms
+     *
      * Apply transform to paired vectors using a buffer. Apply using different
      * transforms for by-index or by-key chosen by the under data source.
      *
@@ -525,14 +540,15 @@ public:
         buffered_apply_binary_transform(result, rhs, key_transform, UnderlyingVectorType::degree_tag);
     }
 
-    /// Unbuffered apply transform with separate transforms
+
     /**
+     * @brief Unbuffered apply transform with separate transforms
+     *
      * Apply transform to paired vectors using a buffer. Apply using different
      * transforms for by-index or by-key chosen by the under data source.
      *
      * @tparam KeyTransform Key transform type
      * @tparam IndexTransform Index transform type
-     * @param result Buffer in which to place the result
      * @param rhs Right hand side buffer
      * @param key_transform Transform to apply by keys (sparse elements)
      * @param index_transform Transform to apply by index (dense elements)
@@ -550,6 +566,17 @@ public:
         unbuffered_apply_binary_transform(rhs, key_transform, UnderlyingVectorType::degree_tag);
     }
 
+    /**
+     * @brief Buffered apply transform with separate transforms up to max degree
+     *
+     * @tparam KeyTransform Key transform type
+     * @tparam IndexTransform Index transform type
+     * @param result Buffer in which to place the result
+     * @param rhs Right hand side buffer
+     * @param key_transform Transform to apply by keys (sparse elements)
+     * @param index_transform Transform to apply by index (dense elements)
+     * @param max_depth Maximum depth to compute the result
+     */
     template <typename KeyTransform, typename IndexTransform> void
     buffered_apply_binary_transform(vector &result, const vector &rhs, KeyTransform key_transform,
                                     IndexTransform index_transform, const DEG max_depth) const
@@ -558,6 +585,16 @@ public:
                                                                   max_depth);
     }
 
+    /**
+     * @brief Unbuffered apply transform with separate transforms up to max degree
+     *
+     * @tparam KeyTransform Key transform type
+     * @tparam IndexTransform Index transform type
+     * @param rhs Right hand side buffer
+     * @param key_transform Transform to apply by keys (sparse elements)
+     * @param index_transform Transform to apply by index (dense elements)
+     * @param max_depth Maximum depth to compute the result
+     */
     template <typename KeyTransform, typename IndexTransform> void
     unbuffered_apply_binary_transform(const vector &rhs, KeyTransform key_transform, IndexTransform index_transform,
                                       const DEG max_depth)
@@ -566,7 +603,7 @@ public:
                                                                            max_depth);
     }
 
-    /// Buffered apply transform with only key transform
+    /// Buffered apply transform with only key transform up to max degree
     template <typename KeyTransform> void
     buffered_apply_binary_transform(vector &result, const vector &rhs, KeyTransform key_transform,
                                     const DEG max_depth) const
@@ -639,6 +676,7 @@ private:
 public:
     // Methods for operator implementation
 
+    /// Apply a transform inplace to the vector with buffering
     template <typename Transform> void buffered_apply_unary_transform(vector &result, Transform transform) const
     {
         buffered_apply_unary_transform_impl(result, transform, UnderlyingVectorType::degree_tag);

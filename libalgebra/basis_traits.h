@@ -11,6 +11,10 @@ Version 3. (See accompanying file License.txt)
 #pragma once
 #ifndef basis_traits_h__
 #define basis_traits_h__
+
+namespace alg {
+
+
 /// Basis traits
 
 /// Without_degree: an algebra with a product but no meaningful degree function
@@ -35,5 +39,7 @@ template <basis_product_trait trait = Without_Degree, DEG no_letters = 0, DEG ma
     /// The maximum degree
     static const DEG MAX_DEGREE = (trait == With_Degree) ? max_degree : DEG(0);
 };
+
+} // namespace alg
 
 #endif // basis_traits_h__

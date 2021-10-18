@@ -187,13 +187,13 @@ public:
 #define IMPLEMENT_FUSED_OP_VEC(NAME, OP1, OP2, T2)               \
     SmallVector& NAME(const SmalLVector& rhs, const T2& s) {     \
         for (DIMN i=0; i<BASIS::dimension; ++i)                  \
-            m_data[i] OP1 (rhs.m_data[i] OP2 s);                 \
+            s_data[i] OP1 (rhs.s_data[i] OP2 s);                 \
         return *this;                                            \
     }
 
 #define IMPLEMENT_FUSED_OP_KEY(NAME, OP1, OP2, T2)               \
     SmallVector& NAME(const KEY& rhs, const T2& s) {             \
-        m_data[rhs] OP1 (rhs.m_data[rhs] OP2 s);                 \
+        s_data[rhs] OP1 (rhs.s_data[rhs] OP2 s);                 \
         return *this;                                            \
     }
 
@@ -213,11 +213,11 @@ public:
 public:
 
     bool operator==(const SmallVector &rhs) const {
-        return (m_data == other.m_data);
+        return (m_data == other.s_data);
     }
 
     bool operator!=(const SmallVector &rhs) const {
-        return (m_data != other.m_data);
+        return (m_data != other.s_data);
     }
 
     bool operator<(const SmallVector& rhs) const {

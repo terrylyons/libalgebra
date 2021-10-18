@@ -55,8 +55,10 @@ typedef unsigned __int64 uint64_t;
 #include <boost/thread/shared_mutex.hpp>
 
 #include "compat.h"
-#include "implimentation_types.h"
+#include "implementation_types.h"
 #include <boost/thread/locks.hpp>
+#include "hall_set.h"
+
 
 #if __cplusplus >= 201103L
 
@@ -117,17 +119,16 @@ typedef unsigned __int64 uint64_t;
    operators are + - * / and explicit ctor from SCA type and int type.
 */
 
-#include <boost/container/flat_map.hpp>
 
 #include "libalgebra/utils/integer_maths.h"
 #include "libalgebra/vectors/vectors.h"
 #include "multiplication_helpers.h"
 #include "dual_pairing.h"
 
+
 namespace alg {
 
-#include "constlog2.h"
-#include "constpower.h"
+
 // Some useful macros to avoid similar codes.
 
 #define __DECLARE_BINARY_OPERATOR(T1, NEWOP, OLDOP, T2)                        \
@@ -169,7 +170,7 @@ template <typename Coeff, DEG n_letters, DEG max_degree = 0,
 template <typename Coeff, DEG n_letters, DEG max_degree = 0> class shuffle_tensor;
 
 /// Philip Hall Lie Basis.
-template <DEG n_letters> class hall_basis;
+template <DEG n_letters, DEG MaxDegree> class hall_basis;
 
 /// Free Lie Associative Algebra Basis.  Associative and non commutative.
 template <DEG n_letters, DEG max_degree = 0> class lie_basis;
@@ -210,6 +211,8 @@ template <DEG n_letters, DEG max_degree = 0> class poly_lie_basis;
 /// III. Multivariate Polynomial Lie Algebra. Associative and non commutative
 template <typename Coeff, DEG n_letters, DEG max_degree = 0> class poly_lie;
 
+} // namespace alg
+
 #include "algebra.h"
 #include "lie.h"
 #include "lie_basis.h"
@@ -219,7 +222,6 @@ template <typename Coeff, DEG n_letters, DEG max_degree = 0> class poly_lie;
 #include "poly_lie.h"
 #include "poly_lie_basis.h"
 #include "polynomials.h"
-#include "sparse_vector.h"
 #include "tensor.h"
 #include "tensor_basis.h"
 #include "utils.h"
@@ -229,7 +231,7 @@ template <typename Coeff, DEG n_letters, DEG max_degree = 0> class poly_lie;
 #undef __DECLARE_BINARY_OPERATOR
 // End of undeclaration of local macros.
 
-} // namespace alg
+
 
 // Include once wrapper
 #endif // DJC_COROPA_LIBALGEBRAH_SEEN

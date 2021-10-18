@@ -12,17 +12,12 @@ Version 3. (See accompanying file License.txt)
 #define alg_types_h__
 
 #include "libalgebra/libalgebra.h"
-#include <addons/gmpwrapper.h>
-#include <boost/multiprecision/gmp.hpp>
-//#include "mtl/mtl.h"
+
 #include "libalgebra/coefficients/coefficients.h"
+#include "coefficients/rational_coefficients.h"
 
-#include <vector>
 
-//#pragma warning(push)
-//#pragma warning (disable : 800)
-//#include "../addons/gmpwrapper.h"
-//#pragma warning(pop)
+
 
 enum coefficient_t { Rational, DPReal, SPReal };
 
@@ -45,7 +40,6 @@ template <> struct vector_selector<Dense>
 {
     template <typename Basis, typename Coeffs> struct selector
     {
-        typedef std::vector<typename Coeffs::S> storage_type;
         typedef alg::vectors::dense_vector<Basis, Coeffs> type;
     };
 };
@@ -54,7 +48,6 @@ template <> struct vector_selector<Hybrid>
 {
     template <typename Basis, typename Coeffs> struct selector
     {
-        typedef std::vector<typename Coeffs::S> storage_type;
         typedef LIBALGEBRA_DEFAULT_MAP_TYPE map_type;
         typedef alg::vectors::policy::basic_resize_policy policy_type;
         typedef alg::vectors::hybrid_vector<Basis, Coeffs, policy_type, map_type> type;
@@ -63,24 +56,25 @@ template <> struct vector_selector<Hybrid>
 
 template <coefficient_t F> struct Field;
 
-template <> struct Field<Rational>
+template <> struct Field<Rational> : alg::coefficients::rational_field
 {
-    // typedef mpq_class S;
-    // typedef mpq_class Q;
-    typedef boost::multiprecision::number<boost::multiprecision::gmp_rational, boost::multiprecision::et_off> S;
-    typedef S Q;
+    using base = alg::coefficients::rational_field;
+    using base::S;
+    using base::Q;
 };
 
-template <> struct Field<DPReal>
+template <> struct Field<DPReal> : alg::coefficients::double_field
 {
-    typedef double S;
-    typedef double Q;
+    using base = alg::coefficients::double_field;
+    using base::S;
+    using base::Q;
 };
 
-template <> struct Field<SPReal>
+template <> struct Field<SPReal> : alg::coefficients::float_field
 {
-    typedef float S;
-    typedef float Q;
+    using base = alg::coefficients::float_field;
+    using base::S;
+    using base::Q;
 };
 
 } // namespace

@@ -32,8 +32,8 @@ public:
         std::vector<generic_coefficient<Integer> > tmp;
         tmp.reserve(Width);
 
-        for (int i=0; i < length; ++i) {
-            for (int j=0; j<Width; ++j) {
+        for (unsigned i=0; i < length; ++i) {
+            for (unsigned j=0; j<Width; ++j) {
                 tmp.push_back(generic_coefficient<Integer>(vals[i*2*Width + 2*j], vals[i*2*Width + 2*j + 1]));
             }
             m_increments.push_back(generic_lie_increment<Width, Integer>(tmp));

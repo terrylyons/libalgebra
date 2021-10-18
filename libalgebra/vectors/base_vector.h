@@ -10,6 +10,18 @@
 namespace alg {
 namespace vectors {
 
+/**
+ * @brief Base class for vectors
+ *
+ * Provides static members for useful scalar constants, basis instance,
+ * and the degree tag, which is used to dispatch to the correct function
+ * in various places in the vector hierarchy.
+ *
+ * All vector types should inherit from this class.
+ *
+ * @tparam Basis Basis type
+ * @tparam Coeff Coefficient field
+ */
 template <typename Basis, typename Coeff>
 class base_vector
 {

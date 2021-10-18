@@ -24,7 +24,6 @@ typedef categorical_path<9, 9> CPD9W9;
 template<typename LOGS, typename SIG, typename FRAMEWORK>
 void report_outcomes(const LOGS& logs, const SIG& sig, const FRAMEWORK & context)
 {
-	int index = 4;
 	std::cout 
 		<< "\nTesting integer multiplication and sparseness:\n"
 		<< "\t ALPHABET_SIZE = " << FRAMEWORK::ALPHABET_SIZE
@@ -32,11 +31,6 @@ void report_outcomes(const LOGS& logs, const SIG& sig, const FRAMEWORK & context
 		<< "\t INTERVALS = " << FRAMEWORK::ALPHABET_SIZE
 		<< "\nsupport for the logsignature: " << logs.size() << "/" << FRAMEWORK::LIE::basis.size()
 		<< "\nand for the signature:        " << sig.size() << "/" << FRAMEWORK::TENSOR::basis.size()
-#ifdef LAT_VERBOSE_OUT
-//		<< "\n and actual value of logs[4] " << logs[index]
-		<< "\n and actual value of keys 3: " << (((cbegin(logs)++)++)++)->first
-		<< "\n and actual value of keys 3: " << (((cbegin(logs)++)++)++)->second
-#endif
 		<< "\n\n";
 }
 

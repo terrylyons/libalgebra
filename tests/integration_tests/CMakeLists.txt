@@ -1,6 +1,6 @@
 
 
-add_library(integration_tests OBJECT EXCLUDE_FROM_ALL
+add_library(Libalgebra_tests_integration_tests OBJECT EXCLUDE_FROM_ALL
         alg_framework.h
         brown_path_increments.h
         log2ceil.h
@@ -21,13 +21,13 @@ add_library(integration_tests OBJECT EXCLUDE_FROM_ALL
 )
 
 
-target_link_libraries(integration_tests PUBLIC
+target_link_libraries(Libalgebra_tests_integration_tests PUBLIC
         la_unittests::utilities
         Libalgebra::Libalgebra
         )
+add_library(la_unittests::integration_tests ALIAS Libalgebra_tests_integration_tests)
 
-
-add_executable(integration_tests_exe EXCLUDE_FROM_ALL)
-target_link_libraries(integration_tests_exe PRIVATE la_unittests::main integration_tests)
+add_executable(integration_tests_exe)
+target_link_libraries(integration_tests_exe PRIVATE la_unittests::main Libalgebra_tests_integration_tests)
 
 add_test(NAME integration_tests COMMAND integration_tests_exe)

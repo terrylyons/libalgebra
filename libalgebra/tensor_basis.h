@@ -16,54 +16,37 @@ Version 3. (See accompanying file License.txt)
 
 #include "_tensor_basis.h"
 #include "basis_traits.h"
-#include "constlog2.h"
-#include "constpower.h"
 #include <limits>
 #include <cmath>
 
+namespace alg {
+
 namespace dtl {
 
-template <DEG NoLetters, DEG Depth> struct depth_size
-{
-    enum { value = (ConstPower<NoLetters, Depth>::ans - 1) / (NoLetters - 1) };
-};
-/*
-template <DEG NoLetters>
-struct depth_size<NoLetters, 1>
-{
-    enum : DIMN {
-        value = 1 + NoLetters
-    };
-};
+using alg::integer_maths::power;
 
-template <DEG NoLetters>
-struct depth_size<NoLetters, 0>
-{
-    enum : DIMN {
-        value = 0
-    };
-};
-*/
+
 
 template <DEG NoLetters> struct tensor_size_info
 {
-    static const DEG bits_per_letter = ConstLog2<NoLetters - 1>::ans + 1;
-    static const DEG mantissa_bits_stored = std::numeric_limits<word_t>::digits - 1;
-    static const DEG max_depth = mantissa_bits_stored / bits_per_letter;
+    static constexpr DEG bits_per_letter = ConstLog2<NoLetters - 1>::ans + 1;
+    static constexpr DEG mantissa_bits_stored = std::numeric_limits<word_t>::digits - 1;
+    static constexpr DEG max_depth = mantissa_bits_stored / bits_per_letter;
 
-    static const LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, max_depth + 2> degree_sizes;
+    template <DIMN Depth>
+    struct helper
+    {
+        static constexpr DIMN value = (power(NoLetters, Depth + 1) - 1) / (NoLetters - 1);
+    };
+
+    using holder = typename alg::utils::generate_array<max_depth+1, helper>::result;
+
+    static const std::array<DIMN, max_depth + 2> degree_sizes;
 };
 
-template <DEG NoLetters>
-LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, tensor_size_info<NoLetters>::max_depth + 2> populate_tensor_size_info_array()
-{
-    LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, tensor_size_info<NoLetters>::max_depth + 2> tmp;
-    alg::utils::populate_array<depth_size, NoLetters, tensor_size_info<NoLetters>::max_depth + 1>::fill(tmp);
-    return tmp;
-}
+template <DEG N>
+const std::array<DIMN, tensor_size_info<N>::max_depth+2> tensor_size_info<N>::degree_sizes = tensor_size_info<N>::holder::data;
 
-template <DEG NoLetters> const LIBALGEBRA_STATIC_ARRAY_TYPE<DIMN, tensor_size_info<NoLetters>::max_depth + 2>
-        tensor_size_info<NoLetters>::degree_sizes = populate_tensor_size_info_array<NoLetters>();
 
 } // namespace dtl
 
@@ -92,8 +75,8 @@ common ancestor for free_tensor_basis and shuffle_tensor_basis classes.
 The implementation of the prod() member function constitutes the essential
 difference between free_tensor_basis and shuffle_tensor_basis.
 */
-template <DEG n_letters, DEG max_degree> class tensor_basis : dtl::tensor_size_info<n_letters>
-{
+template<DEG n_letters, DEG max_degree>
+class tensor_basis : dtl::tensor_size_info<n_letters> {
     typedef dtl::tensor_size_info<n_letters> SIZE_INFO;
 
 public:
@@ -128,26 +111,27 @@ public:
 
     /// We statically compute the size (n^{d+1}-1)/(n-1)
     /// where n == n_letters and d == max_degree.
-    tensor_basis(void) : _size((LET(ConstPower<n_letters, max_degree + 1>::ans) - 1) / (n_letters - 1)) {}
+    tensor_basis(void)
+            :_size((LET(ConstPower<n_letters, max_degree+1>::ans)-1)/(n_letters-1)) { }
 
 public:
     /// Returns the key corresponding to a letter.
     inline KEY keyofletter(LET letter) const { return KEY(letter); }
 
     /// Tells if a key is a letter (i.e. word of length one).
-    inline bool letter(const KEY &k) const { return k.size() == 1; }
+    inline bool letter(const KEY& k) const { return k.size()==1; }
 
     /// Returns the first letter of a key.
-    inline LET getletter(const KEY &k) const { return k.FirstLetter(); }
+    inline LET getletter(const KEY& k) const { return k.FirstLetter(); }
 
     /// Returns the first letter of a key. For compatibility with lie_basis.
-    inline KEY lparent(const KEY &k) const { return k.lparent(); }
+    inline KEY lparent(const KEY& k) const { return k.lparent(); }
 
     /// Returns the key which corresponds to the sub-word after the first letter.
-    inline KEY rparent(const KEY &k) const { return k.rparent(); }
+    inline KEY rparent(const KEY& k) const { return k.rparent(); }
 
     /// Returns the length of the key viewed as a word of letters.
-    inline DEG degree(const KEY &k) const { return k.size(); }
+    inline DEG degree(const KEY& k) const { return k.size(); }
 
     /// Returns the size of the basis.
     inline LET size(void) const { return LET(_size); }
@@ -165,35 +149,37 @@ public:
     }
 
     /// Returns the key next a given key in the basis.
-    inline static KEY nextkey(const KEY &k)
+    inline static KEY nextkey(const KEY& k)
     {
         // tjl  25/08/2012
         size_t i = k.size();
         KEY result(k);
-        for (size_t j = 0; j < i; ++j) {
-            if (k[i - 1 - j] < LET(n_letters)) {
-                result[i - 1 - j] += 1;
+        for (size_t j = 0; j<i; ++j) {
+            if (k[i-1-j]<LET(n_letters)) {
+                result[i-1-j] += 1;
                 return result;
-            } else {
-                result[i - 1 - j] = KEY(LET(1)).FirstLetter();
+            }
+            else {
+                result[i-1-j] = KEY(LET(1)).FirstLetter();
             }
         }
-        if (k.size() == max_degree) {
+        if (k.size()==max_degree) {
             return end();
-        } else {
-            return KEY(LET(1)) * result;
+        }
+        else {
+            return KEY(LET(1))*result;
         }
     }
 
     /// Outputs a key as a string of letters to an std::ostringstream.
-    std::string key2string(const KEY &k) const
+    std::string key2string(const KEY& k) const
     {
         std::ostringstream oss;
 
-        if (k.size() > 0) {
+        if (k.size()>0) {
             oss << k.FirstLetter();
             KEY kk = k.rparent();
-            for (unsigned i = 1; i < k.size(); ++i) {
+            for (unsigned i = 1; i<k.size(); ++i) {
                 oss << "," << kk.FirstLetter();
                 kk = kk.rparent();
             }
@@ -243,17 +229,17 @@ public:
     }
 */
 
-    static DIMN key_to_index(const KEY &key)
+    static DIMN key_to_index(const KEY& key)
     {
         assert(key.valid());
 
         DIMN idx = 0;
-        if (key.size() == 0) {
+        if (key.size()==0) {
             return idx;
         }
 
         KEY tmp(key);
-        while (tmp.size() > 0) {
+        while (tmp.size()>0) {
             idx *= n_letters;
             idx += static_cast<DIMN>(tmp.FirstLetter());
             tmp = tmp.rparent();
@@ -261,15 +247,14 @@ public:
         return idx;
     }
 
-
     static KEY index_to_key(const DIMN idx)
     {
-        if (idx == 0) {
+        if (idx==0) {
             return KEY();
-        } else if (1 <= idx && idx <= n_letters) {
+        }
+        else if (1<=idx && idx<=n_letters) {
             return KEY(LET(idx));
         }
-
 
         static boost::recursive_mutex access;
         boost::lock_guard<boost::recursive_mutex> lock(access);
@@ -289,7 +274,7 @@ public:
 
         KEY& rv = cache[idx];
 
-        if (rv.size() > 0) {
+        if (rv.size()>0) {
             return rv;
         }
 
@@ -299,8 +284,8 @@ public:
         KEY val;
         while (i) {
             i -= 1;
-            l = i % n_letters;
-            val.push_back(LET(1 + l));
+            l = i%n_letters;
+            val.push_back(LET(1+l));
             i /= n_letters;
         }
 
@@ -310,35 +295,36 @@ public:
 
     static DIMN start_of_degree(const DEG deg)
     {
-        assert(deg <= max_degree + 1);
-        return SIZE_INFO::degree_sizes[deg];
+        assert(deg<=max_degree+1);
+        return (deg == 0) ? 0 : SIZE_INFO::degree_sizes[deg-1];
     }
 
 public:
     /// Outputs a std::pair<shuffle_tensor_basis*, KEY> to an std::ostream.
-    inline friend std::ostream &operator<<(std::ostream &os, const std::pair<tensor_basis *, KEY> &t)
+    inline friend std::ostream& operator<<(std::ostream& os, const std::pair<tensor_basis*, KEY>& t)
     {
         return os << (t.first)->key2string(t.second);
     }
 
 };
 
-/// The monoid of words of a finite number of letters with concat product.
 /**
-This is the basis used to implement the free_tensor class as a
-specialisation of the algebra class. This basis is the Free Associative
-Algebra basis with a finite number of letters, with the usual
-concatenation product. The free_tensor_basis is a container of keys. A key
-is the implementation of a word of letters. The prod() member function
-corresponds to the concatenation of the two keys given as arguments. This
-product is associative but not commutative. Letters can be seen as
-particular basis keys, i.e. words of length one. The empty word is a
-special key used for the imbedding of letters (words of length one).
+ * @brief The monoid of words of a finite number of letters with concat product.
+ *
+ * This is the basis used to implement the free_tensor class as a
+ * specialisation of the algebra class. This basis is the Free Associative
+ * Algebra basis with a finite number of letters, with the usual
+ * concatenation product. The free_tensor_basis is a container of keys. A key
+ * is the implementation of a word of letters. The prod() member function
+ * corresponds to the concatenation of the two keys given as arguments. This
+ * product is associative but not commutative. Letters can be seen as
+ * particular basis keys, i.e. words of length one. The empty word is a
+ * special key used for the imbedding of letters (words of length one).
 */
-template <DEG n_letters, DEG max_degree> class free_tensor_basis : public tensor_basis<n_letters, max_degree>,
-                                                                   public basis_traits<With_Degree, n_letters,
-                                                                                       max_degree>
-{
+template<DEG n_letters, DEG max_degree>
+class free_tensor_basis : public tensor_basis<n_letters, max_degree>,
+                          public basis_traits<With_Degree, n_letters,
+                                              max_degree> {
 public:
     /// The tensor_basis type.
     typedef tensor_basis<n_letters, max_degree> TBASIS;
@@ -349,7 +335,7 @@ public:
 
 public:
     /// Default constructor.
-    free_tensor_basis(void) {}
+    free_tensor_basis(void) { }
 
 public:
     /// The concatenation product of two basis elements.
@@ -378,10 +364,10 @@ public:
     //	return result;
     // }
 
-    static inline typename TBASIS::KEY prod(const typename TBASIS::KEY &k1, const typename TBASIS::KEY &k2)
+    static inline typename TBASIS::KEY prod(const typename TBASIS::KEY& k1, const typename TBASIS::KEY& k2)
     {
-        assert((max_degree == 0) || (k1.size() + k2.size() <= max_degree));
-        return k1 * k2;
+        assert((max_degree==0) || (k1.size()+k2.size()<=max_degree));
+        return k1*k2;
     }
 
     // static inline TENSOR& prod(const typename alg::tensor_basis<SCA, n_letters,
@@ -394,7 +380,7 @@ public:
     // }
 
     /// Outputs an std::pair<free_tensor_basis*, KEY> to an std::ostream.
-    inline friend std::ostream &operator<<(std::ostream &os, const std::pair<free_tensor_basis *, KEY &> &t)
+    inline friend std::ostream& operator<<(std::ostream& os, const std::pair<free_tensor_basis*, KEY&>& t)
     {
         return os << (t.first)->key2string(t.second);
     }
@@ -402,9 +388,8 @@ public:
 
 namespace vectors {
 
-template <DEG n_letters, DEG max_depth, typename Field>
-struct vector_type_selector<free_tensor_basis<n_letters, max_depth>, Field>
-{
+template<DEG n_letters, DEG max_depth, typename Field>
+struct vector_type_selector<free_tensor_basis<n_letters, max_depth>, Field> {
     typedef free_tensor_basis<n_letters, max_depth> BASIS;
     typedef typename BASIS::KEY KEY;
     typedef vectors::sparse_vector<BASIS, Field,
@@ -426,87 +411,29 @@ struct vector_type_selector<free_tensor_basis<n_letters, max_depth>, Field>
     > hybrid_vect;
 
     typedef typename alg::utils::type_selector<boost::is_pod<typename Field::S>::value, sparse_vect, dense_vect>::type
-    type;
+            type;
 };
 
 } // namespace vectors
 
-template <DEG n_letters, DEG max_depth> struct basis_multiplication_selector<free_tensor_basis<n_letters, max_depth>>
-{
-    typedef two_method_multiplication_tag tag;
 
-    template <typename Basis, typename Coeffs, typename Transform> struct index_operator
-    {
-
-        index_operator() : m_transform() {}
-
-        template <typename Arg> index_operator(Arg arg) : m_transform(arg) {}
-
-        void
-        operator()(typename Coeffs::S *result_ptr, const typename Coeffs::S *lhs_ptr, const typename Coeffs::S *rhs_ptr,
-                   const DEG lhs_target, const DEG rhs_target, const bool assign = false)
-        {
-            typename Coeffs::S lhs;
-            if (assign) {
-                for (IDIMN i = 0; i < static_cast<IDIMN>(lhs_target); ++i) {
-                    lhs = lhs_ptr[i];
-                    for (IDIMN j = 0; j < static_cast<IDIMN>(rhs_target); ++j) {
-                        *(result_ptr++) = m_transform(lhs * rhs_ptr[j]);
-                    }
-                }
-            } else {
-                for (IDIMN i = 0; i < static_cast<IDIMN>(lhs_target); ++i) {
-                    lhs = lhs_ptr[i];
-                    for (IDIMN j = 0; j < static_cast<IDIMN>(rhs_target); ++j) {
-                        *(result_ptr++) += m_transform(lhs * rhs_ptr[j]);
-                    }
-                }
-            }
-        }
-
-    private:
-        Transform m_transform;
-    };
-
-    template <typename Basis, typename Coeffs, typename Transform> struct key_operator
-    {
-
-        typedef typename Basis::KEY KEY;
-        typedef typename Coeffs::S S;
-
-        /// Trivial constructor
-        key_operator() : m_transform() {}
-
-        /// Passthrough constructor for transform
-        template <typename Arg> key_operator(Arg a) : m_transform(a) {}
-
-        template <typename Vector> inline void
-        operator()(Vector &result, const KEY &lhs_key, const S &lhs_val, const KEY &rhs_key, const S &rhs_val)
-        {
-            result.add_scal_prod(Vector::basis.prod(lhs_key, rhs_key), m_transform(lhs_val * rhs_val));
-        }
-
-    private:
-        Transform m_transform;
-    };
-};
-
-/// The monoid of words of a finite number of letters with shuffle product.
 /**
-This is the basis used to implement the shuffle_tensor class as a
-specialisation of the algebra class. This basis is the Free Associative
-Algebra basis with a finite number of letters, with the shuffle product.
-The shuffle_tensor_basis is a container of keys. A key is the
-implementation of a word of letters. The prod() member function
-corresponds to the shuffle product of the two keys given as arguments.
-This product is associative and commutative. Letters can be seen as
-particular basis keys, i.e. words of length one. The empty word is a
-special key used for the imbedding of letters (words of length one).
+ * @brief The monoid of words of a finite number of letters with shuffle product.
+ *
+ * This is the basis used to implement the shuffle_tensor class as a
+ * specialisation of the algebra class. This basis is the Free Associative
+ * Algebra basis with a finite number of letters, with the shuffle product.
+ * The shuffle_tensor_basis is a container of keys. A key is the
+ * implementation of a word of letters. The prod() member function
+ * corresponds to the shuffle product of the two keys given as arguments.
+ * This product is associative and commutative. Letters can be seen as
+ * particular basis keys, i.e. words of length one. The empty word is a
+ * special key used for the embedding of letters (words of length one).
 */
-template <DEG n_letters, DEG max_degree> class shuffle_tensor_basis : public tensor_basis<n_letters, max_degree>,
-                                                                      public basis_traits<With_Degree, n_letters,
-                                                                                          max_degree>
-{
+template<DEG n_letters, DEG max_degree>
+class shuffle_tensor_basis : public tensor_basis<n_letters, max_degree>,
+                             public basis_traits<With_Degree, n_letters,
+                                                 max_degree> {
 public:
     /// The tensor_basis type.
     typedef tensor_basis<n_letters, max_degree> TBASIS;
@@ -520,17 +447,15 @@ public:
 
 public:
     /// Default constructor.
-    shuffle_tensor_basis(void) {}
-
+    shuffle_tensor_basis(void) { }
 
 };
 //#endif
 
 namespace vectors {
 
-template <DEG n_letters, DEG max_depth, typename Field>
-struct vector_type_selector<shuffle_tensor_basis<n_letters, max_depth>, Field>
-{
+template<DEG n_letters, DEG max_depth, typename Field>
+struct vector_type_selector<shuffle_tensor_basis<n_letters, max_depth>, Field> {
     typedef shuffle_tensor_basis<n_letters, max_depth> BASIS;
     typedef typename BASIS::KEY KEY;
 
@@ -559,6 +484,8 @@ struct vector_type_selector<shuffle_tensor_basis<n_letters, max_depth>, Field>
 
 } // namespace vectors
 
+
+} // namespace alg
 // Include once wrapper
 #endif // DJC_COROPA_LIBALGEBRA_TENSORBASISH_SEEN
 

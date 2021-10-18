@@ -19,12 +19,7 @@ find_package(UnitTest++ CONFIG REQUIRED)
 find_package(Boost COMPONENTS thread filesystem iostreams chrono random container REQUIRED)
 
 find_package(OpenMP REQUIRED)
-if(OpenMP_CXX_FOUND AND MSVC)
-## overwrite the windows flag -openmp -> -openmp:experimental to get simd
-set( OpenMP_CXX_FLAGS "-openmp:experimental")
-set_property(TARGET OpenMP::OpenMP_CXX
-             PROPERTY INTERFACE_COMPILE_OPTIONS ${OpenMP_CXX_FLAGS})
-endif()
+
 
 message(STATUS ">>> Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}")
 message(STATUS ">>> UnitTest++_INCLUDE_DIRS = ${UnitTest++_INCLUDE_DIRS}")

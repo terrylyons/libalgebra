@@ -14,18 +14,15 @@ project(Libalgebra VERSION 1.0.0)
 
 option(LIBALGEBA_TESTING "Enable building test targets" OFF)
 
-
-add_compile_options(
-        "-Wpedantic"
-        "-Wconversion"
-        "-Wsign-compare"
-)
+# This helps IDEs that can arrange projects into folders (apparently)
+# See https://cmake.org/cmake/help/v3.22/prop_gbl/USE_FOLDERS.html
+# from https://github.com/Lectem/cpp-boilerplate/blob/master/CMakeLists.txt
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 
 include(GNUInstallDirs)
 set(LIBALGEBRA_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Libalgebra")
 
-#set(CMAKE_CXX_STANDARD 98)
 
 ## we have a limited binary boost dependency
 find_package(Boost REQUIRED COMPONENTS thread container)
@@ -33,10 +30,11 @@ find_package(Boost REQUIRED COMPONENTS thread container)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules/)
 find_package(Bignum)
 
-
-
+# Interface libraries sometimes complain if you list sources, see below.
 add_library(Libalgebra INTERFACE)
 
+# For IDEs that use target sources lists to generate project information
+# we add a custom target that attaches these sources.
 add_custom_target(Libalgebra.headers SOURCES
         libalgebra/basis/tags.h
         libalgebra/basis/basis.h

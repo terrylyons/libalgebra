@@ -12,7 +12,7 @@ endif()
 
 project(Libalgebra VERSION 1.0.0)
 
-option(LIBALGEBA_TESTING "Enable building test targets" OFF)
+option(LIBALGEBRA_TESTING "Enable building test targets" OFF)
 
 # This helps IDEs that can arrange projects into folders (apparently)
 # See https://cmake.org/cmake/help/v3.22/prop_gbl/USE_FOLDERS.html
@@ -95,6 +95,23 @@ endif()
 
 add_library(Libalgebra::Libalgebra ALIAS Libalgebra)
 
+# Build the documentation using Doxygen
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.9)
+    find_package(Doxygen OPTIONAL_COMPONENTS dot mscgen dia)
+    if (Doxygen_FOUND)
+        message(STATUS "Doxygen found, building docs")
+        set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
+        doxygen_add_docs(
+                doc
+                README.md libalgebra
+                COMMENT "Generate man pages"
+        )
+    else()
+        message(STATUS "Doxygen not found")
+    endif()
+endif()
+
+
 
 if(NOT_SUBPROJECT)
     install(TARGETS Libalgebra
@@ -138,8 +155,6 @@ if(NOT_SUBPROJECT)
             ${CMAKE_SOURCE_DIR}/cmake/Modules/FindBignum.cmake
             DESTINATION ${LIBALGEBRA_CMAKE_CONFIG_DESTINATION}
             )
-
-
 endif()
 
 if (LIBALGEBRA_TESTING)

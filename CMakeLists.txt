@@ -19,8 +19,9 @@ option(LIBALGEBA_TESTING "Enable building test targets" OFF)
 # from https://github.com/Lectem/cpp-boilerplate/blob/master/CMakeLists.txt
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-
+include(vcpkg OPTIONAL)
 include(GNUInstallDirs)
+
 set(LIBALGEBRA_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Libalgebra")
 
 

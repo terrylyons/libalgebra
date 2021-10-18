@@ -9,7 +9,7 @@ if(WIN32)
 else()
 endif()
 
-include(vcpkg OPTIONAL)
+
 
 find_package(UnitTest++ CONFIG REQUIRED)
 

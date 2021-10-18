@@ -35,12 +35,12 @@ add_subdirectory(unit_tests)
 add_executable(all_tests EXCLUDE_FROM_ALL)
 target_link_libraries(all_tests PRIVATE
         la_unittests::main
-        integration_tests
-        algebra_tests
-        lie_tests
-        signature_tests
-        tensor_tests
-        utils_tests
-        vector_tests
-        hall_set_tests
+        la_unittests::integration_tests
+        la_unittests::algebra_tests
+        la_unittests::lie_tests
+        la_unittests::signature_tests
+        la_unittests::tensor_tests
+        la_unittests::utils_tests
+        la_unittests::vector_tests
+        la_unittests::hall_set_tests
         )

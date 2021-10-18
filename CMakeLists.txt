@@ -26,7 +26,7 @@ set(LIBALGEBRA_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Libalgebr
 
 
 ## we have a limited binary boost dependency
-find_package(Boost REQUIRED COMPONENTS thread container)
+find_package(Boost REQUIRED COMPONENTS thread)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules/)
 find_package(Bignum)
@@ -84,7 +84,7 @@ target_include_directories(Libalgebra
 target_link_libraries(Libalgebra INTERFACE
         Boost::boost
         Boost::thread
-        Boost::container)
+        )
 
 if (TARGET Bignum::Bignum)
     target_link_libraries(Libalgebra INTERFACE Bignum::Bignum)

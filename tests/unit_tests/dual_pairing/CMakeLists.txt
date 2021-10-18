@@ -1,14 +1,16 @@
 
 
 
-add_library(dual_pairing_tests OBJECT EXCLUDE_FROM_ALL
+add_library(Libalgebra_tests_dual_pairing_tests OBJECT EXCLUDE_FROM_ALL
         test_tensor_dual_pairing.cpp
         )
 
-target_link_libraries(dual_pairing_tests PUBLIC UnitTest++ Libalgebra::Libalgebra la_unittests::utilities)
+target_link_libraries(Libalgebra_tests_dual_pairing_tests PUBLIC UnitTest++ Libalgebra::Libalgebra la_unittests::utilities)
 
-add_executable(dual_pairing_tests_exe EXCLUDE_FROM_ALL)
-target_link_libraries(dual_pairing_tests_exe PRIVATE la_unittests::main dual_pairing_tests)
+add_library(la_unittests::dual_pairing_tests ALIAS Libalgebra_tests_dual_pairing_tests)
+
+add_executable(dual_pairing_tests_exe)
+target_link_libraries(dual_pairing_tests_exe PRIVATE la_unittests::main Libalgebra_tests_dual_pairing_tests)
 
 add_test(NAME test_algebra
         COMMAND dual_pairing_tests_exe)

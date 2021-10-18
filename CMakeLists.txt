@@ -88,7 +88,8 @@ target_link_libraries(Libalgebra INTERFACE
 
 if (TARGET Bignum::Bignum)
     target_link_libraries(Libalgebra INTERFACE Bignum::Bignum)
-    target_compile_definitions(Libalgebra INTERFACE LIBALGEBRA_USE_GMP)
+else()
+    target_compile_definitions(Libalgebra INTERFACE LIBALGEBRA_NO_GMP)
 endif()
 
 

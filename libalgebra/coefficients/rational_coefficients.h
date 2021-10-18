@@ -18,7 +18,7 @@ namespace coefficients {
 
 namespace mp = boost::multiprecision;
 
-#ifdef LIBALGEBRA_USE_GMP
+#ifndef LIBALGEBRA_NO_GMP
 typedef mp::gmp_rational rational_backend;
 #else
 typedef mp::cpp_rational_backend rational_backend;

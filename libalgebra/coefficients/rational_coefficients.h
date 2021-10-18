@@ -5,7 +5,7 @@
 #ifndef LIBALGEBRA_RATIONAL_COEFFICIENTS_H
 #define LIBALGEBRA_RATIONAL_COEFFICIENTS_H
 
-#ifdef LIBALGEBRA_USE_GMP
+#ifndef LIBALGEBRA_NO_GMP
 #include <boost/multiprecision/gmp.hpp>
 #else
 #include <boost/multiprecision/cpp_int.hpp>

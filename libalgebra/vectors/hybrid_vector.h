@@ -415,11 +415,6 @@ public:
 
         iterator_item() : m_dense_iterator(), m_dense_end(), m_sparse_begin(), m_sparse_iterator() {}
 
-        iterator_item(const iterator_item &other) : m_dense_iterator(other.m_dense_iterator),
-                                                    m_dense_end(other.m_dense_end),
-                                                    m_sparse_begin(other.m_sparse_begin),
-                                                    m_sparse_iterator(other.m_sparse_iterator) {}
-
         iterator_item(hybrid_vector &vect, typename SPARSE::iterator it) : m_dense_iterator(vect.dense_part().end()),
                                                                            m_dense_end(vect.dense_part().end()),
                                                                            m_sparse_begin(vect.sparse_part().begin()),
@@ -504,10 +499,6 @@ public:
 
         const_iterator_item() : m_dense_iterator(), m_dense_end(), m_sparse_begin(), m_sparse_iterator() {}
 
-        const_iterator_item(const const_iterator_item &other) : m_dense_iterator(other.m_dense_iterator),
-                                                                m_dense_end(other.m_dense_end),
-                                                                m_sparse_begin(other.m_sparse_begin),
-                                                                m_sparse_iterator(other.m_sparse_iterator) {}
 
         const_iterator_item(const hybrid_vector &vect, typename SPARSE::const_iterator it) : m_dense_iterator(
                 vect.dense_part().end()), m_dense_end(vect.dense_part().end()), m_sparse_begin(

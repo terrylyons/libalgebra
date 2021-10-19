@@ -116,8 +116,6 @@ public:
 
         iterator_item() : m_iterator() {}
 
-        iterator_item(const iterator_item &other) : m_iterator(other.m_iterator) {}
-
         iterator_item(sparse_vector &, typename MAP::iterator it) : m_iterator(it) {}
 
         key_type key() { return m_iterator->first; }
@@ -159,8 +157,6 @@ public:
         typedef const SCALAR &value_type;
 
         const_iterator_item() : m_iterator() {}
-
-        const_iterator_item(const const_iterator_item &other) : m_iterator(other.m_iterator) {}
 
         const_iterator_item(const sparse_vector &, typename MAP::const_iterator it) : m_iterator(it) {}
 

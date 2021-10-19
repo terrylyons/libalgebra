@@ -255,9 +255,7 @@ public:
         friend class dense_vector;
 
     public:
-        iterator_item() : m_vector(NULL), m_iterator() {}
-
-        iterator_item(const iterator_item &other) : m_vector(other.m_vector), m_iterator(other.m_iterator) {}
+        iterator_item() : m_vector(nullptr), m_iterator() {}
 
         iterator_item(dense_vector &vect, typename STORAGE::iterator it) : m_vector(&vect), m_iterator(it) {}
 
@@ -302,10 +300,7 @@ public:
         friend class dense_vector;
 
     public:
-        const_iterator_item() : m_vector(NULL), m_iterator() {}
-
-        const_iterator_item(const const_iterator_item &other) : m_vector(other.m_vector),
-                                                                m_iterator(other.m_iterator) {}
+        const_iterator_item() : m_vector(nullptr), m_iterator() {}
 
         const_iterator_item(const dense_vector &vect, typename STORAGE::const_iterator it) : m_vector(&vect),
                                                                                              m_iterator(it) {}

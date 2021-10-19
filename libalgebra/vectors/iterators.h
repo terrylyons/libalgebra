@@ -81,8 +81,6 @@ public:
     /// Default constructor
     vector_iterator() : m_value() {}
 
-    /// Copy constructor
-    vector_iterator(const vector_iterator &other) : m_value(other.m_value) {}
 
     /// Vector/iterator constructor
     template <typename Vector, typename Iterator> vector_iterator(Vector &vect, Iterator it) : m_value(vect, it) {}

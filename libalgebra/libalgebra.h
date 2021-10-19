@@ -137,7 +137,7 @@ namespace alg {
   }
 
 #define __DECLARE_UNARY_OPERATOR(NEWT, NEWOP, OLDOP, OLDT)                     \
-  NEWT operator NEWOP(void) const { return OLDT::operator OLDOP(); }
+  NEWT operator NEWOP(void) const { return NEWT(OLDT::operator OLDOP()); }
 
 //  End of macros.
 

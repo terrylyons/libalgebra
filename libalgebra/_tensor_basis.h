@@ -125,7 +125,7 @@ public:
     /// Constructor
 
     /// Checks that the DEPTH does not exceed the Maximum word length.
-    _tensor_basis(void)
+    _tensor_basis()
             :_word((word_t)1.)
     {
         STATIC_ASSERT(DEPTH<=uMaxWordLength);

@@ -167,7 +167,7 @@ public:
         STATIC_ASSERT(std::numeric_limits<word_t>::is_iec559 &&
                 std::numeric_limits<double>::has_denorm);
 
-        word_t dPowerOfTwo = rhs._word;
+        word_t dPowerOfTwo{rhs._word};
         reinterpret_cast<fp_info<word_t>::unsigned_int_type&>(dPowerOfTwo) &= fp_info<word_t>::mantissa_mask_zeroes;
         _word = _word*dPowerOfTwo+rhs._word-dPowerOfTwo;
         return *this;
@@ -179,7 +179,7 @@ public:
         STATIC_ASSERT(std::numeric_limits<word_t>::is_iec559 &&
                 std::numeric_limits<double>::has_denorm);
 
-        word_t dPowerOfTwo = rhs._word;
+        word_t dPowerOfTwo{rhs._word};
         reinterpret_cast<fp_info<word_t>::unsigned_int_type&>(dPowerOfTwo) &= fp_info<word_t>::mantissa_mask_zeroes;
         return _word*dPowerOfTwo+rhs._word-dPowerOfTwo;
     }

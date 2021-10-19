@@ -15,6 +15,7 @@ Version 3. (See accompanying file License.txt)
 
 #include "libalgebra/vectors/base_vector.h"
 #include "libalgebra/vectors/iterators.h"
+#include "libalgebra/utils/order_trait.h"
 
 namespace alg {
 namespace vectors {
@@ -479,210 +480,234 @@ public:
     /// Binary version of  operator-=()
     inline __DECLARE_BINARY_OPERATOR(sparse_vector, -, -=, sparse_vector);
 
+    
+private:
+    
+    void min_impl(const sparse_vector& rhs, std::true_type)
+    {
+        typename MAP::iterator it(map_begin()), itend(map_end());
+        typename MAP::const_iterator cit(rhs.map_begin()), cend(rhs.map_end());
+        for (; it!=itend && cit!=cend;) {
+            int c = (it->first<cit->first) ? 1
+                                           : (cit->first<it->first) ? 2
+                                                                    : (cit->first==it->first) ? 3
+                                                                                              : 4;
+            switch (c) {
+            case 1: {
+                if (it->second>=zero)
+                    erase(it++);
+                break;
+            }
+            case 2: {
+                if (cit->second<zero)
+                    insert(*cit);
+                ++cit;
+                break;
+            }
+            case 3: {
+                operator[](it->first) =
+                        ((it->second<cit->second) ? (it->second) : (cit->second));
+                ++cit;
+                ++it;
+                break;
+            }
+            default:;
+            }
+        }
+        if (cit==cend) {
+            for (; it!=itend;)
+                if (it->second>=zero)
+                    erase(it++);
+                else
+                    ++it;
+        }
+        if (it==itend) {
+            for (; cit!=cend; ++cit)
+                if (cit->second<zero)
+                    insert(*cit);
+        }
+    }
+    
+    void min_impl(const sparse_vector& rhs, std::false_type)
+    {
+        
+        typename std::vector<std::pair<KEY, SCALAR>> target(map_begin(), map_end()), source(rhs.map_begin(),
+                rhs.map_end());
+        const auto& comp = [](typename std::pair<KEY, SCALAR> lhs, typename std::pair<KEY, SCALAR> rhs) -> bool {
+          return lhs.first<rhs.first;
+        };
+        std::sort(target.begin(), target.end(), comp);
+        std::sort(source.begin(), source.end(), comp);
+        typename std::vector<std::pair<KEY, SCALAR>>::iterator it = target.begin();
+        typename std::vector<std::pair<KEY, SCALAR>>::const_iterator cit = source.begin();
+        for (; it!=target.end() && cit!=source.end();) {
+            int c = (it->first<cit->first) ? 1 : (cit->first<it->first) ? 2 : (cit->first==it->first) ? 3 : 4;
+            switch (c) {
+            case 1: {
+                if (it->second>=zero) {
+                    erase((it++)->first);
+                }
+                break;
+            }
+            case 2: {
+                if (cit->second<zero) {
+                    insert(*cit);
+                }
+                ++cit;
+                break;
+            }
+            case 3: {
+                operator[](it->first) = ((it->second<cit->second) ? (it->second) : (cit->second));
+                ++cit;
+                ++it;
+                break;
+            }
+            default:;
+            }
+        }
+        if (cit==source.end()) {
+            for (; it!=target.end();) {
+                if (it->second>=zero) {
+                    erase((it++)->first);
+                }
+                else {
+                    ++it;
+                }
+            }
+        }
+        if (it==target.end()) {
+            for (; cit!=source.end(); ++cit) {
+                if (cit->second<zero) {
+                    insert(*cit);
+                }
+            }
+        }
+        
+    }
+    
+    
+public:
+    
     /// Where SCA admits an order forms the min of two sparse vectors
     inline sparse_vector &operator&=(const sparse_vector &rhs)
     {
 // these min max operators are slower (factor of 3?) on unordered sparse vectors
-#ifdef UNORDEREDMAP
-        {
-            typename std::vector<std::pair<KEY, SCALAR>> target(map_begin(), map_end()), source(rhs.map_begin(),
-                                                                                                rhs.map_end());
-            const auto &comp = [](typename std::pair<KEY, SCALAR> lhs, typename std::pair<KEY, SCALAR> rhs) -> bool
-            {
-                return lhs.first < rhs.first;
-            };
-            std::sort(target.begin(), target.end(), comp);
-            std::sort(source.begin(), source.end(), comp);
-            typename std::vector<std::pair<KEY, SCALAR>>::iterator it = target.begin();
-            typename std::vector<std::pair<KEY, SCALAR>>::const_iterator cit = source.begin();
-            for (; it != target.end() && cit != source.end();) {
-                int c = (it->first < cit->first) ? 1 : (cit->first < it->first) ? 2 : (cit->first == it->first) ? 3 : 4;
-                switch (c) {
-                    case 1: {
-                        if (!(it->second < SCALAR(0))) {
-                            erase((it++)->first);
-                        }
-                        break;
-                    }
-                    case 2: {
-                        if (cit->second < SCALAR(0)) {
-                            insert(*cit);
-                        }
-                        ++cit;
-                        break;
-                    }
-                    case 3: {
-                        operator[](it->first) = ((it->second < cit->second) ? (it->second) : (cit->second));
-                        ++cit;
-                        ++it;
-                        break;
-                    }
-                    default:;
-                }
-            }
-            if (cit == source.end()) {
-                for (; it != target.end();) {
-                    if (!(it->second < SCALAR(0))) {
-                        erase((it++)->first);
-                    } else {
-                        ++it;
-                    }
-                }
-            }
-            if (it == target.end()) {
-                for (; cit != source.end(); ++cit) {
-                    if (cit->second < SCALAR(0)) {
-                        insert(*cit);
-                    }
-                }
-            }
-        }
-#else
-        typename MAP::iterator it(map_begin()), itend(map_end());
-        typename MAP::const_iterator cit(rhs.map_begin()), cend(rhs.map_end());
-        for (; it != itend && cit != cend;) {
-          int c = (it->first < cit->first)    ? 1
-                  : (cit->first < it->first)  ? 2
-                  : (cit->first == it->first) ? 3
-                                              : 4;
-          switch (c) {
-          case 1: {
-            if (!(it->second < SCALAR(0)))
-              erase(it++);
-            break;
-          }
-          case 2: {
-            if (cit->second < SCALAR(0))
-              insert(*cit);
-            ++cit;
-            break;
-          }
-          case 3: {
-            operator[](it->first) =
-                ((it->second < cit->second) ? (it->second) : (cit->second));
-            ++cit;
-            ++it;
-            break;
-          }
-          default:;
-          }
-        }
-        if (cit == cend) {
-          for (; it != itend;)
-            if (!(it->second < SCALAR(0)))
-              erase(it++);
-            else
-              ++it;
-        }
-        if (it == itend) {
-          for (; cit != cend; ++cit)
-            if (cit->second < SCALAR(0))
-              insert(*cit);
-        }
-#endif
+        min_impl(rhs, utils::is_ordered<MAP>());
         return *this;
     }
 
     /// Binary version of  operator&=()
     inline __DECLARE_BINARY_OPERATOR(sparse_vector, &, &=, sparse_vector);
 
-    /// Where SCA admits an order forms the max of two sparse vectors
-    inline sparse_vector &operator|=(const sparse_vector &rhs)
+private:
+    
+    void max_impl(const sparse_vector& rhs, std::true_type)
     {
-#ifdef UNORDEREDMAP
-
+        typename MAP::iterator it(map_begin()), itend(map_end());
+        typename MAP::const_iterator cit(rhs.map_begin()), cend(rhs.map_end());
+        for (; it!=itend && cit!=cend;) {
+            // c++11 syntax auto
+            int c = (it->first<cit->first) ? 1
+                                           : (cit->first<it->first) ? 2
+                                                                    : (cit->first==it->first) ? 3
+                                                                                              : 4;
+            switch (c) {
+            case 1: {
+                if (it->second<=zero)
+                    erase(it++);
+                break;
+            }
+            case 2: {
+                if (cit->second>zero)
+                    insert(*cit);
+                ++cit;
+                break;
+            }
+            case 3: {
+                operator[](it->first) =
+                        ((it->second>cit->second) ? (it->second) : (cit->second));
+                ++cit;
+                ++it;
+                break;
+            }
+            default:;
+            }
+        }
+        if (cit==cend) {
+            for (; it!=itend;)
+                if (it->second<=zero)
+                    erase(it++);
+                else
+                    ++it;
+        }
+        if (it==itend) {
+            for (; cit!=cend; ++cit)
+                if (cit->second>zero)
+                    insert(*cit);
+        }
+    }
+    
+    void max_impl(const sparse_vector& rhs, std::false_type)
+    {
         typename std::vector<std::pair<KEY, SCALAR>> target(map_begin(), map_end()), source(rhs.map_begin(),
-                                                                                            rhs.map_end());
+                rhs.map_end());
         std::sort(target.begin(), target.end(), comp);
         std::sort(source.begin(), source.end(), comp);
 
         typename std::vector<std::pair<KEY, SCALAR>>::iterator it = target.begin();
         typename std::vector<std::pair<KEY, SCALAR>>::const_iterator cit = source.begin();
-        for (; it != target.end() && cit != source.end();) {
-            auto c = (it->first < cit->first) ? 1 : (cit->first < it->first) ? 2 : (cit->first == it->first) ? 3 : 4;
+        for (; it!=target.end() && cit!=source.end();) {
+            auto c = (it->first<cit->first) ? 1 : (cit->first<it->first) ? 2 : (cit->first==it->first) ? 3 : 4;
             switch (c) {
-                case 1: {
-                    if (!(it->second > SCALAR(0))) {
-                        erase((it++)->first);
-                    }
-                    break;
-                }
-                case 2: {
-                    if (cit->second > SCALAR(0)) {
-                        insert(*cit);
-                    }
-                    ++cit;
-                    break;
-                }
-                case 3: {
-                    operator[](it->first) = ((it->second > cit->second) ? (it->second) : (cit->second));
-                    ++cit;
-                    ++it;
-                    break;
-                }
-                default:;
-            }
-        }
-        if (cit == source.end()) {
-            for (; it != target.end();) {
-                if (!(it->second > SCALAR(0))) {
+            case 1: {
+                if (it->second<=zero) {
                     erase((it++)->first);
-                } else {
+                }
+                break;
+            }
+            case 2: {
+                if (cit->second>zero) {
+                    insert(*cit);
+                }
+                ++cit;
+                break;
+            }
+            case 3: {
+                operator[](it->first) = ((it->second>cit->second) ? (it->second) : (cit->second));
+                ++cit;
+                ++it;
+                break;
+            }
+            default:;
+            }
+        }
+        if (cit==source.end()) {
+            for (; it!=target.end();) {
+                if (it->second<=zero) {
+                    erase((it++)->first);
+                }
+                else {
                     ++it;
                 }
             }
         }
-        if (it == target.end()) {
-            for (; cit != source.end(); ++cit) {
-                if (cit->second > SCALAR(0)) {
+        if (it==target.end()) {
+            for (; cit!=source.end(); ++cit) {
+                if (cit->second>zero) {
                     insert(*cit);
                 }
             }
         }
-#else
-        typename MAP::iterator it(map_begin()), itend(map_end());
-        typename MAP::const_iterator cit(rhs.map_begin()), cend(rhs.map_end());
-        for (; it != itend && cit != cend;) {
-          // c++11 syntax auto
-          int c = (it->first < cit->first)    ? 1
-                  : (cit->first < it->first)  ? 2
-                  : (cit->first == it->first) ? 3
-                                              : 4;
-          switch (c) {
-          case 1: {
-            if (!(it->second > SCALAR(0)))
-              erase(it++);
-            break;
-          }
-          case 2: {
-            if (cit->second > SCALAR(0))
-              insert(*cit);
-            ++cit;
-            break;
-          }
-          case 3: {
-            operator[](it->first) =
-                ((it->second > cit->second) ? (it->second) : (cit->second));
-            ++cit;
-            ++it;
-            break;
-          }
-          default:;
-          }
-        }
-        if (cit == cend) {
-          for (; it != itend;)
-            if (!(it->second > SCALAR(0)))
-              erase(it++);
-            else
-              ++it;
-        }
-        if (it == itend) {
-          for (; cit != cend; ++cit)
-            if (cit->second > SCALAR(0))
-              insert(*cit);
-        }
-#endif // UNORDEREDMAP
+    }
+    
+    
+public:
+    
+    
+    /// Where SCA admits an order forms the max of two sparse vectors
+    inline sparse_vector &operator|=(const sparse_vector &rhs)
+    {
+        max_impl(rhs, utils::is_ordered<MAP>());
         return *this;
     }
 
@@ -694,7 +719,7 @@ public:
     inline sparse_vector &add_scal_prod(const KEY &rhs, const SCALAR &s)
     {
         // sparse addition
-        if (SCALAR(0) == (operator[](rhs) += s)) {
+        if (zero == (operator[](rhs) += s)) {
             erase(rhs);
         }
         return *this;
@@ -733,7 +758,7 @@ public:
     inline sparse_vector &sub_scal_prod(const KEY &rhs, const SCALAR &s)
     {
         // sparse addition
-        if (SCALAR(0) == (operator[](rhs) -= s)) {
+        if (zero == (operator[](rhs) -= s)) {
             erase(rhs);
         }
         return *this;
@@ -939,30 +964,39 @@ public:
         return lhs.first < rhs.first;
     };
 
+
+private:
+
+    void print_members_impl(std::ostream& os, std::false_type) const
+    {
+        std::pair<BASIS*, KEY> token;
+        token.first = &sparse_vector::basis;
+        typename std::vector<std::pair<KEY, SCALAR>>::const_iterator cit;
+        typename std::vector<std::pair<KEY, SCALAR>> buffer(map_begin(), map_end());
+        std::sort(buffer.begin(), buffer.end(), comp);
+        for (cit = buffer.begin(); cit!=buffer.end(); ++cit) {
+            token.second = cit->first;
+            os << ' ' << cit->second << '(' << token << ')';
+        }
+    }
+
+    void print_members_impl(std::ostream& os, std::true_type) const
+    {
+        std::pair<BASIS*, KEY> token;
+        token.first = &sparse_vector::basis;
+        const_iterator cit;
+
+        for (cit = begin(); cit!=end(); ++cit) {
+            token.second = cit->key();
+            os << ' ' << cit->value() << '(' << token << ')';
+        }
+    }
+    
 protected:
     /// Print members to output stream
     void print_members(std::ostream &os) const
     {
-        std::pair<BASIS *, KEY> token;
-        token.first = &sparse_vector::basis;
-        // create buffer to avoid unnecessary calls to MAP inside loop
-#ifndef ORDEREDMAP
-        typename std::vector<std::pair<KEY, SCALAR>>::const_iterator cit;
-        typename std::vector<std::pair<KEY, SCALAR>> buffer(map_begin(), map_end());
-        std::sort(buffer.begin(), buffer.end(), comp);
-        for (cit = buffer.begin(); cit != buffer.end(); ++cit) {
-            token.second = cit->first;
-            os << ' ' << cit->second << '(' << token << ')';
-        }
-
-#else
-        const_iterator cit;
-
-        for (cit = begin(); cit != end(); ++cit) {
-          token.second = cit->key();
-          os << ' ' << cit->value() << '(' << token << ')';
-        }
-#endif // ORDEREDMAP
+        print_members_impl(os, utils::is_ordered<MAP>());
     }
 
 public:

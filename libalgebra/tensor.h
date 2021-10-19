@@ -420,7 +420,6 @@ class shuffle_tensor_multiplication {
         //typedef typename Tensor::KEY key_t;
 
         typedef typename Tensor::BASIS basis_t;
-        typedef free_tensor<Coeff, basis_t::s_no_letters, basis_t::s_max_degree> free_tensor_t;
 
         Tensor result;
         // unsigned i, j;

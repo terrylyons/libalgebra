@@ -160,8 +160,6 @@ public:
 
 #endif
 
-    /// Destructor
-    ~_tensor_basis(void) { }
 
     /// Concatenates two words
     inline _tensor_basis& push_back(const _tensor_basis& rhs)

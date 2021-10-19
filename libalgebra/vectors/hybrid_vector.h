@@ -1132,7 +1132,7 @@ private:
             return;
         }
         std::vector<std::pair<KEY, SCALAR>> buffer;
-        rhs.fill_buffer(buffer);
+        rhs.fill_buffer(buffer, utils::is_ordered<SparseMap>());
 
         typename std::vector<std::pair<KEY, SCALAR>>::const_iterator cit, buf_begin(buffer.begin()), buf_end(
                 buffer.end());

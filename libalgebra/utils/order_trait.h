@@ -5,16 +5,19 @@
 #ifndef LIBALGEBRA_ORDER_TRAIT_H
 #define LIBALGEBRA_ORDER_TRAIT_H
 
+#include <type_traits>
+
 namespace alg {
 namespace utils {
 
 /// Trait indicating whether a map type is ordered
-template <typename Map> struct is_ordered { static const bool value = false; };
+template <typename Map>
+struct is_ordered : std::false_type
+{};
 
-template <typename K, typename V> struct is_ordered<std::map<K, V>>
-{
-    static const bool value = true;
-};
+template <typename K, typename V>
+struct is_ordered<std::map<K, V>> : std::true_type
+{};
 
 } // namespace utils
 } // namespace alg

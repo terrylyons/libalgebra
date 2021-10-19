@@ -1010,10 +1010,18 @@ public:
     }
 
 protected:
-    void fill_buffer(std::vector<std::pair<KEY, SCALAR>> &buffer) const
+    void fill_buffer(std::vector<std::pair<KEY, SCALAR> > &buffer, std::true_type) const
     {
         buffer.assign(map_begin(), map_end());
     }
+
+    void fill_buffer(std::vector<std::pair<KEY, SCALAR> >& buffer, std::false_type) const
+    {
+        buffer.assign(map_begin(), map_end());
+        std::sort(buffer.begin(), buffer.end(), typename BASIS::ordering_tag::pair_order());
+    }
+
+
 
     /// copy the (key, value) elements from rhs to a sorted vector buffer (using
     /// the key for sorting) and construct an increasing vector iterators so that
@@ -1022,14 +1030,8 @@ protected:
     void separate_by_degree(std::vector<std::pair<KEY, SCALAR>> &buffer, const sparse_vector &rhs, const size_t DEPTH1,
                             std::vector<typename std::vector<std::pair<KEY, SCALAR>>::const_iterator> &iterators) const
     {
-        rhs.fill_buffer(buffer);
-#ifndef ORDEREDMAP
-        std::sort(buffer.begin(), buffer.end(),
-                  [](const std::pair<KEY, SCALAR> &lhs, const std::pair<KEY, SCALAR> &rhs) -> bool
-                  {
-                      return lhs.first < rhs.first;
-                  });
-#endif // ORDEREDMAP
+        rhs.fill_buffer(buffer, utils::is_ordered<MAP>());
+
 
         iterators.assign(DEPTH1 + 1, buffer.end());
         unsigned deg = 0;

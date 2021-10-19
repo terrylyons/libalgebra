@@ -82,6 +82,10 @@ public:
     /// Copy constructor
     dense_vector(const dense_vector &v) : m_data(v.m_data), m_dimension(v.m_dimension), m_degree(v.m_degree) {}
 
+    /// Move constructor
+    dense_vector(dense_vector&& other) noexcept : m_data(std::move(other.m_data)), m_dimension(other.m_dimension), m_degree(other.m_degree)
+    {}
+
     /// Unidimensional constructor
     explicit dense_vector(const KEY &k, const SCALAR &s = one) : m_data(), m_dimension(0), m_degree(0)
     {
@@ -142,6 +146,10 @@ public:
     {
         set_degree(degree_tag);
     }
+
+
+    dense_vector& operator=(const dense_vector& other) = default;
+    dense_vector& operator=(dense_vector&& other) noexcept = default;
 
 
 private:

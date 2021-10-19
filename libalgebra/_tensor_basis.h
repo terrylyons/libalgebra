@@ -13,6 +13,7 @@ Version 3. (See accompanying file License.txt)
 // degrees)
 #include "constlog2.h"
 #include "implementation_types.h"
+#include <cstring>
 
 namespace alg {
 
@@ -160,15 +161,20 @@ public:
 
 #endif
 
-
     /// Concatenates two words
     inline _tensor_basis& push_back(const _tensor_basis& rhs)
     {
         STATIC_ASSERT(std::numeric_limits<word_t>::is_iec559 &&
                 std::numeric_limits<double>::has_denorm);
 
+
+        fp_info<word_t>::unsigned_int_type tmp;
         word_t dPowerOfTwo(rhs._word);
-        reinterpret_cast<fp_info<word_t>::unsigned_int_type&>(dPowerOfTwo) &= fp_info<word_t>::mantissa_mask_zeroes;
+
+        std::memcpy(&tmp, &dPowerOfTwo, sizeof(word_t));
+        tmp &= fp_info<word_t>::mantissa_mask_zeroes;
+        std::memcpy(&dPowerOfTwo, &tmp, sizeof(word_t));
+
         _word = _word*dPowerOfTwo+rhs._word-dPowerOfTwo;
         return *this;
     }
@@ -180,7 +186,11 @@ public:
                 std::numeric_limits<double>::has_denorm);
 
         word_t dPowerOfTwo(rhs._word);
-        reinterpret_cast<fp_info<word_t>::unsigned_int_type&>(dPowerOfTwo) &= fp_info<word_t>::mantissa_mask_zeroes;
+        fp_info<word_t>::unsigned_int_type tmp;
+        std::memcpy(&tmp, &dPowerOfTwo, sizeof(word_t));
+        tmp &= fp_info<word_t>::mantissa_mask_zeroes;
+        std::memcpy(&dPowerOfTwo, &tmp, sizeof(word_t));
+
         return _word*dPowerOfTwo+rhs._word-dPowerOfTwo;
     }
 

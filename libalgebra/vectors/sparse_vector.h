@@ -337,10 +337,12 @@ public:
      * Create an instance of an empty vector.
      * Such a vector is a neutral element for operator+= and operator-=.
      */
-    sparse_vector(void) {}
+    sparse_vector() {}
 
     /// Copy constructor.
-    sparse_vector(const sparse_vector &v) : MAP((const MAP &) v) {}
+    sparse_vector(const sparse_vector &v) : MAP(v) {}
+
+    sparse_vector(sparse_vector&& other) noexcept : MAP(std::move(other)) {}
 
     /// Unidimensional constructor.
     /**
@@ -376,12 +378,13 @@ public:
         insert_from_pointer(offset, begin, end);
     }
 
-
+    sparse_vector& operator=(const sparse_vector& other) = default;
+    sparse_vector& operator=(sparse_vector&& other) noexcept = default;
 
 
 public:
     /// Returns an instance of the additive inverse of the instance.
-    inline sparse_vector operator-(void) const
+    inline sparse_vector operator-() const
     {
         if (empty()) {
             return *this;

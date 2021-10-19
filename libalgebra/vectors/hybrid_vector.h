@@ -177,13 +177,17 @@ public:
     // Constructors
 
     /// Default constructor - creates the zero vector
-    hybrid_vector(void) : DENSE(), SPARSE(), m_resize_policy() {}
+    hybrid_vector() : DENSE(), SPARSE(), m_resize_policy() {}
 
     /// Create a new unidimensional vector with key and value
     explicit hybrid_vector(const KEY &key, const SCALAR &s = one) : DENSE(), SPARSE(key, s), m_resize_policy() {}
 
     /// Copy constructor
     hybrid_vector(const hybrid_vector &other) : DENSE(other), SPARSE(other), m_resize_policy() {}
+
+    /// Move constructor
+    hybrid_vector(hybrid_vector&& other) noexcept : DENSE(std::move(other.dense_part())), SPARSE(std::move(other.sparse_part())), m_resize_policy{std::move(other.m_resize_policy)}
+    {}
 
     /**
      * @brief Construct from pointer to data
@@ -219,6 +223,10 @@ public:
      */
     hybrid_vector(DIMN offset, SCALAR* begin, SCALAR * end) : DENSE(offset, begin, end), SPARSE()
     {}
+
+
+    hybrid_vector& operator=(const hybrid_vector& other) = default;
+    hybrid_vector& operator=(hybrid_vector&& other) noexcept = default;
 
 private:
 

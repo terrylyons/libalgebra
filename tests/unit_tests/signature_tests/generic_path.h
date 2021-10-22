@@ -59,7 +59,6 @@ public:
         typename Framework::MAPS maps;
 
         size_t end = std::min(end_increment, m_increments.size());
-        assert(start_increment >= 0);
         assert(end <= m_increments.size());
 
         Tensor result(typename Tensor::SCALAR(1));

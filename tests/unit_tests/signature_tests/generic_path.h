@@ -20,11 +20,9 @@ class generic_path
     std::vector<generic_lie_increment<Width, Integer> > m_increments;
 public:
 
-    generic_path() : m_increments()
-    {}
+    generic_path() = default;
 
-    generic_path(const generic_path& other) : m_increments(other.m_increments)
-    {}
+
 
     generic_path(Integer* vals, size_t length) : m_increments()
     {

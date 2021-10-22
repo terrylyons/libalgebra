@@ -268,7 +268,7 @@ typedef typename ALG::const_iterator const_iterator;
 public:
 
 /// Default constructor. Zero lie element.
-lie(void) { }
+lie() { }
 
 /// Copy constructor.
 lie(const lie& l)
@@ -301,6 +301,9 @@ SCA const* end
 ALG(begin, end
 ) {
 }
+
+lie& operator=(const lie&) = default;
+lie& operator=(lie&&) noexcept = default;
 
 public:
 

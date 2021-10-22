@@ -151,7 +151,7 @@ public:
     typedef typename ALG::const_iterator const_iterator;
 
     /// Default constructor. Empty polynomial. Zero.
-    poly(void) {}
+    poly() {}
 
     /// Copy constructor.
     poly(const poly &p) : ALG(p) {}
@@ -170,6 +170,9 @@ public:
 
     /// Constructs a unidimensional instance from a given letter and scalar.
     explicit poly(LET letter, const SCA &s) : ALG(VECT::basis.keyofletter(letter), s) {}
+
+    poly& operator=(const poly&) = default;
+    poly& operator=(poly&&) noexcept = default;
 
 public:
     /// Ensures that the return type is an instance of polynomial.

@@ -182,16 +182,9 @@ public:
     /// Concatenates two words
     inline _tensor_basis operator*(const _tensor_basis& rhs) const
     {
-        STATIC_ASSERT(std::numeric_limits<word_t>::is_iec559 &&
-                std::numeric_limits<double>::has_denorm);
-
-        word_t dPowerOfTwo(rhs._word);
-        fp_info<word_t>::unsigned_int_type tmp;
-        std::memcpy(&tmp, &dPowerOfTwo, sizeof(word_t));
-        tmp &= fp_info<word_t>::mantissa_mask_zeroes;
-        std::memcpy(&dPowerOfTwo, &tmp, sizeof(word_t));
-
-        return _word*dPowerOfTwo+rhs._word-dPowerOfTwo;
+        _tensor_basis result(*this);
+        result.push_back(rhs);
+        return result;
     }
 
     /// Compares two words

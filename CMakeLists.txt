@@ -28,7 +28,7 @@ set(LIBALGEBRA_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Libalgebr
 ## we have a limited binary boost dependency
 find_package(Boost REQUIRED COMPONENTS thread)
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules/)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/)
 find_package(Bignum)
 
 # Interface libraries sometimes complain if you list sources, see below.

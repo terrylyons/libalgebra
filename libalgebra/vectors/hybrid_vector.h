@@ -658,7 +658,7 @@ public:
                 return std::pair<iterator, bool>(iterator(*this, DENSE::find_index(idx)), true);
             }
         } else {
-            typename SPARSE::iterator it = SPARSE::find(p.first);
+            //typename SPARSE::iterator it = SPARSE::find(p.first);
             if (p.second != zero) {
                 std::pair<typename SPARSE::iterator, bool> ins = SPARSE::insert(p);
                 return std::pair<iterator, bool>(iterator(*this, ins.first), ins.second);

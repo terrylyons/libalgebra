@@ -1098,7 +1098,7 @@ public:
      * @param max_depth Maximum depth to compute
      */
     template <typename Vector, typename KeyTransform, typename IndexTransform> void
-    triangular_buffered_apply_binary_transform(Vector &result, const dense_vector &rhs, KeyTransform key_transform,
+    triangular_buffered_apply_binary_transform(Vector &result, const dense_vector &rhs, KeyTransform,
                                                IndexTransform index_transform, const DEG max_depth) const
     {
         if (empty() || rhs.empty()) {

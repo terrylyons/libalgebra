@@ -225,11 +225,24 @@ public:
     /// gives the number of letters in _word
     inline unsigned size() const
     {
+        /*
         fp_info<word_t>::unsigned_int_type sz =
                 (fp_info<word_t>::signed_int_type((reinterpret_cast<const fp_info<word_t>::unsigned_int_type&>(
                         _word) & fp_info<word_t>::exponent_mask)
                         >> fp_info<word_t>::mantissa_bits_stored)-
                         fp_info<word_t>::exponent_bias)/uBitsInLetter;
+        */
+        /*
+         * Simplify the old code. Here the memcpy isn't really a problem since a copy would have
+         * been used in any case. This is much easier to read since each operation is split out.
+         */
+        fp_info<word_t>::unsigned_int_type sz;
+        std::memcpy(&sz, &_word, sizeof(word_t));
+        sz &= fp_info<word_t>::exponent_mask;
+        sz >>= fp_info<word_t>::mantissa_bits_stored;
+        sz -= fp_info<word_t>::exponent_bias;
+        sz /= uBitsInLetter;
+
 #ifdef _DEBUG
         int iExponent;
         if (_word != std::numeric_limits<word_t>::infinity()) {
@@ -238,7 +251,8 @@ public:
         }
         assert(sz == ((iExponent - 1) / uBitsInLetter));
 #endif
-        return (unsigned int)sz;
+        // This is a potentially narrowing conversion
+        return static_cast<unsigned>(sz);
     }
 
     /// Returns the first letter of a _tensor_basis as a letter.
@@ -282,7 +296,7 @@ public:
 
         operator LET()
         {
-            word_t dBottom, dMiddle, dTop;
+            word_t dMiddle, dTop;
             int iExponent;
             word_t dTemp, dMantissa;
             dMantissa = frexp(m_parent._word, &iExponent);
@@ -291,7 +305,7 @@ public:
             dTemp = dMiddle+(word_t)1.;
             dMantissa = frexp(dTemp, &iExponent);
             dTemp = ldexp(dMantissa, int(iExponent+uBitsInLetter));
-            dBottom = modf(dTemp, &dMiddle);
+            modf(dTemp, &dMiddle);
             _tensor_basis middle(dMiddle);
             return middle.FirstLetter(); // adds a one implicitly
         }

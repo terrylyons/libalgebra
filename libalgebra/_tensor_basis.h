@@ -168,9 +168,13 @@ public:
                 std::numeric_limits<double>::has_denorm);
 
 
-        fp_info<word_t>::unsigned_int_type tmp;
         word_t dPowerOfTwo(rhs._word);
 
+        // Formerly
+        // reinterpret_cast<fp_info<word_t>::unsigned_int_type&>(dPowerOfTwo) &= fp_info<word_t>::mantissa_mask_zeroes;
+        // But after a little checking, this is more "safely" implemented by following. Checking in the Godbolt compiler
+        // on the major compilers, this produces identical assembly to the above in release mode. Plus, no warnings.
+        fp_info<word_t>::unsigned_int_type tmp;
         std::memcpy(&tmp, &dPowerOfTwo, sizeof(word_t));
         tmp &= fp_info<word_t>::mantissa_mask_zeroes;
         std::memcpy(&dPowerOfTwo, &tmp, sizeof(word_t));

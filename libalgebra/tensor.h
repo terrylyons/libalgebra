@@ -227,7 +227,7 @@ ALG(offset, begin, end
 }
 
 free_tensor& operator=(const free_tensor&) = default;
-free_tensor& operator=(free_tensor&&) noexcept = default;
+//free_tensor& operator=(free_tensor&&) noexcept = default;
 
 
 public:

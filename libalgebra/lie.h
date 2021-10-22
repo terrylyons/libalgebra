@@ -303,7 +303,7 @@ ALG(begin, end
 }
 
 lie& operator=(const lie&) = default;
-lie& operator=(lie&&) noexcept = default;
+//lie& operator=(lie&&) noexcept = default;
 
 public:
 

@@ -200,7 +200,7 @@ public:
     const degree_func_type degree;
 
     /// Constructs the basis with a given number of letters.
-    hall_basis() : hall_set_type(MaxDepth), degree(*this, &letter_degree, std::plus<DEG>()), reverse_map()
+    hall_basis() : hall_set_type(MaxDepth), reverse_map(), degree(*this, &letter_degree, std::plus<DEG>())
     {
         // Instantiate the degree function table.
         degree(letter_type(1));

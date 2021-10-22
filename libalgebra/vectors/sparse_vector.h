@@ -1025,19 +1025,23 @@ public:
      */
     template <typename Vector, typename KeyTransform> void
     triangular_buffered_apply_binary_transform(Vector &result, const sparse_vector &rhs, KeyTransform key_transform,
-                                               const DEG max_depth) const
+                                               const DEG/* max_depth*/) const
     {
+        // Unused parameter max_depth?
+        //DEG max_degree = std::min(max_depth, degree_tag.max_degree);
+        DEG max_degree = degree_tag.max_degree;
+
         // create buffers to avoid unnecessary calls to MAP inside loop
         std::vector<std::pair<KEY, SCALAR>> buffer;
         std::vector<typename std::vector<std::pair<KEY, SCALAR>>::const_iterator> iterators;
-        separate_by_degree(buffer, rhs, degree_tag.max_degree, iterators);
+        separate_by_degree(buffer, rhs, max_degree, iterators);
 
-        typename std::vector<std::pair<KEY, SCALAR>>::const_iterator j, jEnd;
+        typename std::vector<std::pair<KEY, SCALAR>>::const_iterator j;
         const_iterator i(begin()), iEnd(end());
         DEG rhdegree;
         for (; i != iEnd; ++i) {
             const KEY &k = i->key();
-            rhdegree = degree_tag.max_degree - basis.degree(k);
+            rhdegree = max_degree - basis.degree(k);
             typename std::vector<std::pair<KEY, SCALAR>>::const_iterator &jEnd = iterators[rhdegree];
             for (j = buffer.begin(); j != jEnd; ++j) {
                 key_transform(result, k, i->value(), j->first, j->second);

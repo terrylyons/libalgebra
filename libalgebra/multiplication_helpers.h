@@ -22,7 +22,7 @@ template<typename Coeff>
 struct scalar_minus {
     typedef typename Coeff::SCA scalar_t;
 
-    constexpr scalar_t operator()(scalar_t val) const noexcept(noexcept(Coeff::uminus))
+    constexpr scalar_t operator()(scalar_t val) const noexcept(noexcept(Coeff::uminus(val)))
     {
         return Coeff::uminus(val);
     }

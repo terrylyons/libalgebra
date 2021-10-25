@@ -10,7 +10,7 @@ else ()
 endif ()
 
 
-project(Libalgebra VERSION 1.0.0)
+project(Libalgebra VERSION 2.0.0)
 
 option(LIBALGEBRA_TESTING "Enable building test targets" OFF)
 

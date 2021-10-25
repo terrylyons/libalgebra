@@ -88,6 +88,7 @@ target_link_libraries(Libalgebra INTERFACE
         )
 
 set_property(TARGET Libalgebra PROPERTY CXX_STANDARD 11)
+set_property(TARGET Libalgebra PROPERTY CXX_STANDARD_REQUIRED ON)
 
 if (TARGET Bignum::Bignum)
     target_link_libraries(Libalgebra INTERFACE Bignum::Bignum)

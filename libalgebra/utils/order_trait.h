@@ -5,6 +5,7 @@
 #ifndef LIBALGEBRA_ORDER_TRAIT_H
 #define LIBALGEBRA_ORDER_TRAIT_H
 
+#include <map>
 #include <type_traits>
 
 namespace alg {
@@ -19,7 +20,7 @@ template <typename K, typename V>
 struct is_ordered<std::map<K, V>> : std::true_type
 {};
 
-} // namespace utils
-} // namespace alg
+}// namespace utils
+}// namespace alg
 
-#endif // LIBALGEBRA_ORDER_TRAIT_H
+#endif// LIBALGEBRA_ORDER_TRAIT_H

@@ -8,33 +8,36 @@
 namespace alg {
 namespace mult {
 
-
 /// Identity function on scalars
-struct scalar_passthrough
-{
-    template <typename S> LA_CONSTEXPR S operator()(S val) const { return val; }
+struct scalar_passthrough {
+    template<typename S>
+    constexpr S operator()(S val) const noexcept
+    {
+        return val;
+    }
 };
 
-
 /// Scalar minus function on scalars
-template <typename Coeff> struct scalar_minus
-{
+template<typename Coeff>
+struct scalar_minus {
     typedef typename Coeff::SCA scalar_t;
 
-    LA_CONSTEXPR scalar_t operator()(scalar_t val) const
+    constexpr scalar_t operator()(scalar_t val) const noexcept(noexcept(Coeff::uminus))
     {
         return Coeff::uminus(val);
     }
 };
 
 /// Post multiply scalar by fixed scalar
-template <typename Coeff> struct scalar_post_mult
-{
+template<typename Coeff>
+struct scalar_post_mult {
     typedef typename Coeff::SCA scalar_t;
 
-    LA_CONSTEXPR explicit scalar_post_mult(const scalar_t factor = Coeff::one) : m_factor(factor) {}
+    constexpr explicit scalar_post_mult(const scalar_t factor = Coeff::one) noexcept(noexcept(scalar_t(factor)))
+        : m_factor(factor)
+    {}
 
-    LA_CONSTEXPR scalar_t operator()(scalar_t val) const
+    constexpr scalar_t operator()(scalar_t val) const noexcept(noexcept(Coeff::mul(val, m_factor)))
     {
         return Coeff::mul(val, m_factor);
     }
@@ -44,14 +47,16 @@ private:
 };
 
 /// Post divide scalar by fixed rational
-template <typename Coeff> struct rational_post_div
-{
+template<typename Coeff>
+struct rational_post_div {
     typedef typename Coeff::SCA scalar_t;
     typedef typename Coeff::RAT rational_t;
 
-    LA_CONSTEXPR explicit rational_post_div(const rational_t factor) : m_factor(Coeff::div(Coeff::one, factor)) {}
+    constexpr explicit rational_post_div(const rational_t factor)
+        : m_factor(Coeff::div(Coeff::one, factor))
+    {}
 
-    LA_CONSTEXPR scalar_t operator()(scalar_t val) const
+    constexpr scalar_t operator()(scalar_t val) const noexcept(noexcept(Coeff::mul(val, m_factor)))
     {
         return Coeff::mul(val, m_factor);
     }
@@ -60,7 +65,7 @@ private:
     scalar_t m_factor;
 };
 
-} // namespace mult
-} // namespace alg
+}// namespace mult
+}// namespace alg
 
-#endif // LIBALGEBRA_MULTIPLICATION_HELPERS_H
+#endif// LIBALGEBRA_MULTIPLICATION_HELPERS_H

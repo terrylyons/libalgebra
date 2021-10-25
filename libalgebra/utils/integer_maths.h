@@ -8,117 +8,91 @@
 namespace alg {
 namespace integer_maths {
 
-typedef unsigned Unsigned;
-typedef size_t Size;
-typedef long long Long;
-
-// Structs for computing (prime) divisors of a number.
-/*
-The primary template simply delegates the divisor to the next
-divisor value. This template will only trigger if the divisor
-d does not divide n.
-*/
-template <Unsigned N, Unsigned D = 2, Unsigned Q = (N / D), Unsigned R = (N % D)> struct divisor_calc
+template<typename Base, typename Exp>
+constexpr Base power(Base base, Exp exponent)
 {
-    typedef typename divisor_calc<N, D + 1>::next next;
-    enum
-    {
-        num = N, divisor = divisor_calc<N, D + 1>::divisor, quotient = divisor_calc<N, D + 1>::quotient
-    };
-};
+    return (exponent == 0) ? static_cast<Base>(1) : (exponent == 1) ? base
+                                                                    : ((exponent % 2) ? base : static_cast<Base>(1)) * power(base, exponent / 2) * power(base, exponent / 2);
+}
 
-/*
-Specialise for divisor found, when r = 0.
-*/
-template <Unsigned N, Unsigned D, Unsigned Q> struct divisor_calc<N, D, Q, 0>
+// Greatly simplify the computation of the mobius function by constexpr functions
+
+template<typename Unsigned>
+constexpr bool is_squarefree_impl(Unsigned N, Unsigned base)
 {
-    typedef divisor_calc<Q> next;
-    enum { num = N, divisor = D, quotient = Q };
-};
+    return (N % (base * base)) != 0 && (base * base >= N || is_squarefree_impl(N, base + 1));
+}
 
-/*
-Specialise for divisor = number (d = n). This is the terminal
-case.
-*/
-template <Unsigned N> struct divisor_calc<N, N, 1, 0>
+template<typename Unsigned>
+constexpr bool is_squarefree(Unsigned N)
 {
-    typedef divisor_calc<1> next;
-    enum { num = N, divisor = N, quotient = 1 };
-};
+    return is_squarefree_impl(N, static_cast<Unsigned>(2));
+}
 
-/*
-Specialise for n = 1 case.
-*/
-template <Unsigned D, Unsigned Q, Unsigned R> struct divisor_calc<1, D, Q, R>
+template<typename Unsigned>
+constexpr typename std::make_signed<Unsigned>::type mobius(Unsigned);
+
+// Mobius function is defined recursively
+template<typename Unsigned>
+constexpr typename std::make_signed<Unsigned>::type mobius_impl(Unsigned N, Unsigned divisor)
 {
-    typedef divisor_calc<1> next;
-    enum { num = 1, divisor = 1, quotient = 1 };
-};
+    using Int = typename std::make_signed<Unsigned>::type;
+    return (divisor == N) ? static_cast<Int>(-1) : ((N % divisor == static_cast<Unsigned>(0)) ? mobius(divisor) * mobius(N / divisor)// Is a divisor, do product of mobius function on divisor and N/divisor
+                                                                                              : mobius_impl(N, divisor + 1));        // not a divisor, increase divisor.
+}
 
-// Structs for checking whether an integer is square free
-/*
-The strategy is to recurse down the divisors list and check if two
-consecutive divisors are the same. This will always detect squares
-because divisors are computed from smallest to largest in order.
-*/
-template <typename Divisor, bool = false, Unsigned LastNum = 0> struct square_free
+template<typename Unsigned>
+constexpr typename std::make_signed<Unsigned>::type mobius(Unsigned N)
 {
-    static const bool ans = square_free<typename Divisor::next, (Divisor::divisor == LastNum), Divisor::divisor>::ans;
-};
+    using Int = typename std::make_signed<Unsigned>::type;
+    return (N == static_cast<Unsigned>(1))
+            ? static_cast<Int>(1)// mobius(1) = 1
+            : (!is_squarefree(N) ? static_cast<Int>(0) : mobius_impl(N,
+                                                                     static_cast<Unsigned>(2)));// mobius(as^2) = 0 for any a, s > 1;  otherwise recurse
+}
 
-/*
-Specialise for the terminal case when the recursion reaches the
-last divisor.
-*/
-template <Unsigned LastNum> struct square_free<divisor_calc<1>, false, LastNum>
+}// namespace integer_maths
+
+template<typename Int>
+constexpr Int mobius(Int n) noexcept;
+
+namespace dtl {
+
+template<typename Int>
+constexpr bool is_squarefree_impl(Int n, Int base)
 {
-    static const bool ans = true;
-};
+    return (n % (base * base)) != 0 && (base * base >= n || is_squarefree_impl(static_cast<Int>(n), static_cast<Int>(base + 1)));
+}
 
-/*
-Specialise for the case where a repeated digit is detected.
-*/
-template <typename Divisor, Unsigned LastNum> struct square_free<Divisor, true, LastNum>
+template<typename Int>
+constexpr Int mobius_impl(Int n, Int divisor) noexcept
 {
-    static const bool ans = false;
-};
+    return (divisor == n) ? -1 : (n % divisor == 0) ? mobius(divisor) * mobius(n / divisor)
+                                                    : mobius_impl(n, divisor + 1);
+}
 
-namespace Mobius {
-// Structs for computing the value of the Mobius function
+}// namespace dtl
 
-/*
-The strategy is to compute -1 times the Mobius function
-of the next divisor if the number is square free, and 0 otherwise.
-*/
-template <typename Divisor, bool = true, bool = square_free<Divisor>::ans> struct mobius_func_impl
+template<typename Int>
+constexpr bool is_squarefree(Int n) noexcept
 {
-    static const Long value = -1 * mobius_func_impl<typename Divisor::next, (Divisor::num > 1), true>::value;
-};
+    return dtl::is_squarefree_impl(n, static_cast<Int>(2));
+}
 
-/*
-Specialise for non-square-free case.
-*/
-template <typename Divisor, bool B> struct mobius_func_impl<Divisor, B, false>
+template<typename Int>
+constexpr Int mobius(Int n) noexcept
 {
-    static const Long value = 0;
-};
+    return (n == 1) ? 1 : (!is_squarefree(n) ? 0 : dtl::mobius_impl(n, static_cast<Int>(2)));
+}
 
-/*
-Specialise for terminal case.
-*/
-template <bool B> struct mobius_func_impl<divisor_calc<1>, B, true>
+template<typename Int, typename PowerInt>
+constexpr Int power(Int base, PowerInt exponent) noexcept
 {
-    static const Long value = 1;
-};
+    return (exponent == 0)    ? 1
+            : (exponent == 1) ? base
+                              : ((exponent % 2 != 0) ? base : 1) * power(base, exponent / 2) * power(base, exponent / 2);
+}
 
-} // namespace Mobius
+}// namespace alg
 
-template <Unsigned N> struct mobius_func
-{
-    static const Long value = Mobius::mobius_func_impl<divisor_calc<N>>::value;
-};
-
-} // namespace integer_maths
-} // namespace alg
-
-#endif // LIBALGEBRAUNITTESTS_INTEGER_MATHS_H
+#endif// LIBALGEBRAUNITTESTS_INTEGER_MATHS_H

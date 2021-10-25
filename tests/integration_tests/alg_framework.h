@@ -1,6 +1,7 @@
 #pragma once
 
 // the libalgebra framework
+#include <libalgebra/libalgebra.h>
 #include <libalgebra/alg_types.h>
 
 // simple framework for using libalgebra

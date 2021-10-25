@@ -52,12 +52,23 @@ namespace iterators {
  *
  */
 
-template <typename ValueType> class vector_iterator
+/**
+ * @brief Iterator implementation for vector types
+ *
+ * This is a generic wrapper that provides a unified iterator object for vector types.
+ * The vector must define a ValueType, which has member functions to get the key and value
+ * of the corresponding element in the vector. This class then wraps the value type
+ * and implements all the standard iterator methods.
+ *
+ * @tparam ValueType Item type of the iterator.
+ */
+template<typename ValueType>
+class vector_iterator
 {
 public:
     typedef ValueType value_type;
-    typedef value_type &reference;
-    typedef value_type *pointer;
+    typedef value_type& reference;
+    typedef value_type* pointer;
     typedef std::ptrdiff_t difference_type;
     typedef std::forward_iterator_tag iterator_category;
 
@@ -68,13 +79,15 @@ public:
     // Constructors
 
     /// Default constructor
-    vector_iterator() : m_value() {}
-
-    /// Copy constructor
-    vector_iterator(const vector_iterator &other) : m_value(other.m_value) {}
+    vector_iterator()
+        : m_value()
+    {}
 
     /// Vector/iterator constructor
-    template <typename Vector, typename Iterator> vector_iterator(Vector &vect, Iterator it) : m_value(vect, it) {}
+    template<typename Vector, typename Iterator>
+    vector_iterator(Vector& vect, Iterator it)
+        : m_value(vect, it)
+    {}
 
     /*
     vector_iterator& operator=(const vector_iterator& other)
@@ -88,7 +101,7 @@ public:
     // Iterator advance methods
 
     /// Prefix increment
-    vector_iterator &operator++()
+    vector_iterator& operator++()
     {
         m_value.advance();
         return *this;
@@ -105,26 +118,32 @@ public:
 public:
     // Iterator access
 
-    reference operator*() { return m_value; }
+    reference operator*()
+    {
+        return m_value;
+    }
 
-    pointer operator->() { return &m_value; }
+    pointer operator->()
+    {
+        return &m_value;
+    }
 
 public:
     // Comparison operators
 
-    bool operator==(const vector_iterator &other) const
+    bool operator==(const vector_iterator& other) const
     {
         return m_value.compare_iterators(other.m_value);
     }
 
-    bool operator!=(const vector_iterator &other) const
+    bool operator!=(const vector_iterator& other) const
     {
         return !operator==(other);
     }
 };
 
-} // namespace iterators
-} // namespace vectors
-} // namespace alg
+}// namespace iterators
+}// namespace vectors
+}// namespace alg
 
-#endif // LIBALGEBRA_VECTORS_ITERATORS_H
+#endif// LIBALGEBRA_VECTORS_ITERATORS_H

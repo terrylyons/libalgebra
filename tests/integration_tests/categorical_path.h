@@ -21,7 +21,7 @@ struct sigtools: alg_framework <depth, width, S_t>
 	{
 		ptrdiff_t N = end - begin;
 		TENSOR signature(S(1));
-		int count(0);
+
 		for (ptrdiff_t i = 0; i < N; i++)
 			signature *= exp(maps.l2t(*(begin + i)));
 		return signature;

@@ -21,6 +21,9 @@ struct Fixture
         typedef typename BASIS::KEY KEY;
         typedef typename FIELD::LET LET;
 
+        using scalar_t = S;
+        using IDIMN = std::ptrdiff_t;
+
         typedef alg::free_tensor_basis<2, 5> TBASIS;
         typedef typename TBASIS::KEY TKEY;
         typedef _VECTOR_TYPE<TBASIS
@@ -34,6 +37,55 @@ struct Fixture
 
         typedef mt19937 RNG;
         RNG m_rng;
+
+
+    template<typename Transform>
+    class ft_index_operator {
+        Transform m_transform;
+
+    public:
+        ft_index_operator(Transform t)
+                :m_transform(t) { }
+
+        void operator()(scalar_t* result_ptr, scalar_t const* lhs_ptr, scalar_t const* rhs_ptr, DIMN const lhs_target,
+                DIMN const rhs_target, bool assign = false)
+        {
+            scalar_t lhs;
+            if (assign) {
+                for (DIMN i = 0; i<lhs_target; ++i) {
+                    lhs = lhs_ptr[i];
+                    for (DIMN j = 0; j<rhs_target; ++j) {
+                        *(result_ptr++) = m_transform(lhs * rhs_ptr[j]);
+                    }
+                }
+            }
+            else {
+                for (DIMN i = 0; i<lhs_target; ++i) {
+                    lhs = lhs_ptr[i];
+                    for (DIMN j = 0; j<rhs_target; ++j) {
+                        *(result_ptr++) += m_transform(lhs * rhs_ptr[j]);
+                    }
+                }
+            }
+        }
+    };
+
+    template<typename Transform>
+    class ft_key_operator {
+        Transform m_transform;
+
+    public:
+        ft_key_operator(Transform t)
+                :m_transform(t) { }
+
+        template<typename Vector>
+        void
+        operator()(Vector& result, typename Vector::KEY const& lhs_key, scalar_t const& lhs_val,
+                typename Vector::KEY const& rhs_key, scalar_t const& rhs_val)
+        {
+            result.add_scal_prod(lhs_key*rhs_key, m_transform(lhs_val * rhs_val));
+        }
+    };
 
 
         S rand_scalar(S lower_bound = S(-5), S upper_bound = S(5))

@@ -97,7 +97,7 @@ namespace {
 	TEST_FIXTURE(uni_env2, LibAlgebraTestCommutativePoly)
 	{
 		TEST_DETAILS();
-		typedef ALG::MULTIPOLY MULTIPOLY;
+
 		typedef ALG::MULTIPOLY1 MULTIPOLY1;// one dimensional polynomials
 		MULTIPOLY1 p0(S(7)), p1(1, 1), p2(2, 3), p3, x(0), y(2), z;
 		p3 = p0 + p2 * p1 * p2 + p1 * p2;
@@ -137,7 +137,7 @@ namespace {
 		l2 += l1;
 		cout << l1 << " and " << l2 << endl;
 		cout << maps.l2t(l2) << endl;
-		cout << LIE::basis << endl;
+
 		l2 = LIE(2, 3);
 		TENSOR t1(maps.l2t(l1)), t2(maps.l2t(l2)), t(t1 + t2 + t1 * t2 - t2 * t1);
 		cout << "t: " << t << endl;

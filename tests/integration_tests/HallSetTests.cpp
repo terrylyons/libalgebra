@@ -1,13 +1,24 @@
 // HallSetTests.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
+#include <iostream>
+
 // the libalgebra framework
 #include "alg_framework.h"
+#include <libalgebra/libalgebra.h>
 
 // the unit test framework
 #include <UnitTest++/UnitTest++.h>
 #include "../common/time_and_details.h"
 #include "../common/compat.h"
+
+using alg::LET;
+
+std::ostream& operator<<(std::ostream& os, std::pair<LET, LET> k)
+{
+    return os << "(" + std::to_string(k.first) << ", " << std::to_string(k.second) << ")";
+}
+
 
 // validates the hall set and lie multiplication over it
 SUITE(hallset)
@@ -23,36 +34,36 @@ SUITE(hallset)
 			// the basis type
 			typedef typename LIE::BASIS BASIS;
 			// the basis instance
-			const BASIS& basis = LIE::basis;
+            const BASIS& basis = LIE::basis;
+			const BASIS& hall_set = LIE::basis;
 			// the free lie algebra is a vector space built over a hall basis
 			// the hall basis is built from a collection of binary trees called a hall set
 			// an instance of this basis type is described via an totally ordered sequence of KEYS of type LET starting at 1
-			typedef typename BASIS::KEY KEY;
+			// typedef typename BASIS::KEY KEY;
 			// where each key is connected to exactly two earlier keys, the key's parents
-            typedef typename BASIS::PARENT PARENTS;
+            // typedef typename BASIS::PARENT PARENTS;
 			// each hall basis instance contains one (such tree defining) hall set
-			const std::vector<PARENTS>& hall_set = basis.hall_set;
-			// where the vector is indexed by the keys; the first entry is not a basis element.
-			const typename LIE::BASIS::REVERSE_MAP& reverse_map = LIE::basis.reverse_map;
-			// and we follow Hall in having a degree compatible with the key ordering
-			// basis.degree(k)
+            using parents_t = typename BASIS::PARENT;
+
 
 			// check the axioms of a hall set https://www.encyclopediaofmath.org/index.php/Hall_set
 
 			// contains the god element
-			CHECK((std::pair<LET, LET>(0, 0))== (hall_set[0]));
+			CHECK_EQUAL(parents_t(0, 0) ,  hall_set[0]);
 			
 			// contains A
-			for (size_t i = 1; i <= ALPHABET_SIZE; ++i)
-				CHECK((std::pair<LET, LET>(0, i))==(hall_set[i]));
+			for (LET i = 1; i <= ALPHABET_SIZE; ++i)
+				CHECK_EQUAL(parents_t(0, i), hall_set[i]);
 
 			// order property
-			for (typename std::vector<PARENTS>::const_iterator it(hall_set.begin()); it != hall_set.end(); ++it)
-				if (*it != PARENTS(0, 0))
+			for (typename std::vector<parents_t>::const_iterator it(hall_set.parents_begin());
+                    it != hall_set.parents_end(); ++it)
+				if (*it !=parents_t(0, 0))
 					CHECK(it->first < it->second);
 
 			// husband younger than father in-law property
-			for (typename std::vector<PARENTS>::const_iterator it(hall_set.begin()); it != hall_set.end(); ++it)
+			for (typename std::vector<parents_t>::const_iterator it(hall_set.parents_begin());
+                it != hall_set.parents_end(); ++it)
 				CHECK(it->first >= hall_set[it->second].first);
 
 			// sanity tests
@@ -64,12 +75,12 @@ SUITE(hallset)
 			// test degree additivity and monotonicity
 			// initial values
 			for (LET i = 0; i < 1; ++i)
-				CHECK_EQUAL(0, basis.degree(i));
+				CHECK_EQUAL(0U, basis.degree(i));
 			for (LET i = 1; i < ALPHABET_SIZE + 1; ++i)
-				CHECK_EQUAL(1, basis.degree(i));
+				CHECK_EQUAL(1U, basis.degree(i));
 			// additivity
 			for (LET i = 1; i < hall_set.size(); ++i)
-				CHECK(basis.degree(hall_set[i].first) + basis.degree(hall_set[i].second) == basis.degree(i));
+				CHECK_EQUAL(basis.degree(hall_set[i].first) + basis.degree(hall_set[i].second), basis.degree(i));
 			// monotonicity
 			for (LET i = 1; i < hall_set.size(); ++i)
 				CHECK(basis.degree(i - 1) <= basis.degree(i));
@@ -80,15 +91,15 @@ SUITE(hallset)
 			// Check integrity of lie product and the reverse map on hall elements
 
 			{
-				typename std::vector<PARENTS>::const_iterator begin = hall_set.begin();
-				typename std::map<PARENTS, LET>::const_iterator it;
+				typename std::vector<parents_t>::const_iterator begin = hall_set.parents_begin();
+				typename std::map<parents_t, LET>::const_iterator it;
 
 				// every hall set element is in the reverse map
 				for (LET i = 1; i < hall_set.size(); ++i)
 				{
-					PARENTS parents = *(begin + i);
-					it = reverse_map.find(parents);
-					CHECK(it != reverse_map.end());
+                    parents_t parents = *(begin + i);
+					it = hall_set.find(parents);
+					CHECK(it != hall_set.reverse_map_end());
 					if (basis.degree(i) <= DEPTH) {
 						CHECK(LIE(i) == LIE(parents.first) * LIE(parents.second));
 					}
@@ -118,10 +129,10 @@ SUITE(hallset)
 
 						// check that items not in the hall basis are not in reversemap
 						if (i < hall_set[j].first) {
-							PARENTS parents = PARENTS(i, j);
-							typename std::map<PARENTS, LET>::const_iterator it;
-							it = reverse_map.find(parents);
-							CHECK(it == reverse_map.end());
+                            parents_t parents = parents_t(i, j);
+							typename std::map<parents_t, LET>::const_iterator it;
+							it = hall_set.find(parents);
+							CHECK(it == hall_set.reverse_map_end());
 						}
 					}
 		}

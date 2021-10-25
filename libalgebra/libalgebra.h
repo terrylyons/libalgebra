@@ -55,10 +55,9 @@ typedef unsigned __int64 uint64_t;
 #include <boost/thread/shared_mutex.hpp>
 
 #include "compat.h"
+#include "hall_set.h"
 #include "implementation_types.h"
 #include <boost/thread/locks.hpp>
-#include "hall_set.h"
-
 
 #if __cplusplus >= 201103L
 
@@ -74,8 +73,7 @@ typedef unsigned __int64 uint64_t;
 #define UNORDEREDMAP
 #define NOBTREE
 
-#if (!(defined _MSC_VER) && (__cplusplus < 201103L)) || \
-    ((defined _MSC_VER) && (_MSC_VER < 1800))
+#if (!(defined _MSC_VER) && (__cplusplus < 201103L)) || ((defined _MSC_VER) && (_MSC_VER < 1800))
 // we do not not have a C++11 compliant compiler
 // visual studio 2008 does not compile the btree or have unordered map header or
 // have variadic templates gcc 4.8 does not support C++11 unless it is switched
@@ -84,13 +82,13 @@ typedef unsigned __int64 uint64_t;
 //VER 1700 is still needed for python 3.4
 #ifndef NOBTREE
 #define NOBTREE
-#endif // !NOBTREE
+#endif// !NOBTREE
 #ifndef ORDEREDMAP
 #define ORDEREDMAP
-#endif // !ORDEREDMAP
+#endif// !ORDEREDMAP
 #ifdef UNORDEREDMAP
 #undef UNORDEREDMAP
-#endif // UNORDEREDMAP
+#endif// UNORDEREDMAP
 //#endif
 //#endif
 #endif
@@ -105,10 +103,10 @@ typedef unsigned __int64 uint64_t;
 #define MY_UNORDERED_MAP std::unordered_map
 #else
 #define ORDEREDMAP
-#endif // !UNORDEREDMAP
+#endif// !UNORDEREDMAP
 #ifndef NOBTREE
 #include "cpp-btree/safe_btree_map.h"
-#endif // !NOBTREE
+#endif// !NOBTREE
 
 /// The libalgebra namespace. A set of template classes for Algebras.
 /**
@@ -119,25 +117,13 @@ typedef unsigned __int64 uint64_t;
    operators are + - * / and explicit ctor from SCA type and int type.
 */
 
-
 #include "libalgebra/utils/integer_maths.h"
 #include "libalgebra/vectors/vectors.h"
 #include "multiplication_helpers.h"
 
 namespace alg {
 
-
 // Some useful macros to avoid similar codes.
-
-#define __DECLARE_BINARY_OPERATOR(T1, NEWOP, OLDOP, T2)                        \
-  T1 operator NEWOP(const T2 &rhs) const {                                     \
-    T1 result(*this);                                                          \
-    result OLDOP rhs;                                                          \
-    return result;                                                             \
-  }
-
-#define __DECLARE_UNARY_OPERATOR(NEWT, NEWOP, OLDOP, OLDT)                     \
-  NEWT operator NEWOP(void) const { return NEWT(OLDT::operator OLDOP()); }
 
 //  End of macros.
 
@@ -147,69 +133,83 @@ namespace alg {
 // template<class BASIS, class MAP = typename BASIS::MAP>
 // class sparse_vector;
 /// Generic Associative Algebra.
-template <typename Basis, typename Coeff, typename Multiplication, typename VectorType =
-typename vectors::vector_type_selector<Basis, Coeff>::type> class algebra;
+template<typename Basis, typename Coeff, typename Multiplication, typename VectorType = typename vectors::vector_type_selector<Basis, Coeff>::type>
+class algebra;
 
 /// Generic Associative Algebra basis.
-template <DEG n_letters, DEG max_degree = 0> class tensor_basis;
+template<DEG n_letters, DEG max_degree = 0>
+class tensor_basis;
 
 /// Free Associative Algegra Basis. Concatenation product. Non commutative.
-template <DEG n_letters, DEG max_degree = 0> class free_tensor_basis;
+template<DEG n_letters, DEG max_degree = 0>
+class free_tensor_basis;
 
 /// Free Shuffle Associative Algebra Basis. Shuffle product. Commutative.
-template <DEG n_letters, DEG max_degree = 0> class shuffle_tensor_basis;
+template<DEG n_letters, DEG max_degree = 0>
+class shuffle_tensor_basis;
 
 /// Free Associative Algebra.  Associative and non commutative.
-template <typename Coeff, DEG n_letters, DEG max_degree = 0,
-          typename VectorType = typename vectors::vector_type_selector<free_tensor_basis<n_letters, max_degree>,
-                                                                       Coeff>::type> class free_tensor;
+template<typename Coeff, DEG n_letters, DEG max_degree = 0,
+         typename VectorType = typename vectors::vector_type_selector<free_tensor_basis<n_letters, max_degree>,
+                                                                      Coeff>::type>
+class free_tensor;
 
 /// Free Associative Shuffle Algebra.  Associative and Commutative.
-template <typename Coeff, DEG n_letters, DEG max_degree = 0> class shuffle_tensor;
+template<typename Coeff, DEG n_letters, DEG max_degree = 0>
+class shuffle_tensor;
 
 /// Philip Hall Lie Basis.
-template <DEG n_letters, DEG MaxDegree> class hall_basis;
+template<DEG n_letters, DEG MaxDegree>
+class hall_basis;
 
 /// Free Lie Associative Algebra Basis.  Associative and non commutative.
-template <DEG n_letters, DEG max_degree = 0> class lie_basis;
+template<DEG n_letters, DEG max_degree = 0>
+class lie_basis;
 
 /// Free Lie Associative Algebra.  Associative and non commutative.
-template <typename Coeff, DEG n_letters, DEG max_degree = 0,
-          typename VectorType = typename vectors::vector_type_selector<lie_basis<n_letters, max_degree>, Coeff>::type>
+template<typename Coeff, DEG n_letters, DEG max_degree = 0,
+         typename VectorType = typename vectors::vector_type_selector<lie_basis<n_letters, max_degree>, Coeff>::type>
 class lie;
 
 /// Maps between Free Lie and Free Algebra elements.
-template <typename Coeff, DEG n_letters, DEG max_degree = 0,
-          typename Tensor = free_tensor<Coeff, n_letters, max_degree>, typename Lie = lie<Coeff, n_letters, max_degree>>
+template<typename Coeff, DEG n_letters, DEG max_degree = 0,
+         typename Tensor = free_tensor<Coeff, n_letters, max_degree>, typename Lie = lie<Coeff, n_letters, max_degree>>
 class maps;
 
 /// Campbell-Baker-Hausdorff formulas.
-template <typename Coeff, DEG n_letters, DEG max_degree, typename Tensor = free_tensor<Coeff, n_letters, max_degree>,
-          typename Lie = lie<Coeff, n_letters, max_degree>> class cbh;
+template<typename Coeff, DEG n_letters, DEG max_degree, typename Tensor = free_tensor<Coeff, n_letters, max_degree>,
+         typename Lie = lie<Coeff, n_letters, max_degree>>
+class cbh;
 
 /// Multivariate Polynomial Algebra Basis. Associative and Commutative.
 class poly_basis;
 
 /// Multivariate Polynomial Algebra.  Associative and Commutative.
-template <typename Coeff> class poly;
+template<typename Coeff>
+class poly;
 
 /// II. Multivariate Polynomial Algebra pre Basis. Associative and Commutative
-template <DEG n_letters, DEG max_degree = 0> class monomial_basis;
+template<DEG n_letters, DEG max_degree = 0>
+class monomial_basis;
 
 /// II. Multivariate Polynomial Algebra Basis. Associative and Commutative
-template <DEG n_letters, DEG max_degree = 0> class free_monomial_basis;
+template<DEG n_letters, DEG max_degree = 0>
+class free_monomial_basis;
 
 /// II. Multivariate Polynomial Algebra   Associative and Commutative.
-template <typename Coeff, DEG n_letters, DEG max_degree = 0> class multi_polynomial;
+template<typename Coeff, DEG n_letters, DEG max_degree = 0>
+class multi_polynomial;
 
 /// III. Multivariate Polynomial Lie Algebra Basis. Associative and non
 /// commutative
-template <DEG n_letters, DEG max_degree = 0> class poly_lie_basis;
+template<DEG n_letters, DEG max_degree = 0>
+class poly_lie_basis;
 
 /// III. Multivariate Polynomial Lie Algebra. Associative and non commutative
-template <typename Coeff, DEG n_letters, DEG max_degree = 0> class poly_lie;
+template<typename Coeff, DEG n_letters, DEG max_degree = 0>
+class poly_lie;
 
-} // namespace alg
+}// namespace alg
 
 #include "algebra.h"
 #include "lie.h"
@@ -229,9 +229,7 @@ template <typename Coeff, DEG n_letters, DEG max_degree = 0> class poly_lie;
 #undef __DECLARE_BINARY_OPERATOR
 // End of undeclaration of local macros.
 
-
-
 // Include once wrapper
-#endif // DJC_COROPA_LIBALGEBRAH_SEEN
+#endif// DJC_COROPA_LIBALGEBRAH_SEEN
 
 // EOF.

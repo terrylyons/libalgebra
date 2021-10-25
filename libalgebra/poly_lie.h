@@ -16,7 +16,8 @@ Version 3. (See accompanying file License.txt)
 namespace alg {
 
 template<typename Coeff>
-class poly_lie_multiplication : poly_multiplication<Coeff> {
+class poly_lie_multiplication : poly_multiplication<Coeff>
+{
     typedef typename Coeff::SCA scalar_t;
     typedef poly_multiplication<Coeff> poly_multiplication_t;
 
@@ -37,7 +38,7 @@ class poly_lie_multiplication : poly_multiplication<Coeff> {
         key_t mon1(k2.first, k1.second);
         key_t mon2(k1.first, k2.second);
         PolyLie result;
-        result = prod2<PolyLie>(poly1, mon1)-prod2<PolyLie>(poly2, mon2);
+        result = prod2<PolyLie>(poly1, mon1) - prod2<PolyLie>(poly2, mon2);
         return result;
     }
 
@@ -48,37 +49,38 @@ class poly_lie_multiplication : poly_multiplication<Coeff> {
         typedef poly<Coeff> poly_t;
         //typedef typename PolyLie::KEY key_t;
         PolyLie result;
-        for (typename poly_t::const_iterator it = poly1.begin(); it!=poly1.end(); it++) {
+        for (typename poly_t::const_iterator it = poly1.begin(); it != poly1.end(); it++) {
             scalar_t temp = it->value();
-            typename poly_t::BASIS::KEY temp2 = poly_multiplication_t::prod2(liemon1.second, it->key
-                    ());
+            typename poly_t::BASIS::KEY temp2 = poly_multiplication_t::prod2(liemon1.second, it->key());
             result[make_pair(liemon1.first, temp2)] = temp;
         }
         return result;
     }
 
     template<typename Transform, typename Algebra>
-    class key_operator {
+    class key_operator
+    {
 
         Transform m_transform;
 
     public:
-
-#if __cplusplus>=201103UL
+#if __cplusplus >= 201103UL
 
         template<typename... Args>
-        explicit key_operator(Args&& ... args)
-                : m_transform(std::forward<Args>(args)...) { }
+        explicit key_operator(Args&&... args)
+            : m_transform(std::forward<Args>(args)...)
+        {}
 
 #else
-        template <typename Arg>
-        explicit key_operator(Arg arg) : m_transform(arg) {}
+        template<typename Arg>
+        explicit key_operator(Arg arg) : m_transform(arg)
+        {}
 #endif
 
         template<typename Vector>
         void
         operator()(Vector& result, typename Vector::KEY const& lhs_key, scalar_t const& lhs_val,
-                typename Vector::KEY const& rhs_key, scalar_t const& rhs_val)
+                   typename Vector::KEY const& rhs_key, scalar_t const& rhs_val)
         {
             result.add_scal_prod(prod<Algebra>(lhs_key, rhs_key), m_transform(Coeff::mul(lhs_val, rhs_val)));
         }
@@ -143,9 +145,10 @@ public:
 
 template<typename Coeff, DEG n_letters, DEG max_degree>
 class poly_lie : public algebra<
-        poly_lie_basis<n_letters, max_degree>,
-        Coeff,
-        poly_lie_multiplication<Coeff> > {
+                         poly_lie_basis<n_letters, max_degree>,
+                         Coeff,
+                         poly_lie_multiplication<Coeff>>
+{
     typedef poly_lie_multiplication<Coeff> multiplication_t;
 
 public:
@@ -169,23 +172,27 @@ public:
 
 public:
     /// Default constructor. Zero lie element.
-    poly_lie(void) { }
+    poly_lie(void)
+    {}
 
     /// Copy constructor.
     poly_lie(const poly_lie& l)
-            :ALG(l) { }
+        : ALG(l)
+    {}
 
     /// Constructs an instance from an algebra instance.
     poly_lie(const ALG& a)
-            :ALG(a) { }
+        : ALG(a)
+    {}
 
     /// Constructs an instance from a sparse_vector instance.
     poly_lie(const VECT& v)
-            :ALG(v) { }
+        : ALG(v)
+    {}
 
     /// Constructs a unidimensional instance from a given key (with scalar one).
     explicit poly_lie(LET x, LET y, DEG z)
-            :ALG()
+        : ALG()
     {
         POLYBASISKEY tempkey;
         tempkey[y] = z;
@@ -195,11 +202,13 @@ public:
 
     /// Constructs an instance from a basis element.
     explicit poly_lie(const KEY& k)
-            :ALG(k) { }
+        : ALG(k)
+    {}
 
     /// Constructs a unidimensional instance from a letter and a scalar.
     explicit poly_lie(LET letter, const SCA& s)
-            :ALG(VECT::basis.keyofletter(letter), s) { }
+        : ALG(VECT::basis.keyofletter(letter), s)
+    {}
 
     poly_lie& operator=(const poly_lie&) = default;
     poly_lie& operator=(poly_lie&&) noexcept = default;
@@ -212,13 +221,13 @@ public:
         poly_lie result;
         std::map<KEY, poly_lie> table;
         const_iterator i;
-        for (i = src.begin(); i!=src.end(); ++i) {
+        for (i = src.begin(); i != src.end(); ++i) {
             result.add_scal_prod(VECT::basis.replace(i->first, s, v, table), i->second);
         }
         return result;
     }
 };
 
-} // namespace alg
+}// namespace alg
 
 #endif

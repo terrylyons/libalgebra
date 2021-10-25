@@ -6,11 +6,11 @@
 #define LIBALGEBRA_HALL_SET_H
 
 #include <cassert>
+#include <map>
 #include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
-#include <map>
 
 #include "implementation_types.h"
 #include "utils/integer_maths.h"
@@ -27,8 +27,8 @@ namespace alg {
  * in all computations. This is most suitable for functions
  * that are computed rarely and are not expensive.
  */
-struct no_caching_tag { };
-
+struct no_caching_tag {
+};
 
 /**
  * @brief Lazy caching tag
@@ -50,8 +50,8 @@ struct lazy_cache_tag {
 };
 
 template<>
-struct lazy_cache_tag<void> { };
-
+struct lazy_cache_tag<void> {
+};
 
 /**
  * @brief Lookup table caching tag
@@ -69,9 +69,6 @@ template<typename Predicate>
 struct lookup_table_tag {
     Predicate predicate;
 };
-
-
-
 
 /**
  * @brief Data content of a Hall set
@@ -94,7 +91,8 @@ struct lookup_table_tag {
  * @tparam Width The alphabet size of the Hall set.
  */
 template<DEG Width>
-class hall_set_content {
+class hall_set_content
+{
 public:
     using degree_type = DEG;
     using letter_type = LET;
@@ -121,10 +119,10 @@ public:
     static constexpr degree_type n_letters = Width;
 
 private:
-
-    hall_set_content() : current_degree{0}
+    hall_set_content()
+        : current_degree{0}
     {
-        data.reserve(1+n_letters);
+        data.reserve(1 + n_letters);
         sizes.reserve(2);
         l2k.reserve(n_letters);
         data.push_back(parent_type(0, 0));
@@ -132,11 +130,11 @@ private:
         degree_ranges.push_back(degree_range_type(0, 1));
         sizes.push_back(0);
 
-        for (letter_type l = 1; l<=n_letters; ++l) {
+        for (letter_type l = 1; l <= n_letters; ++l) {
             parent_type parents(key_type(0), key_type(l));
             letters.push_back(l);
             data.push_back(parents);
-            reverse_map.insert(std::pair<parent_type, key_type>(parents, data.size()-1));
+            reverse_map.insert(std::pair<parent_type, key_type>(parents, data.size() - 1));
             l2k.push_back(l);
         }
 
@@ -150,20 +148,20 @@ private:
 
     void grow_up(degree_type degree)
     {
-        for (degree_type d = current_degree+1; d<=degree; ++d) {
-            for (degree_type e = 1; 2*e<=d; ++e) {
+        for (degree_type d = current_degree + 1; d <= degree; ++d) {
+            for (degree_type e = 1; 2 * e <= d; ++e) {
                 letter_type i_lower, i_upper, j_lower, j_upper;
                 i_lower = degree_ranges[e].first;
                 i_upper = degree_ranges[e].second;
-                j_lower = degree_ranges[d-e].first;
-                j_upper = degree_ranges[d-e].second;
+                j_lower = degree_ranges[d - e].first;
+                j_upper = degree_ranges[d - e].second;
 
-                for (letter_type i = i_lower; i<i_upper; ++i) {
-                    for (letter_type j = std::max(j_lower, i+1); j<j_upper; ++j) {
-                        if (data[j].first<=i) {
+                for (letter_type i = i_lower; i < i_upper; ++i) {
+                    for (letter_type j = std::max(j_lower, i + 1); j < j_upper; ++j) {
+                        if (data[j].first <= i) {
                             parent_type parents(i, j);
                             data.push_back(parents);
-                            reverse_map[parents] = data.size()-1;
+                            reverse_map[parents] = data.size() - 1;
                         }
                     }
                 }
@@ -179,20 +177,18 @@ private:
     }
 
 public:
-
     static hall_set_content& instance(degree_type degree = 0) noexcept
     {
         static std::mutex lock;
         std::lock_guard<std::mutex> access(lock);
 
         static hall_set_content content;
-        if (degree>=2) {
+        if (degree >= 2) {
             content.grow_up(degree);
         }
 
         return content;
     }
-
 };
 
 /**
@@ -270,35 +266,33 @@ public:
  *
  * @tparam Width Size of alphabet
  */
-template <DEG Width>
+template<DEG Width>
 class hall_set
 {
 
 public:
-    using degree_type               = DEG;
-    using letter_type               = LET;
-    using key_type                  = letter_type;
-    using size_type                 = DIMN;
-    using parent_type               = std::pair<key_type, key_type>;
+    using degree_type = DEG;
+    using letter_type = LET;
+    using key_type = letter_type;
+    using size_type = DIMN;
+    using parent_type = std::pair<key_type, key_type>;
 
 protected:
-    using hall_set_content_type     = hall_set_content<Width>;
-    using degree_range_type         = std::pair<size_type, size_type>;
-    using reverse_map_type          = std::map<parent_type, key_type>;
-    using data_type                 = std::vector<parent_type>;
-    using letter_vec_type           = std::vector<letter_type>;
-    using l2k_map_type              = std::vector<key_type>;
-    using degree_ranges_map_type    = std::vector<degree_range_type>;
-    using size_map_type             = std::vector<size_type>;
+    using hall_set_content_type = hall_set_content<Width>;
+    using degree_range_type = std::pair<size_type, size_type>;
+    using reverse_map_type = std::map<parent_type, key_type>;
+    using data_type = std::vector<parent_type>;
+    using letter_vec_type = std::vector<letter_type>;
+    using l2k_map_type = std::vector<key_type>;
+    using degree_ranges_map_type = std::vector<degree_range_type>;
+    using size_map_type = std::vector<size_type>;
 
     hall_set_content_type& content;
 
 public:
-
     static constexpr degree_type n_letters = Width;
 
 private:
-
     hall_set()
         : content(hall_set_content_type::instance()),
           key2string(*this, letter_to_string, key2string_binop)
@@ -306,16 +300,13 @@ private:
     }
 
 public:
-
     explicit hall_set(degree_type degree)
-        :content(hall_set_content_type::instance(degree)),
+        : content(hall_set_content_type::instance(degree)),
           key2string(*this, letter_to_string, key2string_binop)
     {
     }
 
-
 public:
-
     /// Get a const reference to vector of letters
     const letter_vec_type& letters() const noexcept
     {
@@ -335,20 +326,19 @@ public:
     }
 
 private:
-
     using signed_size_t = std::make_signed<size_type>::type;
 
     static constexpr signed_size_t
     level_term(signed_size_t degree, signed_size_t divisor)
     {
-        return mobius(divisor)*power(static_cast<signed_size_t>(Width), degree/divisor) / degree;
+        return mobius(divisor) * power(static_cast<signed_size_t>(Width), degree / divisor) / degree;
     }
 
     static constexpr signed_size_t
     level_size_impl(signed_size_t degree, signed_size_t divisor)
     {
         return ((degree % divisor == 0) ? level_term(degree, divisor) : 0)
-                + ((divisor < degree) ? level_size_impl(degree, divisor+1) : 0);
+                + ((divisor < degree) ? level_size_impl(degree, divisor + 1) : 0);
     }
 
     static constexpr size_type level_size(degree_type degree) noexcept
@@ -357,11 +347,10 @@ private:
     }
 
 public:
-
     /// Get the index in the basis at which the elements of given degree start
     static constexpr size_type start_of_degree(degree_type degree) noexcept
     {
-        return (degree == 0 || degree == 1) ? 0 : (level_size(degree-1) + start_of_degree(degree-1));
+        return (degree == 0 || degree == 1) ? 0 : (level_size(degree - 1) + start_of_degree(degree - 1));
     }
 
     /// Get the first element of the Hall set
@@ -380,14 +369,14 @@ public:
     key_type next_key(const key_type& key) const noexcept
     {
         if (key < size()) {
-            return (key+1);
-        } else {
+            return (key + 1);
+        }
+        else {
             return key_type(0);
         }
     }
 
 private:
-
     static std::string letter_to_string(letter_type letter) noexcept
     {
         return std::to_string(letter);
@@ -398,14 +387,12 @@ private:
         return "[" + a + "," + b + "]";
     }
 
-
 public:
-
     /// Get the key that corresponds to a letter
     key_type keyofletter(letter_type let) const
     {
         assert(letter(let));
-        return content.l2k[let-1];
+        return content.l2k[let - 1];
     }
 
     /// Get the left parent of a key
@@ -463,7 +450,8 @@ public:
         typename reverse_map_type::const_iterator it;
         if ((it = content.reverse_map.find(parents)) != content.reverse_map.end()) {
             return it->second;
-        } else {
+        }
+        else {
             throw std::invalid_argument("parent object does no correspond to hall basis element");
         }
     }
@@ -493,7 +481,6 @@ public:
     }
 
 public:
-
     /**
      * @brief A wrapper around a function from letters into some set with a binary operation
      *
@@ -509,7 +496,8 @@ public:
      * @see hall_basis::extend_function
      */
     template<typename Function, typename BinOp, typename Tag>
-    class extended_function {
+    class extended_function
+    {
     public:
         typedef Function function_type;
         typedef BinOp binary_operation_type;
@@ -519,13 +507,14 @@ public:
         using table_t = std::map<key_type, output_type>;
 
         explicit extended_function(const hall_set& hs)
-                : m_hall_set(hs), m_fn(), m_op(), m_tag() { }
+            : m_hall_set(hs), m_fn(), m_op(), m_tag()
+        {}
 
         extended_function(const hall_set& hs, Function fn, BinOp op)
-                : m_hall_set(hs), m_fn(fn), m_op(op), m_tag() { }
+            : m_hall_set(hs), m_fn(fn), m_op(op), m_tag()
+        {}
 
     private:
-
         output_type eval_impl(const key_type& k) const
         {
             if (m_hall_set.letter(k)) {
@@ -534,8 +523,7 @@ public:
             else {
                 return m_op(
                         operator()(m_hall_set.lparent(k)),
-                        operator()(m_hall_set.rparent(k))
-                );
+                        operator()(m_hall_set.rparent(k)));
             }
         }
 
@@ -554,7 +542,7 @@ public:
                 boost::lock_guard<boost::recursive_mutex> access(table_lock);
 
                 typename table_t::iterator it = table.find(k);
-                if (it!=table.end()) {
+                if (it != table.end()) {
                     return it->second;
                 }
 
@@ -573,7 +561,7 @@ public:
             boost::lock_guard<boost::recursive_mutex> access(table_lock);
 
             typename table_t::iterator it = table.find(k);
-            if (it!=table.end()) {
+            if (it != table.end()) {
                 return it->second;
             }
 
@@ -585,10 +573,11 @@ public:
         {
             table_t result;
 
-            for (key_type k=m_hall_set.begin(); k!=m_hall_set.end() && predicate(k); k = m_hall_set.next_key(k)) {
+            for (key_type k = m_hall_set.begin(); k != m_hall_set.end() && predicate(k); k = m_hall_set.next_key(k)) {
                 if (m_hall_set.letter(k)) {
                     result[k] = m_fn(m_hall_set.getletter(k));
-                } else {
+                }
+                else {
                     result[k] = m_op(result[m_hall_set.lparent(k)], result[m_hall_set.rparent(k)]);
                 }
             }
@@ -610,7 +599,6 @@ public:
         }
 
     public:
-
         output_type operator()(const key_type& k) const
         {
             return eval(k, m_tag);
@@ -623,26 +611,15 @@ public:
         tag_type m_tag;
     };
 
-
     using key2string_type = extended_function<
             decltype(&hall_set::letter_to_string),
             decltype(&hall_set::key2string_binop),
-            lazy_cache_tag<void>
-    >;
+            lazy_cache_tag<void>>;
 
     /// Write out a key as a (nested) bracket of its parents
     const key2string_type key2string;
-
 };
 
+}// namespace alg
 
-
-
-
-
-}
-
-
-
-
-#endif //LIBALGEBRA_HALL_SET_H
+#endif//LIBALGEBRA_HALL_SET_H

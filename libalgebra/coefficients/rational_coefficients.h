@@ -26,13 +26,9 @@ typedef mp::cpp_rational_backend rational_backend;
 
 typedef mp::number<rational_backend, mp::et_off> rational;
 
-
-
 typedef coefficient_field<rational> rational_field;
 
+}// namespace coefficients
+}// namespace alg
 
-} // namespace coefficients
-} // namespace alg
-
-
-#endif //LIBALGEBRA_RATIONAL_COEFFICIENTS_H
+#endif//LIBALGEBRA_RATIONAL_COEFFICIENTS_H

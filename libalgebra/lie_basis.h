@@ -37,14 +37,15 @@ using alg::integer_maths::power;
 
 
 template <typename Unsigned>
-constexpr std::make_signed_t<Unsigned> hall_set_level_term(Unsigned width, Unsigned level, Unsigned divisor)
+constexpr typename std::make_signed<Unsigned>::type hall_set_level_term(Unsigned width, Unsigned level, Unsigned divisor)
 {
-    using Int = std::make_signed_t<Unsigned>;
+    using Int = typename std::make_signed<Unsigned>::type;
     return mobius(divisor)*power(static_cast<Int>(width), level/divisor)/ static_cast<Int>(level);
 }
 
 template <typename Unsigned>
-constexpr std::make_signed_t<Unsigned> hall_set_level_size_impl(Unsigned width, Unsigned level, Unsigned divisor)
+constexpr typename std::make_signed<Unsigned>::type
+hall_set_level_size_impl(Unsigned width, Unsigned level, Unsigned divisor)
 {
     return (
             (level%divisor==0) ? hall_set_level_term(width, level, divisor) : 0

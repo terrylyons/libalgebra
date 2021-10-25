@@ -31,22 +31,22 @@ constexpr bool is_squarefree(Unsigned N)
 }
 
 template <typename Unsigned>
-constexpr std::make_signed_t<Unsigned> mobius(Unsigned);
+constexpr typename std::make_signed<Unsigned>::type mobius(Unsigned);
 
 // Mobius function is defined recursively
 template <typename Unsigned>
-constexpr std::make_signed_t<Unsigned> mobius_impl(Unsigned N, Unsigned divisor)
+constexpr typename std::make_signed<Unsigned>::type mobius_impl(Unsigned N, Unsigned divisor)
 {
-    using Int = std::make_signed_t<Unsigned>;
+    using Int = typename std::make_signed<Unsigned>::type;
     return (divisor==N) ? static_cast<Int>(-1) : ((N%divisor==static_cast<Unsigned>(0))
         ? mobius(divisor)*mobius(N/divisor) // Is a divisor, do product of mobius function on divisor and N/divisor
         : mobius_impl(N, divisor+1)); // not a divisor, increase divisor.
 }
 
 template <typename Unsigned>
-constexpr std::make_signed_t<Unsigned> mobius(Unsigned N)
+constexpr typename std::make_signed<Unsigned>::type mobius(Unsigned N)
 {
-    using Int = std::make_signed_t<Unsigned>;
+    using Int = typename std::make_signed<Unsigned>::type;
     return (N==static_cast<Unsigned>(1))
         ? static_cast<Int>(1) // mobius(1) = 1
         : (!is_squarefree(N) ? static_cast<Int>(0) : mobius_impl(N, static_cast<Unsigned>(2))); // mobius(as^2) = 0 for any a, s > 1;  otherwise recurse

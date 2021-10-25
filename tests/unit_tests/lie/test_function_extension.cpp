@@ -35,3 +35,41 @@ struct Fixture : alg_types<5, 5, DPReal> {
 
     multiindex_func_t multiindex;
 };
+
+
+
+SUITE(hall_extended_function) {
+
+    TEST_FIXTURE(Fixture, test_extended_function_letters)
+    {
+        for (LET i=1; i<=5; ++i) {
+            LIE expected(hall_basis.keyofletter(i));
+            CHECK_EQUAL(expected, multiindex(key_type(i)));
+        }
+    }
+
+
+    TEST_FIXTURE(Fixture, test_extended_function_deg_2)
+    {
+        key_type k = 6; // [1, 2]
+
+        LIE expected;
+        expected.add_scal_prod(key_type(1), 1.0);
+        expected.add_scal_prod(key_type(2), 1.0);
+
+        CHECK_EQUAL(expected, multiindex(k));
+    }
+
+    TEST_FIXTURE(Fixture, test_extened_function_deg_3)
+    {
+        auto k = static_cast<key_type>(hall_basis_t::start_of_degree(3) + 1); // [1, [1, 2]]
+        LIE expected;
+        expected.add_scal_prod(key_type(1), 2.0);
+        expected.add_scal_prod(key_type(2), 1.0);
+
+        CHECK_EQUAL(expected, multiindex(k));
+    }
+
+
+
+}

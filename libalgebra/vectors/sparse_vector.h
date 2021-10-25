@@ -116,8 +116,6 @@ public:
 
         iterator_item() : m_iterator() {}
 
-        iterator_item(const iterator_item &other) : m_iterator(other.m_iterator) {}
-
         iterator_item(sparse_vector &, typename MAP::iterator it) : m_iterator(it) {}
 
         key_type key() { return m_iterator->first; }
@@ -159,8 +157,6 @@ public:
         typedef const SCALAR &value_type;
 
         const_iterator_item() : m_iterator() {}
-
-        const_iterator_item(const const_iterator_item &other) : m_iterator(other.m_iterator) {}
 
         const_iterator_item(const sparse_vector &, typename MAP::const_iterator it) : m_iterator(it) {}
 
@@ -337,10 +333,12 @@ public:
      * Create an instance of an empty vector.
      * Such a vector is a neutral element for operator+= and operator-=.
      */
-    sparse_vector(void) {}
+    sparse_vector() {}
 
     /// Copy constructor.
-    sparse_vector(const sparse_vector &v) : MAP((const MAP &) v) {}
+    sparse_vector(const sparse_vector &v) : MAP(v) {}
+
+    sparse_vector(sparse_vector&& other) noexcept : MAP(std::move(other)) {}
 
     /// Unidimensional constructor.
     /**
@@ -376,12 +374,13 @@ public:
         insert_from_pointer(offset, begin, end);
     }
 
-
+    sparse_vector& operator=(const sparse_vector& other) = default;
+    sparse_vector& operator=(sparse_vector&& other) noexcept = default;
 
 
 public:
     /// Returns an instance of the additive inverse of the instance.
-    inline sparse_vector operator-(void) const
+    inline sparse_vector operator-() const
     {
         if (empty()) {
             return *this;
@@ -1026,19 +1025,23 @@ public:
      */
     template <typename Vector, typename KeyTransform> void
     triangular_buffered_apply_binary_transform(Vector &result, const sparse_vector &rhs, KeyTransform key_transform,
-                                               const DEG max_depth) const
+                                               const DEG/* max_depth*/) const
     {
+        // Unused parameter max_depth?
+        //DEG max_degree = std::min(max_depth, degree_tag.max_degree);
+        DEG max_degree = degree_tag.max_degree;
+
         // create buffers to avoid unnecessary calls to MAP inside loop
         std::vector<std::pair<KEY, SCALAR>> buffer;
         std::vector<typename std::vector<std::pair<KEY, SCALAR>>::const_iterator> iterators;
-        separate_by_degree(buffer, rhs, degree_tag.max_degree, iterators);
+        separate_by_degree(buffer, rhs, max_degree, iterators);
 
-        typename std::vector<std::pair<KEY, SCALAR>>::const_iterator j, jEnd;
+        typename std::vector<std::pair<KEY, SCALAR>>::const_iterator j;
         const_iterator i(begin()), iEnd(end());
         DEG rhdegree;
         for (; i != iEnd; ++i) {
             const KEY &k = i->key();
-            rhdegree = degree_tag.max_degree - basis.degree(k);
+            rhdegree = max_degree - basis.degree(k);
             typename std::vector<std::pair<KEY, SCALAR>>::const_iterator &jEnd = iterators[rhdegree];
             for (j = buffer.begin(); j != jEnd; ++j) {
                 key_transform(result, k, i->value(), j->first, j->second);

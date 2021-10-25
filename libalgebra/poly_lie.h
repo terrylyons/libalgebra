@@ -201,6 +201,9 @@ public:
     explicit poly_lie(LET letter, const SCA& s)
             :ALG(VECT::basis.keyofletter(letter), s) { }
 
+    poly_lie& operator=(const poly_lie&) = default;
+    poly_lie& operator=(poly_lie&&) noexcept = default;
+
 public:
     /// Replaces the occurrences of letters in s by Lie elements in v.
     inline friend poly_lie

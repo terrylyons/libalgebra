@@ -13,6 +13,7 @@ Version 3. (See accompanying file License.txt)
 // degrees)
 #include "constlog2.h"
 #include "implementation_types.h"
+#include <cstring>
 
 namespace alg {
 
@@ -125,7 +126,7 @@ public:
     /// Constructor
 
     /// Checks that the DEPTH does not exceed the Maximum word length.
-    _tensor_basis(void)
+    _tensor_basis()
             :_word((word_t)1.)
     {
         STATIC_ASSERT(DEPTH<=uMaxWordLength);
@@ -160,17 +161,24 @@ public:
 
 #endif
 
-    /// Destructor
-    ~_tensor_basis(void) { }
-
     /// Concatenates two words
     inline _tensor_basis& push_back(const _tensor_basis& rhs)
     {
         STATIC_ASSERT(std::numeric_limits<word_t>::is_iec559 &&
                 std::numeric_limits<double>::has_denorm);
 
-        word_t dPowerOfTwo = rhs._word;
-        reinterpret_cast<fp_info<word_t>::unsigned_int_type&>(dPowerOfTwo) &= fp_info<word_t>::mantissa_mask_zeroes;
+
+        word_t dPowerOfTwo(rhs._word);
+
+        // Formerly
+        // reinterpret_cast<fp_info<word_t>::unsigned_int_type&>(dPowerOfTwo) &= fp_info<word_t>::mantissa_mask_zeroes;
+        // But after a little checking, this is more "safely" implemented by following. Checking in the Godbolt compiler
+        // on the major compilers, this produces identical assembly to the above in release mode. Plus, no warnings.
+        fp_info<word_t>::unsigned_int_type tmp;
+        std::memcpy(&tmp, &dPowerOfTwo, sizeof(word_t));
+        tmp &= fp_info<word_t>::mantissa_mask_zeroes;
+        std::memcpy(&dPowerOfTwo, &tmp, sizeof(word_t));
+
         _word = _word*dPowerOfTwo+rhs._word-dPowerOfTwo;
         return *this;
     }
@@ -178,12 +186,9 @@ public:
     /// Concatenates two words
     inline _tensor_basis operator*(const _tensor_basis& rhs) const
     {
-        STATIC_ASSERT(std::numeric_limits<word_t>::is_iec559 &&
-                std::numeric_limits<double>::has_denorm);
-
-        word_t dPowerOfTwo = rhs._word;
-        reinterpret_cast<fp_info<word_t>::unsigned_int_type&>(dPowerOfTwo) &= fp_info<word_t>::mantissa_mask_zeroes;
-        return _word*dPowerOfTwo+rhs._word-dPowerOfTwo;
+        _tensor_basis result(*this);
+        result.push_back(rhs);
+        return result;
     }
 
     /// Compares two words
@@ -220,11 +225,24 @@ public:
     /// gives the number of letters in _word
     inline unsigned size() const
     {
+        /*
         fp_info<word_t>::unsigned_int_type sz =
                 (fp_info<word_t>::signed_int_type((reinterpret_cast<const fp_info<word_t>::unsigned_int_type&>(
                         _word) & fp_info<word_t>::exponent_mask)
                         >> fp_info<word_t>::mantissa_bits_stored)-
                         fp_info<word_t>::exponent_bias)/uBitsInLetter;
+        */
+        /*
+         * Simplify the old code. Here the memcpy isn't really a problem since a copy would have
+         * been used in any case. This is much easier to read since each operation is split out.
+         */
+        fp_info<word_t>::unsigned_int_type sz;
+        std::memcpy(&sz, &_word, sizeof(word_t));
+        sz &= fp_info<word_t>::exponent_mask;
+        sz >>= fp_info<word_t>::mantissa_bits_stored;
+        sz -= fp_info<word_t>::exponent_bias;
+        sz /= uBitsInLetter;
+
 #ifdef _DEBUG
         int iExponent;
         if (_word != std::numeric_limits<word_t>::infinity()) {
@@ -233,7 +251,8 @@ public:
         }
         assert(sz == ((iExponent - 1) / uBitsInLetter));
 #endif
-        return (unsigned int)sz;
+        // This is a potentially narrowing conversion
+        return static_cast<unsigned>(sz);
     }
 
     /// Returns the first letter of a _tensor_basis as a letter.
@@ -277,7 +296,7 @@ public:
 
         operator LET()
         {
-            word_t dBottom, dMiddle, dTop;
+            word_t dMiddle, dTop;
             int iExponent;
             word_t dTemp, dMantissa;
             dMantissa = frexp(m_parent._word, &iExponent);
@@ -286,7 +305,7 @@ public:
             dTemp = dMiddle+(word_t)1.;
             dMantissa = frexp(dTemp, &iExponent);
             dTemp = ldexp(dMantissa, int(iExponent+uBitsInLetter));
-            dBottom = modf(dTemp, &dMiddle);
+            modf(dTemp, &dMiddle);
             _tensor_basis middle(dMiddle);
             return middle.FirstLetter(); // adds a one implicitly
         }

@@ -5,6 +5,8 @@
 #ifndef LIBALGEBRA_ORDER_TRAIT_H
 #define LIBALGEBRA_ORDER_TRAIT_H
 
+#include <map>
+
 namespace alg {
 namespace utils {
 

@@ -69,8 +69,7 @@ void CHECK_compare_with_file(const SPARSEVECTOR_T& sig, const PATH_T& filepath)
 		value_type* data_begin = (value_type*)(sigfile.begin());
 		value_type* data_end = data_begin + numberOfElements;
 		// initialize sigfile
-		size_t temp = sig.size();
-		size_t temp2 = data_begin - data_end;
+
 		std::copy(tmp.begin(), tmp.end(), data_begin);
 
 		typename alg::basis::basis_traits<typename SPARSEVECTOR_T::BASIS>::ordering_tag::pair_order order;

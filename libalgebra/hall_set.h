@@ -518,11 +518,11 @@ public:
 
         using table_t = std::map<key_type, output_type>;
 
-        extended_function(const hall_set& hs)
-                : m_hall_set(hs), m_tag(), m_fn(), m_op() { }
+        explicit extended_function(const hall_set& hs)
+                : m_hall_set(hs), m_fn(), m_op(), m_tag() { }
 
         extended_function(const hall_set& hs, Function fn, BinOp op)
-                : m_hall_set(hs), m_tag(), m_fn(fn), m_op(op) { }
+                : m_hall_set(hs), m_fn(fn), m_op(op), m_tag() { }
 
     private:
 

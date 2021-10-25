@@ -109,10 +109,18 @@ public:
      * Create an instance of an empty vector.
      * This element is neutral with respect to + and -.
      */
-    vector(void) : UnderlyingVectorType() {}
+    vector() : UnderlyingVectorType() {}
 
     /// Copy constructor
-    vector(const UnderlyingVectorType &other) : UnderlyingVectorType(other) {}
+    vector(const vector& other) : UnderlyingVectorType(other)
+    {}
+
+    /// Move constructor
+    vector(vector&& other) noexcept : UnderlyingVectorType(std::move(other))
+    {}
+
+    /// Construct from underlying vector type
+    explicit vector(const UnderlyingVectorType &other) : UnderlyingVectorType(other) {}
 
     /// Unidimensional constructor.
     /**
@@ -161,7 +169,8 @@ public:
     vector(DIMN offset, SCALAR* begin, SCALAR* end) : UnderlyingVectorType(offset, begin, end)
     {}
 
-
+    vector& operator=(const vector& other) = default;
+    vector& operator=(vector&& other) noexcept = default;
 
 protected:
     bool ensure_sized_for_degree(const DEG deg)
@@ -181,7 +190,7 @@ public:
      */
 
     /// Additive inverse
-    vector operator-(void) const
+    vector operator-() const
     {
         return vector(UnderlyingVectorType::operator-());
     }

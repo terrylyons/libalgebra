@@ -37,4 +37,7 @@ if (Bignum_FOUND AND NOT TARGET Bignum::Bignum)
     set_property(TARGET Bignum::Bignum PROPERTY IMPORTED_LOCATION "${Bignum_LIBRARY}")
     target_include_directories(Bignum::Bignum INTERFACE ${Bignum_INCLUDE_DIR})
     target_compile_definitions(Bignum::Bignum INTERFACE ${GMP_DEFINITIONS})
+
+    # MSVC requires this for some reason?
+    set_property(TARGET Bignum::Bignum PROPERTY IMPORTED_IMPLIB "${Bignum_LIBRARY}")
 endif()

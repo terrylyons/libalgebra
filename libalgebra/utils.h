@@ -268,7 +268,7 @@ public:
     /// Returns the CBH formula as a free lie element from a vector of letters.
     inline LIE basic(const std::vector<LET>& s) const
     {
-        if (s.size()==0) {
+        if (s.empty()) {
             return empty_lie;
         }
         TENSOR tmp(m_maps.exp(s[0]));
@@ -300,7 +300,7 @@ public:
     /// Returns the CBH formula as a free lie element from a vector of lie.
     inline LIE full(const std::vector<const LIE*>& lies) const
     {
-        if (lies.size()==0) {
+        if (lies.empty()) {
             return empty_lie;
         }
         typename std::vector<const LIE*>::size_type i;

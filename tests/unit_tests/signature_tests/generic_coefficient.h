@@ -39,12 +39,12 @@ struct generic_coefficient
 
     explicit operator float() const
     {
-        return float(numerator) / denominator;
+        return float(numerator) / float(denominator);
     }
 
     explicit operator double() const
     {
-        return double(numerator) / denominator;
+        return double(numerator) / float(denominator);
     }
 
     explicit operator rational_t() const

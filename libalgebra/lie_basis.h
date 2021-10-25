@@ -37,14 +37,15 @@ using alg::integer_maths::power;
 
 
 template <typename Unsigned>
-constexpr std::make_signed_t<Unsigned> hall_set_level_term(Unsigned width, Unsigned level, Unsigned divisor)
+constexpr typename std::make_signed<Unsigned>::type hall_set_level_term(Unsigned width, Unsigned level, Unsigned divisor)
 {
-    using Int = std::make_signed_t<Unsigned>;
+    using Int = typename std::make_signed<Unsigned>::type;
     return mobius(divisor)*power(static_cast<Int>(width), level/divisor)/ static_cast<Int>(level);
 }
 
 template <typename Unsigned>
-constexpr std::make_signed_t<Unsigned> hall_set_level_size_impl(Unsigned width, Unsigned level, Unsigned divisor)
+constexpr typename std::make_signed<Unsigned>::type
+hall_set_level_size_impl(Unsigned width, Unsigned level, Unsigned divisor)
 {
     return (
             (level%divisor==0) ? hall_set_level_term(width, level, divisor) : 0
@@ -200,7 +201,7 @@ public:
     const degree_func_type degree;
 
     /// Constructs the basis with a given number of letters.
-    hall_basis() : hall_set_type(MaxDepth), degree(*this, &letter_degree, std::plus<DEG>()), reverse_map()
+    hall_basis() : hall_set_type(MaxDepth), reverse_map(), degree(*this, &letter_degree, std::plus<DEG>())
     {
         // Instantiate the degree function table.
         degree(letter_type(1));

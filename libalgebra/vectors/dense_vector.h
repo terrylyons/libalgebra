@@ -82,6 +82,10 @@ public:
     /// Copy constructor
     dense_vector(const dense_vector &v) : m_data(v.m_data), m_dimension(v.m_dimension), m_degree(v.m_degree) {}
 
+    /// Move constructor
+    dense_vector(dense_vector&& other) noexcept : m_data(std::move(other.m_data)), m_dimension(other.m_dimension), m_degree(other.m_degree)
+    {}
+
     /// Unidimensional constructor
     explicit dense_vector(const KEY &k, const SCALAR &s = one) : m_data(), m_dimension(0), m_degree(0)
     {
@@ -142,6 +146,10 @@ public:
     {
         set_degree(degree_tag);
     }
+
+
+    dense_vector& operator=(const dense_vector& other) = default;
+    dense_vector& operator=(dense_vector&& other) noexcept = default;
 
 
 private:
@@ -247,9 +255,7 @@ public:
         friend class dense_vector;
 
     public:
-        iterator_item() : m_vector(NULL), m_iterator() {}
-
-        iterator_item(const iterator_item &other) : m_vector(other.m_vector), m_iterator(other.m_iterator) {}
+        iterator_item() : m_vector(nullptr), m_iterator() {}
 
         iterator_item(dense_vector &vect, typename STORAGE::iterator it) : m_vector(&vect), m_iterator(it) {}
 
@@ -294,10 +300,7 @@ public:
         friend class dense_vector;
 
     public:
-        const_iterator_item() : m_vector(NULL), m_iterator() {}
-
-        const_iterator_item(const const_iterator_item &other) : m_vector(other.m_vector),
-                                                                m_iterator(other.m_iterator) {}
+        const_iterator_item() : m_vector(nullptr), m_iterator() {}
 
         const_iterator_item(const dense_vector &vect, typename STORAGE::const_iterator it) : m_vector(&vect),
                                                                                              m_iterator(it) {}
@@ -1095,7 +1098,7 @@ public:
      * @param max_depth Maximum depth to compute
      */
     template <typename Vector, typename KeyTransform, typename IndexTransform> void
-    triangular_buffered_apply_binary_transform(Vector &result, const dense_vector &rhs, KeyTransform key_transform,
+    triangular_buffered_apply_binary_transform(Vector &result, const dense_vector &rhs, KeyTransform,
                                                IndexTransform index_transform, const DEG max_depth) const
     {
         if (empty() || rhs.empty()) {

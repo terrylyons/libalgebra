@@ -92,8 +92,8 @@ struct GenericFixture
     static const unsigned depth = Depth;
     generic_path<width> path;
 
-    float expected_float_error;
     double expected_double_error;
+    float expected_float_error;
 
     typedef typename alg_types<2, 2, Rational>::SCA Rat;
 

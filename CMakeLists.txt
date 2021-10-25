@@ -14,6 +14,7 @@ project(Libalgebra VERSION 1.0.0)
 
 option(LIBALGEBRA_TESTING "Enable building test targets" OFF)
 
+
 # This helps IDEs that can arrange projects into folders (apparently)
 # See https://cmake.org/cmake/help/v3.22/prop_gbl/USE_FOLDERS.html
 # from https://github.com/Lectem/cpp-boilerplate/blob/master/CMakeLists.txt
@@ -85,6 +86,8 @@ target_link_libraries(Libalgebra INTERFACE
         Boost::boost
         Boost::thread
         )
+
+set_property(TARGET Libalgebra PROPERTY CXX_STANDARD 11)
 
 if (TARGET Bignum::Bignum)
     target_link_libraries(Libalgebra INTERFACE Bignum::Bignum)
@@ -159,6 +162,10 @@ if(NOT_SUBPROJECT)
 endif()
 
 if (LIBALGEBRA_TESTING)
+    # Set the C++ standard to c++11 required, so we get better linting in IDEs
+    set(CMAKE_CXX_STANDARD 11)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
     enable_testing()
     add_subdirectory(tests)
 endif()

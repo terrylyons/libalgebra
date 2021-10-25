@@ -151,13 +151,16 @@ public:
     /**
     Constructs an empty algebra element.
     */
-    algebra(void) {}
+    algebra() : VECT() {}
 
     /// Copy constructor.
     algebra(const algebra &a) : VECT(a) {}
 
+    /// Move constructor
+    algebra(algebra&& a) noexcept : VECT(std::move(a)) {}
+
     /// Constructs an algebra instance from a sparse_vector.
-    algebra(const VECT &v) : VECT(v) {}
+    explicit algebra(const VECT &v) : VECT(v) {}
 
     /// Unidimensional constructor.
     explicit algebra(const KEY &k, const SCALAR &s = VECT::one) : VECT(k, s) {}
@@ -173,7 +176,12 @@ public:
     algebra(DIMN offset, SCALAR* begin, SCALAR* end) : VECT(offset, begin, end)
     {}
 
+
+    algebra& operator=(const algebra&) = default;
+    algebra& operator=(algebra&&) noexcept = default;
+
 public:
+
     /// Multiplies the instance with scalar s.
     inline algebra &operator*=(const SCALAR &s)
     {

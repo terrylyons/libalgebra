@@ -219,7 +219,7 @@ SUITE(dense_storage) {
         REQUIRE CHECK_EQUAL(types::borrowed, val1.type());
         dstorage::size_type sz = val1.size();
 
-        double* ptr = val1.begin();
+        val1.begin();
 
         CHECK_EQUAL(types::owned, val1.type());
         CHECK_EQUAL(sz, val1.size());
@@ -231,7 +231,7 @@ SUITE(dense_storage) {
         REQUIRE CHECK_EQUAL(types::borrowed, val1.type());
         dstorage::size_type sz = val1.size();
 
-        double* ptr = val1.end();
+        val1.end();
 
         CHECK_EQUAL(types::owned, val1.type());
         CHECK_EQUAL(sz, val1.size());
@@ -243,7 +243,7 @@ SUITE(dense_storage) {
         REQUIRE CHECK_EQUAL(types::borrowed, val1.type());
         dstorage::size_type sz = val1.size();
 
-        double& v = val1[0];
+        val1[0];
 
         CHECK_EQUAL(types::owned, val1.type());
         CHECK_EQUAL(sz, val1.size());
@@ -255,7 +255,7 @@ SUITE(dense_storage) {
         REQUIRE CHECK_EQUAL(types::borrowed_mut, val1.type());
         dstorage::size_type sz = val1.size();
 
-        double* ptr = val1.begin();
+        val1.begin();
 
         CHECK_EQUAL(types::borrowed_mut, val1.type());
         CHECK_EQUAL(sz, val1.size());
@@ -267,7 +267,7 @@ SUITE(dense_storage) {
         REQUIRE CHECK_EQUAL(types::borrowed_mut, val1.type());
         dstorage::size_type sz = val1.size();
 
-        double* ptr = val1.end();
+        val1.end();
 
         CHECK_EQUAL(types::borrowed_mut, val1.type());
         CHECK_EQUAL(sz, val1.size());
@@ -279,7 +279,7 @@ SUITE(dense_storage) {
         REQUIRE CHECK_EQUAL(types::borrowed_mut, val1.type());
         dstorage::size_type sz = val1.size();
 
-        double& v = val1[0];
+        val1[0];
 
         CHECK_EQUAL(types::borrowed_mut, val1.type());
         CHECK_EQUAL(sz, val1.size());

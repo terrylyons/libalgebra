@@ -54,20 +54,9 @@ typedef unsigned __int64 uint64_t;
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
 
-#include "compat.h"
 #include "hall_set.h"
 #include "implementation_types.h"
 #include <boost/thread/locks.hpp>
-
-#if __cplusplus >= 201103L
-
-#include <array>
-
-#define LIBALGEBRA_STATIC_ARRAY_TYPE std::array
-#else
-#include <boost/array.hpp>
-#define LIBALGEBRA_STATIC_ARRAY_TYPE boost::array
-#endif
 
 //#define ORDEREDMAP
 #define UNORDEREDMAP

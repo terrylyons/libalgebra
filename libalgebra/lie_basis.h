@@ -117,6 +117,9 @@ class hall_basis : private hall_set<N_letters>
     /// Base class - privately derived, so keep private
     using hall_set_type = hall_set<N_letters>;
 
+    template<typename Function, typename BinOp, typename Tag>
+    friend class hall_set_type::extended_function;
+
 public:
     using typename hall_set_type::letter_type;
 
@@ -230,7 +233,7 @@ public:
      */
     inline KEY nextkey(const KEY& k) const
     {
-        if (k < (hall_set_type::start_of_degree(MaxDepth+1))) {
+        if (k < (hall_set_type::start_of_degree(MaxDepth + 1))) {
             return (k + 1);
         }
         else {
@@ -308,11 +311,17 @@ public:
         using ext_fn_t = typename hall_set_type::template extended_function<Function, BinOp, tag_type>;
         return ext_fn_t(*this, fn, op);
     }
-
+    /*
     template<typename ExtendedFunction>
     ExtendedFunction extend_function() const
     {
         return ExtendedFunction(*this);
+    }
+*/
+    template<typename ExtendedFunction, typename... Args>
+    ExtendedFunction extend_function(Args&&... args) const
+    {
+        return ExtendedFunction(*this, std::forward<Args>(args)...);
     }
 };
 

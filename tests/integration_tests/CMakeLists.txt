@@ -5,7 +5,6 @@ add_library(Libalgebra_tests_integration_tests OBJECT EXCLUDE_FROM_ALL
         brown_path_increments.h
         log2ceil.h
         makebm.h
-        SHOW.h
         SigHelpers.h
         TreeBufferHelper.h
         AlgebraFunctionsTests.cpp

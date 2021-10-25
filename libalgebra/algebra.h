@@ -112,8 +112,8 @@ namespace alg {
  * @tparam Multiplication Multiplication operation
  * @tparam VectorType Underlying vector data type to use; e.g. dense_vector or sparse_vector
  */
-template <typename Basis, typename Coeff, typename Multiplication,
-          template<typename, typename> class VectorType = alg::vectors::template_vector_type_selector<Basis, Coeff>::template type>
+template<typename Basis, typename Coeff, typename Multiplication,
+         template<typename, typename, typename...> class VectorType>
 class algebra : public vectors::vector<Basis, Coeff, VectorType>
 {
 
@@ -312,9 +312,7 @@ public:
     }
 };
 
-template <typename B, typename C, typename M, template<typename, typename> class V>
-M algebra<B, C, M, V>::s_multiplication;
-template<typename B, typename C, typename M, typename V>
+template<typename B, typename C, typename M, template<typename, typename, typename...> class V>
 M algebra<B, C, M, V>::s_multiplication;
 
 }// namespace alg

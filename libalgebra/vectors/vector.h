@@ -10,21 +10,24 @@
 namespace alg {
 namespace vectors {
 
-template <typename Basis, typename Field> struct template_vector_type_selector;
+template<typename Basis, typename Field>
+struct template_vector_type_selector;
 
-template <typename Basis, typename Coeffs, template<typename, typename, typename...> class VectorImpl
-    = template_vector_type_selector<Basis, Coeffs>::template type, typename... Args>
+template<typename Basis, typename Coeffs, template<typename, typename, typename...> class VectorImpl = template_vector_type_selector<Basis, Coeffs>::template type, typename... Args>
 class vector;
 
 namespace dtl {
 class vector_base_access
 {
 public:
-    template <typename B, typename C, template<typename, typename, typename...> class Vector, typename... Args>
-    static Vector<B, C, Args...> &convert(Vector<B, C, Args...> &arg) { return arg; }
+    template<typename B, typename C, template<typename, typename, typename...> class Vector, typename... Args>
+    static Vector<B, C, Args...>& convert(Vector<B, C, Args...>& arg)
+    {
+        return arg;
+    }
 
-    template <typename Basis, typename Coeffs, template<typename, typename> class Vector>
-    static Vector<Basis, Coeffs> &convert(vector<Basis, Coeffs, Vector> &arg)
+    template<typename Basis, typename Coeffs, template<typename, typename, typename...> class Vector>
+    static Vector<Basis, Coeffs>& convert(vector<Basis, Coeffs, Vector>& arg)
     {
         return arg;
     }
@@ -49,7 +52,7 @@ public:
  * @tparam VectorImpl The underlying vector class to use. Selected automatically
  * based on the vector_type_selector trait.
  */
-template <typename Basis, typename Coeffs, template<typename, typename, typename...> class VectorImpl, typename... Args>
+template<typename Basis, typename Coeffs, template<typename, typename, typename...> class VectorImpl, typename... Args>
 class vector : VectorImpl<Basis, Coeffs, Args...>
 {
 protected:
@@ -149,8 +152,8 @@ public:
      * @tparam F Other field. Scalar types must be convertible to SCALAR.
      * @tparam V Other underlying vector type.
      */
-    template <typename F, template<typename, typename> class V>
-    explicit vector(const vector<BASIS, F, V> &other) : UnderlyingVectorType()
+    template<typename F, template<typename, typename> class V>
+    explicit vector(const vector<BASIS, F, V>& other) : UnderlyingVectorType()
     {
         typename vector<BASIS, F, V>::const_iterator cit;
         for (cit(other.begin()); cit != other.end(); ++cit) {
@@ -300,8 +303,8 @@ public:
     // Arithmetic for compatible vectors
 
     /// Inplace addition for similar vectors
-    template <template <typename, typename> class V>
-    vector &operator+=(const vector<BASIS, Coeffs, V> &rhs)
+    template<template<typename, typename, typename...> class V>
+    vector& operator+=(const vector<BASIS, Coeffs, V>& rhs)
     {
         typename vector<BASIS, Coeffs, V>::const_iterator cit;
         for (cit(rhs.begin()); cit != rhs.end(); ++cit) {
@@ -311,8 +314,8 @@ public:
     }
 
     /// Inplace subraction for similar vectors
-    template<template<typename, typename> class V>
-    vector &operator-=(const vector<BASIS, Coeffs, V> &rhs)
+    template<template<typename, typename, typename...> class V>
+    vector& operator-=(const vector<BASIS, Coeffs, V>& rhs)
     {
         typename vector<BASIS, Coeffs, V>::const_iterator cit;
         for (cit(rhs.begin()); cit != rhs.end(); ++cit) {
@@ -322,8 +325,8 @@ public:
     }
 
     /// Addition for similar vectors
-    template<template<typename, typename> class V>
-    vector operator+(const vector<BASIS, Coeffs, V> &rhs) const
+    template<template<typename, typename, typename...> class V>
+    vector operator+(const vector<BASIS, Coeffs, V>& rhs) const
     {
         vector result(*this);
         result += rhs;
@@ -331,8 +334,8 @@ public:
     }
 
     /// Addition for similar vectors
-    template<template<typename, typename> class V>
-    vector operator-(const vector<BASIS, Coeffs, V> &rhs) const
+    template<template<typename, typename, typename...> class V>
+    vector operator-(const vector<BASIS, Coeffs, V>& rhs) const
     {
         vector result(*this);
         result -= rhs;
@@ -465,8 +468,8 @@ public:
     // Templated versions of the fused operations. For cross-vector type
     // application.
 
-    template<template<typename, typename> class V>
-    vector &add_scal_prod(const vector<Basis, Coeffs, V> &rhs, const SCALAR &s)
+    template<template<typename, typename, typename...> class V>
+    vector& add_scal_prod(const vector<Basis, Coeffs, V>& rhs, const SCALAR& s)
     {
         using VectorType = V<Basis, Coeffs>;
         typename VectorType::const_iterator cit;
@@ -476,8 +479,8 @@ public:
         return *this;
     }
 
-    template<template<typename, typename> class V>
-    vector &sub_scal_prod(const vector<Basis, Coeffs, V> &rhs, const SCALAR &s)
+    template<template<typename, typename, typename...> class V>
+    vector& sub_scal_prod(const vector<Basis, Coeffs, V>& rhs, const SCALAR& s)
     {
         using VectorType = V<Basis, Coeffs>;
         typename VectorType::const_iterator cit;
@@ -487,8 +490,8 @@ public:
         return *this;
     }
 
-    template<template<typename, typename> class V>
-    vector &add_scal_div(const vector<Basis, Coeffs, V> &rhs, const RATIONAL &s)
+    template<template<typename, typename, typename...> class V>
+    vector& add_scal_div(const vector<Basis, Coeffs, V>& rhs, const RATIONAL& s)
     {
         using VectorType = V<Basis, Coeffs>;
         typename VectorType::const_iterator cit;
@@ -498,8 +501,8 @@ public:
         return *this;
     }
 
-    template<template<typename, typename> class V>
-    vector &sub_scal_div(const vector<Basis, Coeffs, V> &rhs, const RATIONAL &s)
+    template<template<typename, typename, typename...> class V>
+    vector& sub_scal_div(const vector<Basis, Coeffs, V>& rhs, const RATIONAL& s)
     {
         using VectorType = V<Basis, Coeffs>;
         typename VectorType::const_iterator cit;

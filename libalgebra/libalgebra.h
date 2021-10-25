@@ -122,7 +122,8 @@ namespace alg {
 // template<class BASIS, class MAP = typename BASIS::MAP>
 // class sparse_vector;
 /// Generic Associative Algebra.
-template<typename Basis, typename Coeff, typename Multiplication, typename VectorType = typename vectors::vector_type_selector<Basis, Coeff>::type>
+template<typename Basis, typename Coeff, typename Multiplication,
+         template<typename, typename, typename...> class VectorType = alg::vectors::template_vector_type_selector<Basis, Coeff>::template type>
 class algebra;
 
 /// Generic Associative Algebra basis.
@@ -139,8 +140,7 @@ class shuffle_tensor_basis;
 
 /// Free Associative Algebra.  Associative and non commutative.
 template<typename Coeff, DEG n_letters, DEG max_degree = 0,
-         typename VectorType = typename vectors::vector_type_selector<free_tensor_basis<n_letters, max_degree>,
-                                                                      Coeff>::type>
+         template<typename, typename, typename...> class VectorType = vectors::template_vector_type_selector<free_tensor_basis<n_letters, max_degree>, Coeff>::template type>
 class free_tensor;
 
 /// Free Associative Shuffle Algebra.  Associative and Commutative.
@@ -157,7 +157,7 @@ class lie_basis;
 
 /// Free Lie Associative Algebra.  Associative and non commutative.
 template<typename Coeff, DEG n_letters, DEG max_degree = 0,
-         typename VectorType = typename vectors::vector_type_selector<lie_basis<n_letters, max_degree>, Coeff>::type>
+         template<typename, typename, typename...> class VectorType = vectors::template_vector_type_selector<lie_basis<n_letters, max_degree>, Coeff>::template type>
 class lie;
 
 /// Maps between Free Lie and Free Algebra elements.
@@ -201,33 +201,22 @@ class poly_lie;
 }// namespace alg
 
 #include "algebra.h"
-
+#include "lie.h"
 #include "lie_basis.h"
 #include "monomial_basis.h"
-#include "poly_basis.h"
-#include "poly_lie_basis.h"
-}
-
-#include "tensor_basis.h"
-
-
-namespace alg {
-#include "lie.h"
 #include "multi_polynomial.h"
+#include "poly_basis.h"
 #include "poly_lie.h"
+#include "poly_lie_basis.h"
 #include "polynomials.h"
 #include "tensor.h"
-
-
-
+#include "tensor_basis.h"
 #include "utils.h"
-}
+
 // Undeclaring local macros in reverse order of declaration.
 #undef __DECLARE_UNARY_OPERATOR
 #undef __DECLARE_BINARY_OPERATOR
 // End of undeclaration of local macros.
-
-
 
 // Include once wrapper
 #endif// DJC_COROPA_LIBALGEBRAH_SEEN

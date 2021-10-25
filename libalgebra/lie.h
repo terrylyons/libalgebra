@@ -79,8 +79,7 @@ class lie_multiplication
     }
 
     template<typename Lie>
-    static
-    const algebra<typename Lie::BASIS, Coeff, lie_multiplication, vectors::sparse_vector> &
+    static const algebra<typename Lie::BASIS, Coeff, lie_multiplication, vectors::sparse_vector>&
     prod(typename Lie::KEY const& k1, typename Lie::KEY const& k2)
     {
         typedef algebra<typename Lie::BASIS, Coeff, lie_multiplication, vectors::sparse_vector> lie_t;
@@ -241,10 +240,10 @@ public:
  * element of the addition operation. There is no neutral element for the
  * product (free Lie product).
  */
-template <typename Coeff, DEG n_letters, DEG max_degree,
-    template <typename, typename> class VectorType = vectors::template_vector_type_selector<lie_basis<n_letters, max_degree>, Coeff>::template type>
+template<typename Coeff, DEG n_letters, DEG max_degree,
+         template<typename, typename, typename...> class VectorType>
 class lie : public algebra<
-        lie_basis < n_letters, max_degree>, Coeff, lie_multiplication<Coeff>, VectorType>
+                    lie_basis<n_letters, max_degree>, Coeff, lie_multiplication<Coeff>, VectorType>
 {
     typedef lie_multiplication<Coeff> multiplication_t;
 

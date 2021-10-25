@@ -25,8 +25,7 @@ class shuffle_tensor_multiplication;
 template<typename Coeff, DEG n_letters, DEG max_degree>
 class shuffle_tensor;
 
-
-template <typename Coeff>
+template<typename Coeff>
 class free_tensor_multiplication
 {
 
@@ -151,11 +150,11 @@ public:
  * associative algebra corresponding to the SCALAR type. This is permitted by
  * the existence of empty keys in free_tensor_basis.
  */
-template <typename Coeff, DEG n_letters, DEG max_degree,
-          template<typename, typename> class VectorType = vectors::template_vector_type_selector<free_tensor_basis<n_letters, max_degree>, Coeff>::template type>
+template<typename Coeff, DEG n_letters, DEG max_degree,
+         template<typename, typename, typename...> class VectorType>
 class free_tensor : public algebra<
-        free_tensor_basis < n_letters, max_degree>, Coeff, free_tensor_multiplication<Coeff>, VectorType
-> {
+                            free_tensor_basis<n_letters, max_degree>, Coeff, free_tensor_multiplication<Coeff>, VectorType>
+{
     typedef free_tensor_multiplication<Coeff> multiplication_t;
 
 public:

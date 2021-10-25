@@ -179,5 +179,37 @@ SUITE(free_tensor_basis) {
         CHECK_EQUAL(expected, result);
     }
 
+TEST_FIXTURE (Framework55Double, nextkey_TENSOR)
+{
+    FTBASIS basis;
+
+    //// enumerate the words manually into a vector and compare
+    auto width = FTBASIS::NO_LETTERS;
+    auto max_degree = FTBASIS::MAX_DEGREE;
+    KEY k = basis.begin();
+    std::vector<KEY> keys(1);
+
+    CHECK_EQUAL(k, keys.back());
+    k = basis.nextkey(k);
+
+    size_t j = 0, j_max = keys.size();
+    for (size_t depth = 1; depth<=max_degree; ++depth) {
+        for (; j!=j_max; ++j) {
+            // join all letters i to each word j of one degree less
+            for (LET i = 1; i<=width; ++i) {
+                // KEY(LET arg) requires 0 < arg <= NO_LETTERS
+                keys.push_back(keys[j]*KEY(i));
+                CHECK_EQUAL(k, keys.back());
+                k = basis.nextkey(k);
+                //// show words in order placed on vector
+
+            }
+        }
+        j_max = keys.size();
+    }
+
+    CHECK_EQUAL(k, basis.end());
+}
 
 }
+

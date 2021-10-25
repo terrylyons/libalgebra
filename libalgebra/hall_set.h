@@ -506,8 +506,29 @@ public:
 
         using table_t = std::map<key_type, output_type>;
 
+        // Default constructors
+        extended_function() = default;
+        extended_function(const extended_function&) = default;
+        extended_function(extended_function&&) noexcept = default;
+
         explicit extended_function(const hall_set& hs)
             : m_hall_set(hs), m_fn(), m_op(), m_tag()
+        {}
+
+        template<typename HallSet>
+        explicit extended_function(const HallSet& hs) : m_hall_set(hs), m_fn(), m_op(), m_tag()
+        {}
+
+        template<typename HallSet>
+        extended_function(const HallSet& hs, Function fn) : m_hall_set(hs), m_fn(fn), m_op(), m_tag()
+        {}
+
+        template<typename HallSet>
+        extended_function(const HallSet& hs, BinOp bin_op) : m_hall_set(hs), m_fn(), m_op(bin_op), m_tag()
+        {}
+
+        template<typename HallSet>
+        extended_function(const HallSet& hs, Function fn, BinOp bin_op) : m_hall_set(hs), m_fn(fn), m_op(bin_op), m_tag()
         {}
 
         extended_function(const hall_set& hs, Function fn, BinOp op)

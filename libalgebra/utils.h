@@ -85,7 +85,7 @@ public:
     expand_function_t expand;
 
     /// Default constructor.
-    maps(void) : expand(LIE::basis.template extend_function<expand_function_t>())
+    maps() : expand(LIE::basis.template extend_function<expand_function_t>())
     {}
 
 public:
@@ -96,7 +96,7 @@ public:
         const translator h;
 
     public:
-        t2t(translator arg)
+        explicit t2t(translator arg)
                 :h(arg) { }
 
         template<typename Coeff2, DEG n_letters1, DEG max_degree1>
@@ -262,7 +262,7 @@ public:
 
 public:
     /// Default constructor.
-    cbh(void) { }
+    cbh() { }
 
 public:
     /// Returns the CBH formula as a free lie element from a vector of letters.

@@ -49,7 +49,7 @@ public:
 
 public:
     /// Default constructor. Empty basis.
-    poly_lie_basis(void)
+    poly_lie_basis()
     {}
 
 public:

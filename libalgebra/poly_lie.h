@@ -172,7 +172,7 @@ public:
 
 public:
     /// Default constructor. Zero lie element.
-    poly_lie(void)
+    poly_lie()
     {}
 
     /// Copy constructor.

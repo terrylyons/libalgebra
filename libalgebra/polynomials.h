@@ -157,8 +157,7 @@ public:
     typedef typename ALG::const_iterator const_iterator;
 
     /// Default constructor. Empty polynomial. Zero.
-    poly()
-    {}
+    poly() = default;
 
     /// Copy constructor.
     poly(const poly& p)
@@ -203,8 +202,7 @@ public:
     }
 
     /// Ensures that the return type is an instance of polynomial.
-    inline poly
-    operator/(const RAT& rhs) const
+    inline poly operator/(const RAT& rhs) const
     {
         poly result(*this);
         result /= rhs;
@@ -239,7 +237,7 @@ public:
     }
 
     /// Ensures that the return type is an instance of polynomial.
-    inline poly operator-(void) const { return poly(ALG::operator-()); }
+    inline poly operator-() const { return poly(ALG::operator-()); }
 
     /// Evaluates the polynomial for some scalar values for letters
     /// (variables).

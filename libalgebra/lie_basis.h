@@ -237,7 +237,7 @@ public:
      */
     inline KEY nextkey(const KEY& k) const
     {
-        if (k < (hall_set_type::start_of_degree(MaxDepth+1) - 1)) {
+        if (k < (hall_set_type::start_of_degree(MaxDepth+1))) {
             return (k+1);
         }
         else {

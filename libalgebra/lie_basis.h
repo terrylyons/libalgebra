@@ -248,7 +248,7 @@ public:
     }
 
     /// The size of the Hall set up to degree MaxDepth
-    DIMN size() const
+    constexpr DIMN size() const
     {
         return start_of_degree(MaxDepth + 1);
     }

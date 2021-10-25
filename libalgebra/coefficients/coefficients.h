@@ -8,12 +8,15 @@
 namespace alg {
 namespace coefficients {
 
-#define LIBALGEBRA_FIELD_GENERATE_BINARY(NAME, OP, RET_T, LHS_T, RHS_T)                       \
-    static LA_CONSTEXPR RET_T NAME(LHS_T const& lhs, RHS_T const& rhs) { return lhs OP rhs; } \
-                                                                                              \
-    static LA_CONSTEXPR LHS_T& NAME##_inplace(LHS_T& lhs, RHS_T const& rhs)                   \
-    {                                                                                         \
-        return (lhs OP## = rhs);                                                              \
+#define LIBALGEBRA_FIELD_GENERATE_BINARY(NAME, OP, RET_T, LHS_T, RHS_T)                                     \
+    static constexpr RET_T NAME(LHS_T const& lhs, RHS_T const& rhs) noexcept(noexcept(lhs OP rhs))          \
+    {                                                                                                       \
+        return lhs OP rhs;                                                                                  \
+    }                                                                                                       \
+                                                                                                            \
+    static constexpr LHS_T& NAME##_inplace(LHS_T& lhs, RHS_T const& rhs) noexcept(noexcept(lhs OP## = rhs)) \
+    {                                                                                                       \
+        return (lhs OP## = rhs);                                                                            \
     }
 
 /**
@@ -49,7 +52,7 @@ struct coefficient_field {
     static const SCA zero;
     static const SCA mone;
 
-    static LA_CONSTEXPR SCA uminus(SCA arg)
+    static constexpr SCA uminus(SCA arg) noexcept(noexcept(-arg))
     {
         return -arg;
     }

@@ -259,8 +259,7 @@ public:
 
 public:
     /// Default constructor.
-    cbh()
-    {}
+    cbh() = default;
 
 public:
     /// Returns the CBH formula as a free lie element from a vector of letters.

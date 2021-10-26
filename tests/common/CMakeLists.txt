@@ -10,6 +10,7 @@ add_library(libalgebra_tests_utilities STATIC EXCLUDE_FROM_ALL
         time_and_details.h
         memfile.h
         SHOW.h
+        random_vector_generator.h
         )
 
 target_include_directories(libalgebra_tests_utilities PUBLIC "${CMAKE_CURRENT_LIST_DIR}")

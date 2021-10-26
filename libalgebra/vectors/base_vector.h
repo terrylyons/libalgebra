@@ -10,7 +10,19 @@
 namespace alg {
 namespace vectors {
 
-template <typename Basis, typename Coeff>
+/**
+ * @brief Base class for vectors
+ *
+ * Provides static members for useful scalar constants, basis instance,
+ * and the degree tag, which is used to dispatch to the correct function
+ * in various places in the vector hierarchy.
+ *
+ * All vector types should inherit from this class.
+ *
+ * @tparam Basis Basis type
+ * @tparam Coeff Coefficient field
+ */
+template<typename Basis, typename Coeff>
 class base_vector
 {
 public:
@@ -31,21 +43,26 @@ public:
 // Initialisation of static members of base_vector
 
 /// Static initialisation of the sparse_vector basis.
-template <typename Basis, typename Coeff> Basis base_vector<Basis, Coeff>::basis;
+template<typename Basis, typename Coeff>
+Basis base_vector<Basis, Coeff>::basis;
 
 /// Static initialisation of the scalar constant +1.
-template <typename Basis, typename Coeff> const typename Coeff::S base_vector<Basis, Coeff>::one(1);
+template<typename Basis, typename Coeff>
+const typename Coeff::S base_vector<Basis, Coeff>::one(+1);
 
 /// Static initialisation of the scalar constant 0.
-template <typename Basis, typename Coeff> const typename Coeff::S base_vector<Basis, Coeff>::zero(0);
+template<typename Basis, typename Coeff>
+const typename Coeff::S base_vector<Basis, Coeff>::zero(0);
 
 /// Static initialisation of the scalar constant -1.
-template <typename Basis, typename Coeff> const typename Coeff::S base_vector<Basis, Coeff>::mone(-1);
+template<typename Basis, typename Coeff>
+const typename Coeff::S base_vector<Basis, Coeff>::mone(-1);
 
-template <typename Basis, typename Coeff> const typename alg::basis::basis_traits<Basis>::degree_tag
+template<typename Basis, typename Coeff>
+const typename alg::basis::basis_traits<Basis>::degree_tag
         base_vector<Basis, Coeff>::degree_tag;
 
-} // namespace vectors
-} // namespace alg
+}// namespace vectors
+}// namespace alg
 
-#endif // LIBALGEBRA_BASE_VECTOR_H
+#endif// LIBALGEBRA_BASE_VECTOR_H

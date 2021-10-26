@@ -1,0 +1,503 @@
+
+
+struct accuracy_fixture : Fixture
+{
+
+
+
+    accuracy_fixture() : Fixture()
+    {}
+
+    using Fixture::float_sparse_framework;
+    using Fixture::double_sparse_framework;
+    using Fixture::rational_sparse_framework;
+    using Fixture::float_dense_framework;
+    using Fixture::double_dense_framework;
+    using Fixture::rational_dense_framework;
+    using Fixture::float_hybrid_framework;
+    using Fixture::double_hybrid_framework;
+    using Fixture::rational_hybrid_framework;
+
+    template <typename Tensor>
+    typename float_sparse_framework::TENSOR
+    sparse_tensor_float_convert(const Tensor& arg) const
+    {
+        typename float_sparse_framework::TENSOR result;
+        typedef typename Tensor::const_iterator citer;
+
+        float val;
+        for (citer cit(arg.begin()); cit != arg.end(); ++cit) {
+            val = float(cit->value());
+            result[cit->key()] = val;
+        }
+
+        return result;
+    }
+
+    template <typename Tensor>
+    typename double_sparse_framework::TENSOR
+    sparse_tensor_double_convert(const Tensor& arg) const
+    {
+        typename double_sparse_framework::TENSOR result;
+        typedef typename Tensor::const_iterator citer;
+
+        for (citer cit(arg.begin()); cit != arg.end(); ++cit) {
+            result[cit->key()] = double(cit->value());
+        }
+
+        return result;
+    }
+
+    template <typename Tensor>
+    typename float_dense_framework::TENSOR
+    dense_tensor_float_convert(const Tensor& arg) const
+    {
+        typename float_dense_framework::TENSOR result;
+        typedef typename Tensor::const_iterator citer;
+
+        for (citer cit(arg.begin()); cit != arg.end(); ++cit) {
+            result[cit->key()] = float(cit->value());
+        }
+
+        return result;
+    }
+
+    template <typename Tensor>
+    typename double_dense_framework::TENSOR
+    dense_tensor_double_convert(const Tensor& arg) const
+    {
+        typename double_dense_framework::TENSOR result;
+        typedef typename Tensor::const_iterator citer;
+
+        for (citer cit(arg.begin()); cit != arg.end(); ++cit) {
+            result[cit->key()] = double(cit->value());
+        }
+
+        return result;
+    }
+
+    template <typename Tensor>
+    typename float_hybrid_framework::TENSOR
+    hybrid_tensor_float_convert(const Tensor& arg) const
+    {
+        typename float_hybrid_framework::TENSOR result;
+        typedef typename Tensor::const_iterator citer;
+
+        for (citer cit(arg.begin()); cit != arg.end(); ++cit) {
+            result[cit->key()] = float(cit->value());
+        }
+
+        return result;
+    }
+
+    template <typename Tensor>
+    typename double_hybrid_framework::TENSOR
+    hybrid_tensor_double_convert(const Tensor& arg) const
+    {
+        typename double_hybrid_framework::TENSOR result;
+        typedef typename Tensor::const_iterator citer;
+
+        for (citer cit(arg.begin()); cit != arg.end(); ++cit) {
+            result[cit->key()] = double(cit->value());
+        }
+
+        return result;
+    }
+
+    template <typename Lie>
+    typename float_sparse_framework::LIE
+    sparse_lie_float_convert(const Lie& arg) const
+    {
+        typename float_sparse_framework::LIE result;
+        typedef typename Lie::const_iterator citer;
+
+        for (citer cit(arg.begin()); cit != arg.end(); ++cit) {
+            result[cit->key()] = float(cit->value());
+        }
+
+        return result;
+    }
+
+    template <typename Lie>
+    typename double_sparse_framework::LIE
+    sparse_lie_double_convert(const Lie& arg) const
+    {
+        typename double_sparse_framework::LIE result;
+        typedef typename Lie::const_iterator citer;
+
+        for (citer cit(arg.begin()); cit != arg.end(); ++cit) {
+            result[cit->key()] = double(cit->value());
+        }
+
+        return result;
+    }
+
+    template <typename Lie>
+    typename float_dense_framework::LIE
+    dense_lie_float_convert(const Lie& arg) const
+    {
+        typename float_dense_framework::LIE result;
+        typedef typename Lie::const_iterator citer;
+
+        for (citer cit(arg.begin()); cit != arg.end(); ++cit) {
+            result[cit->key()] = float(cit->value());
+        }
+
+        return result;
+    }
+
+    template <typename Lie>
+    typename double_dense_framework::LIE
+    dense_lie_double_convert(const Lie& arg) const
+    {
+        typename double_dense_framework::LIE result;
+        typedef typename Lie::const_iterator citer;
+
+        for (citer cit(arg.begin()); cit != arg.end(); ++cit) {
+            result[cit->key()] = double(cit->value());
+        }
+
+        return result;
+    }
+
+    template <typename Lie>
+    typename float_hybrid_framework::LIE
+    hybrid_lie_float_convert(const Lie& arg) const
+    {
+        typename float_hybrid_framework::LIE result;
+        typedef typename Lie::const_iterator citer;
+
+        for (citer cit(arg.begin()); cit != arg.end(); ++cit) {
+            result[cit->key()] = float(cit->value());
+        }
+
+        return result;
+    }
+
+    template <typename Lie>
+    typename double_hybrid_framework::LIE
+    hybrid_lie_double_convert(const Lie& arg) const
+    {
+        typename double_hybrid_framework::LIE result;
+        typedef typename Lie::const_iterator citer;
+
+        for (citer cit(arg.begin()); cit != arg.end(); ++cit) {
+            result[cit->key()] = double(cit->value());
+        }
+
+        return result;
+    }
+
+    template <typename Tensor>
+    typename rational_dense_framework::TENSOR
+    dense_tensor_rational_convert(const Tensor& arg) const
+    {
+        typename rational_dense_framework::TENSOR result;
+        typedef typename Tensor::const_iterator citer;
+        typedef typename rational_field::S S;
+
+        for (citer cit(arg.begin()); cit != arg.end(); ++cit) {
+            result[cit->key()] = S(cit->value());
+        }
+
+        return result;
+    }
+
+    template <typename Tensor>
+    typename rational_hybrid_framework::TENSOR
+    hybrid_tensor_rational_convert(const Tensor& arg) const
+    {
+        typename rational_hybrid_framework::TENSOR result;
+        typedef typename Tensor::const_iterator citer;
+        typedef typename rational_field::S S;
+
+        for (citer cit(arg.begin()); cit != arg.end(); ++cit) {
+            result[cit->key()] = S(cit->value());
+        }
+
+        return result;
+    }
+
+    template <typename Lie>
+    typename rational_dense_framework::LIE
+    dense_lie_rational_convert(const Lie& arg) const
+    {
+        typename rational_dense_framework::LIE result;
+        typedef typename Lie::const_iterator citer;
+        typedef typename rational_field::S S;
+
+        for (citer cit(arg.begin()); cit != arg.end(); ++cit) {
+            result[cit->key()] = S(cit->value());
+        }
+
+        return result;
+    }
+
+    template <typename Lie>
+    typename rational_hybrid_framework::LIE
+    hybrid_lie_rational_convert(const Lie& arg) const
+    {
+        typename rational_hybrid_framework::LIE result;
+        typedef typename Lie::const_iterator citer;
+        typedef typename rational_field::S S;
+
+        for (citer cit(arg.begin()); cit != arg.end(); ++cit) {
+            result[cit->key()] = S(cit->value());
+        }
+
+        return result;
+    }
+
+
+
+    std::pair<float, double> signature_error_sparse() const
+    {
+        typename rational_sparse_framework::TENSOR base = path.template
+                signature<rational_sparse_framework>();
+        typename float_sparse_framework::TENSOR float_result = path.template
+                signature<float_sparse_framework>();
+        typename double_sparse_framework::TENSOR double_result = path.template
+                signature<double_sparse_framework>();
+
+        std::pair<float, double> result;
+        result.first = (float_result - sparse_tensor_float_convert(base)).NormLInf();
+        result.second = (double_result - sparse_tensor_double_convert(base)).NormLInf();
+
+        return result;
+    }
+
+    std::pair<float, double> signature_error_dense() const
+    {
+        typename rational_dense_framework::TENSOR base = path.template
+                signature<rational_dense_framework>();
+        typename float_dense_framework::TENSOR float_result = path.template
+                signature<float_dense_framework>();
+        typename double_dense_framework::TENSOR double_result = path.template
+                signature<double_dense_framework>();
+
+        std::pair<float, double> result;
+        result.first = (float_result - dense_tensor_float_convert(base)).NormLInf();
+        result.second = (double_result - dense_tensor_double_convert(base)).NormLInf();
+
+        return result;
+    }
+
+    std::pair<float, double> signature_error_hybrid() const
+    {
+        typename rational_hybrid_framework::TENSOR base = path.template
+                signature<rational_hybrid_framework>();
+        typename float_hybrid_framework::TENSOR float_result = path.template
+                signature<float_hybrid_framework>();
+        typename double_hybrid_framework::TENSOR double_result = path.template
+                signature<double_hybrid_framework>();
+
+        std::pair<float, double> result;
+        result.first = (float_result - hybrid_tensor_float_convert(base)).NormLInf();
+        result.second = (double_result - hybrid_tensor_double_convert(base)).NormLInf();
+
+        return result;
+    }
+
+
+    std::pair<float, double> log_signature_error_sparse() const
+    {
+        typename rational_sparse_framework::LIE base = path.template
+                log_signature<rational_sparse_framework>();
+        typename float_sparse_framework::LIE float_result = path.template
+                log_signature<float_sparse_framework>();
+        typename double_sparse_framework::LIE double_result = path.template
+                log_signature<double_sparse_framework>();
+
+        std::pair<float, double> result;
+        result.first = (float_result - sparse_lie_float_convert(base)).NormLInf();
+        result.second = (double_result - sparse_lie_double_convert(base)).NormLInf();
+
+        return result;
+    }
+
+    std::pair<float, double> log_signature_error_dense() const
+    {
+        typename rational_dense_framework::LIE base = path.template
+                log_signature<rational_dense_framework>();
+        typename float_dense_framework::LIE float_result = path.template
+                log_signature<float_dense_framework>();
+        typename double_dense_framework::LIE double_result = path.template
+                log_signature<double_dense_framework>();
+
+        std::pair<float, double> result;
+        result.first = (float_result - dense_lie_float_convert(base)).NormLInf();
+        result.second = (double_result - dense_lie_double_convert(base)).NormLInf();
+
+        return result;
+    }
+
+    std::pair<float, double> log_signature_error_hybrid() const
+    {
+        typename rational_hybrid_framework::LIE base = path.template
+                log_signature<rational_hybrid_framework>();
+        typename float_hybrid_framework::LIE float_result = path.template
+                log_signature<float_hybrid_framework>();
+        typename double_hybrid_framework::LIE double_result = path.template
+                log_signature<double_hybrid_framework>();
+
+        std::pair<float, double> result;
+        result.first = (float_result - hybrid_lie_float_convert(base)).NormLInf();
+        result.second = (double_result - hybrid_lie_double_convert(base)).NormLInf();
+
+        return result;
+    }
+
+};
+
+
+TEST_FIXTURE(accuracy_fixture, test_accuracy_signature_sparse)
+{
+    TEST_DETAILS();
+
+    std::pair<float, double> errors = signature_error_sparse();
+
+    CHECK_CLOSE(0.0f, errors.first, expected_float_error);
+    CHECK_CLOSE(0.0, errors.second, expected_double_error);
+}
+
+TEST_FIXTURE(accuracy_fixture, test_accuracy_signature_dense)
+{
+    TEST_DETAILS();
+
+    std::pair<float, double> errors = signature_error_dense();
+
+    CHECK_CLOSE(0.0f, errors.first, expected_float_error);
+    CHECK_CLOSE(0.0, errors.second, expected_double_error);
+}
+
+
+TEST_FIXTURE(accuracy_fixture, test_accuracy_signature_hybrid)
+{
+    TEST_DETAILS();
+
+    std::pair<float, double> errors = signature_error_hybrid();
+
+    CHECK_CLOSE(0.0f, errors.first, expected_float_error);
+    CHECK_CLOSE(0.0, errors.second, expected_double_error);
+}
+
+
+TEST_FIXTURE(accuracy_fixture, test_accuracy_log_signature_sparse)
+{
+    TEST_DETAILS();
+
+    std::pair<float, double> errors = log_signature_error_sparse();
+
+    CHECK_CLOSE(0.0f, errors.first, expected_float_error);
+    CHECK_CLOSE(0.0, errors.second, expected_double_error);
+}
+
+TEST_FIXTURE(accuracy_fixture, test_accuracy_log_signature_dense)
+{
+    TEST_DETAILS();
+
+    std::pair<float, double> errors = log_signature_error_dense();
+
+    CHECK_CLOSE(0.0f, errors.first, expected_float_error);
+    CHECK_CLOSE(0.0, errors.second, expected_double_error);
+}
+
+
+TEST_FIXTURE(accuracy_fixture, test_accuracy_log_signature_hybrid)
+{
+    TEST_DETAILS();
+
+    std::pair<float, double> errors = log_signature_error_hybrid();
+
+    CHECK_CLOSE(0.0f, errors.first, expected_float_error);
+    CHECK_CLOSE(0.0, errors.second, expected_double_error);
+}
+
+
+TEST_FIXTURE(accuracy_fixture, test_accuracy_signature_sparse_dense)
+{
+    TEST_DETAILS();
+
+    typename rational_dense_framework::TENSOR dense_base = path.template
+            signature<rational_dense_framework>();
+    typename float_dense_framework::TENSOR dense_float = path.template
+            signature<float_dense_framework>();
+    typename double_dense_framework::TENSOR dense_double = path.template
+            signature<double_dense_framework>();
+
+    typename rational_sparse_framework::TENSOR sparse_base = path.template
+            signature<rational_sparse_framework>();
+    typename float_sparse_framework::TENSOR sparse_float = path.template
+            signature<float_sparse_framework>();
+    typename double_sparse_framework::TENSOR sparse_double = path.template
+            signature<double_sparse_framework>();
+
+    typename rational_field::S rational_error =
+            (dense_base - dense_tensor_rational_convert(sparse_base)).NormLInf();
+    float float_error = (dense_float - dense_tensor_float_convert(sparse_float)).NormLInf();
+    double double_error = (dense_double - dense_tensor_double_convert(sparse_double)).NormLInf();
+
+
+    CHECK_EQUAL(typename rational_field::S(0), rational_error);
+    CHECK_CLOSE(0.0f, float_error, expected_float_error);
+    CHECK_CLOSE(0.0, double_error, expected_double_error);
+}
+
+
+TEST_FIXTURE(accuracy_fixture, test_accuracy_signature_sparse_hybrid)
+{
+    TEST_DETAILS();
+
+    typename rational_hybrid_framework::TENSOR hybrid_base = path.template
+            signature<rational_hybrid_framework>();
+    typename float_hybrid_framework::TENSOR hybrid_float = path.template
+            signature<float_hybrid_framework>();
+    typename double_hybrid_framework::TENSOR hybrid_double = path.template
+            signature<double_hybrid_framework>();
+
+    typename rational_sparse_framework::TENSOR sparse_base = path.template
+            signature<rational_sparse_framework>();
+    typename float_sparse_framework::TENSOR sparse_float = path.template
+            signature<float_sparse_framework>();
+    typename double_sparse_framework::TENSOR sparse_double = path.template
+            signature<double_sparse_framework>();
+
+    typename rational_field::S rational_error =
+            (hybrid_base - hybrid_tensor_rational_convert(sparse_base)).NormLInf();
+    float float_error = (hybrid_float - hybrid_tensor_float_convert(sparse_float)).NormLInf();
+    double double_error = (hybrid_double - hybrid_tensor_double_convert(sparse_double)).NormLInf();
+
+
+    CHECK_EQUAL(typename rational_field::S(0), rational_error);
+    CHECK_CLOSE(0.0f, float_error, expected_float_error);
+    CHECK_CLOSE(0.0, double_error, expected_double_error);
+}
+
+TEST_FIXTURE(accuracy_fixture, test_accuracy_signature_dense_hybrid)
+{
+    TEST_DETAILS();
+
+    typename rational_hybrid_framework::TENSOR hybrid_base = path.template
+            signature<rational_hybrid_framework>();
+    typename float_hybrid_framework::TENSOR hybrid_float = path.template
+            signature<float_hybrid_framework>();
+    typename double_hybrid_framework::TENSOR hybrid_double = path.template
+            signature<double_hybrid_framework>();
+
+    typename rational_dense_framework::TENSOR dense_base = path.template
+            signature<rational_dense_framework>();
+    typename float_dense_framework::TENSOR dense_float = path.template
+            signature<float_dense_framework>();
+    typename double_dense_framework::TENSOR dense_double = path.template
+            signature<double_dense_framework>();
+
+    typename rational_field::S rational_error =
+            (dense_base - dense_tensor_rational_convert(hybrid_base)).NormLInf();
+    float float_error = (dense_float - dense_tensor_float_convert(hybrid_float)).NormLInf();
+    double double_error = (dense_double - dense_tensor_double_convert(hybrid_double)).NormLInf();
+
+
+    CHECK_EQUAL(typename rational_field::S(0), rational_error);
+    CHECK_CLOSE(0.0f, float_error, expected_float_error);
+    CHECK_CLOSE(0.0, double_error, expected_double_error);
+}

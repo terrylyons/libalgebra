@@ -14,36 +14,50 @@
 namespace alg {
 namespace vectors {
 
-template <typename Basis, typename Field> struct vector_type_selector;
+template<typename Basis, typename Field>
+struct vector_type_selector;
 
-template <typename Basis, typename Coeffs, typename VectorImpl =
-typename vector_type_selector<Basis, Coeffs>::type> class vector;
+template<typename Basis, typename Coeffs, typename VectorImpl = typename vector_type_selector<Basis, Coeffs>::type>
+class vector;
 
 namespace dtl {
 class vector_base_access
 {
 public:
-    template <typename Vector> static Vector &convert(Vector &arg) { return arg; }
+    template<typename Vector>
+    static Vector& convert(Vector& arg)
+    {
+        return arg;
+    }
 
-    template <typename Basis, typename Coeffs, typename Vector>
-    static Vector &convert(vector<Basis, Coeffs, Vector> &arg)
+    template<typename Basis, typename Coeffs, typename Vector>
+    static Vector& convert(vector<Basis, Coeffs, Vector>& arg)
     {
         return arg;
     }
 };
-} // namespace dtl
+}// namespace dtl
 
 /// Main vector interface
 /**
- * Main vector interface for libalgebra.
+ * @brief Main vector interface for libalgebra.
  *
+ * Provides a consistent interface to the underlying storage type. Moreover, it provides some additional
+ * cross-vector-type interactions. For example, it provides an interface for adding a dense vector to a sparse
+ * vector.
+ *
+ * All vectors in libalgebra instances of this class template. The VectorImpl parameter determines the actual
+ * type of the vector. Most operations are simply passed through to the underlying vector type, but some
+ * have additional layers of misdirection to, for example, select the correct implementation to use. This is
+ * especially the case for the functions that are used by algebra types for implementing multiplication.
  *
  * @tparam Basis The basis class for the vector to use
  * @tparam Field The coefficient field to use
  * @tparam VectorImpl The underlying vector class to use. Selected automatically
  * based on the vector_type_selector trait.
  */
-template <typename Basis, typename Coeffs, typename VectorImpl> class vector : VectorImpl
+template<typename Basis, typename Coeffs, typename VectorImpl>
+class vector : VectorImpl
 {
 public:
     // Type definitions
@@ -95,7 +109,10 @@ protected:
 
 protected:
     /// Accessor for underlying vector type for derived classes
-    UnderlyingVectorType &underlying_vector() { return *this; }
+    UnderlyingVectorType& underlying_vector()
+    {
+        return *this;
+    }
 
 public:
     // Constructors
@@ -105,17 +122,33 @@ public:
      * Create an instance of an empty vector.
      * This element is neutral with respect to + and -.
      */
-    vector(void) : UnderlyingVectorType() {}
+    vector()
+        : UnderlyingVectorType()
+    {}
 
     /// Copy constructor
-    vector(const UnderlyingVectorType &other) : UnderlyingVectorType(other) {}
+    vector(const vector& other)
+        : UnderlyingVectorType(other)
+    {}
+
+    /// Move constructor
+    vector(vector&& other) noexcept
+        : UnderlyingVectorType(std::move(other))
+    {}
+
+    /// Construct from underlying vector type
+    explicit vector(const UnderlyingVectorType& other)
+        : UnderlyingVectorType(other)
+    {}
 
     /// Unidimensional constructor.
     /**
      * Create a vector with the value corresponding to key k equal
      * to the given coefficient (default +1).
      */
-    explicit vector(const KEY &k, const SCALAR &s = one) : UnderlyingVectorType(k, s) {}
+    explicit vector(const KEY& k, const SCALAR& s = one)
+        : UnderlyingVectorType(k, s)
+    {}
 
     /// Copy from other vector type
     /**
@@ -123,7 +156,9 @@ public:
      * @tparam F Other field. Scalar types must be convertible to SCALAR.
      * @tparam V Other underlying vector type.
      */
-    template <typename F, typename V> explicit vector(const vector<BASIS, F, V> &other) : UnderlyingVectorType()
+    template<typename F, typename V>
+    explicit vector(const vector<BASIS, F, V>& other)
+        : UnderlyingVectorType()
     {
         typename vector<BASIS, F, V>::const_iterator cit;
         for (cit(other.begin()); cit != other.end(); ++cit) {
@@ -137,8 +172,9 @@ public:
      * @param begin
      * @param end
      */
-    template <typename InputIt>
-    vector(InputIt begin, InputIt end) : UnderlyingVectorType()
+    template<typename InputIt>
+    vector(InputIt begin, InputIt end)
+        : UnderlyingVectorType()
     {
         UnderlyingVectorType::insert(begin, end);
     }
@@ -148,16 +184,20 @@ public:
      * @param begin
      * @param end
      */
-    vector(SCALAR const* begin, SCALAR const* end) : UnderlyingVectorType(begin, end)
+    vector(SCALAR const* begin, SCALAR const* end)
+        : UnderlyingVectorType(begin, end)
     {}
 
-    vector(DIMN offset, SCALAR const* begin, SCALAR const* end) : UnderlyingVectorType(offset, begin, end)
+    vector(DIMN offset, SCALAR const* begin, SCALAR const* end)
+        : UnderlyingVectorType(offset, begin, end)
     {}
 
-    vector(DIMN offset, SCALAR* begin, SCALAR* end) : UnderlyingVectorType(offset, begin, end)
+    vector(DIMN offset, SCALAR* begin, SCALAR* end)
+        : UnderlyingVectorType(offset, begin, end)
     {}
 
-
+    vector& operator=(const vector& other) = default;
+    vector& operator=(vector&& other) noexcept = default;
 
 protected:
     bool ensure_sized_for_degree(const DEG deg)
@@ -166,8 +206,11 @@ protected:
     }
 
 public:
-    // Swap
-    void swap(vector &rhs) { UnderlyingVectorType::swap(rhs); }
+    /// Swap the data in this instance with another
+    void swap(vector& rhs)
+    {
+        UnderlyingVectorType::swap(rhs);
+    }
 
 public:
     // Arithmetic
@@ -177,71 +220,96 @@ public:
      */
 
     /// Additive inverse
-    vector operator-(void) const
+    vector operator-() const
     {
         return vector(UnderlyingVectorType::operator-());
     }
 
     /// Inplace scalar multiply
-    vector &operator*=(const SCALAR &s)
+    vector& operator*=(const SCALAR& s)
     {
         UnderlyingVectorType::operator*=(s);
         return *this;
     }
 
     /// Inplace rational divide
-    vector &operator/=(const RATIONAL &s)
+    vector& operator/=(const RATIONAL& s)
     {
         UnderlyingVectorType::operator/=(s);
         return *this;
     }
 
     /// Inplace addition
-    vector &operator+=(const vector &rhs)
+    vector& operator+=(const vector& rhs)
     {
         UnderlyingVectorType::operator+=(rhs);
         return *this;
     }
 
     /// Inplace subtraction
-    vector &operator-=(const vector &rhs)
+    vector& operator-=(const vector& rhs)
     {
         UnderlyingVectorType::operator-=(rhs);
         return *this;
     }
 
     /// Inplace coordinatewise minimum
-    vector &operator&=(const vector &rhs)
+    vector& operator&=(const vector& rhs)
     {
         UnderlyingVectorType::operator&=(rhs);
         return *this;
     }
 
     /// Inplace coordinatewise maximum
-    vector &operator|=(const vector &rhs)
+    vector& operator|=(const vector& rhs)
     {
         UnderlyingVectorType::operator|=(rhs);
         return *this;
     }
 
     /// Scalar multiply
-    __DECLARE_BINARY_OPERATOR(vector, *, *=, SCALAR);
+    vector operator*(const SCALAR& rhs) const
+    {
+        vector result(*this);
+        return result *= rhs;
+    };
     /// Rational divide
-    __DECLARE_BINARY_OPERATOR(vector, /, /=, RATIONAL);
+    vector operator/(const RATIONAL& rhs) const
+    {
+        vector result(*this);
+        return result /= rhs;
+    };
     /// Addition
-    __DECLARE_BINARY_OPERATOR(vector, +, +=, vector);
+    vector operator+(const vector& rhs) const
+    {
+        vector result(*this);
+        return result += rhs;
+    };
     /// Subtraction
-    __DECLARE_BINARY_OPERATOR(vector, -, -=, vector);
+    vector operator-(const vector& rhs) const
+    {
+        vector result(*this);
+        return result -= rhs;
+    };
     /// Coordinatewise minimum
-    __DECLARE_BINARY_OPERATOR(vector, &, &=, vector);
+    vector operator&(const vector& rhs) const
+    {
+        vector result(*this);
+        return result &= rhs;
+    };
     /// Coordinatewise maximum
-    __DECLARE_BINARY_OPERATOR(vector, |, |=, vector);
+    vector operator|(const vector& rhs) const
+    {
+        vector result(*this);
+        return result |= rhs;
+    };
 
 public:
     // Arithmetic for compatible vectors
 
     /// Inplace addition for similar vectors
-    template <typename V> vector &operator+=(const vector<BASIS, Coeffs, V> &rhs)
+    template<typename V>
+    vector& operator+=(const vector<BASIS, Coeffs, V>& rhs)
     {
         typename vector<BASIS, Coeffs, V>::const_iterator cit;
         for (cit(rhs.begin()); cit != rhs.end(); ++cit) {
@@ -251,7 +319,8 @@ public:
     }
 
     /// Inplace subraction for similar vectors
-    template <typename V> vector &operator-=(const vector<BASIS, Coeffs, V> &rhs)
+    template<typename V>
+    vector& operator-=(const vector<BASIS, Coeffs, V>& rhs)
     {
         typename vector<BASIS, Coeffs, V>::const_iterator cit;
         for (cit(rhs.begin()); cit != rhs.end(); ++cit) {
@@ -261,7 +330,8 @@ public:
     }
 
     /// Addition for similar vectors
-    template <typename V> vector operator+(const vector<BASIS, Coeffs, V> &rhs) const
+    template<typename V>
+    vector operator+(const vector<BASIS, Coeffs, V>& rhs) const
     {
         vector result(*this);
         result += rhs;
@@ -269,7 +339,8 @@ public:
     }
 
     /// Addition for similar vectors
-    template <typename V> vector operator-(const vector<BASIS, Coeffs, V> &rhs) const
+    template<typename V>
+    vector operator-(const vector<BASIS, Coeffs, V>& rhs) const
     {
         vector result(*this);
         result -= rhs;
@@ -288,7 +359,7 @@ public:
      * @param s
      * @return
      */
-    vector &add_scal_prod(const KEY &rhs, const SCALAR &s)
+    vector& add_scal_prod(const KEY& rhs, const SCALAR& s)
     {
         UnderlyingVectorType::add_scal_prod(rhs, s);
         return *this;
@@ -303,7 +374,7 @@ public:
      * @param s
      * @return
      */
-    vector &add_scal_prod(const vector &rhs, const SCALAR &s)
+    vector& add_scal_prod(const vector& rhs, const SCALAR& s)
     {
         UnderlyingVectorType::add_scal_prod(rhs, s);
         return *this;
@@ -318,7 +389,7 @@ public:
      * @param s
      * @return
      */
-    vector &sub_scal_prod(const KEY &rhs, const SCALAR &s)
+    vector& sub_scal_prod(const KEY& rhs, const SCALAR& s)
     {
         UnderlyingVectorType::sub_scal_prod(rhs, s);
         return *this;
@@ -333,7 +404,7 @@ public:
      * @param s
      * @return
      */
-    vector &sub_scal_prod(const vector &rhs, const SCALAR &s)
+    vector& sub_scal_prod(const vector& rhs, const SCALAR& s)
     {
         UnderlyingVectorType::sub_scal_prod(rhs, s);
         return *this;
@@ -348,7 +419,7 @@ public:
      * @param s
      * @return
      */
-    vector &add_scal_div(const KEY &rhs, const RATIONAL &s)
+    vector& add_scal_div(const KEY& rhs, const RATIONAL& s)
     {
         UnderlyingVectorType::add_scal_div(rhs, s);
         return *this;
@@ -363,7 +434,7 @@ public:
      * @param s
      * @return
      */
-    vector &add_scal_div(const vector &rhs, const RATIONAL &s)
+    vector& add_scal_div(const vector& rhs, const RATIONAL& s)
     {
         UnderlyingVectorType::add_scal_div(rhs, s);
         return *this;
@@ -378,7 +449,7 @@ public:
      * @param s
      * @return
      */
-    vector &sub_scal_div(const KEY &rhs, const RATIONAL &s)
+    vector& sub_scal_div(const KEY& rhs, const RATIONAL& s)
     {
         UnderlyingVectorType::sub_scal_div(rhs, s);
         return *this;
@@ -393,7 +464,7 @@ public:
      * @param s
      * @return
      */
-    vector &sub_scal_div(const vector &rhs, const RATIONAL &s)
+    vector& sub_scal_div(const vector& rhs, const RATIONAL& s)
     {
         UnderlyingVectorType::sub_scal_div(rhs, s);
         return *this;
@@ -401,8 +472,9 @@ public:
 
     // Templated versions of the fused operations. For cross-vector type
     // application.
-
-    template <typename VectorType> vector &add_scal_prod(const vector<Basis, Coeffs, VectorType> &rhs, const SCALAR &s)
+    /// A version of += fused with scalar multiplication
+    template<typename VectorType>
+    vector& add_scal_prod(const vector<Basis, Coeffs, VectorType>& rhs, const SCALAR& s)
     {
         typename VectorType::const_iterator cit;
         for (cit = rhs.begin(); cit != rhs.end(); ++cit) {
@@ -411,7 +483,9 @@ public:
         return *this;
     }
 
-    template <typename VectorType> vector &sub_scal_prod(const vector<Basis, Coeffs, VectorType> &rhs, const SCALAR &s)
+    /// A version of -= fused with scalar multiplication
+    template<typename VectorType>
+    vector& sub_scal_prod(const vector<Basis, Coeffs, VectorType>& rhs, const SCALAR& s)
     {
         typename VectorType::const_iterator cit;
         for (cit = rhs.begin(); cit != rhs.end(); ++cit) {
@@ -420,7 +494,9 @@ public:
         return *this;
     }
 
-    template <typename VectorType> vector &add_scal_div(const vector<Basis, Coeffs, VectorType> &rhs, const RATIONAL &s)
+    /// A version of += fused with rational division
+    template<typename VectorType>
+    vector& add_scal_div(const vector<Basis, Coeffs, VectorType>& rhs, const RATIONAL& s)
     {
         typename VectorType::const_iterator cit;
         for (cit = rhs.begin(); cit != rhs.end(); ++cit) {
@@ -429,7 +505,9 @@ public:
         return *this;
     }
 
-    template <typename VectorType> vector &sub_scal_div(const vector<Basis, Coeffs, VectorType> &rhs, const RATIONAL &s)
+    /// A version of -= fused with rational division
+    template<typename VectorType>
+    vector& sub_scal_div(const vector<Basis, Coeffs, VectorType>& rhs, const RATIONAL& s)
     {
         typename VectorType::const_iterator cit;
         for (cit = rhs.begin(); cit != rhs.end(); ++cit) {
@@ -442,16 +520,19 @@ public:
     // Comparison operators
 
     /// Equality operator
-    bool operator==(const vector &rhs) const
+    bool operator==(const vector& rhs) const
     {
         return UnderlyingVectorType::operator==(rhs);
     }
 
     /// Non-equality operator
-    bool operator!=(const vector &rhs) const { return !operator==(rhs); }
+    bool operator!=(const vector& rhs) const
+    {
+        return !operator==(rhs);
+    }
 
     /// Lexicographic comparison
-    bool operator<(const vector &rhs) const
+    bool operator<(const vector& rhs) const
     {
         return UnderlyingVectorType::operator<(rhs);
     }
@@ -459,9 +540,10 @@ public:
 public:
     // Display
 
-    inline friend std::ostream &operator<<(std::ostream &os, const vector &rhs)
+    /// Print the vector to an output stream
+    inline friend std::ostream& operator<<(std::ostream& os, const vector& rhs)
     {
-        return (os << (const UnderlyingVectorType &) rhs);
+        return (os << (const UnderlyingVectorType&)rhs);
     }
 
 public:
@@ -477,26 +559,36 @@ public:
 public:
     // Information methods
 
-    DEG degree() const { return degree_impl(degree_tag); }
+    /// Get the maximum degree held by this vector
+    DEG degree() const
+    {
+        return degree_impl(degree_tag);
+    }
 
+    /// Test if the maximum degree held by this vector is equal to given value
     bool degree_equals(const DEG degree) const
     {
         return UnderlyingVectorType::degree_equals(degree);
     }
 
 private:
-    template <DEG D> DEG degree_impl(alg::basis::with_degree<D>) const
+    template<DEG D>
+    DEG degree_impl(alg::basis::with_degree<D>) const
     {
         return UnderlyingVectorType::degree();
     }
 
-    DEG degree_impl(alg::basis::without_degree) const { return 0; }
+    DEG degree_impl(alg::basis::without_degree) const
+    {
+        return 0;
+    }
 
 public:
     // Apply transform methods
 
-    /// Buffered apply transform with separate transforms
     /**
+     * @brief Buffered apply transform with separate transforms
+     *
      * Apply transform to paired vectors using a buffer. Apply using different
      * transforms for by-index or by-key chosen by the under data source.
      *
@@ -507,24 +599,49 @@ public:
      * @param key_transform Transform to apply by keys (sparse elements)
      * @param index_transform Transform to apply by index (dense elements)
      */
-    template <typename KeyTransform, typename IndexTransform> void
-    buffered_apply_binary_transform(vector &result, const vector &rhs, KeyTransform key_transform,
+    template<typename KeyTransform, typename IndexTransform>
+    void
+    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
                                     IndexTransform index_transform) const
     {
         buffered_apply_binary_transform(result, rhs, key_transform, index_transform, UnderlyingVectorType::degree_tag);
     }
 
     /// Buffered apply transform with only key transform
-    template <typename KeyTransform>
-    void buffered_apply_binary_transform(vector &result, const vector &rhs, KeyTransform key_transform) const
+    template<typename KeyTransform>
+    void buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform) const
     {
         buffered_apply_binary_transform(result, rhs, key_transform, UnderlyingVectorType::degree_tag);
     }
 
-    /// Unbuffered apply transform with separate transforms
     /**
+     * @brief Unbuffered apply transform with separate transforms
+     *
      * Apply transform to paired vectors using a buffer. Apply using different
      * transforms for by-index or by-key chosen by the under data source.
+     *
+     * @tparam KeyTransform Key transform type
+     * @tparam IndexTransform Index transform type
+     * @param rhs Right hand side buffer
+     * @param key_transform Transform to apply by keys (sparse elements)
+     * @param index_transform Transform to apply by index (dense elements)
+     */
+    template<typename KeyTransform, typename IndexTransform>
+    void
+    unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform, IndexTransform index_transform)
+    {
+        unbuffered_apply_binary_transform(rhs, key_transform, index_transform, UnderlyingVectorType::degree_tag);
+    }
+
+    /// Buffered apply transform with only key transform
+    template<typename KeyTransform>
+    void unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform)
+    {
+        unbuffered_apply_binary_transform(rhs, key_transform, UnderlyingVectorType::degree_tag);
+    }
+
+    /**
+     * @brief Buffered apply transform with separate transforms up to max degree
      *
      * @tparam KeyTransform Key transform type
      * @tparam IndexTransform Index transform type
@@ -532,92 +649,98 @@ public:
      * @param rhs Right hand side buffer
      * @param key_transform Transform to apply by keys (sparse elements)
      * @param index_transform Transform to apply by index (dense elements)
+     * @param max_depth Maximum depth to compute the result
      */
-    template <typename KeyTransform, typename IndexTransform> void
-    unbuffered_apply_binary_transform(const vector &rhs, KeyTransform key_transform, IndexTransform index_transform)
-    {
-        unbuffered_apply_binary_transform(rhs, key_transform, index_transform, UnderlyingVectorType::degree_tag);
-    }
-
-    /// Buffered apply transform with only key transform
-    template <typename KeyTransform>
-    void unbuffered_apply_binary_transform(const vector &rhs, KeyTransform key_transform)
-    {
-        unbuffered_apply_binary_transform(rhs, key_transform, UnderlyingVectorType::degree_tag);
-    }
-
-    template <typename KeyTransform, typename IndexTransform> void
-    buffered_apply_binary_transform(vector &result, const vector &rhs, KeyTransform key_transform,
+    template<typename KeyTransform, typename IndexTransform>
+    void
+    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
                                     IndexTransform index_transform, const DEG max_depth) const
     {
         UnderlyingVectorType::triangular_buffered_apply_transform(result, rhs, key_transform, index_transform,
                                                                   max_depth);
     }
 
-    template <typename KeyTransform, typename IndexTransform> void
-    unbuffered_apply_binary_transform(const vector &rhs, KeyTransform key_transform, IndexTransform index_transform,
+    /**
+     * @brief Unbuffered apply transform with separate transforms up to max degree
+     *
+     * @tparam KeyTransform Key transform type
+     * @tparam IndexTransform Index transform type
+     * @param rhs Right hand side buffer
+     * @param key_transform Transform to apply by keys (sparse elements)
+     * @param index_transform Transform to apply by index (dense elements)
+     * @param max_depth Maximum depth to compute the result
+     */
+    template<typename KeyTransform, typename IndexTransform>
+    void
+    unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform, IndexTransform index_transform,
                                       const DEG max_depth)
     {
         UnderlyingVectorType::triangular_unbuffered_apply_binary_transform(rhs, key_transform, index_transform,
                                                                            max_depth);
     }
 
-    /// Buffered apply transform with only key transform
-    template <typename KeyTransform> void
-    buffered_apply_binary_transform(vector &result, const vector &rhs, KeyTransform key_transform,
+    /// Buffered apply transform with only key transform up to max degree
+    template<typename KeyTransform>
+    void
+    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
                                     const DEG max_depth) const
     {
         UnderlyingVectorType::triangular_buffered_apply_binary_transform(result, rhs, key_transform, max_depth);
     }
 
 private:
-    template <typename KeyTransform> void
-    buffered_apply_binary_transform(vector &result, const vector &rhs, KeyTransform key_transform,
+    template<typename KeyTransform>
+    void
+    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
                                     alg::basis::without_degree) const
     {
         UnderlyingVectorType::square_buffered_apply_binary_transform(result, rhs, key_transform);
     }
 
-    template <DEG D, typename KeyTransform> void
-    buffered_apply_binary_transform(vector &result, const vector &rhs, KeyTransform key_transform,
+    template<DEG D, typename KeyTransform>
+    void
+    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
                                     alg::basis::with_degree<D>) const
     {
         UnderlyingVectorType::triangular_buffered_apply_binary_transform(result, rhs, key_transform, D);
     }
 
-    template <typename KeyTransform, typename IndexTransform> void
-    buffered_apply_binary_transform(vector &result, const vector &rhs, KeyTransform key_transform,
+    template<typename KeyTransform, typename IndexTransform>
+    void
+    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
                                     IndexTransform index_transform, alg::basis::without_degree) const
     {
         UnderlyingVectorType::square_buffered_apply_binary_transform(result, rhs, key_transform, index_transform);
     }
 
-    template <DEG D, typename KeyTransform, typename IndexTransform> void
-    buffered_apply_binary_transform(vector &result, const vector &rhs, KeyTransform key_transform,
+    template<DEG D, typename KeyTransform, typename IndexTransform>
+    void
+    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
                                     IndexTransform index_transform, alg::basis::with_degree<D>) const
     {
         UnderlyingVectorType::triangular_buffered_apply_binary_transform(result, rhs, key_transform, index_transform,
                                                                          D);
     }
 
-    template <typename KeyTransform>
-    void unbuffered_apply_binary_transform(const vector &rhs, KeyTransform key_transform, alg::basis::without_degree)
+    template<typename KeyTransform>
+    void unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform, alg::basis::without_degree)
     {
         vector result;
         UnderlyingVectorType::square_buffered_apply_binary_transform(result, rhs, key_transform);
         swap(result);
     }
 
-    template <DEG D, typename KeyTransform>
-    void unbuffered_apply_binary_transform(const vector &rhs, KeyTransform key_transform, alg::basis::with_degree<D>)
+    template<DEG D, typename KeyTransform>
+    void unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform, alg::basis::with_degree<D>)
     {
         vector result;
         UnderlyingVectorType::triangular_buffered_apply_binary_transform(result, rhs, key_transform, D);
         swap(result);
     }
 
-    template <typename KeyTransform, typename IndexTransform> void
-    unbuffered_apply_binary_transform(const vector &rhs, KeyTransform key_transform, IndexTransform index_transform,
+    template<typename KeyTransform, typename IndexTransform>
+    void
+    unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform, IndexTransform index_transform,
                                       alg::basis::without_degree)
     {
         vector result;
@@ -625,8 +748,9 @@ private:
         swap(result);
     }
 
-    template <DEG D, typename KeyTransform, typename IndexTransform> void
-    unbuffered_apply_binary_transform(const vector &rhs, KeyTransform key_transform, IndexTransform index_transform,
+    template<DEG D, typename KeyTransform, typename IndexTransform>
+    void
+    unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform, IndexTransform index_transform,
                                       alg::basis::with_degree<D>)
     {
         UnderlyingVectorType::triangular_unbuffered_apply_binary_transform(rhs, key_transform, index_transform, D);
@@ -635,25 +759,27 @@ private:
 public:
     // Methods for operator implementation
 
-    template <typename Transform> void buffered_apply_unary_transform(vector &result, Transform transform) const
+    /// Apply a transform inplace to the vector with buffering
+    template<typename Transform>
+    void buffered_apply_unary_transform(vector& result, Transform transform) const
     {
         buffered_apply_unary_transform_impl(result, transform, UnderlyingVectorType::degree_tag);
     }
 
 private:
-    template <DEG D, typename Transform>
-    void buffered_apply_unary_transform_impl(vector &result, Transform transform, alg::basis::with_degree<D>) const
+    template<DEG D, typename Transform>
+    void buffered_apply_unary_transform_impl(vector& result, Transform transform, alg::basis::with_degree<D>) const
     {
         UnderlyingVectorType::buffered_apply_unary_transform(result, transform, D);
     }
 
-    template <typename Transform>
-    void buffered_apply_unary_transform_impl(vector &result, Transform transform, alg::basis::without_degree) const
+    template<typename Transform>
+    void buffered_apply_unary_transform_impl(vector& result, Transform transform, alg::basis::without_degree) const
     {
         UnderlyingVectorType::buffered_apply_unary_transform(result, transform);
     }
 };
 
-} // namespace vectors
-} // namespace alg
-#endif // LIBALGEBRA_VECTOR_H
+}// namespace vectors
+}// namespace alg
+#endif// LIBALGEBRA_VECTOR_H

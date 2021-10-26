@@ -1,0 +1,67 @@
+
+
+COEFFICIENT_TEST(test_sparse_sig_support)
+{
+    TEST_DETAILS();
+
+    for (unsigned i=0; i < path.length(); ++i) {
+        CHECK_EQUAL(sig_support(i), sparse_signature(0, i).size());
+    }
+
+}
+
+COEFFICIENT_TEST(test_sparse_signature_split_full)
+{
+    TEST_DETAILS();
+
+    size_t first_s(0), first_e(path.length() / 2), second_s(first_e), second_e(path.length());
+
+    CHECK_VEC_CLOSE(sparse_signature(),
+                    sparse_signature(first_s, first_e) * sparse_signature(second_s, second_e), expected_error);
+}
+
+COEFFICIENT_TEST(test_dense_signature_split_full)
+{
+    TEST_DETAILS();
+
+    size_t first_s(0), first_e(path.length() / 2), second_s(first_e), second_e(path.length());
+
+    CHECK_VEC_CLOSE(dense_signature(),
+        dense_signature(first_s, first_e) * dense_signature(second_s, second_e),
+                    expected_error);
+}
+
+COEFFICIENT_TEST(test_hybrid_signature_split_full)
+{
+    TEST_DETAILS();
+
+    size_t first_s(0), first_e(path.length() / 2), second_s(first_e), second_e(path.length());
+
+    CHECK_VEC_CLOSE(hybrid_signature(),
+        hybrid_signature(first_s, first_e)* hybrid_signature(second_s, second_e),
+        expected_error);
+}
+
+COEFFICIENT_TEST(test_sparse_log_signature_roundtrip)
+{
+    TEST_DETAILS();
+    typename sparse_framework::MAPS maps;
+
+    CHECK_VEC_CLOSE(sparse_signature(), exp(maps.l2t(sparse_log_signature())), expected_error);
+}
+
+COEFFICIENT_TEST(test_dense_log_signature_roundtrip)
+{
+    TEST_DETAILS();
+    typename dense_framework::MAPS maps;
+
+    CHECK_VEC_CLOSE(dense_signature(), exp(maps.l2t(dense_log_signature())), expected_error);
+}
+
+COEFFICIENT_TEST(test_hybrid_log_signature_roundtrip)
+{
+    TEST_DETAILS();
+    typename hybrid_framework::MAPS maps;
+
+    CHECK_VEC_CLOSE(hybrid_signature(), exp(maps.l2t(hybrid_log_signature())), expected_error);
+}

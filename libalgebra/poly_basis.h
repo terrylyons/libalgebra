@@ -14,6 +14,8 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_POLYBASISH_SEEN
 #define DJC_COROPA_LIBALGEBRA_POLYBASISH_SEEN
 
+namespace alg {
+
 /// A polynomial basis class.
 /**
 This is the basis used to implement the polynomial class as a
@@ -47,15 +49,16 @@ public:
 
 public:
     /// Default constructor. Empty basis.
-    poly_basis(void) {}
+    poly_basis(void)
+    {}
 
 public:
     // tjl the code below is strange -
     // the result of such an evaluation should be a scalar times a key of
     // unevaluated variables
     /// Evaluate the key from a vector of scalars.
-    template <typename Coeff>
-    typename Coeff::SCA eval_key(const KEY &k, const std::map<LET, typename Coeff::SCA> &values) const
+    template<typename Coeff>
+    typename Coeff::SCA eval_key(const KEY& k, const std::map<LET, typename Coeff::SCA>& values) const
     {
         typename Coeff::SCA result(Coeff::one);
         typename KEY::const_iterator it;
@@ -68,11 +71,12 @@ public:
                         for (DEG j = 1; j <= it->second; ++j) {
                             Coeff::mul_inplace(result, iit->second);
                         }
-                    } else {
+                    }
+                    else {
                         throw "not all variables have values!";
                     }
-
-                } catch (char *str) {
+                }
+                catch (char* str) {
                     std::cerr << "Exception raised: " << str << '\n';
                     abort();
                 }
@@ -91,7 +95,7 @@ public:
     }
 
     /// Returns the degree of a monomial
-    inline static DEG degree(const KEY &k)
+    inline static DEG degree(const KEY& k)
     {
         DEG result(0);
         typename KEY::const_iterator it;
@@ -101,16 +105,18 @@ public:
         return result;
     }
 
-    struct KEY_LESS
-    {
-        bool inline operator()(const KEY &lhs, const KEY &rhs) const
+    struct KEY_LESS {
+        bool inline operator()(const KEY& lhs, const KEY& rhs) const
         {
             return ((degree(lhs) < degree(rhs)) || ((degree(lhs) == degree(rhs)) && lhs < rhs));
         }
     };
 
     /// Returns the value of the smallest key in the basis.
-    inline KEY begin(void) const { return empty_key; }
+    inline KEY begin(void) const
+    {
+        return empty_key;
+    }
     ///// Returns the key next the biggest key of the basis.
     //// this doesn't make sense without a maximum degree.
     // inline KEY end(void) const
@@ -130,7 +136,7 @@ public:
     // }
 
     /// Outputs a std::pair<poly_basis*, KEY> to an std::ostream.
-    inline friend std::ostream &operator<<(std::ostream &os, const std::pair<poly_basis *, KEY> &t)
+    inline friend std::ostream& operator<<(std::ostream& os, const std::pair<poly_basis*, KEY>& t)
     {
         bool first(true);
         typename KEY::const_iterator it;
@@ -138,7 +144,8 @@ public:
             if (it->second > 0) {
                 if (!first) {
                     os << ' ';
-                } else {
+                }
+                else {
                     first = false;
                 }
                 os << "x" << it->first;
@@ -153,16 +160,17 @@ public:
 
 namespace vectors {
 
-template <typename Coeff> struct vector_type_selector<poly_basis, Coeff>
-{
+template<typename Coeff>
+struct vector_type_selector<poly_basis, Coeff> {
     typedef poly_basis BASIS;
-    typedef sparse_vector <BASIS, Coeff, std::map<typename BASIS::KEY, typename Coeff::S,
-                                                  typename BASIS::KEY_LESS>> type;
+    typedef sparse_vector<BASIS, Coeff, std::map<typename BASIS::KEY, typename Coeff::S, typename BASIS::KEY_LESS>> type;
 };
 
-} // namespace vectors
+}// namespace vectors
+
+}// namespace alg
 
 // Include once wrapper
-#endif // DJC_COROPA_LIBALGEBRA_POLYBASISH_SEEN
+#endif// DJC_COROPA_LIBALGEBRA_POLYBASISH_SEEN
 
 // EOF.

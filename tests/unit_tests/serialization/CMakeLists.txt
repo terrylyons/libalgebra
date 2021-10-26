@@ -2,12 +2,12 @@
 find_package(Boost COMPONENTS REQUIRED serialization)
 
 add_library(Libalgebra_tests_serialization_tests OBJECT EXCLUDE_FROM_ALL
-        double_dense_vec_serialization.cpp
+        dense_vec_serialization.cpp
         fixture.h
         fixture.cpp
         temporary_directory.cpp
         temporary_directory.h
-        test_dense_storage.cpp)
+        test_dense_storage.cpp sparse_vector_serialization.cpp)
 
 target_link_libraries(Libalgebra_tests_serialization_tests PRIVATE
         Boost::boost

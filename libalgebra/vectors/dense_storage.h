@@ -6,9 +6,9 @@
 #define LIBALGEBRA_DENSE_STORAGE_H
 
 #include <cassert>
+#include <initializer_list>
 #include <iostream>
 #include <memory>
-#include <initializer_list>
 
 #include <boost/serialization/array.hpp>
 
@@ -127,10 +127,26 @@ struct dense_storage_base {
 private:
     friend class boost::serialization::access;
 
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
     template<typename Archive>
-    void serialize(Archive& ar, const unsigned /*version*/)
+    void save(Archive& ar, const unsigned int /*version*/) const
     {
+        ar& boost::serialization::make_nvp("size", m_size);
         ar& boost::serialization::make_array(m_data, m_size);
+    }
+
+    template<typename Archive>
+    void load(Archive& ar, const unsigned int /*version*/)
+    {
+        assert(m_data == nullptr);
+        ar& boost::serialization::make_nvp("size", m_size);
+        if (m_size > 0) {
+            m_data = alloc_traits::allocate(m_alloc, m_size);
+            ar& boost::serialization::make_array(m_data, m_size);
+        }
+        // Loaded storage is always owned
+        m_type = owned;
     }
 };
 
@@ -317,7 +333,6 @@ public:
         fill_range_default_construct(m_base.m_data, m_base.m_data + offset);
         std::uninitialized_copy(std::make_move_iterator(start), std::make_move_iterator(end), m_base.m_data + offset);
     }
-
 
     /**
      * @brief Initializer list constructor

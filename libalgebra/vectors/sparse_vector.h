@@ -14,7 +14,6 @@ Version 3. (See accompanying file License.txt)
 #define DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN
 
 #include <boost/serialization/base_object.hpp>
-#include <boost/serialization/map.hpp>
 
 #include "libalgebra/vectors/base_vector.h"
 #include "libalgebra/vectors/iterators.h"

@@ -8,6 +8,7 @@
 #include <cassert>
 #include <iostream>
 #include <memory>
+#include <initializer_list>
 
 #include <boost/serialization/array.hpp>
 
@@ -315,6 +316,19 @@ public:
     {
         fill_range_default_construct(m_base.m_data, m_base.m_data + offset);
         std::uninitialized_copy(std::make_move_iterator(start), std::make_move_iterator(end), m_base.m_data + offset);
+    }
+
+
+    /**
+     * @brief Initializer list constructor
+     *
+     */
+    dense_storage(std::initializer_list<S> args) : m_base(args.size())
+    {
+        size_type i = 0;
+        for (auto v : args) {
+            m_base.m_data[i++] = v;
+        }
     }
 
     ~dense_storage()

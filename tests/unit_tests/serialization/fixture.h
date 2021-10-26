@@ -5,25 +5,40 @@
 #ifndef LIBALGEBRA_FIXTURE_H
 #define LIBALGEBRA_FIXTURE_H
 
+#include <fstream>
+#include <iostream>
+
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/filesystem.hpp>
 
 struct fixture_base {
+
     using path = boost::filesystem::path;
 
-    path tmpdir;
+    path archive;
 
-    fixture_base() : tmpdir(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path())
+    fixture_base();
+
+    std::ofstream open_write() const;
+    std::ifstream open_read() const;
+
+    template<typename T>
+    void write(const T& arg) const
     {
-        if (!boost::filesystem::create_directories(tmpdir)) {
-            throw std::runtime_error("Unable to create temporary directory");
-        }
+        auto file = open_write();
+        boost::archive::text_oarchive oa{file};
+        oa << arg;
     }
 
-    ~fixture_base()
+    template<typename T>
+    T read() const
     {
-        boost::filesystem::remove_all(tmpdir);
+        auto file = open_read();
+        boost::archive::text_iarchive ia{file};
+        T arg;
+        ia >> arg;
+        return arg;
     }
 };
 

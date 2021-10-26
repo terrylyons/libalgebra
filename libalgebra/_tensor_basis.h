@@ -275,7 +275,7 @@ public:
         sz /= uBitsInLetter;
 
 #ifdef _DEBUG
-        int iExponent;
+        int iExponent = 1025;
         if (_word != std::numeric_limits<word_t>::infinity()) {
             frexp(_word, &iExponent);
             assert((iExponent - 1) % uBitsInLetter == 0);

@@ -4,11 +4,13 @@
 
 #include <UnitTest++/UnitTest++.h>
 #include <libalgebra/vectors/dense_storage.h>
+#include <random>
 
 #include "fixture.h"
 
 struct fixture : fixture_base {
     using storage = alg::vectors::dense_storage<double>;
+    using size_type = storage::size_type;
 };
 
 SUITE(dense_storage_serialization)
@@ -22,6 +24,7 @@ SUITE(dense_storage_serialization)
 
         storage y = read<storage>();
 
+        CHECK_EQUAL(size_type(0), y.size());
         CHECK_EQUAL(x, y);
     }
 
@@ -33,11 +36,62 @@ SUITE(dense_storage_serialization)
 
         storage y = read<storage>();
 
+        CHECK_EQUAL(size_type(5), y.size());
         CHECK_EQUAL(x, y);
     }
 
 
+    TEST_FIXTURE(fixture, test_serialization_borrowed_random)
+    {
+        std::vector<double> data;
+        data.reserve(50);
 
+        std::random_device rd;
+        std::mt19937 rng(rd());
+        std::uniform_real_distribution<double> dist(-1.0, 1.0);
+
+        for (int i=0; i<50; ++i) {
+            data.emplace_back(dist(rng));
+        }
+
+        storage borrowed(&*data.cbegin(), &*data.cend());
+        REQUIRE CHECK_EQUAL(size_type(50), borrowed.size());
+        REQUIRE CHECK_EQUAL(storage::vec_type::borrowed, borrowed.type());
+
+        write(borrowed);
+
+        storage y = read<storage>();
+
+        CHECK_EQUAL(size_type(50), y.size());
+        CHECK_EQUAL(storage::vec_type::owned, y.type());
+        CHECK_EQUAL(borrowed, y);
+    }
+
+    TEST_FIXTURE(fixture, test_serialization_borrowed_mut_random)
+    {
+        std::vector<double> data;
+        data.reserve(50);
+
+        std::random_device rd;
+        std::mt19937 rng(rd());
+        std::uniform_real_distribution<double> dist(-1.0, 1.0);
+
+        for (int i=0; i<50; ++i) {
+            data.emplace_back(dist(rng));
+        }
+
+        storage borrowed(&*data.begin(), &*data.end());
+        REQUIRE CHECK_EQUAL(size_type(50), borrowed.size());
+        REQUIRE CHECK_EQUAL(storage::vec_type::borrowed_mut, borrowed.type());
+
+        write(borrowed);
+
+        storage y = read<storage>();
+
+        CHECK_EQUAL(size_type(50), y.size());
+        CHECK_EQUAL(storage::vec_type::owned, y.type());
+        CHECK_EQUAL(borrowed, y);
+    }
 
 
 

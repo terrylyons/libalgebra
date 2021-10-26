@@ -9,6 +9,8 @@
 #include <iostream>
 #include <memory>
 
+#include <boost/serialization/array.hpp>
+
 #include "libalgebra/implementation_types.h"
 
 namespace alg {
@@ -122,16 +124,13 @@ struct dense_storage_base {
     }
 
 private:
-
     friend class boost::serialization::access;
 
-    template <typename Archive>
-    void serialize(Archive &ar, const unsigned /*version*/)
+    template<typename Archive>
+    void serialize(Archive& ar, const unsigned /*version*/)
     {
-        ar & boost::serialization::make_array(m_data, m_size);
+        ar& boost::serialization::make_array(m_data, m_size);
     }
-
-
 };
 
 }// namespace dtl
@@ -810,15 +809,13 @@ public:
     }
 
 private:
-
     friend class boost::serialization::access;
 
-    template <typename Archive>
+    template<typename Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar & m_base;
+        ar& m_base;
     }
-
 };
 
 }// namespace vectors

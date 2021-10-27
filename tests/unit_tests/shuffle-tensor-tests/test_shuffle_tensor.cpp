@@ -51,6 +51,24 @@ SUITE(shuffle_tensor)
 
     };
 
+    template <typename Coeff, DEG Width, DEG Depth>
+    struct pairing{   
+        
+        using scalar_t = typename Coeff::S;
+        using free_tensor_t = alg::free_tensor<Coeff, Width, Depth>;
+        using shuffle_tensor_t = alg::shuffle_tensor<Coeff, Width, Depth>;
+
+        scalar_t operator()(const shuffle_tensor_t& functional, const free_tensor_t* vector) const
+        {
+           scalar_t result {0};
+           for (auto cit = functional.begin(); cit != functional.end(); ++cit) {
+                result += cit->value() * (*vector)[cit->key()];
+           }
+           return result;
+        }
+
+    };
+
 // #define ADD_KEY(N, ...) \
 //     {                     \
 //         LET tmp[N] = {__VA_ARGS__};  \

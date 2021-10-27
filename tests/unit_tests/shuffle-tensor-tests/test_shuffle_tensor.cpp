@@ -1298,4 +1298,58 @@ SUITE(shuffle_tensor)
             
     } // TEST test_multiply_inplace_deg_2_deg_1_op_max_depth
 
+    // test: < Sh(t1), S(x) > x < Sh(t2), S(x) > = <Sh(t1) x Sh(t2), S(x) >
+
+    TEST_FIXTURE(Fixture, test_shuffle_product_accuracy){
+        TEST_DETAILS();
+
+        LET k1[] = {1};
+        LET k2[] = {2};
+        LET k3[] = {3};
+        LET k4[] = {4};
+        LET k5[] = {5};
+
+        TENSOR t1(make_key(k1, 1));
+        TENSOR t2(make_key(k2, 1));
+        TENSOR t3(make_key(k3, 1));
+        TENSOR t4(make_key(k4, 1));
+        TENSOR t5(make_key(k5, 1));
+
+        // std::cout << "t1 = " << t1 << ", t2 = " << t2 << ", t3 = " << t3 << ", t4 = " << t4 << ", t5 = " << t5 << std::endl;
+
+        TENSOR sig = exp(t1)*exp(t2)*exp(t3)*exp(t4)*exp(t5);
+
+        // std::cout << "signature = " << sig << std::endl;
+
+        LET k11[] = {1, 1};
+        LET k111[] = {1, 1, 1};
+
+        SHUFFLE_TENSOR st1;
+
+        st1.add_scal_prod(make_key(k11,2), 0.5);
+        st1.add_scal_prod(make_key(k111,3), 0.5);
+
+        LET k22[] = {2, 2};
+        LET k222[] = {2, 2, 2};
+
+        SHUFFLE_TENSOR st2;
+
+        st2.add_scal_prod(make_key(k22,2), 0.5);
+        st2.add_scal_prod(make_key(k222,3), 0.5);
+
+        // std::cout << "st1 = " << st1 << ", st2 = " << st2 << std::endl;
+
+        pairing<COEFF, 5, 5> my_pairing;
+
+        COEFF::S lhs;
+        COEFF::S rhs;
+
+        lhs = my_pairing(st1, &sig) * my_pairing(st2, &sig);
+        rhs = my_pairing(st1*st2, &sig);
+
+                CHECK_EQUAL(lhs, rhs);
+
+
+    } // test_shuffle_product_accuracy
+
 } // SUITE shuffle_tensor

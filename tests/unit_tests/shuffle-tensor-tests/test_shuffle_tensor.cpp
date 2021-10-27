@@ -224,7 +224,7 @@ SUITE(shuffle_tensor)
         SHUFFLE_TENSOR rhs(tunit); // {1()}
         SHUFFLE_TENSOR expected; // {}
 
-        std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
 
         SHUFFLE_TENSOR result;
         result = lhs * rhs;
@@ -282,7 +282,7 @@ SUITE(shuffle_tensor)
         SHUFFLE_TENSOR rhs(tunit); // {1()}
         SHUFFLE_TENSOR expected; // {}
 
-        std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
 
         SHUFFLE_TENSOR result;
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
@@ -302,7 +302,7 @@ SUITE(shuffle_tensor)
         SHUFFLE_TENSOR rhs(tunit); // {1()}
         SHUFFLE_TENSOR expected; // {}
 
-        std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
 
         SHUFFLE_TENSOR result;
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
@@ -362,7 +362,7 @@ SUITE(shuffle_tensor)
         SHUFFLE_TENSOR rhs(tunit); // {1()}
         SHUFFLE_TENSOR expected(tunit); // {1()}
 
-        std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
 
         SHUFFLE_TENSOR result;
         result = lhs * rhs;
@@ -420,7 +420,7 @@ SUITE(shuffle_tensor)
         SHUFFLE_TENSOR rhs(tunit); // {1()}
         SHUFFLE_TENSOR expected(tunit); // {1()}
 
-        std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
 
         SHUFFLE_TENSOR result;
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
@@ -440,7 +440,7 @@ SUITE(shuffle_tensor)
         SHUFFLE_TENSOR rhs(tunit); // {1()}
         SHUFFLE_TENSOR expected(tunit); // {1()}
 
-        std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
 
         SHUFFLE_TENSOR result;
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
@@ -504,7 +504,7 @@ SUITE(shuffle_tensor)
 
         SHUFFLE_TENSOR expected(make_key(k1, 1)); // {1(1)}
 
-        std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
 
         SHUFFLE_TENSOR result;
 
@@ -575,7 +575,7 @@ SUITE(shuffle_tensor)
 
         SHUFFLE_TENSOR expected(make_key(k1, 1)); // {1(1)}
 
-        std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
 
         SHUFFLE_TENSOR result;
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
@@ -599,7 +599,7 @@ SUITE(shuffle_tensor)
 
         SHUFFLE_TENSOR expected(make_key(k1, 1)); // {1(1)}
 
-        std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
 
         SHUFFLE_TENSOR result;
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
@@ -677,7 +677,7 @@ SUITE(shuffle_tensor)
         expected.add_scal_prod(make_key(k12,2), 1.0);
         expected.add_scal_prod(make_key(k21,2), 1.0);
 
-        std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
 
         SHUFFLE_TENSOR result;
 
@@ -766,7 +766,7 @@ SUITE(shuffle_tensor)
         expected.add_scal_prod(make_key(k12,2), 1.0);
         expected.add_scal_prod(make_key(k21,2), 1.0);
 
-        std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
 
         SHUFFLE_TENSOR result;
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
@@ -796,7 +796,7 @@ SUITE(shuffle_tensor)
         expected.add_scal_prod(make_key(k12,2), 1.0);
         expected.add_scal_prod(make_key(k21,2), 1.0);
 
-        std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
 
         SHUFFLE_TENSOR result;
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
@@ -888,7 +888,7 @@ SUITE(shuffle_tensor)
         expected.add_scal_prod(make_key(k213,3), 1.0);
         expected.add_scal_prod(make_key(k231,3), 1.0);
 
-        std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
 
         SHUFFLE_TENSOR result;
 
@@ -983,7 +983,7 @@ SUITE(shuffle_tensor)
         expected.add_scal_prod(make_key(k213,3), 1.0);
         expected.add_scal_prod(make_key(k231,3), 1.0);
 
-        std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
 
         SHUFFLE_TENSOR result;
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
@@ -1015,7 +1015,7 @@ SUITE(shuffle_tensor)
         expected.add_scal_prod(make_key(k213,3), 1.0);
         expected.add_scal_prod(make_key(k231,3), 1.0);
 
-        std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
 
         SHUFFLE_TENSOR result;
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
@@ -1111,7 +1111,7 @@ SUITE(shuffle_tensor)
         expected.add_scal_prod(make_key(k132,3), 1.0); // 1(1,3,2)
         expected.add_scal_prod(make_key(k312,3), 1.0); // 1(3,1,2)      // {1(1,2,3) 1(1,3,2) 1(3,1,2)}
 
-        std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
 
         SHUFFLE_TENSOR result;
 
@@ -1206,7 +1206,7 @@ SUITE(shuffle_tensor)
         expected.add_scal_prod(make_key(k132,3), 1.0); // 1(1,3,2)
         expected.add_scal_prod(make_key(k312,3), 1.0); // 1(3,1,2)      // {1(1,2,3) 1(1,3,2) 1(3,1,2)}
 
-        std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
 
         SHUFFLE_TENSOR result;
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
@@ -1238,7 +1238,7 @@ SUITE(shuffle_tensor)
         expected.add_scal_prod(make_key(k132,3), 1.0); // 1(1,3,2)
         expected.add_scal_prod(make_key(k312,3), 1.0); // 1(3,1,2)      // {1(1,2,3) 1(1,3,2) 1(3,1,2)}
 
-        std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
 
         SHUFFLE_TENSOR result;
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;

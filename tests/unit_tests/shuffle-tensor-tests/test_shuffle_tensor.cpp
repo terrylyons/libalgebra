@@ -216,7 +216,7 @@ SUITE(shuffle_tensor)
     // test: {} * {1()} == {}
 
     TEST_FIXTURE(Fixture, test_star_zero_tunit) {
-
+        TEST_DETAILS();
 
         // test: {} * {1()} == {}
 
@@ -274,7 +274,7 @@ SUITE(shuffle_tensor)
     } // TEST test_multiply_and_add_zero_tunit_op_max_depth
 
     TEST_FIXTURE(Fixture, test_multiply_zero_tunit_op) {
-
+        TEST_DETAILS();
 
         // test: {} * {1()} == {}
 
@@ -294,7 +294,7 @@ SUITE(shuffle_tensor)
     } // TEST test_multiply_zero_tunit_op
 
     TEST_FIXTURE(Fixture, test_multiply_zero_tunit_op_max_depth) {
-
+        TEST_DETAILS();
 
         // test: {} * {1()} == {}
 
@@ -354,7 +354,7 @@ SUITE(shuffle_tensor)
     // test: {1()} * {1()} == {1()}
 
     TEST_FIXTURE(Fixture, test_star_tunit_tunit) {
-
+        TEST_DETAILS();
 
         // test: {1()} * {1()} == {1()}
 
@@ -412,7 +412,7 @@ SUITE(shuffle_tensor)
     } // TEST test_multiply_and_add_tunit_tunit_op_max_depth
 
     TEST_FIXTURE(Fixture, test_multiply_tunit_tunit_op) {
-
+        TEST_DETAILS();
 
         // test: {1()} * {1()} == {1()}
 
@@ -432,7 +432,7 @@ SUITE(shuffle_tensor)
     } // TEST test_multiply_tunit_tunit_op
 
     TEST_FIXTURE(Fixture, test_multiply_tunit_tunit_op_max_depth) {
-
+        TEST_DETAILS();
 
     // test: {1()} * {1()} == {1()}
 
@@ -492,6 +492,7 @@ SUITE(shuffle_tensor)
     // test: {1()} * {1(1)} ==  {1(1)}
 
     TEST_FIXTURE(Fixture, test_star_deg_1_tunit) {
+        TEST_DETAILS();
 
         // test: {1()} * {1(1)} ==  {1(1)}
 
@@ -562,7 +563,7 @@ SUITE(shuffle_tensor)
     } // TEST test_multiply_and_add_deg_1_tunit_op_max_depth
 
     TEST_FIXTURE(Fixture, test_multiply_deg_1_tunit_op) {
-
+        TEST_DETAILS();
 
         // test: {1()} * {1(1)} ==  {1(1)}
 
@@ -586,6 +587,7 @@ SUITE(shuffle_tensor)
     } // TEST test_multiply_deg_1_tunit_op
 
     TEST_FIXTURE(Fixture, test_multiply_deg_1_tunit_op_max_depth) {
+        TEST_DETAILS();
 
         // test: {1()} * {1(1)} ==  {1(1)}
 
@@ -657,6 +659,7 @@ SUITE(shuffle_tensor)
     // test: {1(1)} * {1(2)} == {1(1,2) 1(2,1)} 
 
     TEST_FIXTURE(Fixture, test_star_deg_1_deg_1) {
+        TEST_DETAILS();
 
         // test: {1(1)} * {1(2)} == {1(1,2) 1(2,1)} 
 
@@ -745,6 +748,7 @@ SUITE(shuffle_tensor)
     } // TEST test_multiply_and_add_deg_1_deg_1_op_max_depth
 
     TEST_FIXTURE(Fixture, test_multiply_deg_1_deg_1_op) {
+        TEST_DETAILS();
 
         // test: {1(1)} * {1(2)} == {1(1,2) 1(2,1)}
 
@@ -774,6 +778,7 @@ SUITE(shuffle_tensor)
     } // TEST test_multiply_deg_1_deg_1_op
 
     TEST_FIXTURE(Fixture, test_multiply_deg_1_deg_1_op_max_depth) {
+        TEST_DETAILS();
 
         // test: {1(1)} * {1(2)} == {1(1,2) 1(2,1)}
 
@@ -863,6 +868,7 @@ SUITE(shuffle_tensor)
     // test: {1(1)} * {1(2,3)} == {1(1,2,3) 1(2,1,3) 1(2,3,1)}
 
     TEST_FIXTURE(Fixture, test_star_deg_1_deg_2) {
+        TEST_DETAILS();
 
         // test: {1(1)} * {1(2,3)} == {1(1,2,3) 1(2,1,3) 1(2,3,1)}
 
@@ -957,6 +963,7 @@ SUITE(shuffle_tensor)
     } // TEST test_multiply_and_add_deg_1_deg_2_op_max_depth
 
     TEST_FIXTURE(Fixture, test_multiply_deg_1_deg_2_op) {
+        TEST_DETAILS();
 
         // test: {1(1)} * {1(2,3)} == {1(1,2,3) 1(2,1,3) 1(2,3,1)}
 
@@ -988,6 +995,7 @@ SUITE(shuffle_tensor)
     } // TEST test_multiply_deg_1_deg_2_op
 
     TEST_FIXTURE(Fixture, test_multiply_deg_1_deg_2_op_max_depth) {
+        TEST_DETAILS();
 
         // test: {1(1)} * {1(2,3)} == {1(1,2,3) 1(2,1,3) 1(2,3,1)}
 
@@ -1083,6 +1091,7 @@ SUITE(shuffle_tensor)
     // test: {1(1,2)} * {1(3)} == {1(1,2,3) 1(1,3,2) 1(3,1,2)}
 
     TEST_FIXTURE(Fixture, test_star_deg_2_deg_1) {
+        TEST_DETAILS();
 
         // test: {1(1,2)} * {1(3)} == {1(1,2,3) 1(1,3,2) 1(3,1,2)}
 
@@ -1177,6 +1186,7 @@ SUITE(shuffle_tensor)
     } // TEST test_multiply_and_add_deg_2_deg_1_op_max_depth
 
     TEST_FIXTURE(Fixture, test_multiply_deg_2_deg_1_op) {
+        TEST_DETAILS();
 
         // test: {1(1,2)} * {1(3)} == {1(1,2,3) 1(1,3,2) 1(3,1,2)}
 
@@ -1208,6 +1218,7 @@ SUITE(shuffle_tensor)
     } // TEST test_multiply_deg_2_deg_1_op
 
     TEST_FIXTURE(Fixture, test_multiply_deg_2_deg_1_op_max_depth) {
+        TEST_DETAILS();
 
         // test: {1(1,2)} * {1(3)} == {1(1,2,3) 1(1,3,2) 1(3,1,2)}
 

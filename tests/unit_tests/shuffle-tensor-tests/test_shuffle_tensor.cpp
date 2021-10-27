@@ -78,7 +78,7 @@ SUITE(shuffle_tensor)
     // test: {1()} * {} == {}
 
     TEST_FIXTURE(Fixture, test_star_tunit_zero) {
-
+        TEST_DETAILS();
 
         // test: {1()} * {} == {}
 
@@ -96,6 +96,7 @@ SUITE(shuffle_tensor)
     } // TEST test_star_tunit_zero
 
     TEST_FIXTURE(Fixture, test_multiply_and_add_tunit_zero_op) {
+        TEST_DETAILS();
 
         // test: {1()} * {} == {}
 
@@ -115,7 +116,7 @@ SUITE(shuffle_tensor)
     } // TEST test_multiply_and_add_tunit_zero_op
 
     TEST_FIXTURE(Fixture, test_multiply_and_add_tunit_zero_op_max_depth) {
-
+        TEST_DETAILS();
 
         // test: {1()} * {} == {}
 
@@ -135,7 +136,7 @@ SUITE(shuffle_tensor)
     } // TEST test_multiply_and_add_tunit_zero_op_max_depth
 
     TEST_FIXTURE(Fixture, test_multiply_tunit_zero_op) {
-
+        TEST_DETAILS();
 
         // test: {1()} * {} == {}
 
@@ -155,7 +156,7 @@ SUITE(shuffle_tensor)
     } // TEST test_multiply_tunit_zero_op
     
     TEST_FIXTURE(Fixture, test_multiply_tunit_zero_op_max_depth) {
-
+        TEST_DETAILS();
 
         // test: {1()} * {} == {}
 
@@ -175,7 +176,7 @@ SUITE(shuffle_tensor)
     } // TEST test_multiply_tunit_zero_op_max_depth
 
     TEST_FIXTURE(Fixture, test_multiply_inplace_tunit_zero_op) {
-
+        TEST_DETAILS();
 
         // test: {1()} * {} == {}
 
@@ -194,6 +195,7 @@ SUITE(shuffle_tensor)
     } // TEST test_multiply_inplace_tunit_zero_op
     
     TEST_FIXTURE(Fixture, test_multiply_inplace_tunit_zero_op_max_depth) {
+        TEST_DETAILS();
 
         // test: {1()} * {} == {}
 

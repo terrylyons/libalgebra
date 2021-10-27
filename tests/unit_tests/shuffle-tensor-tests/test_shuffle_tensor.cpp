@@ -1110,6 +1110,70 @@ SUITE(shuffle_tensor)
             
     } // TEST test_product_unidim_deg_2_deg_1
 
+    TEST_FIXTURE(Fixture, test_multiply_and_add_deg_2_deg_1_op) {
+        TEST_DETAILS();
+
+        // test: {1(1,2)} * {1(3)} == {1(1,2,3) 1(1,3,2) 1(3,1,2)}
+
+        LET k1[] = {1, 2};
+        LET k2[] = {3};
+
+        SHUFFLE_TENSOR lhs(make_key(k1, 2)); // {1(1,2)}
+        SHUFFLE_TENSOR rhs(make_key(k2, 1)); // {1(3)}
+
+        SHUFFLE_TENSOR expected;
+
+        LET k123[] = {1, 2, 3};
+        LET k132[] = {1, 3, 2};
+        LET k312[] = {3, 1, 2};
+
+        expected.add_scal_prod(make_key(k123,3), 1.0); // 1(1,2,3)
+        expected.add_scal_prod(make_key(k132,3), 1.0); // 1(1,3,2)
+        expected.add_scal_prod(make_key(k312,3), 1.0); // 1(3,1,2)      // {1(1,2,3) 1(1,3,2) 1(3,1,2)}
+
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+
+        SHUFFLE_TENSOR result;
+        SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
+        alg::mult::scalar_passthrough my_scalar_passthrough; 
+        my_shuffle_tensor_product.multiply_and_add<SHUFFLE_TENSOR, alg::mult::scalar_passthrough>(result, lhs, rhs, my_scalar_passthrough);
+
+                CHECK_EQUAL(expected, result);
+            
+    } // TEST test_multiply_and_add_deg_2_deg_1_op
+
+    TEST_FIXTURE(Fixture, test_multiply_and_add_deg_2_deg_1_op_max_depth) {
+        TEST_DETAILS();
+
+        // test: {1(1,2)} * {1(3)} == {1(1,2,3) 1(1,3,2) 1(3,1,2)}
+
+        LET k1[] = {1, 2};
+        LET k2[] = {3};
+
+        SHUFFLE_TENSOR lhs(make_key(k1, 2)); // {1(1,2)}
+        SHUFFLE_TENSOR rhs(make_key(k2, 1)); // {1(3)}
+
+        SHUFFLE_TENSOR expected;
+
+        LET k123[] = {1, 2, 3};
+        LET k132[] = {1, 3, 2};
+        LET k312[] = {3, 1, 2};
+
+        expected.add_scal_prod(make_key(k123,3), 1.0); // 1(1,2,3)
+        expected.add_scal_prod(make_key(k132,3), 1.0); // 1(1,3,2)
+        expected.add_scal_prod(make_key(k312,3), 1.0); // 1(3,1,2)      // {1(1,2,3) 1(1,3,2) 1(3,1,2)}
+
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+
+        SHUFFLE_TENSOR result;
+        SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
+        alg::mult::scalar_passthrough my_scalar_passthrough; 
+        my_shuffle_tensor_product.multiply_and_add<SHUFFLE_TENSOR, alg::mult::scalar_passthrough>(result, lhs, rhs, my_scalar_passthrough, 5);
+
+                CHECK_EQUAL(expected, result);
+            
+    } // TEST test_multiply_and_add_deg_2_deg_1_op_max_depth
+
     TEST_FIXTURE(Fixture, test_multiply_deg_2_deg_1_op) {
 
         // test: {1(1,2)} * {1(3)} == {1(1,2,3) 1(1,3,2) 1(3,1,2)}
@@ -1171,5 +1235,67 @@ SUITE(shuffle_tensor)
                 CHECK_EQUAL(expected, result);
             
     } // TEST test_multiply_deg_2_deg_1_op_max_depth
+
+    TEST_FIXTURE(Fixture, test_multiply_inplace_deg_2_deg_1_op) {
+        TEST_DETAILS();
+
+        // test: {1(1,2)} * {1(3)} == {1(1,2,3) 1(1,3,2) 1(3,1,2)}
+
+        LET k1[] = {1, 2};
+        LET k2[] = {3};
+
+        SHUFFLE_TENSOR lhs(make_key(k1, 2)); // {1(1,2)}
+        SHUFFLE_TENSOR rhs(make_key(k2, 1)); // {1(3)}
+
+        SHUFFLE_TENSOR expected;
+
+        LET k123[] = {1, 2, 3};
+        LET k132[] = {1, 3, 2};
+        LET k312[] = {3, 1, 2};
+
+        expected.add_scal_prod(make_key(k123,3), 1.0); // 1(1,2,3)
+        expected.add_scal_prod(make_key(k132,3), 1.0); // 1(1,3,2)
+        expected.add_scal_prod(make_key(k312,3), 1.0); // 1(3,1,2)      // {1(1,2,3) 1(1,3,2) 1(3,1,2)}
+
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+
+        SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
+        alg::mult::scalar_passthrough my_scalar_passthrough; 
+        my_shuffle_tensor_product.multiply_inplace<SHUFFLE_TENSOR, alg::mult::scalar_passthrough>(lhs, rhs, my_scalar_passthrough);
+
+                CHECK_EQUAL(expected, lhs);
+            
+    } // TEST test_multiply_inplace_deg_2_deg_1_op
+
+    TEST_FIXTURE(Fixture, test_multiply_inplace_deg_2_deg_1_op_max_depth) {
+        TEST_DETAILS();
+
+        // test: {1(1,2)} * {1(3)} == {1(1,2,3) 1(1,3,2) 1(3,1,2)}
+
+        LET k1[] = {1, 2};
+        LET k2[] = {3};
+
+        SHUFFLE_TENSOR lhs(make_key(k1, 2)); // {1(1,2)}
+        SHUFFLE_TENSOR rhs(make_key(k2, 1)); // {1(3)}
+
+        SHUFFLE_TENSOR expected;
+
+        LET k123[] = {1, 2, 3};
+        LET k132[] = {1, 3, 2};
+        LET k312[] = {3, 1, 2};
+
+        expected.add_scal_prod(make_key(k123,3), 1.0); // 1(1,2,3)
+        expected.add_scal_prod(make_key(k132,3), 1.0); // 1(1,3,2)
+        expected.add_scal_prod(make_key(k312,3), 1.0); // 1(3,1,2)      // {1(1,2,3) 1(1,3,2) 1(3,1,2)}
+
+        // std::cout << "lhs = " << lhs << ", rhs = " << rhs << ", expected = " << expected << std::endl;
+
+        SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
+        alg::mult::scalar_passthrough my_scalar_passthrough; 
+        // my_shuffle_tensor_product.multiply_inplace<SHUFFLE_TENSOR, alg::mult::scalar_passthrough>(lhs, rhs, my_scalar_passthrough, 5);
+
+                CHECK_EQUAL(expected, lhs);
+            
+    } // TEST test_multiply_inplace_deg_2_deg_1_op_max_depth
 
 } // SUITE shuffle_tensor

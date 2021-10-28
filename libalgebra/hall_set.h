@@ -12,6 +12,9 @@
 #include <utility>
 #include <vector>
 
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/vector.hpp>
+
 #include "implementation_types.h"
 #include "utils/integer_maths.h"
 
@@ -639,6 +642,21 @@ public:
 
     /// Write out a key as a (nested) bracket of its parents
     const key2string_type key2string;
+
+protected:
+    friend class boost::serialization::access;
+
+    template<typename Archive>
+    void serialize(Archive& ar, const unsigned int /*version*/)
+    {
+        ar& content.letters;
+        ar& content.data;
+        ar& content.reverse_map;
+        ar& content.current_degree;
+        ar& content.l2k;
+        ar& content.degree_ranges;
+        ar& content.sizes;
+    }
 };
 
 }// namespace alg

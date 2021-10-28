@@ -9,9 +9,6 @@
 #include <map>
 #include <unordered_map>
 
-#include <boost/serialization/map.hpp>
-#include <boost/serialization/unordered_map.hpp>
-
 #include "../../common/random_vector_generator.h"
 #include "../../common/rng.h"
 #include "fixture.h"

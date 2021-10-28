@@ -564,11 +564,11 @@ public:
         template<typename Predicate>
         output_type eval(const key_type& k, lazy_cache_tag<Predicate> tag) const
         {
-            static boost::recursive_mutex table_lock;
+            static std::recursive_mutex table_lock;
             static table_t table;
 
             if (tag.predicate(k)) {
-                boost::lock_guard<boost::recursive_mutex> access(table_lock);
+                std::lock_guard<std::recursive_mutex> access(table_lock);
 
                 typename table_t::iterator it = table.find(k);
                 if (it != table.end()) {
@@ -584,10 +584,10 @@ public:
 
         output_type eval(const key_type& k, lazy_cache_tag<void>) const
         {
-            static boost::recursive_mutex table_lock;
+            static std::recursive_mutex table_lock;
             static table_t table;
 
-            boost::lock_guard<boost::recursive_mutex> access(table_lock);
+            std::lock_guard<std::recursive_mutex> access(table_lock);
 
             typename table_t::iterator it = table.find(k);
             if (it != table.end()) {

@@ -7,7 +7,7 @@ add_library(Libalgebra_tests_serialization_tests OBJECT EXCLUDE_FROM_ALL
         fixture.cpp
         temporary_directory.cpp
         temporary_directory.h
-        test_dense_storage.cpp sparse_vector_serialization.cpp)
+        test_dense_storage.cpp sparse_vector_serialization.cpp test_higher_classes.cpp)
 
 target_link_libraries(Libalgebra_tests_serialization_tests PRIVATE
         Boost::boost

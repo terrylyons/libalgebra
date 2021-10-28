@@ -3,6 +3,7 @@
 //
 
 #include <UnitTest++/UnitTest++.h>
+#include <libalgebra/coefficients/rational_coefficients.h>
 #include <libalgebra/vectors/dense_storage.h>
 #include <random>
 
@@ -40,7 +41,6 @@ SUITE(dense_storage_serialization)
         CHECK_EQUAL(x, y);
     }
 
-
     TEST_FIXTURE(fixture, test_serialization_borrowed_random)
     {
         std::vector<double> data;
@@ -50,7 +50,7 @@ SUITE(dense_storage_serialization)
         std::mt19937 rng(rd());
         std::uniform_real_distribution<double> dist(-1.0, 1.0);
 
-        for (int i=0; i<50; ++i) {
+        for (int i = 0; i < 50; ++i) {
             data.emplace_back(dist(rng));
         }
 
@@ -76,7 +76,7 @@ SUITE(dense_storage_serialization)
         std::mt19937 rng(rd());
         std::uniform_real_distribution<double> dist(-1.0, 1.0);
 
-        for (int i=0; i<50; ++i) {
+        for (int i = 0; i < 50; ++i) {
             data.emplace_back(dist(rng));
         }
 
@@ -93,6 +93,15 @@ SUITE(dense_storage_serialization)
         CHECK_EQUAL(borrowed, y);
     }
 
+    TEST_FIXTURE(fixture, test_serialization_rational_storage)
+    {
+        using rational = alg::coefficients::rational;
+        alg::vectors::dense_storage<rational> data{rational(1), rational(2), rational(3.1415)};
 
+        write(data);
 
+        auto y = read<alg::vectors::dense_storage<rational>>();
+
+        CHECK_EQUAL(data, y);
+    }
 }

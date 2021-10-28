@@ -5,9 +5,11 @@
 #include <UnitTest++/UnitTest++.h>
 #include <libalgebra/coefficients/coefficients.h>
 #include <libalgebra/coefficients/rational_coefficients.h>
+
 #include <libalgebra/libalgebra.h>
 
 #include "../../common/random_vector_generator.h"
+#include "../../common/rng.h"
 #include "fixture.h"
 
 SUITE(dense_double_serialization)
@@ -82,7 +84,6 @@ SUITE(dense_float_serialization)
     }
 }
 
-/*
 SUITE(dense_rational_serialization)
 {
     struct Fixture : fixture_base {
@@ -90,6 +91,7 @@ SUITE(dense_rational_serialization)
         using basis_t = alg::free_tensor_basis<5, 3>;
         using coeff_t = alg::coefficients::rational_field;
         using key_type = typename basis_t::KEY;
+        using scalar_t = coeff_t::S;
 
         using vector_t = alg::vectors::dense_vector<basis_t, coeff_t>;
     };
@@ -106,7 +108,8 @@ SUITE(dense_rational_serialization)
 
     TEST_FIXTURE(Fixture, test_serialize_random_vec)
     {
-        la_testing::random_vector_generator<vector_t> rvg(-1.0, 1.0);
+        using dist_t = la_testing::uniform_rational_distribution<scalar_t>;
+        la_testing::random_vector_generator<vector_t, dist_t> rvg(scalar_t(-1), scalar_t(1));
         boost::random::mt19937 rng;
 
         vector_t vec = rvg(rng);
@@ -118,4 +121,3 @@ SUITE(dense_rational_serialization)
         CHECK_EQUAL(vec, read_vec);
     }
 }
-*/

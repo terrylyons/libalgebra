@@ -322,6 +322,11 @@ public:
         return content.degree_ranges;
     }
 
+    const degree_type& current_degree() const noexcept
+    {
+        return content.current_degree;
+    }
+
     /// return a const reference to letter to key map
     const l2k_map_type& l2k() const noexcept
     {

@@ -20,21 +20,20 @@ struct random_vector_generator {
     using kv_vec = std::vector<kv_pair>;
 
     template<typename... Args>
-    explicit random_vector_generator(SkipDist&& skip, Args&&... args)
-        : m_coeff_dist(std::forward<Args>(args)...), m_skip_dist(std::move(skip))
+    explicit random_vector_generator(const SkipDist& skip, Args&&... args)
+        : m_coeff_dist(std::forward<Args>(args)...), m_skip_dist(skip)
     {}
 
     template<typename Rng>
-    Vector operator()(Rng& rng) const
+    Vector operator()(Rng& rng)
     {
         const basis_type& basis = Vector::basis;
-        kv_vec tmp;
-        tmp.reserve(basis.max_dimension());
-        int skip = m_skip_dist(rng);
+        Vector tmp;
 
+        int skip = m_skip_dist(rng);
         for (key_type k = basis.begin(); k != basis.end(); k = basis.nextkey(k)) {
             if (skip == 0) {
-                tmp.template emplace_back(k, m_coeff_dist(rng));
+                tmp.add_scal_prod(k, m_coeff_dist(rng));
                 skip = m_skip_dist(rng);
             }
             else {
@@ -42,7 +41,7 @@ struct random_vector_generator {
             }
         }
 
-        return Vector(tmp.begin(), tmp.end());
+        return tmp;
     }
 
 private:
@@ -68,7 +67,7 @@ struct random_vector_generator<Vector, CoeffDist, void> {
     {}
 
     template<typename Rng>
-    Vector operator()(Rng& rng) const
+    Vector operator()(Rng& rng)
     {
         const basis_type& basis = Vector::basis;
         Vector tmp;

@@ -177,7 +177,7 @@ private:
     }
 
 public:
-    static hall_set_content& instance(degree_type degree = 0) noexcept
+    static hall_set_content& instance(degree_type degree = 0)
     {
         static std::mutex lock;
         std::lock_guard<std::mutex> access(lock);

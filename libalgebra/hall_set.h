@@ -126,6 +126,7 @@ private:
         : current_degree{0}
     {
         data.reserve(1 + n_letters);
+        letters.reserve(n_letters);
         sizes.reserve(2);
         l2k.reserve(n_letters);
         data.push_back(parent_type(0, 0));

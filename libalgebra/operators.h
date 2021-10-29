@@ -6,6 +6,7 @@
 #define LIBALGEBRA_OPERATORS_H
 
 #include <type_traits>
+#include <utility>
 
 namespace alg {
 namespace operators {
@@ -13,8 +14,13 @@ namespace operators {
 template<typename Impl, typename ArgumentType, typename ResultType>
 class linear_operator : protected Impl
 {
-public:
-    using argument_type = ArgumentType;
+    static_assert(
+            std::is_same<
+                    decltype(std::declval<Impl>()(std::declval<const ArgumentType&>()),
+                    ResultType>::value,
+            "implementation class must be callable with a const reference to ArgumentType and return ResultType")
+
+            public : using argument_type = ArgumentType;
     using result_type = ResultType;
 
 protected:

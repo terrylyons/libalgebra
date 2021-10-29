@@ -67,6 +67,7 @@ add_custom_target(Libalgebra.headers SOURCES
         libalgebra/monomial_basis.h
         libalgebra/multi_polynomial.h
         libalgebra/multiplication_helpers.h
+        libalgebra/operators.h
         libalgebra/poly_basis.h
         libalgebra/poly_lie.h
         libalgebra/poly_lie_basis.h

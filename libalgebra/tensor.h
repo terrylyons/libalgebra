@@ -672,6 +672,9 @@ public:
         : ALG(VECT::basis.empty_key, s)
     {}
 
+    shuffle_tensor& operator=(const shuffle_tensor&) = default;
+    shuffle_tensor& operator=(shuffle_tensor&&) noexcept = default;
+
 public:
     /// Ensures that the return type is a shuffle_tensor.
     inline shuffle_tensor operator*(const SCA& rhs) const

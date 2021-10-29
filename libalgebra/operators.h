@@ -21,14 +21,14 @@ class linear_operator : protected Impl
             "implementation class must be callable with a const reference to ArgumentType and return ResultType")
 
             public : using argument_type = ArgumentType;
-    using result_type = ResultType;
+
 
 protected:
     using implementation_type = Impl;
 
 public:
     using implementation_type::implementation_type;
-
+    using result_type = ResultType;
     using implementation_type::operator();
 };
 

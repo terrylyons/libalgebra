@@ -54,7 +54,9 @@ SUITE(dense_storage_serialization)
             data.emplace_back(dist(rng));
         }
 
-        storage borrowed(&*data.cbegin(), &*data.cend());
+        const double* begin = data.data();
+        const double* end = begin + data.size();
+        storage borrowed(begin, end);
         REQUIRE CHECK_EQUAL(size_type(50), borrowed.size());
         REQUIRE CHECK_EQUAL(storage::vec_type::borrowed, borrowed.type());
 
@@ -79,8 +81,10 @@ SUITE(dense_storage_serialization)
         for (int i = 0; i < 50; ++i) {
             data.emplace_back(dist(rng));
         }
-
-        storage borrowed(&*data.begin(), &*data.end());
+        
+        double* begin = data.data();
+        double* end = begin + data.size();
+        storage borrowed(begin, end);
         REQUIRE CHECK_EQUAL(size_type(50), borrowed.size());
         REQUIRE CHECK_EQUAL(storage::vec_type::borrowed_mut, borrowed.type());
 

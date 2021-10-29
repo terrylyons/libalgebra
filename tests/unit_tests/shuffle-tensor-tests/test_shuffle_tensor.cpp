@@ -1330,7 +1330,7 @@ SUITE(shuffle_tensor)
         st1.add_scal_prod(make_key(k111, 3), 1);
 
         LET k22[] = {2, 2};
-        LET k222[] = {2, 2, 2};
+        //LET k222[] = {2, 2, 2};
 
         SHUFFLE_TENSOR st2;
 

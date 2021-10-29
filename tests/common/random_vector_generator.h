@@ -18,6 +18,7 @@ struct random_vector_generator {
     using scalar_type = typename Vector::SCALAR;
     using kv_pair = std::pair<key_type, scalar_type>;
     using kv_vec = std::vector<kv_pair>;
+    using size_type = typename SkipDist::result_type;
 
     template<typename... Args>
     explicit random_vector_generator(const SkipDist& skip, Args&&... args)
@@ -30,7 +31,7 @@ struct random_vector_generator {
         const basis_type& basis = Vector::basis;
         Vector tmp;
 
-        int skip = m_skip_dist(rng);
+        size_type skip = m_skip_dist(rng);
         for (key_type k = basis.begin(); k != basis.end(); k = basis.nextkey(k)) {
             if (skip == 0) {
                 tmp.add_scal_prod(k, m_coeff_dist(rng));

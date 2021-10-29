@@ -13,74 +13,85 @@ Version 3. (See accompanying file License.txt)
 
 #include "libalgebra/libalgebra.h"
 
-#include "libalgebra/coefficients/coefficients.h"
 #include "coefficients/rational_coefficients.h"
+#include "libalgebra/coefficients/coefficients.h"
 
 
 
+enum coefficient_t
+{
+    Rational,
+    DPReal,
+    SPReal
+};
 
-enum coefficient_t { Rational, DPReal, SPReal };
-
-enum vector_t { Sparse, Dense, Hybrid };
+enum vector_t
+{
+    Sparse,
+    Dense,
+    Hybrid
+};
 
 namespace {
 
-template <vector_t VectorType> struct vector_selector;
+template<vector_t VectorType>
+struct vector_selector;
 
-template <> struct vector_selector<Sparse>
-{
-    template <typename Basis, typename Coeffs> struct selector
-    {
+template<>
+struct vector_selector<Sparse> {
+    template<typename Basis, typename Coeffs>
+    struct selector {
         typedef LIBALGEBRA_DEFAULT_MAP_TYPE map_type;
         typedef alg::vectors::sparse_vector<Basis, Coeffs, map_type> type;
     };
 };
 
-template <> struct vector_selector<Dense>
-{
-    template <typename Basis, typename Coeffs> struct selector
-    {
+template<>
+struct vector_selector<Dense> {
+    template<typename Basis, typename Coeffs>
+    struct selector {
         typedef alg::vectors::dense_vector<Basis, Coeffs> type;
     };
 };
 
-template <> struct vector_selector<Hybrid>
-{
-    template <typename Basis, typename Coeffs> struct selector
-    {
+template<>
+struct vector_selector<Hybrid> {
+    template<typename Basis, typename Coeffs>
+    struct selector {
         typedef LIBALGEBRA_DEFAULT_MAP_TYPE map_type;
         typedef alg::vectors::policy::basic_resize_policy policy_type;
         typedef alg::vectors::hybrid_vector<Basis, Coeffs, policy_type, map_type> type;
     };
 };
 
-template <coefficient_t F> struct Field;
+template<coefficient_t F>
+struct Field;
 
-template <> struct Field<Rational> : alg::coefficients::rational_field
-{
+template<>
+struct Field<Rational> : alg::coefficients::rational_field {
     using base = alg::coefficients::rational_field;
-    using base::S;
     using base::Q;
+    using base::S;
 };
 
-template <> struct Field<DPReal> : alg::coefficients::double_field
-{
+template<>
+struct Field<DPReal> : alg::coefficients::double_field {
     using base = alg::coefficients::double_field;
-    using base::S;
     using base::Q;
+    using base::S;
 };
 
-template <> struct Field<SPReal> : alg::coefficients::float_field
-{
+template<>
+struct Field<SPReal> : alg::coefficients::float_field {
     using base = alg::coefficients::float_field;
-    using base::S;
     using base::Q;
+    using base::S;
 };
 
-} // namespace
+}// namespace
 
-template <size_t D, size_t W, coefficient_t F = Rational, vector_t VectorType = Hybrid> struct alg_types
-{
+template<size_t D, size_t W, coefficient_t F = Rational, vector_t VectorType = Hybrid>
+struct alg_types {
     const static coefficient_t FIELD = F;
     typedef typename Field<F>::S S;
     typedef typename Field<F>::Q Q;
@@ -175,4 +186,4 @@ template <size_t D, size_t W, coefficient_t F = Rational, vector_t VectorType = 
 //	typedef alg::multi_polynomial<S, Q, ALPHABET_SIZE, DEPTH> MULTIPOLY;
 //};
 
-#endif // alg_types_h__
+#endif// alg_types_h__

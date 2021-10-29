@@ -3,16 +3,17 @@ cmake_minimum_required(VERSION 3.1)
 # I took this from CATCH2's (V2.0) CMakeList.txt because
 # this seems to be close to our use case here.
 # https://github.com/catchorg/Catch2/blob/v2.x/CMakeLists.txt
-if(NOT DEFINED PROJECT_NAME)
+if (NOT DEFINED PROJECT_NAME)
     set(NOT_SUBPROJECT ON)
-else()
+else ()
     set(NOT_SUBPROJECT OFF)
-endif()
+endif ()
 
 
-project(Libalgebra VERSION 1.0.0)
+project(Libalgebra VERSION 2.0.0)
 
 option(LIBALGEBRA_TESTING "Enable building test targets" OFF)
+
 
 # This helps IDEs that can arrange projects into folders (apparently)
 # See https://cmake.org/cmake/help/v3.22/prop_gbl/USE_FOLDERS.html
@@ -28,7 +29,7 @@ set(LIBALGEBRA_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Libalgebr
 ## we have a limited binary boost dependency
 find_package(Boost REQUIRED COMPONENTS thread)
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules/)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/)
 find_package(Bignum)
 
 # Interface libraries sometimes complain if you list sources, see below.
@@ -56,7 +57,6 @@ add_custom_target(Libalgebra.headers SOURCES
         libalgebra/alg_types.h
         libalgebra/algebra.h
         libalgebra/basis_traits.h
-        libalgebra/compat.h
         libalgebra/constlog2.h
         libalgebra/constpower.h
         libalgebra/hall_set.h
@@ -78,20 +78,27 @@ add_custom_target(Libalgebra.headers SOURCES
 
 target_include_directories(Libalgebra
         INTERFACE
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
         )
 target_link_libraries(Libalgebra INTERFACE
         Boost::boost
         Boost::thread
         )
 
+# Set the _DEBUG flag when we are building in Debug configuration.
+# This macro should probably be renamed to avoid collisions with compiler
+# automatic definitions
+target_compile_definitions(Libalgebra INTERFACE $<$<CONFIG:Debug>:_DEBUG>)
+
+set_property(TARGET Libalgebra PROPERTY CXX_STANDARD 11)
+set_property(TARGET Libalgebra PROPERTY CXX_STANDARD_REQUIRED ON)
+
 if (TARGET Bignum::Bignum)
     target_link_libraries(Libalgebra INTERFACE Bignum::Bignum)
-else()
+else ()
     target_compile_definitions(Libalgebra INTERFACE LIBALGEBRA_NO_GMP)
-endif()
-
+endif ()
 
 
 add_library(Libalgebra::Libalgebra ALIAS Libalgebra)
@@ -107,14 +114,13 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.9)
                 README.md libalgebra
                 COMMENT "Generate man pages"
         )
-    else()
+    else ()
         message(STATUS "Doxygen not found")
-    endif()
-endif()
+    endif ()
+endif ()
 
 
-
-if(NOT_SUBPROJECT)
+if (NOT_SUBPROJECT)
     install(TARGETS Libalgebra
             EXPORT LibalgebraTargets
             PUBLIC_HEADER
@@ -156,9 +162,13 @@ if(NOT_SUBPROJECT)
             ${CMAKE_SOURCE_DIR}/cmake/Modules/FindBignum.cmake
             DESTINATION ${LIBALGEBRA_CMAKE_CONFIG_DESTINATION}
             )
-endif()
+endif ()
 
 if (LIBALGEBRA_TESTING)
+    # Set the C++ standard to c++11 required, so we get better linting in IDEs
+    set(CMAKE_CXX_STANDARD 11)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
     enable_testing()
     add_subdirectory(tests)
-endif()
+endif ()

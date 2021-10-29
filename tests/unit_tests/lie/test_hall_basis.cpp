@@ -160,7 +160,16 @@ SUITE(hall_basis) {
         CHECK(!basis.letter(key));
     }
 
-
+    TEST (test_begin_end_exhaustive)
+    {
+        TestBasis hall_set;
+        KEY k1 = hall_set.begin();
+        for (KEY k = 1; k<=hall_set.size(); ++k) {
+            CHECK_EQUAL(k, k1);
+            k1 = hall_set.nextkey(k1);
+        }
+        CHECK_EQUAL(KEY(0), k1);
+    }
 
 }
 

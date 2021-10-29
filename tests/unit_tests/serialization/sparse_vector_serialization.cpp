@@ -82,7 +82,7 @@ SUITE(sparse_map_float_serialization)
         std::mt19937 rng;
 
         Fixture() : fixture_base(), sd(0, 5), cd(-1.0f, 1.0f),
-                    rvg(sd, -1.0, 1.0), rng(std::random_device()())
+                    rvg(sd, -1.0f, 1.0f), rng(std::random_device()())
         {}
     };
 
@@ -223,7 +223,7 @@ SUITE(sparse_unordered_map_float_serialization)
         std::mt19937 rng;
 
         Fixture() : fixture_base(), sd(0, 5), cd(-1.0f, 1.0f),
-                    rvg(sd, -1.0, 1.0), rng(std::random_device()())
+                    rvg(sd, -1.0f, 1.0f), rng(std::random_device()())
         {}
     };
 

@@ -9,7 +9,6 @@
 #include <initializer_list>
 #include <iostream>
 #include <memory>
-#include <cassert>
 
 #include <boost/serialization/array.hpp>
 
@@ -125,14 +124,13 @@ struct dense_storage_base {
         return m_type == borrowed_mut;
     }
 
-    template <typename... Args>
+    template<typename... Args>
     value_type& emplace(size_type idx, Args&&... args) noexcept(noexcept(alloc_traits::construct(m_alloc, m_data + idx, std::forward<Args>(args)...)))
     {
         assert(idx < m_size);
         alloc_traits::construct(m_alloc, m_data + idx, std::forward<Args>(args)...);
         return m_data[idx];
     }
-
 };
 
 }// namespace dtl
@@ -327,7 +325,7 @@ public:
     {
         size_type i = 0;
         for (auto v : args) {
-            m_base.template emplace(i++, v);
+            m_base.emplace(i++, v);
         }
     }
 

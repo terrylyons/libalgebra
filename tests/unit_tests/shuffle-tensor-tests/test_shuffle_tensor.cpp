@@ -1325,30 +1325,36 @@ SUITE(shuffle_tensor)
 
         TENSOR sig = exp(t1) * exp(t2) * exp(t3) * exp(t4) * exp(t5);
 
-        // std::cout << "signature = " << sig << std::endl;
+        //std::cout << "signature = " << sig << std::endl;
 
         LET k11[] = {1, 1};
         LET k111[] = {1, 1, 1};
 
         SHUFFLE_TENSOR st1;
 
-        st1.add_scal_prod(make_key(k11, 2), 0.5);
-        st1.add_scal_prod(make_key(k111, 3), 0.5);
+        st1.add_scal_prod(make_key(k11, 2), 1);
+        st1.add_scal_prod(make_key(k111, 3), 1);
 
         LET k22[] = {2, 2};
         LET k222[] = {2, 2, 2};
 
         SHUFFLE_TENSOR st2;
 
-        st2.add_scal_prod(make_key(k22, 2), 0.5);
-        st2.add_scal_prod(make_key(k222, 3), 0.5);
+        st2.add_scal_prod(make_key(k22, 2), 1);
+        //st2.add_scal_prod(make_key(k222, 3), 1);
 
-        // std::cout << "st1 = " << st1 << ", st2 = " << st2 << std::endl;
+        //std::cout << "st1 = " << st1 << "\nst2 = " << st2 << "\nst1 *st2 = " << st1 * st2 << std::endl;
 
         pairing<COEFF, 5, 5> my_pairing;
 
         COEFF::S lhs;
         COEFF::S rhs;
+
+        /*
+         * Something interesting happens here. The shuffle tensor truncates the terms of degree 6, which leads to
+         * a non-zero error term in the inner product between <sh1, sig><sh2, sig> and <sh1*sh2, sig>. I've trimmed sh2
+         * so that it only has degree 2 terms so no truncation occurs, and we should get a precise answer.
+         */
 
         lhs = my_pairing(st1, sig) * my_pairing(st2, sig);
         rhs = my_pairing(st1 * st2, sig);

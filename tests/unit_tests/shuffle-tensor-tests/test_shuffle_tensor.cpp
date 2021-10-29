@@ -62,12 +62,6 @@ SUITE(shuffle_tensor)
         }
     };
 
-    // #define ADD_KEY(N, ...) \
-//     {                     \
-//         LET tmp[N] = {__VA_ARGS__};  \
-//         expected += TENSOR(make_key(tmp, N));\
-//     }
-
     // test: {1()} * {} == {}
 
     TEST_FIXTURE(Fixture, test_star_tunit_zero)

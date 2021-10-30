@@ -1,7 +1,7 @@
 
 
 add_library(Libalgebra_tests_operators_tests OBJECT EXCLUDE_FROM_ALL
-
+        test_tensor_multiplication_operator.cpp
         )
 
 target_link_libraries(Libalgebra_tests_operators_tests PUBLIC UnitTest++ Libalgebra::Libalgebra la_unittests::utilities)

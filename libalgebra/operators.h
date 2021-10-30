@@ -16,12 +16,12 @@ class linear_operator : protected Impl
 {
     static_assert(
             std::is_same<
-                    decltype(std::declval<Impl>()(std::declval<const ArgumentType&>()),
+                    decltype(std::declval<Impl>()(std::declval<const ArgumentType&>())),
                     ResultType>::value,
-            "implementation class must be callable with a const reference to ArgumentType and return ResultType")
+            "implementation class must be callable with a const reference to ArgumentType and return ResultType");
 
-            public : using argument_type = ArgumentType;
-
+public:
+    using argument_type = ArgumentType;
 
 protected:
     using implementation_type = Impl;
@@ -41,7 +41,7 @@ template<typename Algebra>
 class left_multiplication_operator_impl
 {
 protected:
-    typename algebra_t = Algebra;
+    using algebra_t = Algebra;
 
 public:
     template<typename... Args>
@@ -65,7 +65,7 @@ template<typename Algebra>
 class right_multiplication_operator_impl
 {
 protected:
-    typename algebra_t = Algebra;
+    using algebra_t = Algebra;
 
 public:
     template<typename... Args>

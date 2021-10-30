@@ -13,6 +13,10 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN
 #define DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN
 
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/unordered_map.hpp>
+
 #include "libalgebra/vectors/base_vector.h"
 #include "libalgebra/vectors/iterators.h"
 
@@ -69,10 +73,10 @@ template<typename Basis, typename Coeffs, typename MapType = LIBALGEBRA_DEFAULT_
 class sparse_vector : /*private*/ MapType, protected base_vector<Basis, Coeffs>
 {
     typedef MapType MAP;
-    typedef Basis BASIS;
     typedef base_vector<Basis, Coeffs> BASE_VEC;
 
 public:
+    typedef Basis BASIS;
     using MAP::operator[];
     /// Import of set this instance to the zero instance
     using MAP::clear;
@@ -1295,6 +1299,15 @@ public:
 
         typename Transform::key_transform kt(transform.get_key_transform());
         kt(result, *this);
+    }
+
+private:
+    friend class boost::serialization::access;
+
+    template<typename Archive>
+    void serialize(Archive& ar, unsigned int const /* version */)
+    {
+        ar& boost::serialization::base_object<MapType>(*this);
     }
 };
 

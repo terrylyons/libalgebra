@@ -553,6 +553,30 @@ public:
             return static_cast<size_t>(key._word);
         }
     };
+
+private:
+    friend class boost::serialization::access;
+
+    template<typename Archive>
+    void serialize(Archive& ar, const unsigned /*version*/)
+    {
+        ar& _word;
+    }
 };
 
 }// namespace alg
+
+namespace std {
+
+template<alg::DEG Width, alg::DEG Depth>
+struct hash<alg::_tensor_basis<Width, Depth>> {
+
+    /// hashes a key injectively to an integer in the range [HashBegin, HashEnd)
+    size_t operator()(const alg::_tensor_basis<Width, Depth>& key) const
+    {
+        typename alg::_tensor_basis<Width, Depth>::hash h;
+        return h(key);
+    }
+};
+
+}// namespace std

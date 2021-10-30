@@ -53,6 +53,7 @@ typedef unsigned __int64 uint64_t;
 
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
+#include <boost/serialization/base_object.hpp>
 
 #include "hall_set.h"
 #include "implementation_types.h"

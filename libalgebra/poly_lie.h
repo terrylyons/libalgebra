@@ -216,7 +216,7 @@ public:
 public:
     /// Replaces the occurrences of letters in s by Lie elements in v.
     inline friend poly_lie
-    replace(const poly_lie& src, const std::vector<LET>& s, const std::vector<const poly_lie*>& v)
+    replace(const poly_lie &src, const std::vector<LET> &s, const std::vector<const poly_lie *> &v)
     {
         poly_lie result;
         std::map<KEY, poly_lie> table;
@@ -226,6 +226,15 @@ public:
         }
         return result;
     }
+private:
+
+friend class boost::serialization::access;
+
+template <typename Archive>
+void serialize(Archive &ar, unsigned int const /* version */) {
+    ar & boost::serialization::base_object<ALG>(*this);
+}
+
 };
 
 }// namespace alg

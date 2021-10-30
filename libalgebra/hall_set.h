@@ -12,6 +12,9 @@
 #include <utility>
 #include <vector>
 
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/vector.hpp>
+
 #include "implementation_types.h"
 #include "utils/integer_maths.h"
 
@@ -123,6 +126,7 @@ private:
         : current_degree{0}
     {
         data.reserve(1 + n_letters);
+        letters.reserve(n_letters);
         sizes.reserve(2);
         l2k.reserve(n_letters);
         data.push_back(parent_type(0, 0));
@@ -177,7 +181,7 @@ private:
     }
 
 public:
-    static hall_set_content& instance(degree_type degree = 0) noexcept
+    static hall_set_content& instance(degree_type degree = 0)
     {
         static std::mutex lock;
         std::lock_guard<std::mutex> access(lock);
@@ -317,6 +321,11 @@ public:
     const degree_ranges_map_type& hall_set_degree_ranges() const noexcept
     {
         return content.degree_ranges;
+    }
+
+    const degree_type& current_degree() const noexcept
+    {
+        return content.current_degree;
     }
 
     /// return a const reference to letter to key map
@@ -556,11 +565,11 @@ public:
         template<typename Predicate>
         output_type eval(const key_type& k, lazy_cache_tag<Predicate> tag) const
         {
-            static boost::recursive_mutex table_lock;
+            static std::recursive_mutex table_lock;
             static table_t table;
 
             if (tag.predicate(k)) {
-                boost::lock_guard<boost::recursive_mutex> access(table_lock);
+                std::lock_guard<std::recursive_mutex> access(table_lock);
 
                 typename table_t::iterator it = table.find(k);
                 if (it != table.end()) {
@@ -576,10 +585,10 @@ public:
 
         output_type eval(const key_type& k, lazy_cache_tag<void>) const
         {
-            static boost::recursive_mutex table_lock;
+            static std::recursive_mutex table_lock;
             static table_t table;
 
-            boost::lock_guard<boost::recursive_mutex> access(table_lock);
+            std::lock_guard<std::recursive_mutex> access(table_lock);
 
             typename table_t::iterator it = table.find(k);
             if (it != table.end()) {
@@ -639,6 +648,21 @@ public:
 
     /// Write out a key as a (nested) bracket of its parents
     const key2string_type key2string;
+
+protected:
+    friend class boost::serialization::access;
+
+    template<typename Archive>
+    void serialize(Archive& ar, const unsigned int /*version*/)
+    {
+        ar& content.letters;
+        ar& content.data;
+        ar& content.reverse_map;
+        ar& content.current_degree;
+        ar& content.l2k;
+        ar& content.degree_ranges;
+        ar& content.sizes;
+    }
 };
 
 }// namespace alg

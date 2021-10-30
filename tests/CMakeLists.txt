@@ -41,4 +41,5 @@ target_link_libraries(all_tests PRIVATE
         la_unittests::utils_tests
         la_unittests::vector_tests
         la_unittests::hall_set_tests
+        la_unittests::serialization_tests
         )

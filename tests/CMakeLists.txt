@@ -1,14 +1,12 @@
 cmake_minimum_required(VERSION 3.12)
 
 
-
-if(WIN32)
-## better remove this and add it to the command line as machine specific
-#list(APPEND CMAKE_MODULE_PATH  "c:/dev/vcpkg/scripts/buildsystems/")
+if (WIN32)
+    ## better remove this and add it to the command line as machine specific
+    #list(APPEND CMAKE_MODULE_PATH  "c:/dev/vcpkg/scripts/buildsystems/")
     add_compile_options(/bigobj /fp:strict)
-else()
-endif()
-
+else ()
+endif ()
 
 
 find_package(UnitTest++ CONFIG REQUIRED)
@@ -32,7 +30,7 @@ add_subdirectory(integration_tests)
 add_subdirectory(unit_tests)
 
 
-add_executable(all_tests EXCLUDE_FROM_ALL)
+add_executable(all_tests EXCLUDE_FROM_ALL unit_tests/operators/test_tensor_multiplication_operator.cpp)
 target_link_libraries(all_tests PRIVATE
         la_unittests::main
         la_unittests::integration_tests

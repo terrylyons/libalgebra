@@ -448,7 +448,7 @@ class shuffle_tensor_multiplication
     template<typename Tensor>
     static Tensor _prod(typename Tensor::KEY const& k1, typename Tensor::KEY const& k2)
     {
-        typedef typename Tensor::KEY key_t;
+        typedef typename Tensor::KEY key_type;
 
         typedef typename Tensor::BASIS basis_t;
 
@@ -469,7 +469,7 @@ class shuffle_tensor_multiplication
             // let's just implement the multiplication
             const Tensor& first = prod<Tensor>(k1.rparent(), k2);
             const Tensor& second = prod<Tensor>(k1, k2.rparent());
-            const key_t k1l{k1.lparent()}, k2l{k2.lparent()};
+            const key_type k1l{k1.lparent()}, k2l{k2.lparent()};
 
             typename Tensor::const_iterator cit;
 

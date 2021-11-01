@@ -86,6 +86,11 @@ target_link_libraries(Libalgebra INTERFACE
         Boost::thread
         )
 
+# Set the _DEBUG flag when we are building in Debug configuration.
+# This macro should probably be renamed to avoid collisions with compiler
+# automatic definitions
+target_compile_definitions(Libalgebra INTERFACE $<$<CONFIG:Debug>:_DEBUG>)
+
 set_property(TARGET Libalgebra PROPERTY CXX_STANDARD 11)
 set_property(TARGET Libalgebra PROPERTY CXX_STANDARD_REQUIRED ON)
 

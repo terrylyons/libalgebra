@@ -448,7 +448,7 @@ class shuffle_tensor_multiplication
     template<typename Tensor>
     static Tensor _prod(typename Tensor::KEY const& k1, typename Tensor::KEY const& k2)
     {
-        //typedef typename Tensor::KEY key_t;
+        typedef typename Tensor::KEY key_t;
 
         typedef typename Tensor::BASIS basis_t;
 
@@ -671,6 +671,9 @@ public:
     explicit shuffle_tensor(const SCA& s)
         : ALG(VECT::basis.empty_key, s)
     {}
+
+    shuffle_tensor& operator=(const shuffle_tensor&) = default;
+    shuffle_tensor& operator=(shuffle_tensor&&) noexcept = default;
 
 public:
     /// Ensures that the return type is a shuffle_tensor.

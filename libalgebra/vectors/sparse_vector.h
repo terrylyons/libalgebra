@@ -13,7 +13,10 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN
 #define DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN
 
+#include <iosfwd>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "libalgebra/utils/order_trait.h"
 #include "libalgebra/vectors/base_vector.h"
@@ -391,7 +394,6 @@ private:
     }
 
 public:
-
     /*
      * Following the rule of 5, if we define any one of trivial ctor, copy/move ctor or assignment,
      * then we should define all of them. We're going to do this, but let's let the compiler fill
@@ -448,7 +450,6 @@ public:
     {
         insert_from_pointer(offset, begin, end);
     }
-
 
 public:
     /// Returns an instance of the additive inverse of the instance.
@@ -536,7 +537,8 @@ public:
     inline sparse_vector operator+(const sparse_vector& rhs) const
     {
         sparse_vector result(*this);
-        return result += rhs;
+        result += rhs;
+        return result;
     };
 
     /// Subtracts a sparse_vector to the instance.
@@ -566,7 +568,8 @@ public:
     inline sparse_vector operator-(const sparse_vector& rhs) const
     {
         sparse_vector result(*this);
-        return result -= rhs;
+        result -= rhs;
+        return result;
     };
 
 private:
@@ -685,7 +688,8 @@ public:
     inline sparse_vector operator&(const sparse_vector& rhs) const
     {
         sparse_vector result(*this);
-        return result &= rhs;
+        result &= rhs;
+        return result;
     };
 
 private:
@@ -802,7 +806,8 @@ public:
     inline sparse_vector operator|(const sparse_vector& rhs) const
     {
         sparse_vector result(*this);
-        return result |= rhs;
+        result |= rhs;
+        return result;
     };
 
     /// A version of operator+=(rhs.scal_prod(s))

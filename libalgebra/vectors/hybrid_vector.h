@@ -137,7 +137,7 @@ public:
  * @tparam ResizePolicy Policy object used to determine when a vector should resize
  * @tparam SparseMap Type to use as the storage for the sparse vector
  */
-template<typename Basis, typename Coeffs, typename ResizePolicy = policy::basic_resize_policy, typename SparseMap = LIBALGEBRA_DEFAULT_MAP_TYPE>
+template<typename Basis, typename Coeffs, typename ResizePolicy = policy::basic_resize_policy, typename SparseMap = std::unordered_map<typename Basis::KEY, typename Coeffs::S>>
 class hybrid_vector : public dense_vector<Basis, Coeffs>, public sparse_vector<Basis, Coeffs, SparseMap>
 {
     typedef dense_vector<Basis, Coeffs> DENSE;

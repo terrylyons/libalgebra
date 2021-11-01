@@ -16,8 +16,6 @@ Version 3. (See accompanying file License.txt)
 #include "coefficients/rational_coefficients.h"
 #include "libalgebra/coefficients/coefficients.h"
 
-
-
 enum coefficient_t
 {
     Rational,
@@ -41,7 +39,7 @@ template<>
 struct vector_selector<Sparse> {
     template<typename Basis, typename Coeffs>
     struct selector {
-        typedef LIBALGEBRA_DEFAULT_MAP_TYPE map_type;
+        typedef std::unordered_map<typename Basis::KEY, typename Coeffs::S> map_type;
         typedef alg::vectors::sparse_vector<Basis, Coeffs, map_type> type;
     };
 };
@@ -58,7 +56,7 @@ template<>
 struct vector_selector<Hybrid> {
     template<typename Basis, typename Coeffs>
     struct selector {
-        typedef LIBALGEBRA_DEFAULT_MAP_TYPE map_type;
+        typedef std::unordered_map<typename Basis::KEY, typename Coeffs::S> map_type;
         typedef alg::vectors::policy::basic_resize_policy policy_type;
         typedef alg::vectors::hybrid_vector<Basis, Coeffs, policy_type, map_type> type;
     };

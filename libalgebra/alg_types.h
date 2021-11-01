@@ -16,6 +16,8 @@ Version 3. (See accompanying file License.txt)
 #include "coefficients/rational_coefficients.h"
 #include "libalgebra/coefficients/coefficients.h"
 
+
+
 enum coefficient_t
 {
     Rational,

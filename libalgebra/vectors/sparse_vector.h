@@ -391,22 +391,27 @@ private:
     }
 
 public:
-    /// Default constructor.
-    /**
+
+    /*
+     * Following the rule of 5, if we define any one of trivial ctor, copy/move ctor or assignment,
+     * then we should define all of them. We're going to do this, but let's let the compiler fill
+     * them in.
+     */
+
+    /** @brief Default constructor.
      * Create an instance of an empty vector.
      * Such a vector is a neutral element for operator+= and operator-=.
      */
-    sparse_vector()
-    {}
+    sparse_vector() = default;
 
     /// Copy constructor.
-    sparse_vector(const sparse_vector& v)
-        : MAP(v)
-    {}
-
-    sparse_vector(sparse_vector&& other) noexcept
-        : MAP(std::move(other))
-    {}
+    sparse_vector(const sparse_vector& v) = default;
+    /// Move constructor
+    sparse_vector(sparse_vector&& other) noexcept = default;
+    /// Copy assignment
+    sparse_vector& operator=(const sparse_vector& other) = default;
+    /// Move assignment
+    sparse_vector& operator=(sparse_vector&& other) noexcept = default;
 
     /// Unidimensional constructor.
     /**
@@ -444,8 +449,6 @@ public:
         insert_from_pointer(offset, begin, end);
     }
 
-    sparse_vector& operator=(const sparse_vector& other) = default;
-    sparse_vector& operator=(sparse_vector&& other) noexcept = default;
 
 public:
     /// Returns an instance of the additive inverse of the instance.

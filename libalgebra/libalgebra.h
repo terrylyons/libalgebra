@@ -53,10 +53,10 @@ typedef unsigned __int64 uint64_t;
 
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/locks.hpp>
 
 #include "hall_set.h"
 #include "implementation_types.h"
-#include <boost/thread/locks.hpp>
 
 //#define ORDEREDMAP
 #define UNORDEREDMAP

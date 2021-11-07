@@ -560,7 +560,7 @@ public:
             static table_t table;
 
             if (tag.predicate(k)) {
-                boost::lock_guard<boost::recursive_mutex> access(table_lock);
+                typename boost::lock_guard<typename boost::recursive_mutex> access(table_lock);
 
                 typename table_t::iterator it = table.find(k);
                 if (it != table.end()) {
@@ -579,7 +579,7 @@ public:
             static boost::recursive_mutex table_lock;
             static table_t table;
 
-            boost::lock_guard<boost::recursive_mutex> access(table_lock);
+            typename boost::lock_guard<typename boost::recursive_mutex> access(table_lock);
 
             typename table_t::iterator it = table.find(k);
             if (it != table.end()) {

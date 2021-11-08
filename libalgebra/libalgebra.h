@@ -51,12 +51,9 @@ typedef unsigned __int64 uint64_t;
 #include <utility>
 #include <vector>
 
+#include <boost/thread/locks.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
-
-#include "hall_set.h"
-#include "implementation_types.h"
-#include <boost/thread/locks.hpp>
 
 //#define ORDEREDMAP
 #define UNORDEREDMAP
@@ -106,6 +103,8 @@ typedef unsigned __int64 uint64_t;
    operators are + - * / and explicit ctor from SCA type and int type.
 */
 
+#include "hall_set.h"
+#include "implementation_types.h"
 #include "libalgebra/utils/integer_maths.h"
 #include "libalgebra/vectors/vectors.h"
 #include "multiplication_helpers.h"

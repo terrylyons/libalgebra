@@ -166,6 +166,11 @@ if (NOT_SUBPROJECT)
 endif ()
 
 if (LIBALGEBRA_TESTING)
+
+
+    include(cmake/check_header_independence.cmake)
+    check_all_header_independent(cahi_result "${CMAKE_SOURCE_DIR}/libalgebra" Libalgebra)
+
     # Set the C++ standard to c++11 required, so we get better linting in IDEs
     set(CMAKE_CXX_STANDARD 11)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)

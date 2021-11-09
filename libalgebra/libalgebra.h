@@ -103,8 +103,9 @@ typedef unsigned __int64 uint64_t;
    operators are + - * / and explicit ctor from SCA type and int type.
 */
 
-#include "hall_set.h"
 #include "implementation_types.h"
+
+#include "hall_set.h"
 #include "libalgebra/utils/integer_maths.h"
 #include "libalgebra/vectors/vectors.h"
 #include "multiplication_helpers.h"

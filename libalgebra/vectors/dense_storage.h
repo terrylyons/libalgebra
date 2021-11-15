@@ -6,8 +6,11 @@
 #define LIBALGEBRA_DENSE_STORAGE_H
 
 #include <cassert>
+#include <initializer_list>
 #include <iostream>
 #include <memory>
+
+#include <boost/serialization/array.hpp>
 
 #include "libalgebra/implementation_types.h"
 
@@ -119,6 +122,14 @@ struct dense_storage_base {
     bool is_borrowed_mut() const
     {
         return m_type == borrowed_mut;
+    }
+
+    template<typename... Args>
+    value_type& emplace(size_type idx, Args&&... args) noexcept(noexcept(alloc_traits::construct(m_alloc, m_data + idx, std::forward<Args>(args)...)))
+    {
+        assert(idx < m_size);
+        alloc_traits::construct(m_alloc, m_data + idx, std::forward<Args>(args)...);
+        return m_data[idx];
     }
 };
 
@@ -304,6 +315,18 @@ public:
     {
         fill_range_default_construct(m_base.m_data, m_base.m_data + offset);
         std::uninitialized_copy(std::make_move_iterator(start), std::make_move_iterator(end), m_base.m_data + offset);
+    }
+
+    /**
+     * @brief Initializer list constructor
+     *
+     */
+    dense_storage(std::initializer_list<S> args) : m_base(args.size())
+    {
+        size_type i = 0;
+        for (auto v : args) {
+            m_base.emplace(i++, v);
+        }
     }
 
     ~dense_storage()
@@ -795,6 +818,30 @@ public:
         }
         os << " }";
         return os;
+    }
+
+private:
+    friend class boost::serialization::access;
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+    template<typename Archive>
+    void load(Archive& ar, const unsigned /* version */)
+    {
+        size_type sz = 0;
+        ar >> sz;
+        m_base = base_type(sz);
+        if (sz > 0) {
+            fill_range_default_construct(m_base.m_data, m_base.m_data + m_base.m_size);
+            ar >> boost::serialization::make_array(m_base.m_data, m_base.m_size);
+        }
+    }
+
+    template<typename Archive>
+    void save(Archive& ar, const unsigned int /*version*/) const
+    {
+        ar << boost::serialization::make_nvp("size", m_base.m_size);
+        ar << boost::serialization::make_array(m_base.m_data, m_base.m_size);
     }
 };
 

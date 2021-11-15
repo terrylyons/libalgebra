@@ -13,6 +13,10 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN
 #define DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN
 
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/unordered_map.hpp>
+
 #include <iosfwd>
 #include <unordered_map>
 #include <utility>
@@ -67,7 +71,6 @@ template<typename Basis, typename Coeffs, typename MapType = std::unordered_map<
 class sparse_vector : /*private*/ MapType, protected base_vector<Basis, Coeffs>
 {
     typedef MapType MAP;
-
     typedef base_vector<Basis, Coeffs> BASE_VEC;
 
 public:
@@ -1321,6 +1324,15 @@ public:
 
         typename Transform::key_transform kt(transform.get_key_transform());
         kt(result, *this);
+    }
+
+private:
+    friend class boost::serialization::access;
+
+    template<typename Archive>
+    void serialize(Archive& ar, unsigned int const /* version */)
+    {
+        ar& boost::serialization::base_object<MapType>(*this);
     }
 };
 

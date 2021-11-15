@@ -138,7 +138,6 @@ template<typename Coeff, typename...>
 class poly : public algebra<poly_basis, Coeff, poly_multiplication<Coeff>>
 {
     typedef poly_multiplication<Coeff> multiplication_t;
-
 public:
     typedef typename Coeff::S SCA;
     typedef typename Coeff::Q RAT;
@@ -327,6 +326,18 @@ public:
         }
         return result;
     }
+
+
+private:
+
+    friend class boost::serialization::access;
+
+    template <typename Archive>
+    void serialize(Archive &ar, unsigned int const /* version */) {
+        ar & boost::serialization::base_object<ALG>(*this);
+    }
+
+
 };
 
 }// namespace alg

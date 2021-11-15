@@ -320,6 +320,18 @@ public:
         }
         return result;
     }
+
+
+
+private:
+
+    friend class boost::serialization::access;
+
+    template <typename Archive>
+    void serialize(Archive &ar, unsigned int const /* version */) {
+        ar & boost::serialization::base_object<ALG>(*this);
+    }
+
 };
 
 }// namespace alg

@@ -549,6 +549,15 @@ public:
             return static_cast<size_t>(key._word);
         }
     };
+
+private:
+    friend class boost::serialization::access;
+
+    template<typename Archive>
+    void serialize(Archive& ar, const unsigned /*version*/)
+    {
+        ar& _word;
+    }
 };
 
 } // namespace alg

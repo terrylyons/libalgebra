@@ -311,6 +311,17 @@ public:
         }
         return result;
     }
+
+
+private:
+
+    friend class boost::serialization::access;
+
+    template <typename Archive>
+    void serialize(Archive &ar, unsigned int const /* version */) {
+        ar & boost::serialization::base_object<VECT>(*this);
+    }
+
 };
 
 template<typename B, typename C, typename M, template<typename, typename, typename...> class V, typename... Args>

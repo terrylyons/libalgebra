@@ -447,6 +447,18 @@ public:
         }
         return ans;
     }
+
+
+private:
+
+friend class boost::serialization::access;
+
+template <typename Archive>
+void serialize(Archive &ar, unsigned int const /* version */) {
+    ar & boost::serialization::base_object<ALG>(*this);
+}
+
+
 };
 
 template<typename Coeff>
@@ -727,6 +739,16 @@ public:
 
     /// Ensures that the return type is a shuffle_tensor.
     inline shuffle_tensor operator-(void) const { return shuffle_tensor(ALG::operator-()); }
+
+
+private:
+
+friend class boost::serialization::access;
+
+template <typename Archive>
+void serialize(Archive &ar, unsigned int const /* version */) {
+    ar & boost::serialization::base_object<ALG>(*this);
+}
 };
 
 }// namespace alg

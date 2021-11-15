@@ -111,6 +111,15 @@ public:
     {
         return get_resize_size_impl(vect, vect.degree_tag);
     }
+
+private:
+
+    friend class boost::serialization::access;
+
+    template <typename Archive>
+    void serialize(Archive& ar, const unsigned /* version */)
+    {}
+
 };
 
 }// namespace policy
@@ -1494,6 +1503,20 @@ public:
         SPARSE::buffered_apply_unary_transform(result, transform);
         result.maybe_resize();
     }
+
+
+private:
+
+    friend class boost::serialization::access;
+
+    template <typename Archive>
+    void serialize(Archive& ar, const unsigned /* version */)
+    {
+        ar & boost::serialization::base_object<DENSE>(*this);
+        ar & boost::serialization::base_object<SPARSE>(*this);
+        ar & m_resize_policy;
+    }
+
 };
 
 #undef DEFINE_FUSED_OP

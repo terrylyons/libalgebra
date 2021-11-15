@@ -54,6 +54,7 @@ typedef unsigned __int64 uint64_t;
 #include <boost/thread/locks.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
+#include <boost/serialization/base_object.hpp>
 
 //#define ORDEREDMAP
 #define UNORDEREDMAP

@@ -8,12 +8,16 @@
 namespace alg {
 namespace coefficients {
 
-#define LIBALGEBRA_FIELD_GENERATE_BINARY(NAME, OP, RET_T, LHS_T, RHS_T)        \
-  static LA_CONSTEXPR RET_T NAME(LHS_T const &lhs, RHS_T const &rhs) { return lhs OP rhs; } \
-                                                                               \
-  static LA_CONSTEXPR LHS_T &NAME##_inplace(LHS_T &lhs, RHS_T const &rhs) {                 \
-    return (lhs OP## = rhs);                                                   \
-  }
+#define LIBALGEBRA_FIELD_GENERATE_BINARY(NAME, OP, RET_T, LHS_T, RHS_T)                                     \
+    static constexpr RET_T NAME(LHS_T const& lhs, RHS_T const& rhs) noexcept(noexcept(lhs OP rhs))          \
+    {                                                                                                       \
+        return lhs OP rhs;                                                                                  \
+    }                                                                                                       \
+                                                                                                            \
+    static constexpr LHS_T& NAME##_inplace(LHS_T& lhs, RHS_T const& rhs) noexcept(noexcept(lhs OP## = rhs)) \
+    {                                                                                                       \
+        return (lhs OP## = rhs);                                                                            \
+    }
 
 /**
  * @brief A field (or more generally, ring) that can be used as coefficients in a vector
@@ -36,8 +40,8 @@ namespace coefficients {
  * @tparam Scalar Type for scalar (coefficient) values
  * @tparam Rational Type of rational values in the field (ring). Default: Scalar
  */
-template <typename Scalar, typename Rational = Scalar> struct coefficient_field
-{
+template<typename Scalar, typename Rational = Scalar>
+struct coefficient_field {
 
     typedef Scalar SCA;
     typedef Rational RAT;
@@ -48,7 +52,10 @@ template <typename Scalar, typename Rational = Scalar> struct coefficient_field
     static const SCA zero;
     static const SCA mone;
 
-    static LA_CONSTEXPR SCA uminus(SCA arg) { return -arg; }
+    static constexpr SCA uminus(SCA arg) noexcept(noexcept(-arg))
+    {
+        return -arg;
+    }
 
     LIBALGEBRA_FIELD_GENERATE_BINARY(add, +, SCA, SCA, SCA);
 
@@ -59,18 +66,21 @@ template <typename Scalar, typename Rational = Scalar> struct coefficient_field
     LIBALGEBRA_FIELD_GENERATE_BINARY(div, /, SCA, SCA, RAT);
 };
 
-template <typename Scalar, typename Rational> const Scalar coefficient_field<Scalar, Rational>::one(1);
+template<typename Scalar, typename Rational>
+const Scalar coefficient_field<Scalar, Rational>::one(1);
 
-template <typename Scalar, typename Rational> const Scalar coefficient_field<Scalar, Rational>::zero(0);
+template<typename Scalar, typename Rational>
+const Scalar coefficient_field<Scalar, Rational>::zero(0);
 
-template <typename Scalar, typename Rational> const Scalar coefficient_field<Scalar, Rational>::mone(-1);
+template<typename Scalar, typename Rational>
+const Scalar coefficient_field<Scalar, Rational>::mone(-1);
 
 #undef LIBALGEBRA_FIELD_GENERATE_BINARY
 
 typedef coefficient_field<double> double_field;
 typedef coefficient_field<float> float_field;
 
-} // namespace coefficients
-} // namespace alg
+}// namespace coefficients
+}// namespace alg
 
-#endif // LIBALGEBRA_COEFFICIENTS_H
+#endif// LIBALGEBRA_COEFFICIENTS_H

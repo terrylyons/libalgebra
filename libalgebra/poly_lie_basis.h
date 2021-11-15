@@ -22,7 +22,8 @@ monomial). The product is the Lie bracket of two vector fields.
 */
 
 template<DEG n_letters, DEG max_degree>
-class poly_lie_basis {
+class poly_lie_basis
+{
 public:
     /// The basis elements of poly_basis.
     typedef poly_basis POLYBASIS;
@@ -37,18 +38,19 @@ public:
     struct KEY_LESS {
         bool inline operator()(const KEY& lhs, const KEY& rhs) const
         {
-            return ((degree(lhs)<degree(rhs)) || ((degree(lhs)==degree(rhs)) && lhs<rhs));
+            return ((degree(lhs) < degree(rhs)) || ((degree(lhs) == degree(rhs)) && lhs < rhs));
         }
     };
 
 public:
     // Property tags
     typedef alg::basis::with_degree<max_degree> degree_tag;
-    typedef alg::basis::unordered ordering_tag;
+    typedef alg::basis::ordered<KEY_LESS> ordering_tag;
 
 public:
     /// Default constructor. Empty basis.
-    poly_lie_basis(void) { }
+    poly_lie_basis()
+    {}
 
 public:
     /// Turns a d/dx_i into a polynomial vector field by multiplying the empty
@@ -61,7 +63,10 @@ public:
     }
 
     /// Returns the degree of the monomial in the pair (Let, monomial)
-    inline static DEG degree(const KEY& k) { return POLYBASIS::degree(k.second); }
+    inline static DEG degree(const KEY& k)
+    {
+        return POLYBASIS::degree(k.second);
+    }
 
     /// Outputs a std::pair<poly_basis*, KEY> to an std::ostream.
     inline friend std::ostream& operator<<(std::ostream& os, const std::pair<poly_lie_basis*, KEY>& t)
@@ -70,7 +75,8 @@ public:
         std::pair<POLYBASIS*, POLYBASIS_KEY> polypair;
         polypair.first = &poly1;
         polypair.second = t.second.second;
-        os << "{" << polypair << "}" << "d/dx" << t.second.first << "}";
+        os << "{" << polypair << "}"
+           << "d/dx" << t.second.first << "}";
         return os;
     }
 };
@@ -80,11 +86,10 @@ namespace vectors {
 template<DEG n_letters, DEG max_degree, typename Field>
 struct vector_type_selector<poly_lie_basis<n_letters, max_degree>, Field> {
     typedef poly_lie_basis<n_letters, max_degree> BASIS;
-    typedef sparse_vector<BASIS, Field, std::map<typename BASIS::KEY, typename Field::S,
-                                                 typename BASIS::KEY_LESS>> type;
+    typedef sparse_vector<BASIS, Field, std::map<typename BASIS::KEY, typename Field::S, typename BASIS::KEY_LESS>> type;
 };
 
-} // namespace vectors
+}// namespace vectors
 
-} // namespace alg
+}// namespace alg
 #endif

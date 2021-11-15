@@ -75,9 +75,9 @@ SUITE(hallset)
 			// test degree additivity and monotonicity
 			// initial values
 			for (LET i = 0; i < 1; ++i)
-				CHECK_EQUAL(0, basis.degree(i));
+				CHECK_EQUAL(0U, basis.degree(i));
 			for (LET i = 1; i < ALPHABET_SIZE + 1; ++i)
-				CHECK_EQUAL(1, basis.degree(i));
+				CHECK_EQUAL(1U, basis.degree(i));
 			// additivity
 			for (LET i = 1; i < hall_set.size(); ++i)
 				CHECK_EQUAL(basis.degree(hall_set[i].first) + basis.degree(hall_set[i].second), basis.degree(i));

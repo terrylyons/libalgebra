@@ -97,7 +97,7 @@ namespace {
 	TEST_FIXTURE(uni_env2, LibAlgebraTestCommutativePoly)
 	{
 		TEST_DETAILS();
-		typedef ALG::MULTIPOLY MULTIPOLY;
+
 		typedef ALG::MULTIPOLY1 MULTIPOLY1;// one dimensional polynomials
 		MULTIPOLY1 p0(S(7)), p1(1, 1), p2(2, 3), p3, x(0), y(2), z;
 		p3 = p0 + p2 * p1 * p2 + p1 * p2;

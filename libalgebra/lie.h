@@ -241,9 +241,10 @@ public:
  * product (free Lie product).
  */
 template<typename Coeff, DEG n_letters, DEG max_degree,
-         template<typename, typename, typename...> class VectorType>
+         template<typename, typename, typename...> class VectorType,
+         typename... Args>
 class lie : public algebra<
-                    lie_basis<n_letters, max_degree>, Coeff, lie_multiplication<Coeff>, VectorType>
+                    lie_basis<n_letters, max_degree>, Coeff, lie_multiplication<Coeff>, VectorType, Args...>
 {
     typedef lie_multiplication<Coeff> multiplication_t;
 
@@ -253,7 +254,7 @@ public:
     /// Import of the KEY type.
     typedef typename BASIS::KEY KEY;
     /// The algebra type.
-    typedef algebra<BASIS, Coeff, multiplication_t, VectorType> ALG;
+    typedef algebra<BASIS, Coeff, multiplication_t, VectorType, Args...> ALG;
     /// The sparse_vector type.
     typedef typename ALG::VECT VECT;
 

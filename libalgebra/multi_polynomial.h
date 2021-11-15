@@ -58,9 +58,11 @@ class multipoly_multiplication
    associative algebra corresponding to the SCALAR type. This is permitted by
    the existence of empty keys in monomial_basis.
  */
-template<typename Coeff, DEG n_letters, DEG max_degree>
+template<typename Coeff, DEG n_letters, DEG max_degree, typename... Args>
 class multi_polynomial : public algebra<
-                                 free_monomial_basis<n_letters, max_degree>, Coeff, multipoly_multiplication<Coeff>>
+                                 free_monomial_basis<n_letters, max_degree>,
+                                 Coeff, multipoly_multiplication<Coeff>
+                                 >
 {
 
     typedef multipoly_multiplication<Coeff> multiplication_t;

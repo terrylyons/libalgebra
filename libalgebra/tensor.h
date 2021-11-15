@@ -22,7 +22,7 @@ class free_tensor_multiplication;
 template<typename Coeff>
 class shuffle_tensor_multiplication;
 
-template<typename Coeff, DEG n_letters, DEG max_degree>
+template<typename Coeff, DEG n_letters, DEG max_degree, typename...>
 class shuffle_tensor;
 
 template<typename Coeff>
@@ -151,9 +151,10 @@ public:
  * the existence of empty keys in free_tensor_basis.
  */
 template<typename Coeff, DEG n_letters, DEG max_degree,
-         template<typename, typename, typename...> class VectorType>
+         template<typename, typename, typename...> class VectorType,
+         typename... Args>
 class free_tensor : public algebra<
-                            free_tensor_basis<n_letters, max_degree>, Coeff, free_tensor_multiplication<Coeff>, VectorType>
+                            free_tensor_basis<n_letters, max_degree>, Coeff, free_tensor_multiplication<Coeff>, VectorType, Args...>
 {
     typedef free_tensor_multiplication<Coeff> multiplication_t;
 
@@ -163,7 +164,7 @@ public:
     /// Import of the KEY type.
     typedef typename BASIS::KEY KEY;
     /// The algebra type.
-    typedef algebra<BASIS, Coeff, multiplication_t, VectorType> ALG;
+    typedef algebra<BASIS, Coeff, multiplication_t, VectorType, Args...> ALG;
 
     typedef typename Coeff::SCA SCA;
     typedef typename Coeff::RAT RAT;
@@ -606,11 +607,9 @@ public:
  * the SCALAR type. This is permitted by the existence of empty keys in
  * shuffle_tensor_basis.
  */
-template<typename Coeff, DEG n_letters, DEG max_degree>
+template<typename Coeff, DEG n_letters, DEG max_degree, typename...>
 class shuffle_tensor : public algebra<
-                               shuffle_tensor_basis<n_letters, max_degree>, Coeff, shuffle_tensor_multiplication<Coeff>
-
-                               >
+                               shuffle_tensor_basis<n_letters, max_degree>, Coeff, shuffle_tensor_multiplication<Coeff>>
 {
     typedef shuffle_tensor_multiplication<Coeff> multiplication_t;
 

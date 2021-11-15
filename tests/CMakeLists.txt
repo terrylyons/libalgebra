@@ -30,7 +30,7 @@ add_subdirectory(integration_tests)
 add_subdirectory(unit_tests)
 
 
-add_executable(all_tests EXCLUDE_FROM_ALL unit_tests/operators/test_tensor_multiplication_operator.cpp)
+add_executable(all_tests EXCLUDE_FROM_ALL)
 target_link_libraries(all_tests PRIVATE
         la_unittests::main
         la_unittests::integration_tests
@@ -42,4 +42,5 @@ target_link_libraries(all_tests PRIVATE
         la_unittests::vector_tests
         la_unittests::hall_set_tests
         la_unittests::serialization_tests
+        la_unittests::shuffle_tensor_tests
         )

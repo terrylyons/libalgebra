@@ -112,8 +112,10 @@ namespace alg {
  * @tparam Multiplication Multiplication operation
  * @tparam VectorType Underlying vector data type to use; e.g. dense_vector or sparse_vector
  */
-template<typename Basis, typename Coeff, typename Multiplication, typename VectorType>
-class algebra : public vectors::vector<Basis, Coeff, VectorType>
+template<typename Basis, typename Coeff, typename Multiplication,
+         template<typename, typename, typename...> class VectorType = alg::vectors::template_vector_type_selector<Basis, Coeff>::template type,
+         typename... Args>
+class algebra : public vectors::vector<Basis, Coeff, VectorType, Args...>
 {
 
     typedef mult::scalar_passthrough scalar_passthrough;
@@ -124,7 +126,7 @@ class algebra : public vectors::vector<Basis, Coeff, VectorType>
 public:
     typedef Basis BASIS;
     /// The inherited sparse vector type.
-    typedef vectors::vector<Basis, Coeff, VectorType> VECT;
+    typedef vectors::vector<Basis, Coeff, VectorType, Args...> VECT;
     /// Import of the iterator type from sparse_vector.
     typedef typename VECT::iterator iterator;
     /// Import of the constant iterator type from sparse_vector.
@@ -322,8 +324,8 @@ private:
 
 };
 
-template<typename B, typename C, typename M, typename V>
-M algebra<B, C, M, V>::s_multiplication;
+template<typename B, typename C, typename M, template<typename, typename, typename...> class V, typename... Args>
+M algebra<B, C, M, V, Args...>::s_multiplication;
 
 }// namespace alg
 // Include once wrapper

@@ -41,10 +41,10 @@ namespace tools {
 
 struct size_control {
 
-    template<typename Basis, typename Coeff, typename Vector>
+    template <typename Basis, typename Coeff, template<typename, typename> class Vector>
     static DIMN set_dense_dimension(vector<Basis, Coeff, Vector>& vect, DIMN dim)
     {
-        Vector& v_vect = dtl::vector_base_access::convert(vect);
+        Vector<Basis, Coeff> &v_vect = dtl::vector_base_access::convert(vect);
         v_vect.resize_dense(dim);
         return v_vect.dense_dimension();
     }
@@ -146,7 +146,7 @@ private:
  * @tparam ResizePolicy Policy object used to determine when a vector should resize
  * @tparam SparseMap Type to use as the storage for the sparse vector
  */
-template<typename Basis, typename Coeffs, typename ResizePolicy = policy::basic_resize_policy, typename SparseMap = LIBALGEBRA_DEFAULT_MAP_TYPE>
+template<typename Basis, typename Coeffs, typename ResizePolicy = policy::basic_resize_policy, typename SparseMap = std::unordered_map<typename Basis::KEY, typename Coeffs::S>>
 class hybrid_vector : public dense_vector<Basis, Coeffs>, public sparse_vector<Basis, Coeffs, SparseMap>
 {
     typedef dense_vector<Basis, Coeffs> DENSE;
@@ -1296,7 +1296,7 @@ private:
             return;
         }
         std::vector<std::pair<KEY, SCALAR>> buffer;
-        rhs.fill_buffer(buffer);
+        rhs.fill_buffer(buffer, utils::is_ordered<SparseMap>());
 
         typename std::vector<std::pair<KEY, SCALAR>>::const_iterator cit, buf_begin(buffer.begin()), buf_end(buffer.end());
 

@@ -46,14 +46,15 @@ class maps
             TBASIS,
             Coeff,
             free_tensor_multiplication<Coeff>,
-            sparse_tensor_vect>
-            sparse_tensor_t;
+            vectors::sparse_vector
+    > sparse_tensor_t;
 
     using dense_lie1_t = algebra<
             lie_basis<n_letters, 1>,
             Coeff,
             lie_multiplication<Coeff>,
-            vectors::dense_vector<lie_basis<n_letters, 1>, Coeff>>;
+            vectors::dense_vector
+    >;
 
 private:
     struct expand_letter {

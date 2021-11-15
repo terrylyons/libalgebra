@@ -41,10 +41,10 @@ namespace tools {
 
 struct size_control {
 
-    template<typename Basis, typename Coeff, typename Vector>
+    template <typename Basis, typename Coeff, template<typename, typename> class Vector>
     static DIMN set_dense_dimension(vector<Basis, Coeff, Vector>& vect, DIMN dim)
     {
-        Vector& v_vect = dtl::vector_base_access::convert(vect);
+        Vector<Basis, Coeff> &v_vect = dtl::vector_base_access::convert(vect);
         v_vect.resize_dense(dim);
         return v_vect.dense_dimension();
     }

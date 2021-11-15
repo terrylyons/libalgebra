@@ -79,14 +79,10 @@ class lie_multiplication
     }
 
     template<typename Lie>
-    static const algebra<typename Lie::BASIS, Coeff, lie_multiplication, vectors::sparse_vector<typename Lie::BASIS, Coeff>>&
+    static const algebra<typename Lie::BASIS, Coeff, lie_multiplication, vectors::sparse_vector>&
     prod(typename Lie::KEY const& k1, typename Lie::KEY const& k2)
     {
-        typedef algebra<typename Lie::BASIS,
-                        Coeff,
-                        lie_multiplication,
-                        vectors::sparse_vector<typename Lie::BASIS, Coeff>>
-                lie_t;
+        typedef algebra<typename Lie::BASIS, Coeff, lie_multiplication, vectors::sparse_vector> lie_t;
 
         typedef typename Lie::BASIS basis_t;
         typedef typename basis_t::PARENT parent_t;
@@ -244,11 +240,11 @@ public:
  * element of the addition operation. There is no neutral element for the
  * product (free Lie product).
  */
-template<typename Coeff, DEG n_letters, DEG max_degree, typename VectorType>
+template<typename Coeff, DEG n_letters, DEG max_degree,
+         template<typename, typename, typename...> class VectorType,
+         typename... Args>
 class lie : public algebra<
-                    lie_basis<n_letters, max_degree>, Coeff, lie_multiplication<Coeff>, VectorType
-
-                    >
+                    lie_basis<n_letters, max_degree>, Coeff, lie_multiplication<Coeff>, VectorType, Args...>
 {
     typedef lie_multiplication<Coeff> multiplication_t;
 
@@ -258,7 +254,7 @@ public:
     /// Import of the KEY type.
     typedef typename BASIS::KEY KEY;
     /// The algebra type.
-    typedef algebra<BASIS, Coeff, multiplication_t, VectorType> ALG;
+    typedef algebra<BASIS, Coeff, multiplication_t, VectorType, Args...> ALG;
     /// The sparse_vector type.
     typedef typename ALG::VECT VECT;
 

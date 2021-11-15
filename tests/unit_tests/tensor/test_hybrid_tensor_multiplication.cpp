@@ -36,7 +36,7 @@ SUITE (hybrid_tensor_multiplication) {
                 > HYBRID;
         typedef alg::algebra<TBASIS, field,
         alg::free_tensor_multiplication<field>,
-        HYBRID> TENSOR;
+        alg::vectors::hybrid_vector> TENSOR;
 
         const TENSOR tunit;
         const TENSOR tzero;

@@ -24,7 +24,7 @@ struct fixture
 
     typedef alg::free_tensor_basis<Width, Depth> TBASIS;
     typedef alg::vectors::dense_vector<TBASIS, Coeff> VECT;
-    typedef alg::free_tensor<Coeff, Width, Depth, VECT> TENSOR;
+    typedef alg::free_tensor<Coeff, Width, Depth, alg::vectors::dense_vector> TENSOR;
 
     typedef typename TBASIS::KEY KEY;
 

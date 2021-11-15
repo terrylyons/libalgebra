@@ -143,7 +143,7 @@ public:
 /// of pairs of monomials and directions). The product is the Lie bracket
 /// for vector fields.
 
-template<typename Coeff, DEG n_letters, DEG max_degree>
+template<typename Coeff, DEG n_letters, DEG max_degree, typename...>
 class poly_lie : public algebra<
                          poly_lie_basis<n_letters, max_degree>,
                          Coeff,

@@ -5,8 +5,8 @@ if (WIN32)
     ## better remove this and add it to the command line as machine specific
     #list(APPEND CMAKE_MODULE_PATH  "c:/dev/vcpkg/scripts/buildsystems/")
     add_compile_options(/bigobj /fp:strict)
-else ()
-endif ()
+else()
+endif()
 
 
 find_package(UnitTest++ CONFIG REQUIRED)
@@ -42,4 +42,5 @@ target_link_libraries(all_tests PRIVATE
         la_unittests::vector_tests
         la_unittests::hall_set_tests
         la_unittests::serialization_tests
+        la_unittests::shuffle_tensor_tests
         )

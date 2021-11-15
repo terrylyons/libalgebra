@@ -26,7 +26,7 @@ struct fixture
     typedef alg::free_tensor_basis<Width, Depth> TBASIS;
     typedef typename TBASIS::KEY KEY;
     typedef alg::vectors::sparse_vector<TBASIS, Coeff, std::map<KEY, S> > VECT;
-    typedef alg::free_tensor<Coeff, Width, Depth, VECT> TENSOR;
+    typedef alg::free_tensor<Coeff, Width, Depth, alg::vectors::sparse_vector> TENSOR;
 
 
     template<class T>

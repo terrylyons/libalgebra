@@ -98,6 +98,18 @@ struct generate_array {
     using result = typename generate_array_impl<N, F>::result;
 };
 
+template<bool Cond, template<typename...> class T1, template<typename...> class T2>
+struct template_selector {
+    template<typename... A>
+    using type = T1<A...>;
+};
+
+template<template<typename...> class T1, template<typename...> class T2>
+struct template_selector<true, T1, T2> {
+    template<typename... A>
+    using type = T2<A...>;
+};
+
 }// namespace utils
 }// namespace alg
 

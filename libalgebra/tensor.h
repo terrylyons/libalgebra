@@ -17,6 +17,15 @@ Version 3. (See accompanying file License.txt)
 namespace alg {
 
 template<typename Coeff>
+class free_tensor_multiplication;
+
+template<typename Coeff>
+class shuffle_tensor_multiplication;
+
+template<typename Coeff, DEG n_letters, DEG max_degree, typename...>
+class shuffle_tensor;
+
+template<typename Coeff>
 class free_tensor_multiplication
 {
 
@@ -141,9 +150,11 @@ public:
  * associative algebra corresponding to the SCALAR type. This is permitted by
  * the existence of empty keys in free_tensor_basis.
  */
-template<typename Coeff, DEG n_letters, DEG max_degree, typename VectorType>
-class free_tensor : public algebra<free_tensor_basis<n_letters, max_degree>, Coeff, free_tensor_multiplication<Coeff>,
-                                   VectorType>
+template<typename Coeff, DEG n_letters, DEG max_degree,
+         template<typename, typename, typename...> class VectorType,
+         typename... Args>
+class free_tensor : public algebra<
+                            free_tensor_basis<n_letters, max_degree>, Coeff, free_tensor_multiplication<Coeff>, VectorType, Args...>
 {
     typedef free_tensor_multiplication<Coeff> multiplication_t;
 
@@ -153,7 +164,7 @@ public:
     /// Import of the KEY type.
     typedef typename BASIS::KEY KEY;
     /// The algebra type.
-    typedef algebra<BASIS, Coeff, multiplication_t, VectorType> ALG;
+    typedef algebra<BASIS, Coeff, multiplication_t, VectorType, Args...> ALG;
 
     typedef typename Coeff::SCA SCA;
     typedef typename Coeff::RAT RAT;
@@ -460,7 +471,7 @@ class shuffle_tensor_multiplication
     template<typename Tensor>
     static Tensor _prod(typename Tensor::KEY const& k1, typename Tensor::KEY const& k2)
     {
-        //typedef typename Tensor::KEY key_t;
+        typedef typename Tensor::KEY key_type;
 
         typedef typename Tensor::BASIS basis_t;
 
@@ -481,7 +492,7 @@ class shuffle_tensor_multiplication
             // let's just implement the multiplication
             const Tensor& first = prod<Tensor>(k1.rparent(), k2);
             const Tensor& second = prod<Tensor>(k1, k2.rparent());
-            const key_t k1l{k1.lparent()}, k2l{k2.lparent()};
+            const key_type k1l{k1.lparent()}, k2l{k2.lparent()};
 
             typename Tensor::const_iterator cit;
 
@@ -608,11 +619,9 @@ public:
  * the SCALAR type. This is permitted by the existence of empty keys in
  * shuffle_tensor_basis.
  */
-template<typename Coeff, DEG n_letters, DEG max_degree>
+template<typename Coeff, DEG n_letters, DEG max_degree, typename...>
 class shuffle_tensor : public algebra<
-                               shuffle_tensor_basis<n_letters, max_degree>, Coeff, shuffle_tensor_multiplication<Coeff>
-
-                               >
+                               shuffle_tensor_basis<n_letters, max_degree>, Coeff, shuffle_tensor_multiplication<Coeff>>
 {
     typedef shuffle_tensor_multiplication<Coeff> multiplication_t;
 
@@ -683,6 +692,9 @@ public:
     explicit shuffle_tensor(const SCA& s)
         : ALG(VECT::basis.empty_key, s)
     {}
+
+    shuffle_tensor& operator=(const shuffle_tensor&) = default;
+    shuffle_tensor& operator=(shuffle_tensor&&) noexcept = default;
 
 public:
     /// Ensures that the return type is a shuffle_tensor.

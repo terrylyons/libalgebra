@@ -21,11 +21,11 @@ struct fixture
 
     typedef alg::vectors::dense_vector<tensor_basis, coeff_t> dense_vec_t;
 
-    typedef alg::free_tensor<coeff_t, 2, 2, dense_vec_t> dense_tensor;
+    typedef alg::free_tensor<coeff_t, 2, 2, alg::vectors::dense_vector> dense_tensor;
 
     typedef alg::lie<coeff_t, 2, 1> lie_increment;
-    typedef alg::maps<coeff_t, 2, 2> maps;
-    typedef alg::cbh<coeff_t, 2, 2> cbh;
+    typedef alg::maps<coeff_t, 2, 2, dense_tensor> maps;
+    typedef alg::cbh<coeff_t, 2, 2, dense_tensor> cbh;
 
     std::vector<lie_increment> increments;
 

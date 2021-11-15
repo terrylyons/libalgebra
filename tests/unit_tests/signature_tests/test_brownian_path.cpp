@@ -139,8 +139,8 @@ struct GenericFixture
                 std::map < typename LBASIS::KEY, S>
         > SPLIE;
 
-        typedef alg::free_tensor<rational_field, width, depth, SPTENS> TENSOR;
-        typedef alg::lie<rational_field, width, depth, SPLIE> LIE;
+        typedef alg::free_tensor<rational_field, width, depth, alg::vectors::sparse_vector> TENSOR;
+        typedef alg::lie<rational_field, width, depth, alg::vectors::sparse_vector> LIE;
         typedef alg::maps<rational_field, width, depth, TENSOR, LIE> MAPS;
 
     };
@@ -162,8 +162,8 @@ struct GenericFixture
                 rational_field
         > DLIE;
 
-        typedef alg::free_tensor<rational_field, width, depth, DTENS> TENSOR;
-        typedef alg::lie<rational_field, width, depth, DLIE> LIE;
+        typedef alg::free_tensor<rational_field, width, depth, alg::vectors::dense_vector> TENSOR;
+        typedef alg::lie<rational_field, width, depth, alg::vectors::dense_vector> LIE;
         typedef alg::maps<rational_field, width, depth, TENSOR, LIE> MAPS;
     };
 
@@ -188,8 +188,8 @@ struct GenericFixture
                 std::map<typename LBASIS::KEY, S>
         > HLIE;
 
-        typedef alg::free_tensor<rational_field, width, depth, HTENS> TENSOR;
-        typedef alg::lie<rational_field, width, depth, HLIE> LIE;
+        typedef alg::free_tensor<rational_field, width, depth, alg::vectors::hybrid_vector> TENSOR;
+        typedef alg::lie<rational_field, width, depth, alg::vectors::hybrid_vector> LIE;
         typedef alg::maps<rational_field, width, depth, TENSOR, LIE> MAPS;
     };
 
@@ -212,8 +212,8 @@ struct GenericFixture
                 std::map<typename LBASIS::KEY, S>
         > SPLIE;
 
-        typedef alg::free_tensor<double_field, width, depth, SPTENS> TENSOR;
-        typedef alg::lie<double_field, width, depth, SPLIE> LIE;
+        typedef alg::free_tensor<double_field, width, depth, alg::vectors::sparse_vector> TENSOR;
+        typedef alg::lie<double_field, width, depth, alg::vectors::sparse_vector> LIE;
         typedef alg::maps<double_field, width, depth, TENSOR, LIE> MAPS;
     };
 
@@ -234,8 +234,8 @@ struct GenericFixture
                 double_field
         > DLIE;
 
-        typedef alg::free_tensor<double_field, width, depth, DTENS> TENSOR;
-        typedef alg::lie<double_field, width, depth, DLIE> LIE;
+        typedef alg::free_tensor<double_field, width, depth, alg::vectors::dense_vector> TENSOR;
+        typedef alg::lie<double_field, width, depth, alg::vectors::dense_vector> LIE;
         typedef alg::maps<double_field, width, depth, TENSOR, LIE> MAPS;
     };
 
@@ -260,8 +260,8 @@ struct GenericFixture
                 std::map<typename LBASIS::KEY, S>
         > HLIE;
 
-        typedef alg::free_tensor<double_field, width, depth, HTENS> TENSOR;
-        typedef alg::lie<double_field, width, depth, HLIE> LIE;
+        typedef alg::free_tensor<double_field, width, depth, alg::vectors::hybrid_vector> TENSOR;
+        typedef alg::lie<double_field, width, depth, alg::vectors::hybrid_vector> LIE;
         typedef alg::maps<double_field, width, depth, TENSOR, LIE> MAPS;
     };
 
@@ -284,8 +284,8 @@ struct GenericFixture
                 std::map<typename LBASIS::KEY, S>
         > SPLIE;
 
-        typedef alg::free_tensor<float_field, width, depth, SPTENS> TENSOR;
-        typedef alg::lie<float_field, width, depth, SPLIE> LIE;
+        typedef alg::free_tensor<float_field, width, depth, alg::vectors::sparse_vector> TENSOR;
+        typedef alg::lie<float_field, width, depth, alg::vectors::sparse_vector> LIE;
         typedef alg::maps<float_field, width, depth, TENSOR, LIE> MAPS;
     };
 
@@ -306,8 +306,8 @@ struct GenericFixture
                 float_field
         > DLIE;
 
-        typedef alg::free_tensor<float_field, width, depth, DTENS> TENSOR;
-        typedef alg::lie<float_field, width, depth, DLIE> LIE;
+        typedef alg::free_tensor<float_field, width, depth, alg::vectors::dense_vector> TENSOR;
+        typedef alg::lie<float_field, width, depth, alg::vectors::dense_vector> LIE;
         typedef alg::maps<float_field, width, depth, TENSOR, LIE> MAPS;
     };
 
@@ -332,8 +332,8 @@ struct GenericFixture
                 std::map<typename LBASIS::KEY, S>
         > HLIE;
 
-        typedef alg::free_tensor<float_field, width, depth, HTENS> TENSOR;
-        typedef alg::lie<float_field, width, depth, HLIE> LIE;
+        typedef alg::free_tensor<float_field, width, depth, alg::vectors::hybrid_vector> TENSOR;
+        typedef alg::lie<float_field, width, depth, alg::vectors::hybrid_vector> LIE;
         typedef alg::maps<float_field, width, depth, TENSOR, LIE> MAPS;
     };
 

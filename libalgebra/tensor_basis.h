@@ -190,8 +190,7 @@ public:
         }
         if (k.size() == max_degree) {
             return end();
-        }
-        else {
+        } else {
             return KEY(LET(1)) * result;
         }
     }
@@ -325,7 +324,7 @@ public:
 
 public:
     /// Outputs a std::pair<shuffle_tensor_basis*, KEY> to an std::ostream.
-    inline friend std::ostream& operator<<(std::ostream& os, const std::pair<tensor_basis*, KEY>& t)
+    inline friend std::ostream &operator<<(std::ostream &os, const std::pair<tensor_basis *, KEY> &t)
     {
         return os << (t.first)->key2string(t.second);
     }
@@ -346,8 +345,7 @@ public:
 */
 template<DEG n_letters, DEG max_degree>
 class free_tensor_basis : public tensor_basis<n_letters, max_degree>,
-                          public basis_traits<With_Degree, n_letters,
-                                              max_degree>
+                          public basis_traits<With_Degree, n_letters, max_degree>
 {
 public:
     /// The tensor_basis type.
@@ -458,8 +456,7 @@ struct vector_type_selector<free_tensor_basis<n_letters, max_depth>, Field> {
 */
 template<DEG n_letters, DEG max_degree>
 class shuffle_tensor_basis : public tensor_basis<n_letters, max_degree>,
-                             public basis_traits<With_Degree, n_letters,
-                                                 max_degree>
+                             public basis_traits<With_Degree, n_letters, max_degree>
 {
 public:
     /// The tensor_basis type.

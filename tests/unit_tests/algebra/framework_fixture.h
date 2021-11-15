@@ -12,10 +12,10 @@ struct Fixture
 
     typedef SimpleIntegerBasis<5, field> BASIS;
     typedef alg::vectors::vector<BASIS, field,
-    ALGEBRA_TESTS_VECT_TYPE<BASIS, field> > VECT;
+    ALGEBRA_TESTS_VECT_TYPE> VECT;
     typedef alg::algebra<BASIS, field,
     pointwise_multiplication,
-    ALGEBRA_TESTS_VECT_TYPE<BASIS, field> > ALG;
+    ALGEBRA_TESTS_VECT_TYPE> ALG;
 
     typedef typename BASIS::KEY KEY;
     typedef typename field::S S;

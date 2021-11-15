@@ -87,3 +87,4 @@ private:
 }// namespace la_testing
 
 #endif//LIBALGEBRA_RANDOM_VECTOR_GENERATOR_H
+

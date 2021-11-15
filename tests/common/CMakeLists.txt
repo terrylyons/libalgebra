@@ -9,8 +9,10 @@ add_library(libalgebra_tests_utilities STATIC EXCLUDE_FROM_ALL
         simple_basis.h
         time_and_details.h
         memfile.h
+        random_vector_generator.h)
         SHOW.h
         )
+
 
 target_include_directories(libalgebra_tests_utilities PUBLIC "${CMAKE_CURRENT_LIST_DIR}")
 

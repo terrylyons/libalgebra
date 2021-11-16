@@ -1,5 +1,5 @@
 
-
+add_subdirectory(basis)
 add_subdirectory(algebra)
 add_subdirectory(lie)
 add_subdirectory(signature_tests)

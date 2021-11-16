@@ -41,6 +41,7 @@ add_library(Libalgebra INTERFACE)
 add_custom_target(Libalgebra.headers SOURCES
         libalgebra/basis/tags.h
         libalgebra/basis/basis.h
+        libalgebra/basis/key_iterators.h
         libalgebra/coefficients/coefficients.h
         libalgebra/utils/integer_maths.h
         libalgebra/utils/iterators.h

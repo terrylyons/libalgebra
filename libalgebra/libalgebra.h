@@ -51,10 +51,10 @@ typedef unsigned __int64 uint64_t;
 #include <utility>
 #include <vector>
 
+#include <boost/serialization/base_object.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
-#include <boost/serialization/base_object.hpp>
 
 //#define ORDEREDMAP
 #define UNORDEREDMAP
@@ -113,9 +113,7 @@ typedef unsigned __int64 uint64_t;
 
 #include "algebra.h"
 
-
 namespace alg {
-
 
 /// Forward declaration of classes
 
@@ -228,6 +226,8 @@ class poly_lie;
 #include "tensor_basis.h"
 #include "utils.h"
 
+#include <libalgebra/operators/functionals.h>
+#include <libalgebra/operators/operators.h>
 
 // End of undeclaration of local macros.
 

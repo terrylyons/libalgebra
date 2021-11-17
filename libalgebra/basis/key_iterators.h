@@ -11,7 +11,7 @@ namespace alg {
 namespace basis {
 
 template<typename Basis>
-class basis_iterable;
+class key_range;
 
 /**
  * @brief Iterator of keys of a basis.
@@ -30,7 +30,7 @@ class basis_iterable;
 template<typename Basis>
 class key_iterator
 {
-    using parent_type = basis_iterable<Basis>;
+    using parent_type = key_range<Basis>;
 
 public:
     using difference_type = std::ptrdiff_t;
@@ -127,7 +127,7 @@ private:
  * @tparam Basis Basis type from which keys should be taken
  */
 template<typename Basis>
-class basis_iterable
+class key_range
 {
     friend class key_iterator<Basis>;
 
@@ -135,13 +135,13 @@ public:
     using iterator = key_iterator<Basis>;
     using value_type = typename Basis::KEY;
 
-    explicit basis_iterable(const Basis& b) : basis(b), start_key(basis.begin()), end_key(basis.end())
+    explicit key_range(const Basis& b) : basis(b), start_key(basis.begin()), end_key(basis.end())
     {}
 
-    explicit basis_iterable(const Basis& b, const value_type& start) : basis(b), start_key(start), end_key(basis.end())
+    explicit key_range(const Basis& b, const value_type& start) : basis(b), start_key(start), end_key(basis.end())
     {}
 
-    explicit basis_iterable(const Basis& b, const value_type& start, const value_type& end)
+    explicit key_range(const Basis& b, const value_type& start, const value_type& end)
         : basis(b), start_key(start), end_key(end)
     {}
 

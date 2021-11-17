@@ -12,24 +12,24 @@ SUITE(test_basis_iterator_helpers)
     struct fixture {
         using tensor_basis = alg::tensor_basis<2, 2>;
         using key_type = typename tensor_basis::KEY;
-        using basis_iterable = alg::basis::basis_iterable<tensor_basis>;
+        using key_range = alg::basis::key_range<tensor_basis>;
         using iterator = alg::basis::key_iterator<tensor_basis>;
 
         tensor_basis basis;
 
-        basis_iterable iterate_basis() const
+        key_range iterate_basis() const
         {
-            return basis_iterable(basis);
+            return key_range(basis);
         }
 
-        basis_iterable iterate_basis(const key_type& k) const
+        key_range iterate_basis(const key_type& k) const
         {
-            return basis_iterable(basis, k);
+            return key_range(basis, k);
         }
 
-        basis_iterable iterate_basis(const key_type& start, const key_type& finish) const
+        key_range iterate_basis(const key_type& start, const key_type& finish) const
         {
-            return basis_iterable(basis, start, finish);
+            return key_range(basis, start, finish);
         }
     };
 

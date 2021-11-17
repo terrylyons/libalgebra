@@ -106,10 +106,14 @@ public:
     using iterator = key_iterator<Basis>;
     using value_type = typename Basis::KEY;
 
-    explicit basis_iterable(const Basis& b) : basis(b), start_key(basis.begin())
+    explicit basis_iterable(const Basis& b) : basis(b), start_key(basis.begin()), end_key(basis.end())
     {}
 
-    explicit basis_iterable(const Basis& b, const value_type& start) : basis(b), start_key(start)
+    explicit basis_iterable(const Basis& b, const value_type& start) : basis(b), start_key(start), end_key(basis.end())
+    {}
+
+    explicit basis_iterable(const Basis& b, const value_type& start, const value_type& end)
+        : basis(b), start_key(start), end_key(basis.nextkey(end))
     {}
 
     iterator begin() noexcept
@@ -119,12 +123,13 @@ public:
 
     iterator end() noexcept
     {
-        return iterator(this, basis.end());
+        return iterator(this, end_key);
     }
 
 private:
     const Basis& basis;
     value_type start_key;
+    value_type end_key;
 };
 
 }// namespace basis

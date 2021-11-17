@@ -1,7 +1,7 @@
 
 
 
-add_library(Libalgebra_tests_basis_tests OBJECT EXCLUDE_FROM_ALL)
+add_library(Libalgebra_tests_basis_tests OBJECT EXCLUDE_FROM_ALL basis_iteration_suite.h test_tensor_basis_iteration.cpp test_lie_basis_iteration.cpp)
 
 target_sources(Libalgebra_tests_basis_tests PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/test_basis_iteration.cpp

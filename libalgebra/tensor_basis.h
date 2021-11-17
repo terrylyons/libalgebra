@@ -17,6 +17,7 @@ Version 3. (See accompanying file License.txt)
 #include "_tensor_basis.h"
 #include "basis_traits.h"
 #include <cmath>
+#include <libalgebra/basis/key_iterators.h>
 #include <limits>
 
 namespace alg {
@@ -190,7 +191,8 @@ public:
         }
         if (k.size() == max_degree) {
             return end();
-        } else {
+        }
+        else {
             return KEY(LET(1)) * result;
         }
     }
@@ -209,6 +211,28 @@ public:
             }
         }
         return oss.str();
+    }
+
+    // Key iteration methods
+
+    basis::key_range<tensor_basis> iterate_keys() const noexcept
+    {
+        return basis::key_range<tensor_basis>(*this);
+    }
+
+    basis::key_range<tensor_basis> iterate_keys(const KEY& begin, const KEY& end) const noexcept
+    {
+        return basis::key_range<tensor_basis>{*this, begin, end};
+    }
+
+    basis::key_range<tensor_basis> iterate_keys_from(const KEY& begin) const noexcept
+    {
+        return basis::key_range<tensor_basis>{*this, begin};
+    }
+
+    basis::key_range<tensor_basis> iterate_keys_to(const KEY& end) const noexcept
+    {
+        return basis::key_range<tensor_basis>{*this, begin(), end};
     }
 
 private:
@@ -324,7 +348,7 @@ public:
 
 public:
     /// Outputs a std::pair<shuffle_tensor_basis*, KEY> to an std::ostream.
-    inline friend std::ostream &operator<<(std::ostream &os, const std::pair<tensor_basis *, KEY> &t)
+    inline friend std::ostream& operator<<(std::ostream& os, const std::pair<tensor_basis*, KEY>& t)
     {
         return os << (t.first)->key2string(t.second);
     }

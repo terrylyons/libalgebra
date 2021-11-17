@@ -12,7 +12,7 @@ add_library(libalgebra_tests_utilities STATIC EXCLUDE_FROM_ALL
         random_vector_generator.h
         SHOW.h
         random_vector_generator.h
-        )
+        multi_test.h)
 
 
 target_include_directories(libalgebra_tests_utilities PUBLIC "${CMAKE_CURRENT_LIST_DIR}")

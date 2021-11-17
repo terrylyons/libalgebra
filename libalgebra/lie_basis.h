@@ -17,6 +17,7 @@ Version 3. (See accompanying file License.txt)
 #include "constpower.h"
 #include "libalgebra/basis/basis.h"
 #include "utils/integer_maths.h"
+#include <libalgebra/basis/key_iterators.h>
 
 namespace alg {
 
@@ -233,7 +234,8 @@ public:
      */
     inline KEY nextkey(const KEY& k) const
     {
-        if (k < (hall_set_type::start_of_degree(MaxDepth + 1))) {
+        constexpr DIMN max_size = hall_set_type::start_of_degree(MaxDepth + 1);
+        if (k < max_size) {
             return (k + 1);
         }
         else {
@@ -449,7 +451,7 @@ public:
     /// Convert an index to key
     static KEY index_to_key(const DIMN idx)
     {
-        return KEY(idx + 1);
+        return (idx < start_of_degree(max_degree + 1)) ? KEY(idx + 1) : KEY(0);
     }
 
     /// Get the index at which elements of given degree start
@@ -457,6 +459,28 @@ public:
     {
         assert(d <= max_degree + 1);
         return (d == 0) ? 0 : SIZE_INFO::degree_sizes[d - 1];
+    }
+
+    // Key iteration methods
+
+    basis::key_range<lie_basis> iterate_keys() const noexcept
+    {
+        return basis::key_range<lie_basis>(*this);
+    }
+
+    basis::key_range<lie_basis> iterate_keys(const KEY& begin, const KEY& end) const noexcept
+    {
+        return basis::key_range<lie_basis>{*this, begin, (end <= start_of_degree(max_degree + 1)) ? end : KEY(0)};
+    }
+
+    basis::key_range<lie_basis> iterate_keys_from(const KEY& begin) const noexcept
+    {
+        return basis::key_range<lie_basis>{*this, begin};
+    }
+
+    basis::key_range<lie_basis> iterate_keys_to(const KEY& end) const noexcept
+    {
+        return basis::key_range<lie_basis>{*this, begin(), (end <= start_of_degree(max_degree + 1)) ? end : KEY(0)};
     }
 };
 

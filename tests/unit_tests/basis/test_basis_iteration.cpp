@@ -121,14 +121,14 @@ SUITE(test_basis_iterator_helpers)
 
     TEST_FIXTURE(fixture, test_iteration_between_keys)
     {
-        key_type start_key{alg::LET(1)}, end_key{alg::LET{2}};
+        key_type start_key{alg::LET(1)}, end_key{alg::LET{1}, alg::LET{1}};
         auto basis_iter = iterate_basis(start_key, end_key);
 
         auto first = basis_iter.begin();
         auto second = basis_iter.end();
 
         CHECK_EQUAL(start_key, *first);
-        CHECK_EQUAL(basis.nextkey(end_key), *second);
+        CHECK_EQUAL(end_key, *second);
         CHECK(++(++first) == second);
 
         key_type k{start_key};

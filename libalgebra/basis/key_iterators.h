@@ -13,6 +13,20 @@ namespace basis {
 template<typename Basis>
 class basis_iterable;
 
+/**
+ * @brief Iterator of keys of a basis.
+ *
+ * A key_iterator of a basis produces the keys associated with the basis in order.
+ * This acts in tandem with a parent object that controls the start and end of
+ * iteration. Two iterators with different parents will always be non-equal.
+ * This is a forward input iterator - meaning it cannot be used to modify the
+ * keys of a basis. Indeed, the keys in a basis must be invariant.
+ *
+ * Under the hood, the key_iterator uses the basis function nextkey to advance
+ * the iterator, and holds the current key internally.
+ *
+ * @tparam Basis Basis type
+ */
 template<typename Basis>
 class key_iterator
 {
@@ -25,16 +39,16 @@ public:
     using reference = const value_type&;
     using iterator_category = std::forward_iterator_tag;
 
-    key_iterator() : parent(nullptr), current()
+    key_iterator() noexcept : parent(nullptr), current()
     {}
 
-    explicit key_iterator(parent_type* p) : parent(p), current(p->basis.begin())
+    explicit key_iterator(parent_type* p) noexcept : parent(p), current(p->basis.begin())
     {}
 
-    key_iterator(parent_type* p, value_type c) : parent(p), current(c)
+    key_iterator(parent_type* p, value_type c) noexcept : parent(p), current(c)
     {}
 
-    key_iterator(const key_iterator& other) : parent(other.parent), current(other.current)
+    key_iterator(const key_iterator& other) noexcept : parent(other.parent), current(other.current)
     {}
 
     key_iterator(key_iterator&& other) noexcept
@@ -43,7 +57,7 @@ public:
         current = std::move(other.current);
     }
 
-    key_iterator& operator=(const key_iterator& other)
+    key_iterator& operator=(const key_iterator& other) noexcept
     {
         parent = other.parent;
         current = other.current;
@@ -71,23 +85,23 @@ public:
         return prev;
     }
 
-    reference operator*()
+    reference operator*() noexcept
     {
         return current;
     }
 
-    pointer operator->()
+    pointer operator->() noexcept
     {
         return &current;
     }
 
 public:
-    bool operator==(const key_iterator& other) const
+    bool operator==(const key_iterator& other) const noexcept
     {
         return (parent == other.parent && current == other.current);
     }
 
-    bool operator!=(const key_iterator& other) const
+    bool operator!=(const key_iterator& other) const noexcept
     {
         return (parent != other.parent || current != other.current);
     }
@@ -97,6 +111,21 @@ private:
     value_type current;
 };
 
+/**
+ * @brief Iterable class representing a range of keys associated with a basis.
+ *
+ * This class allows us to iterate over the keys associated with a basis from a given range.
+ * The class holds a reference to the basis, and so must be provided with this reference
+ * upon construction. By default, when only this basis reference is provided, the range will
+ * contain all keys associated with the basis. Alternatively, one can provide a start key
+ * or both start key and end key. In the first case, the range will iterate over all keys
+ * from the start key provided to the end, and in the second case the range will iterate
+ * from start key (inclusive) to end key (exclusive).
+ *
+ * The iterator type of the range is a key_iterator<Basis>.
+ *
+ * @tparam Basis Basis type from which keys should be taken
+ */
 template<typename Basis>
 class basis_iterable
 {
@@ -113,7 +142,7 @@ public:
     {}
 
     explicit basis_iterable(const Basis& b, const value_type& start, const value_type& end)
-        : basis(b), start_key(start), end_key(basis.nextkey(end))
+        : basis(b), start_key(start), end_key(end)
     {}
 
     iterator begin() noexcept

@@ -392,7 +392,7 @@ private:
             k = basis.nextkey(k);
         }
         for (SCALAR const* it(begin); it != end && k != basis.end(); ++it, k = basis.nextkey(k)) {
-            MAP::insert(k, *it);
+            MAP::insert(std::make_pair(k, *it));
         }
     }
 

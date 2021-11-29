@@ -5,9 +5,7 @@
 #ifndef LIBALGEBRA_VECTOR_H
 #define LIBALGEBRA_VECTOR_H
 
-
 #include <boost/serialization/serialization.hpp>
-
 
 #include "libalgebra/vectors/sparse_vector.h"
 
@@ -30,8 +28,8 @@ public:
         return arg;
     }
 
-    template<typename Basis, typename Coeffs, template<typename, typename, typename...> class Vector>
-    static Vector<Basis, Coeffs>& convert(vector<Basis, Coeffs, Vector>& arg)
+    template<typename Basis, typename Coeffs, template<typename, typename, typename...> class Vector, typename... Args>
+    static Vector<Basis, Coeffs, Args...>& convert(vector<Basis, Coeffs, Vector, Args...>& arg)
     {
         return arg;
     }
@@ -547,13 +545,13 @@ public:
     }
 
 public:
-
     // Serialization access and methods
     friend class boost::serialization::access;
 
     template<typename Archive>
-    void serialize(Archive &ar, const unsigned int /*version*/) {
-        ar & boost::serialization::base_object<UnderlyingVectorType>(*this);
+    void serialize(Archive& ar, const unsigned int /*version*/)
+    {
+        ar& boost::serialization::base_object<UnderlyingVectorType>(*this);
     }
 
 public:

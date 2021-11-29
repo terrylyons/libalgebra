@@ -82,8 +82,8 @@ add_custom_target(Libalgebra.headers SOURCES
 
 target_include_directories(Libalgebra
         INTERFACE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
         )
 target_link_libraries(Libalgebra INTERFACE
         Boost::boost
@@ -97,7 +97,10 @@ target_compile_definitions(Libalgebra INTERFACE $<$<CONFIG:Debug>:_DEBUG>)
 
 set_property(TARGET Libalgebra PROPERTY CXX_STANDARD 11)
 set_property(TARGET Libalgebra PROPERTY CXX_STANDARD_REQUIRED ON)
-
+# Set the __cplusplus macro in MSVC to a current compiler value
+if(MSVC)
+target_compile_options(Libalgebra INTERFACE "/Zc:__cplusplus")
+endif()
 if (TARGET Bignum::Bignum)
     target_link_libraries(Libalgebra INTERFACE Bignum::Bignum)
 else ()

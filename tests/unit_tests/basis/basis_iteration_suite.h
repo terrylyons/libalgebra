@@ -53,4 +53,34 @@ la_testing::multi_suite create_basis_test_suite(const std::string& basis_name)
     return suite;
 }
 
+NEW_AUTO_SUITE(basis_iteration_tests, typename Basis)
+{
+    using key_type = typename Basis::KEY;
+
+    ADD_TEST(test_basic_iteration) {
+        Basis basis;
+
+        key_type k = basis.begin();
+        for (auto r : basis.iterate_keys()) {
+            CHECK_EQUAL(k, r);
+            k = basis.nextkey(k);
+        }
+    };
+
+
+    ADD_TEST(test_between_iteration) {
+        Basis basis;
+        key_type start(basis.index_to_key(1U)), finish(basis.index_to_key(3U));
+
+        key_type k(start);
+        for (auto r : basis.iterate_keys(start, finish)) {
+            CHECK_EQUAL(k, r);
+            k = basis.nextkey(k);
+        }
+        CHECK_EQUAL(k, finish);
+    };
+
+
+}
+
 #endif//LIBALGEBRA_BASIS_ITERATION_SUITE_H

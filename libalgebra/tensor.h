@@ -494,13 +494,14 @@ class shuffle_tensor_multiplication
             const Tensor& second = prod<Tensor>(k1, k2.rparent());
             const key_type k1l{k1.lparent()}, k2l{k2.lparent()};
 
+
             typename Tensor::const_iterator cit;
 
             for (cit = first.begin(); cit != first.end(); ++cit) {
-                result[k1l * cit->key()] += Coeff::one;
+                result[k1l * cit->key()] += first [cit->key()];
             }
             for (cit = second.begin(); cit != second.end(); ++cit) {
-                result[k2l * cit->key()] += Coeff::one;
+                result[k2l * cit->key()] += second[cit->key()];
             }
         }
 
@@ -677,14 +678,9 @@ public:
     {}
 
     /// Constructs a unidimensional instance from a letter and a scalar.
-    shuffle_tensor(LET
-                           letter,
-                   const SCA& s)
-        : ALG(VECT::basis
-                      .keyofletter(letter),
-              s)
-    {
-    }
+    shuffle_tensor(LET letter, const SCA& s)
+        : ALG(VECT::basis.keyofletter(letter), s)
+    {}
 
     /// Constructs a unidimensional instance from a key (basis element).
     explicit shuffle_tensor(const KEY& k)

@@ -566,7 +566,7 @@ public:
         template<typename Predicate>
         output_type eval(const key_type& k, lookup_table_tag<Predicate>) const
         {
-            static const table_t table = fill_table(m_tag.predicate);
+            static table_t table = fill_table(m_tag.predicate);
 
             if (m_tag.predicate(k)) {
                 return table[k];

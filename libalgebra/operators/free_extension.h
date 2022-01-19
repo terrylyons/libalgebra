@@ -29,7 +29,7 @@ public:
 
 private:
     template<typename Predicate>
-    result_type eval(const key_type& k, lazy_caching_tag<Predicate> tag) const
+    result_type eval(const key_type& k, lazy_cache_tag<Predicate> tag) const
     {
         static std::recursive_mutex table_lock;
         static table_t table;
@@ -44,12 +44,12 @@ private:
 
             return table[k] = m_fn(k);
         }
-        else if {
+        else {
             return m_fn(k);
         }
     }
 
-    result_type eval(const key_type& k, lazy_caching_tag<void> tag) const
+    result_type eval(const key_type& k, lazy_cache_tag<void> tag) const
     {
         static std::recursive_mutex table_lock;
         static table_t table;
@@ -70,7 +70,7 @@ private:
         basis_type basis;
 
         for (key_type k = basis.begin(); k != basis.end() && predicate(k); k = basis.nextkey(k)) {
-            table[k] = m_fn(k);
+            result[k] = m_fn(k);
         }
 
         return result;

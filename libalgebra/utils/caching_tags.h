@@ -60,6 +60,9 @@ struct lookup_table_tag {
     Predicate predicate;
 };
 
+struct lazy_cache_on_object_tag {
+};
+
 }// namespace alg
 
 #endif//LIBALGEBRA_CACHING_TAGS_H

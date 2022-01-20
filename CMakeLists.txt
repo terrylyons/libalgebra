@@ -14,6 +14,7 @@ project(Libalgebra VERSION 2.0.0)
 
 option(LIBALGEBRA_TESTING "Enable building test targets" OFF)
 
+set(CMAKE_CXX_STANDARD 14)
 
 # This helps IDEs that can arrange projects into folders (apparently)
 # See https://cmake.org/cmake/help/v3.22/prop_gbl/USE_FOLDERS.html
@@ -34,7 +35,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/)
 find_package(Bignum)
 
 # Interface libraries sometimes complain if you list sources, see below.
-add_library(Libalgebra INTERFACE)
+add_library(Libalgebra INTERFACE libalgebra/utils/caching_tags.h)
 
 # For IDEs that use target sources lists to generate project information
 # we add a custom target that attaches these sources.
@@ -71,6 +72,7 @@ add_custom_target(Libalgebra.headers SOURCES
         libalgebra/operators/operators.h
         libalgebra/operators/dot_product_implementations.h
         libalgebra/operators/functionals.h
+        libalgebra/operators/free_extension.h
         libalgebra/poly_basis.h
         libalgebra/poly_lie.h
         libalgebra/poly_lie_basis.h
@@ -78,6 +80,7 @@ add_custom_target(Libalgebra.headers SOURCES
         libalgebra/tensor.h
         libalgebra/tensor_basis.h
         libalgebra/utils.h
+
         )
 
 target_include_directories(Libalgebra

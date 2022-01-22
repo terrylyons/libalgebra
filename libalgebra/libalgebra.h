@@ -227,6 +227,7 @@ class poly_lie;
 #include "utils.h"
 
 #include <libalgebra/operators/functionals.h>
+#include <libalgebra/operators/multi_linear_operators.h>
 #include <libalgebra/operators/operators.h>
 
 // End of undeclaration of local macros.

@@ -22,7 +22,7 @@
 namespace alg {
 namespace operators {
 
-namespace dlt {
+namespace dtl {
 
 struct basic_tensor_inner_product {
 
@@ -86,7 +86,8 @@ public:
             template<typename, typename, typename...> class Arg1VecType,
             typename... Arg1Args,
             template<typename, typename, typename...> class Arg2VecType,
-            typename... Arg2Args>
+            typename... Arg2Args
+            >
     typename Coeffs::S operator()(
             const arg_type<Coeffs, Arg1VecType, Arg1Args...>& arg1,
             const arg_type<Coeffs, Arg2VecType, Arg2Args...>& arg2) const
@@ -102,7 +103,22 @@ public:
     }
 };
 
-}// namespace dlt
+}// namespace dtl
+
+
+template <
+        typename Coeffs,
+        DEG Width,
+        DEG Depth,
+        template<typename, typename, typename...> class ArgVecType,
+        typename... ArgArgs
+>
+using lie_inner_product = multi_linear_operator<
+        dtl::lie_inner_product_impl<Width, Depth>,
+        alg::lie<Coeffs, Width, Depth, ArgVecType, ArgArgs...>,
+        alg::lie<Coeffs, Width, Depth, ArgVecType, ArgArgs...>
+        >;
+
 
 }// namespace operators
 }// namespace alg

@@ -42,6 +42,7 @@ add_library(Libalgebra INTERFACE)
 add_custom_target(Libalgebra.headers SOURCES
         libalgebra/basis/tags.h
         libalgebra/basis/basis.h
+        libalgebra/basis/key_iterators.h
         libalgebra/coefficients/coefficients.h
         libalgebra/coefficients/complex.h
         libalgebra/coefficients/mpfloat_coefficients.h

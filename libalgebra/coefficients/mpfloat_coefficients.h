@@ -2,8 +2,8 @@
 // Created by sam on 24/01/2022.
 //
 
-#ifndef LIBALGEBRA_MPFLOAT_FIELD_H
-#define LIBALGEBRA_MPFLOAT_FIELD_H
+#ifndef LIBALGEBRA_MPFLOAT_COEFFICIENTS_H
+#define LIBALGEBRA_MPFLOAT_COEFFICIENTS_H
 
 #include <libalgebra/implementation_types.h>
 
@@ -38,4 +38,4 @@ using mpfloat_field = coefficient_field<mpfloat<Digits10>>;
 }// namespace coefficients
 }// namespace alg
 
-#endif//LIBALGEBRA_MPFLOAT_FIELD_H
+#endif//LIBALGEBRA_MPFLOAT_COEFFICIENTS_H

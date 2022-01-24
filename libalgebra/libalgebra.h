@@ -226,6 +226,8 @@ class poly_lie;
 #include "tensor_basis.h"
 #include "utils.h"
 
+#include <libalgebra/coefficients/mpfloat_coefficients.h>
+#include <libalgebra/coefficients/rational_coefficients.h>
 #include <libalgebra/operators/functionals.h>
 #include <libalgebra/operators/operators.h>
 

@@ -36,7 +36,7 @@ struct Fixture : public alg_types<5, 5, Rational>
     > SPARSE;
     typedef alg::algebra<TBASIS, field,
                          alg::free_tensor_multiplication<field>,
-            SPARSE> TENSOR;
+            alg::vectors::sparse_vector> TENSOR;
 
     const TENSOR tunit;
     const TENSOR tzero;

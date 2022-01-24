@@ -20,14 +20,14 @@ ENTRYPOINT cmake -DCMAKE_BUILD_TYPE=Release -DLIBALGEBRA_TESTING=ON .. && cmake 
 
 # Run the tests
 FROM builder AS tester
-# ENTRYPOINT cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build . && ./test
+ENTRYPOINT cmake -DCMAKE_BUILD_TYPE=Release -DLIBALGEBRA_TESTING=ON .. && cmake --build . && ctest
 
 # docker volume create libalgebra_volume
 # docker build -t libalgebra . --target builder
-# docker run -v libalgebra_volume:/libalgebra_tests/build -it libalgebra
+# docker run -v libalgebra_volume:/libalgebra/build -it libalgebra
 #
 # OR
 #
 # docker volume create libalgebra_tests_volume
 # docker build -t libalgebra_tests . --target tester
-# docker run -v libalgebra_tests_volume:/libalgebra_tests/build -it libalgebra_tests
+# docker run -v libalgebra_tests_volume:/libalgebra/build -it libalgebra_tests

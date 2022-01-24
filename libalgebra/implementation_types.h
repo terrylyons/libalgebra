@@ -21,7 +21,7 @@ namespace alg {
 
 /// Used to store degrees.
 typedef unsigned DEG;
-typedef typename std::make_signed<DEG>::type IDEG; // signed integer same size as degree
+typedef typename std::make_signed<DEG>::type IDEG;// signed integer same size as degree
 
 /// Used to index letters, and basis elements. The value 0 may be special.
 typedef size_t LET;
@@ -33,5 +33,5 @@ typedef unsigned long long LET64;
 typedef size_t DIMN;
 typedef std::ptrdiff_t IDIMN;
 
-} // namespace alg
-#endif // implimetation_types_h__
+}// namespace alg
+#endif// implimetation_types_h__

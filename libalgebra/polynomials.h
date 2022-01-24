@@ -15,15 +15,16 @@ Version 3. (See accompanying file License.txt)
 #define DJC_COROPA_LIBALGEBRA_POLYNOMIALSH_SEEN
 namespace alg {
 
-
-template <typename Coeff> class poly_multiplication
+template<typename Coeff>
+class poly_multiplication
 {
 
     typedef typename Coeff::SCA scalar_t;
 
 protected:
     /// Multiplication of two monomials, outputted as a monomial
-    template <typename Key> static Key prod2(Key const &k1, Key const &k2)
+    template<typename Key>
+    static Key prod2(Key const& k1, Key const& k2)
     {
         Key k(k1);
         typename Key::const_iterator it;
@@ -42,75 +43,79 @@ private:
     (key) again. To satisfy the condtions of algebra, the output is
     in the form of a polynomial.
     */
-    template <typename Poly> static Poly prod(typename Poly::KEY const &k1, typename Poly::KEY const &k2)
+    template<typename Poly>
+    static Poly prod(typename Poly::KEY const& k1, typename Poly::KEY const& k2)
     {
         Poly result;
         result[prod2(k1, k2)] = Coeff::one;
         return result;
     }
 
-
-    template <typename Transform, typename Poly>
+    template<typename Transform, typename Poly>
     class key_operator
     {
         Transform m_transform;
 
     public:
-        key_operator(Transform t) : m_transform(t) {}
+        key_operator(Transform t)
+            : m_transform(t)
+        {}
 
-        template <typename Vector> void
-        operator()(Vector &result, typename Vector::KEY const &lhs_key, scalar_t const &lhs_val,
-                   typename Vector::KEY const &rhs_key, scalar_t const &rhs_val)
+        template<typename Vector>
+        void
+        operator()(Vector& result, typename Vector::KEY const& lhs_key, scalar_t const& lhs_val,
+                   typename Vector::KEY const& rhs_key, scalar_t const& rhs_val)
         {
             result.add_scal_prod(prod<Poly>(lhs_key, rhs_key), m_transform(Coeff::mul(lhs_val, rhs_val)));
         }
     };
 
 public:
-    template <typename Algebra, typename Operator>
-    Algebra &multiply_and_add(Algebra &result, Algebra const &lhs, Algebra const &rhs, Operator op) const
+    template<typename Algebra, typename Operator>
+    Algebra& multiply_and_add(Algebra& result, Algebra const& lhs, Algebra const& rhs, Operator op) const
     {
-        key_operator <Operator, Algebra> kt(op);
+        key_operator<Operator, Algebra> kt(op);
         lhs.buffered_apply_binary_transform(result, rhs, kt);
         return result;
     }
 
-    template <typename Algebra, typename Operator> Algebra &
-    multiply_and_add(Algebra &result, Algebra const &lhs, Algebra const &rhs, Operator op, DEG const max_depth) const
+    template<typename Algebra, typename Operator>
+    Algebra&
+    multiply_and_add(Algebra& result, Algebra const& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
     {
-        key_operator <Operator, Algebra> kt(op);
+        key_operator<Operator, Algebra> kt(op);
         lhs.buffered_apply_binary_transform(result, rhs, kt, max_depth);
         return result;
     }
 
-    template <typename Algebra, typename Operator>
-    Algebra multiply(Algebra const &lhs, Algebra const &rhs, Operator op) const
+    template<typename Algebra, typename Operator>
+    Algebra multiply(Algebra const& lhs, Algebra const& rhs, Operator op) const
     {
         Algebra result;
         multiply_and_add(result, lhs, rhs, op);
         return result;
     }
 
-    template <typename Algebra, typename Operator>
-    Algebra multiply(Algebra const &lhs, Algebra const &rhs, Operator op, DEG const max_depth) const
+    template<typename Algebra, typename Operator>
+    Algebra multiply(Algebra const& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
     {
         Algebra result;
         multiply_and_add(result, lhs, rhs, op, max_depth);
         return result;
     }
 
-    template <typename Algebra, typename Operator>
-    Algebra &multiply_inplace(Algebra &lhs, Algebra const &rhs, Operator op) const
+    template<typename Algebra, typename Operator>
+    Algebra& multiply_inplace(Algebra& lhs, Algebra const& rhs, Operator op) const
     {
-        key_operator <Operator, Algebra> kt(op);
+        key_operator<Operator, Algebra> kt(op);
         lhs.unbuffered_apply_binary_transform(rhs, kt);
         return lhs;
     }
 
-    template <typename Algebra, typename Operator>
-    Algebra &multiply_inplace(Algebra &lhs, Algebra const &rhs, Operator op, DEG const max_depth) const
+    template<typename Algebra, typename Operator>
+    Algebra& multiply_inplace(Algebra& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
     {
-        key_operator <Operator, Algebra> kt(op);
+        key_operator<Operator, Algebra> kt(op);
         lhs.unbuffered_apply_binary_transform(rhs, kt, max_depth);
         return lhs;
     }
@@ -129,10 +134,10 @@ public:
    polynomial is essentially a sparse vector of monomials with polynomial
    commutative product.
  */
-template <typename Coeff> class poly : public algebra<poly_basis, Coeff, poly_multiplication<Coeff>>
+template<typename Coeff, typename...>
+class poly : public algebra<poly_basis, Coeff, poly_multiplication<Coeff>>
 {
     typedef poly_multiplication<Coeff> multiplication_t;
-
 public:
     typedef typename Coeff::S SCA;
     typedef typename Coeff::Q RAT;
@@ -142,7 +147,7 @@ public:
     /// Import of the KEY type.
     typedef typename BASIS::KEY KEY;
     /// The algebra type.
-    typedef algebra <BASIS, Coeff, multiplication_t> ALG;
+    typedef algebra<BASIS, Coeff, multiplication_t> ALG;
     /// The sparse_vector type.
     typedef typename ALG::VECT VECT;
     /// Import of the iterator type.
@@ -151,48 +156,91 @@ public:
     typedef typename ALG::const_iterator const_iterator;
 
     /// Default constructor. Empty polynomial. Zero.
-    poly(void) {}
+    poly() = default;
 
     /// Copy constructor.
-    poly(const poly &p) : ALG(p) {}
+    poly(const poly& p)
+        : ALG(p)
+    {}
 
     /// Constructs an instance from an algebra instance.
-    poly(const ALG &a) : ALG(a) {}
+    poly(const ALG& a)
+        : ALG(a)
+    {}
 
     /// Constructs an instance from a sparse_vector instance.
-    poly(const VECT &v) : ALG(v) {}
+    poly(const VECT& v)
+        : ALG(v)
+    {}
 
     /// Constructs an instance from a scalar. Embedding of scalars.
-    explicit poly(const SCA &s) : ALG(poly::basis.empty_key, s) {}
+    explicit poly(const SCA& s)
+        : ALG(poly::basis.empty_key, s)
+    {}
 
     /// Constructs a unidimensional instance from a key (a monomial).
-    explicit poly(const KEY &k) : ALG(k) {}
+    explicit poly(const KEY& k)
+        : ALG(k)
+    {}
 
     /// Constructs a unidimensional instance from a given letter and scalar.
-    explicit poly(LET letter, const SCA &s) : ALG(VECT::basis.keyofletter(letter), s) {}
+    explicit poly(LET letter, const SCA& s)
+        : ALG(VECT::basis.keyofletter(letter), s)
+    {}
+
+    poly& operator=(const poly&) = default;
+    poly& operator=(poly&&) noexcept = default;
 
 public:
     /// Ensures that the return type is an instance of polynomial.
-    inline __DECLARE_BINARY_OPERATOR(poly, *, *=, SCA)
+    inline poly operator*(const SCA& rhs) const
+    {
+        poly result(*this);
+        result *= rhs;
+        return result;
+    }
 
     /// Ensures that the return type is an instance of polynomial.
-    inline __DECLARE_BINARY_OPERATOR(poly, /, /=, RAT)
+    inline poly operator/(const RAT& rhs) const
+    {
+        poly result(*this);
+        result /= rhs;
+        return result;
+    }
 
     /// Ensures that the return type is an instance of polynomial.
-    inline __DECLARE_BINARY_OPERATOR(poly, *, *=, poly)
+    inline poly
+    operator*(const poly& rhs) const
+    {
+        poly result(*this);
+        result *= rhs;
+        return result;
+    }
 
     /// Ensures that the return type is an instance of polynomial.
-    inline __DECLARE_BINARY_OPERATOR(poly, +, +=, poly)
+    inline poly
+    operator+(const poly& rhs) const
+    {
+        poly result(*this);
+        result += rhs;
+        return result;
+    }
 
     /// Ensures that the return type is an instance of polynomial.
-    inline __DECLARE_BINARY_OPERATOR(poly, -, -=, poly)
+    inline poly
+    operator-(const poly& rhs) const
+    {
+        poly result(*this);
+        result -= rhs;
+        return result;
+    }
 
     /// Ensures that the return type is an instance of polynomial.
-    inline __DECLARE_UNARY_OPERATOR(poly, -, -, ALG)
+    inline poly operator-() const { return poly(ALG::operator-()); }
 
     /// Evaluates the polynomial for some scalar values for letters
     /// (variables).
-    inline SCA eval(const std::map<LET, SCA> &values) const
+    inline SCA eval(const std::map<LET, SCA>& values) const
     {
         SCA result(VECT::zero);
         for (const_iterator i = VECT::begin(); i != VECT::end(); ++i) {
@@ -203,17 +251,18 @@ public:
 
 public:
     /// Partial differentiation of the KEY (monomial) k1 in the direction k2
-    inline static poly prediff(const KEY &k1, const LET &k2)
+    inline static poly prediff(const KEY& k1, const LET& k2)
     {
         typename KEY::iterator it;
         KEY k(k1);
         it = k.find(k2);
-        poly result; // zero
+        poly result;// zero
         if (it != k.end()) {
             if (it->second == 1) {
                 k.erase(it);
                 result = poly(k);
-            } else {
+            }
+            else {
                 SCA coeff = SCA((it->second)--);
                 poly temp1(k);
                 poly temp2(coeff);
@@ -225,7 +274,7 @@ public:
 
 public:
     /// Partial differentiation of a polynomail in the direction k2.
-    inline static poly diff(const poly &p1, const LET &k2)
+    inline static poly diff(const poly& p1, const LET& k2)
     {
         poly result;
         const_iterator it;
@@ -238,13 +287,13 @@ public:
     /// Computes the truncated exponential of arg
 
     /// The result is 1 + arg + arg^2/2! + ... + arg^n/n! where n = max_degree
-    inline friend poly exp(const poly &arg, DEG max_degree = 3)
+    inline friend poly exp(const poly& arg, DEG max_degree = 3)
     {
         static KEY kunit;
         poly result(kunit);
         for (DEG i = max_degree; i >= 1; --i) {
-            result.mul_scal_div(arg, (RAT) i);
-            result += (poly) kunit;
+            result.mul_scal_div(arg, (RAT)i);
+            result += (poly)kunit;
         }
         return result;
     }
@@ -256,7 +305,7 @@ public:
     /// is forced to 1.
     /// log(arg) = log(1+x) = x - x^2/2 + ... + (-1)^(n+1) x^n/n.
     /// max_degree must be > 0.
-    inline friend poly log(const poly &arg, DEG max_degree = 3)
+    inline friend poly log(const poly& arg, DEG max_degree = 3)
     {
         static KEY kunit;
         poly tunit(kunit);
@@ -268,18 +317,31 @@ public:
         poly result;
         for (DEG i = max_degree; i >= 1; --i) {
             if (i % 2 == 0) {
-                result.sub_scal_div(tunit, (RAT) i);
-            } else {
-                result.add_scal_div(tunit, (RAT) i);
+                result.sub_scal_div(tunit, (RAT)i);
+            }
+            else {
+                result.add_scal_div(tunit, (RAT)i);
             }
             result *= x;
         }
         return result;
     }
+
+
+private:
+
+    friend class boost::serialization::access;
+
+    template <typename Archive>
+    void serialize(Archive &ar, unsigned int const /* version */) {
+        ar & boost::serialization::base_object<ALG>(*this);
+    }
+
+
 };
 
-} // namespace alg
+}// namespace alg
 // Include once wrapper
-#endif // DJC_COROPA_LIBALGEBRA_POLYNOMIALSH_SEEN
+#endif// DJC_COROPA_LIBALGEBRA_POLYNOMIALSH_SEEN
 
 // EOF.

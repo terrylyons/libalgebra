@@ -18,7 +18,8 @@ namespace alg {
 
 /// Provides maps between lie and free_tensor instances.
 template<typename Coeff, DEG n_letters, DEG max_degree, typename Tensor, typename Lie>
-class maps {
+class maps
+{
     typedef typename Coeff::S SCA;
     typedef typename Coeff::Q RAT;
 
@@ -38,24 +39,22 @@ class maps {
     typedef Tensor TENSOR;
 
     typedef vectors::sparse_vector<
-    TBASIS, Coeff, std::unordered_map<TKEY, SCA, typename TKEY::hash>
-    > sparse_tensor_vect;
+            TBASIS, Coeff, std::unordered_map<TKEY, SCA, typename TKEY::hash>>
+            sparse_tensor_vect;
 
     typedef algebra<
-    TBASIS,
-    Coeff,
-    free_tensor_multiplication<Coeff>,
-    sparse_tensor_vect
+            TBASIS,
+            Coeff,
+            free_tensor_multiplication<Coeff>,
+            vectors::sparse_vector
     > sparse_tensor_t;
 
     using dense_lie1_t = algebra<
-    lie_basis<n_letters, 1>,
-    Coeff,
-    lie_multiplication<Coeff>,
-    vectors::dense_vector<lie_basis<n_letters, 1>, Coeff>
+            lie_basis<n_letters, 1>,
+            Coeff,
+            lie_multiplication<Coeff>,
+            vectors::dense_vector
     >;
-
-
 
 private:
     struct expand_letter {
@@ -72,8 +71,7 @@ private:
         }
     };
 
-    using expand_function_t = typename LBASIS::template
-    extended_function<expand_letter, commutator_type, lazy_cache_tag<void> >;
+    using expand_function_t = typename LBASIS::template extended_function<expand_letter, commutator_type, lazy_cache_tag<void>>;
 
 public:
     /**
@@ -85,19 +83,22 @@ public:
     expand_function_t expand;
 
     /// Default constructor.
-    maps(void) : expand(LIE::basis.template extend_function<expand_function_t>())
+    maps()
+        : expand(LIE::basis.template extend_function<expand_function_t>())
     {}
 
 public:
     /// computes the linear map
-    class t2t {
-        typedef alg::LET (* translator)(const LET);
+    class t2t
+    {
+        typedef alg::LET (*translator)(const LET);
 
         const translator h;
 
     public:
-        t2t(translator arg)
-                :h(arg) { }
+        explicit t2t(translator arg)
+            : h(arg)
+        {}
 
         template<typename Coeff2, DEG n_letters1, DEG max_degree1>
         TENSOR operator()(const alg::free_tensor<Coeff2, n_letters1, max_degree1>& in) const
@@ -105,9 +106,9 @@ public:
             typedef alg::free_tensor<Coeff2, n_letters1, max_degree1> TENSORIN;
 
             TENSOR out;
-            for (typename TENSORIN::const_iterator it = in.begin(); it!=in.end(); ++it) {
+            for (typename TENSORIN::const_iterator it = in.begin(); it != in.end(); ++it) {
                 typename TENSOR::KEY y(it->key(), h);
-                if (SCA(0)==(out[y] += (it->value()))) {
+                if (SCA(0) == (out[y] += (it->value()))) {
                     out.erase(y);
                 }
             }
@@ -118,11 +119,11 @@ public:
     /// Computes the free_tensor truncated exponential of a free lie element.
     inline TENSOR exp(LET l)
     {
-        TKEY k; // empty word.
+        TKEY k;// empty word.
         TENSOR result(k);
         SCA coef(+1);
         DEG i;
-        for (i = 1; i<=max_degree; ++i) {
+        for (i = 1; i <= max_degree; ++i) {
             coef /= (RAT)i;
             k.push_back(l);
             result[k] = coef;
@@ -136,7 +137,7 @@ public:
     {
         Tensor result;
         typename InputLie::const_iterator i, iend(arg.end());
-        for (i = arg.begin(); i!=iend; ++i) {
+        for (i = arg.begin(); i != iend; ++i) {
             result.add_scal_prod(expand(i->key()), i->value());
         }
         return result;
@@ -146,14 +147,14 @@ public:
     Tensor l2t(dense_lie1_t&& arg)
     {
         SCA* start = &arg.begin()->value();
-        return Tensor(DIMN(1), start, start+n_letters);
+        return Tensor(DIMN(1), start, start + n_letters);
     }
 
     /// Convert tensor to lie
     Tensor l2t(dense_lie1_t const& arg)
     {
         SCA const* start = &arg.begin()->value();
-        return Tensor(DIMN(1), &*start, start+n_letters);
+        return Tensor(DIMN(1), &*start, start + n_letters);
     }
 
     /**
@@ -167,13 +168,13 @@ public:
     {
         Lie result;
         typename InputTensor::const_iterator i;
-        for (i = arg.begin(); i!=arg.end(); ++i) {
-            if (i->value()!=Tensor::zero) {
+        for (i = arg.begin(); i != arg.end(); ++i) {
+            if (i->value() != Tensor::zero) {
                 result.add_scal_prod(rbraketing(i->key()), i->value());
             }
         }
         typename Lie::iterator j;
-        for (j = result.begin(); j!=result.end(); ++j) {
+        for (j = result.begin(); j != result.end(); ++j) {
             j->value() /= (RAT)(LIE::basis.degree(j->key()));
         }
         return result;
@@ -204,7 +205,6 @@ public:
         }
         return value = _rbraketing(k);
 
-
         /*
         it = lies.find(k);
         if (it != lies.end()) {
@@ -215,24 +215,22 @@ public:
          */
     }
 
-
-
 private:
-
     /// a1,a2,...,an is converted into [a1,[a2,[...,an]]] recursively.
     template<typename TensorKey>
     LIE _rbraketing(const TensorKey& k)
     {
-        if (k.size()==1) {
+        if (k.size() == 1) {
             return (LIE)LIE::basis.keyofletter(k.FirstLetter());
         }
-        return rbraketing(k.lparent())*rbraketing(k.rparent());
+        return rbraketing(k.lparent()) * rbraketing(k.rparent());
     }
 };
 
 /// Provides Campbell-Baker-Hausdorff formulas.
 template<typename Coeff, DEG n_letters, DEG max_degree, typename Tensor, typename Lie>
-class cbh {
+class cbh
+{
     typedef typename Coeff::S SCA;
     typedef typename Coeff::Q RAT;
 
@@ -253,7 +251,7 @@ class cbh {
     /// The MAPS type.
     typedef maps<Coeff, n_letters, max_degree, Tensor, Lie> MAPS;
     /// Maps between lie and free_tensor instances.
-    mutable MAPS m_maps; // TJL added mutable
+    mutable MAPS m_maps;// TJL added mutable
 public:
     /// The empty free_tensor.
     TENSOR empty_tensor;
@@ -262,18 +260,18 @@ public:
 
 public:
     /// Default constructor.
-    cbh(void) { }
+    cbh() = default;
 
 public:
     /// Returns the CBH formula as a free lie element from a vector of letters.
     inline LIE basic(const std::vector<LET>& s) const
     {
-        if (s.size()==0) {
+        if (s.empty()) {
             return empty_lie;
         }
         TENSOR tmp(m_maps.exp(s[0]));
         typename std::string::size_type i;
-        for (i = 1; i<s.size(); ++i) {
+        for (i = 1; i < s.size(); ++i) {
             tmp *= m_maps.exp(s[i]);
         }
         return m_maps.t2l(log(tmp));
@@ -283,14 +281,14 @@ public:
     template<typename InputIt>
     LIE full(InputIt start, InputIt finish)
     {
-        if (start==finish) {
+        if (start == finish) {
             return empty_lie;
         }
 
         InputIt it(start);
         TENSOR result(exp(m_maps.l2t(*(it++))));
 
-        for (; it!=finish; ++it) {
+        for (; it != finish; ++it) {
             result.fmexp_inplace(m_maps.l2t(*it));
         }
 
@@ -300,21 +298,20 @@ public:
     /// Returns the CBH formula as a free lie element from a vector of lie.
     inline LIE full(const std::vector<const LIE*>& lies) const
     {
-        if (lies.size()==0) {
+        if (lies.empty()) {
             return empty_lie;
         }
         typename std::vector<const LIE*>::size_type i;
         TENSOR tmp(exp(m_maps.l2t(*lies[0])));
-        for (i = 1; i<lies.size(); ++i) {
+        for (i = 1; i < lies.size(); ++i) {
             tmp.fmexp_inplace(m_maps.l2t(*lies[i]));
         }
         return m_maps.t2l(log(tmp));
     }
-
 };
 
-} // namespace alg
+}// namespace alg
 // Include once wrapper
-#endif // DJC_COROPA_LIBALGEBRA_UTILSH_SEEN
+#endif// DJC_COROPA_LIBALGEBRA_UTILSH_SEEN
 
 // EOF.

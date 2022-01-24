@@ -24,6 +24,11 @@ namespace coefficients {
         return (lhs OP## = rhs);                                                                            \
     }
 
+/**
+ * @brief
+ * @tparam Scalar
+ * @tparam Rational
+ */
 template<typename Scalar, typename Rational>
 struct coefficient_ring {
 
@@ -39,15 +44,17 @@ struct coefficient_ring {
     static const typename std::enable_if<is_unital, SCA>::type one;
     static const typename std::enable_if<is_unital, SCA>::type mone;
 
-    static constexpr Scalar from(DEG degree) noexcept(noexcept(Scalar(degree)))
+    static constexpr typename std::enable_if<is_unital, SCA>::type
+    from(DEG degree) noexcept(noexcept(SCA(degree)))
     {
         return static_cast<Scalar>(degree);
     }
 
     template<typename T>
-    static constexpr Scalar from(T arg) noexcept(noexcept(Scalar(arg)))
+    static constexpr SCA
+    from(T arg) noexcept(noexcept(SCA(arg)))
     {
-        return static_cast<Scalar>(arg);
+        return static_cast<SCA>(arg);
     }
 
     static constexpr SCA uminus(SCA arg) noexcept(noexcept(-arg))
@@ -84,7 +91,7 @@ const typename std::enable_if<
         Scalar>::type coefficient_ring<Scalar, Rational>::mone(-1);
 
 /**
- * @brief A field (or more generally, ring) that can be used as coefficients in a vector
+ * @brief A field that can be used as coefficients in a vector
  *
  * A coefficient field type encapsulates the properties that are required to build
  * a valid vector space (or module if the coefficients do not actually form a field).
@@ -107,6 +114,7 @@ template<typename Scalar>
 struct coefficient_field : public coefficient_ring<Scalar, Scalar> {
 
     using ring_type = coefficient_ring<Scalar, Scalar>;
+    using ring_type::is_unital;
 
     static_assert(ring_type::is_unital, "a field must be unital");
 
@@ -115,7 +123,9 @@ struct coefficient_field : public coefficient_ring<Scalar, Scalar> {
     using typename ring_type::S;
     using typename ring_type::SCA;
 
-
+    using ring_type::mone;
+    using ring_type::one;
+    using ring_type::zero;
 };
 
 #undef LIBALGEBRA_FIELD_GENERATE_BINARY
@@ -123,7 +133,32 @@ struct coefficient_field : public coefficient_ring<Scalar, Scalar> {
 typedef coefficient_field<double> double_field;
 typedef coefficient_field<float> float_field;
 
-}// namespace coefficients
+template<typename DestCoeff, typename SourceCoeff>
+struct is_convertible_from {
+private:
+    template<typename U, typename = decltype(typename DestCoeff::SCA(std::declval<typename U::SCA>()))>
+    static std::true_type check(void*);
+
+    template<typename>
+    static std::false_type check(...);
+
+public:
+    static constexpr bool value = decltype(check<SourceCoeff>(nullptr))::value;
+};
+
+template<typename T>
+struct is_coefficient_ring {
+private:
+    template<typename S, typename R>
+    static std::true_type check(coefficient_ring<S, R>&);
+
+    static std::false_type check(...);
+
+public:
+    static constexpr bool value = decltype(check(std::declval<T&>()))::value;
+};
+
+};// namespace coefficients
 }// namespace alg
 
 #endif// LIBALGEBRA_COEFFICIENTS_H

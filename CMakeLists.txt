@@ -34,15 +34,13 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/)
 find_package(Bignum)
 
 # Interface libraries sometimes complain if you list sources, see below.
-add_library(Libalgebra INTERFACE)
-
-# For IDEs that use target sources lists to generate project information
-# we add a custom target that attaches these sources.
-add_custom_target(Libalgebra.headers SOURCES
+add_library(Libalgebra INTERFACE
         libalgebra/basis/tags.h
         libalgebra/basis/basis.h
         libalgebra/coefficients/coefficients.h
         libalgebra/coefficients/complex.h
+        libalgebra/coefficients/mpfloat_field.h
+        libalgebra/coefficients/rational_coefficients.h
         libalgebra/utils/integer_maths.h
         libalgebra/utils/iterators.h
         libalgebra/utils/meta.h
@@ -78,7 +76,15 @@ add_custom_target(Libalgebra.headers SOURCES
         libalgebra/polynomials.h
         libalgebra/tensor.h
         libalgebra/tensor_basis.h
-        libalgebra/utils.h
+        libalgebra/utils.h)
+
+target_sources(Libalgebra INTERFACE
+        )
+
+# For IDEs that use target sources lists to generate project information
+# we add a custom target that attaches these sources.
+add_custom_target(Libalgebra.headers SOURCES
+
         )
 
 target_include_directories(Libalgebra
@@ -99,9 +105,9 @@ target_compile_definitions(Libalgebra INTERFACE $<$<CONFIG:Debug>:_DEBUG>)
 set_property(TARGET Libalgebra PROPERTY CXX_STANDARD 11)
 set_property(TARGET Libalgebra PROPERTY CXX_STANDARD_REQUIRED ON)
 # Set the __cplusplus macro in MSVC to a current compiler value
-if(MSVC)
-target_compile_options(Libalgebra INTERFACE "/Zc:__cplusplus")
-endif()
+if (MSVC)
+    target_compile_options(Libalgebra INTERFACE "/Zc:__cplusplus")
+endif ()
 if (TARGET Bignum::Bignum)
     target_link_libraries(Libalgebra INTERFACE Bignum::Bignum)
 else ()

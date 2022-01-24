@@ -6,27 +6,23 @@
 #define LIBALGEBRA_META_H
 
 #include <array>
-#include <boost/type_traits.hpp>
+#include <limits>
+#include <type_traits>
 
 namespace alg {
 namespace utils {
 
-struct true_type {
-    static const bool value = true;
-};
-
-struct false_type {
-    static const bool value = false;
-};
-
-// C++98 does not have enable_if, so define our own
-template<bool Cond, typename T = void>
-struct enable_if {
-};
-
 template<typename T>
-struct enable_if<true, T> {
-    typedef T type;
+struct scalar_base {
+private:
+    template<typename U, typename R = typename U::SCA>
+    static R check(void*);
+
+    template<typename U>
+    static U check(...);
+
+public:
+    using type = decltype(check<T>(nullptr));
 };
 
 template<typename T, typename V>
@@ -36,12 +32,12 @@ struct copy_constness {
 
 template<typename T, typename V>
 struct copy_constness<const T, V> {
-    typedef typename boost::add_const<V>::type type;
+    typedef typename std::add_const<V>::type type;
 };
 
 template<typename T, typename V>
 struct copy_constness<const T&, V> {
-    typedef typename boost::add_const<V>::type type;
+    typedef typename std::add_const<V>::type type;
 };
 
 template<template<unsigned, unsigned> class Compute, unsigned W, unsigned D>

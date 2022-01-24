@@ -5,6 +5,11 @@
 #ifndef LIBALGEBRA_COEFFICIENTS_H
 #define LIBALGEBRA_COEFFICIENTS_H
 
+#include <libalgebra/implementation_types.h>
+#include <libalgebra/utils/meta.h>
+
+#include <type_traits>
+
 namespace alg {
 namespace coefficients {
 
@@ -18,6 +23,65 @@ namespace coefficients {
     {                                                                                                       \
         return (lhs OP## = rhs);                                                                            \
     }
+
+template<typename Scalar, typename Rational>
+struct coefficient_ring {
+
+    static constexpr bool is_unital = std::is_constructible<Scalar, typename alg::utils::scalar_base<Scalar>::type>::value;
+
+    typedef Scalar SCA;
+    typedef Rational RAT;
+    typedef SCA S;
+    typedef RAT Q;
+
+    static const SCA zero;
+
+    static const typename std::enable_if<is_unital, SCA>::type one;
+    static const typename std::enable_if<is_unital, SCA>::type mone;
+
+    static constexpr Scalar from(DEG degree) noexcept(noexcept(Scalar(degree)))
+    {
+        return static_cast<Scalar>(degree);
+    }
+
+    template<typename T>
+    static constexpr Scalar from(T arg) noexcept(noexcept(Scalar(arg)))
+    {
+        return static_cast<Scalar>(arg);
+    }
+
+    static constexpr SCA uminus(SCA arg) noexcept(noexcept(-arg))
+    {
+        return -arg;
+    }
+
+    LIBALGEBRA_FIELD_GENERATE_BINARY(add, +, SCA, SCA, SCA);
+
+    LIBALGEBRA_FIELD_GENERATE_BINARY(sub, -, SCA, SCA, SCA);
+
+    LIBALGEBRA_FIELD_GENERATE_BINARY(mul, *, SCA, SCA, SCA);
+
+    LIBALGEBRA_FIELD_GENERATE_BINARY(div, /, SCA, SCA, RAT);
+};
+
+/*
+ * The zero element should always exist and should be the result of default initialisation.
+ */
+template<typename Scalar, typename Rational>
+const Scalar coefficient_ring<Scalar, Rational>::zero;
+
+/*
+ * One and minus one only exist when the ring is unital.
+ */
+template<typename Scalar, typename Rational>
+const typename std::enable_if<
+        coefficient_ring<Scalar, Rational>::is_unital,
+        Scalar>::type coefficient_ring<Scalar, Rational>::one(1);
+
+template<typename Scalar, typename Rational>
+const typename std::enable_if<
+        coefficient_ring<Scalar, Rational>::is_unital,
+        Scalar>::type coefficient_ring<Scalar, Rational>::mone(-1);
 
 /**
  * @brief A field (or more generally, ring) that can be used as coefficients in a vector
@@ -38,42 +102,21 @@ namespace coefficients {
  * the built in arithmetic for type like floats and doubles.
  *
  * @tparam Scalar Type for scalar (coefficient) values
- * @tparam Rational Type of rational values in the field (ring). Default: Scalar
  */
-template<typename Scalar, typename Rational = Scalar>
-struct coefficient_field {
+template<typename Scalar>
+struct coefficient_field : public coefficient_ring<Scalar, Scalar> {
 
-    typedef Scalar SCA;
-    typedef Rational RAT;
-    typedef SCA S;
-    typedef RAT Q;
+    using ring_type = coefficient_ring<Scalar, Scalar>;
 
-    static const SCA one;
-    static const SCA zero;
-    static const SCA mone;
+    static_assert(ring_type::is_unital, "a field must be unital");
 
-    static constexpr SCA uminus(SCA arg) noexcept(noexcept(-arg))
-    {
-        return -arg;
-    }
+    using typename ring_type::Q;
+    using typename ring_type::RAT;
+    using typename ring_type::S;
+    using typename ring_type::SCA;
 
-    LIBALGEBRA_FIELD_GENERATE_BINARY(add, +, SCA, SCA, SCA);
 
-    LIBALGEBRA_FIELD_GENERATE_BINARY(sub, -, SCA, SCA, SCA);
-
-    LIBALGEBRA_FIELD_GENERATE_BINARY(mul, *, SCA, SCA, SCA);
-
-    LIBALGEBRA_FIELD_GENERATE_BINARY(div, /, SCA, SCA, RAT);
 };
-
-template<typename Scalar, typename Rational>
-const Scalar coefficient_field<Scalar, Rational>::one(1);
-
-template<typename Scalar, typename Rational>
-const Scalar coefficient_field<Scalar, Rational>::zero(0);
-
-template<typename Scalar, typename Rational>
-const Scalar coefficient_field<Scalar, Rational>::mone(-1);
 
 #undef LIBALGEBRA_FIELD_GENERATE_BINARY
 

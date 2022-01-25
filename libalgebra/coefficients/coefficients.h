@@ -75,7 +75,7 @@ struct coefficient_ring {
  * The zero element should always exist and should be the result of default initialisation.
  */
 template<typename Scalar, typename Rational>
-const Scalar coefficient_ring<Scalar, Rational>::zero;
+const Scalar coefficient_ring<Scalar, Rational>::zero{};
 
 /*
  * One and minus one only exist when the ring is unital.

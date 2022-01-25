@@ -51,6 +51,7 @@ add_custom_target(Libalgebra.headers SOURCES
         libalgebra/utils/iterators.h
         libalgebra/utils/meta.h
         libalgebra/utils/order_trait.h
+        libalgebra/utils/is_vector_trait.h
         libalgebra/vectors/base_vector.h
         libalgebra/vectors/dense_storage.h
         libalgebra/vectors/dense_vector.h

@@ -9,6 +9,7 @@ Version 3. (See accompanying file License.txt)
 ************************************************************* */
 
 #include <stddef.h>
+#include <type_traits>
 
 //  implimentation_types.h : provides definitions for basic types
 

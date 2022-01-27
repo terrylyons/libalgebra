@@ -103,4 +103,6 @@ using right_multiplication_operator = linear_operator<
 }// namespace alg
 
 #include <libalgebra/operators/free_extension.h>
+#include <libalgebra/operators/tensor_operator.h>
+
 #endif//LIBALGEBRA_OPERATORS_H

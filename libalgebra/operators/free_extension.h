@@ -89,13 +89,18 @@ private:
         }
     }
 
+    result_type eval(const key_type& k, no_caching_tag) const
+    {
+        return m_fn(k);
+    }
+
 public:
     template<typename Coeff, template<typename, typename, typename...> class VT>
     result_type operator()(const vectors::vector<Basis, Coeff, VT>& arg) const
     {
         result_type result;
         for (auto item : arg) {
-            result.add_scal_prod(eval(item.key()), item.value());
+            result.add_scal_prod(eval(item.key(), m_tag), item.value());
         }
         return result;
     }

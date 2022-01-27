@@ -99,9 +99,8 @@ using right_multiplication_operator = linear_operator<
         Algebra,
         Algebra>;
 
-#include <libalgebra/operators/free_extension.h>
-
 }// namespace operators
 }// namespace alg
 
+#include <libalgebra/operators/free_extension.h>
 #endif//LIBALGEBRA_OPERATORS_H

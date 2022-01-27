@@ -5,6 +5,8 @@
 #ifndef LIBALGEBRA_OPERATORS_H
 #define LIBALGEBRA_OPERATORS_H
 
+#include <libalgebra/operators/scalar_multiply_operator.h>
+#include <libalgebra/operators/sum_operator.h>
 #include <type_traits>
 #include <utility>
 
@@ -30,6 +32,26 @@ public:
     using implementation_type::implementation_type;
     using result_type = ResultType;
     using implementation_type::operator();
+
+public:
+    linear_operator<
+            scalar_multiply_operator<ArgumentType, ResultType, Impl, typename ResultType::SCA>,
+            ArgumentType,
+            ResultType>
+    operator*(const typename ResultType::SCA& scale) const
+    {
+        return {*this, scale};
+    }
+
+    template<typename OtherImpl>
+    linear_operator<
+            sum_operator<Impl, OtherImpl, ArgumentType, ResultType>,
+            ArgumentType,
+            ResultType>
+    operator+(const linear_operator<OtherImpl, ArgumentType, ResultType>& other) const
+    {
+        return {*this, other};
+    }
 };
 
 template<typename Impl, typename ArgumentType>

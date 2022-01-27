@@ -35,7 +35,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/)
 find_package(Bignum)
 
 # Interface libraries sometimes complain if you list sources, see below.
-add_library(Libalgebra INTERFACE libalgebra/utils/caching_tags.h)
+add_library(Libalgebra INTERFACE)
 
 # For IDEs that use target sources lists to generate project information
 # we add a custom target that attaches these sources.
@@ -47,6 +47,7 @@ add_custom_target(Libalgebra.headers SOURCES
         libalgebra/utils/iterators.h
         libalgebra/utils/meta.h
         libalgebra/utils/order_trait.h
+        libalgebra/utils/caching_tags.h
         libalgebra/vectors/base_vector.h
         libalgebra/vectors/dense_storage.h
         libalgebra/vectors/dense_vector.h
@@ -73,6 +74,7 @@ add_custom_target(Libalgebra.headers SOURCES
         libalgebra/operators/dot_product_implementations.h
         libalgebra/operators/functionals.h
         libalgebra/operators/free_extension.h
+        libalgebra/operators/tensor_operator.h
         libalgebra/poly_basis.h
         libalgebra/poly_lie.h
         libalgebra/poly_lie_basis.h

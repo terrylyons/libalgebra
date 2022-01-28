@@ -43,4 +43,5 @@ target_link_libraries(all_tests PRIVATE
         la_unittests::hall_set_tests
         la_unittests::serialization_tests
         la_unittests::shuffle_tensor_tests
+        la_unittests::operators_tests
         )

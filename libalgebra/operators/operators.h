@@ -38,15 +38,6 @@ public:
     using implementation_type::operator();
 
 public:
-    linear_operator<
-            scalar_multiply_operator<ArgumentType, ResultType, Impl, typename ResultType::SCA>,
-            ArgumentType,
-            ResultType>
-    operator*(const typename ResultType::SCA& scale) const
-    {
-        return {*this, scale};
-    }
-
     template<typename OtherImpl>
     linear_operator<
             sum_operator<Impl, OtherImpl, ArgumentType, ResultType>,
@@ -57,14 +48,21 @@ public:
         return {*this, other};
     }
 
-    template<typename OtherImpl, typename NewResultType>
+    template<typename OtherImpl, typename NewArgumentType>
     linear_operator<
-            composition_operator<Impl, OtherImpl, ArgumentType, NewResultType>,
-            ArgumentType,
-            NewResultType>
-    operator*(const linear_operator<OtherImpl, ResultType, NewResultType>& other) const
+            composition_operator<Impl, OtherImpl, NewArgumentType, ResultType>,
+            NewArgumentType,
+            ResultType> friend
+    operator*(const linear_operator& outer,
+              const linear_operator<OtherImpl, NewArgumentType, ArgumentType>& inner)
     {
-        return {*this, other};
+        using composition_type = composition_operator<Impl, OtherImpl, NewArgumentType, ResultType>;
+        using return_type = linear_operator<
+                composition_type,
+                NewArgumentType,
+                ResultType>;
+
+        return return_type(composition_type(static_cast<const OtherImpl&>(inner)), static_cast<const Impl&>(outer));
     }
 };
 

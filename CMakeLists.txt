@@ -14,6 +14,7 @@ project(Libalgebra VERSION 2.0.0)
 
 option(LIBALGEBRA_TESTING "Enable building test targets" OFF)
 
+set(CMAKE_CXX_STANDARD 14)
 
 # This helps IDEs that can arrange projects into folders (apparently)
 # See https://cmake.org/cmake/help/v3.22/prop_gbl/USE_FOLDERS.html
@@ -47,6 +48,7 @@ add_custom_target(Libalgebra.headers SOURCES
         libalgebra/utils/iterators.h
         libalgebra/utils/meta.h
         libalgebra/utils/order_trait.h
+        libalgebra/utils/caching_tags.h
         libalgebra/vectors/base_vector.h
         libalgebra/vectors/dense_storage.h
         libalgebra/vectors/dense_vector.h
@@ -72,6 +74,11 @@ add_custom_target(Libalgebra.headers SOURCES
         libalgebra/operators/operators.h
         libalgebra/operators/dot_product_implementations.h
         libalgebra/operators/functionals.h
+        libalgebra/operators/free_extension.h
+        libalgebra/operators/tensor_operator.h
+        libalgebra/operators/scalar_multiply_operator.h
+        libalgebra/operators/sum_operator.h
+        libalgebra/operators/composition_operator.h
         libalgebra/poly_basis.h
         libalgebra/poly_lie.h
         libalgebra/poly_lie_basis.h
@@ -79,6 +86,7 @@ add_custom_target(Libalgebra.headers SOURCES
         libalgebra/tensor.h
         libalgebra/tensor_basis.h
         libalgebra/utils.h
+
         )
 
 target_include_directories(Libalgebra

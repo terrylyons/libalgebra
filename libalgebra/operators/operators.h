@@ -29,13 +29,15 @@ public:
 protected:
     using implementation_type = Impl;
 
-    explicit linear_operator(Impl&& impl) : Impl(std::forward<Impl>(impl))
-    {}
-
 public:
     using implementation_type::implementation_type;
+
     using result_type = ResultType;
     using implementation_type::operator();
+
+protected:
+    explicit linear_operator(Impl&& impl) : Impl(std::forward<Impl>(impl))
+    {}
 
 public:
     template<typename OtherImpl>

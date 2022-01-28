@@ -5,6 +5,7 @@
 #ifndef LIBALGEBRA_OPERATORS_H
 #define LIBALGEBRA_OPERATORS_H
 
+#include <libalgebra/operators/composition_operator.h>
 #include <libalgebra/operators/scalar_multiply_operator.h>
 #include <libalgebra/operators/sum_operator.h>
 #include <type_traits>
@@ -28,6 +29,9 @@ public:
 protected:
     using implementation_type = Impl;
 
+    explicit linear_operator(Impl&& impl) : Impl(std::forward<Impl>(impl))
+    {}
+
 public:
     using implementation_type::implementation_type;
     using result_type = ResultType;
@@ -49,6 +53,16 @@ public:
             ArgumentType,
             ResultType>
     operator+(const linear_operator<OtherImpl, ArgumentType, ResultType>& other) const
+    {
+        return {*this, other};
+    }
+
+    template<typename OtherImpl, typename NewResultType>
+    linear_operator<
+            composition_operator<Impl, OtherImpl, ArgumentType, NewResultType>,
+            ArgumentType,
+            NewResultType>
+    operator*(const linear_operator<OtherImpl, ResultType, NewResultType>& other) const
     {
         return {*this, other};
     }

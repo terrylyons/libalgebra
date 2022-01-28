@@ -77,6 +77,7 @@ add_custom_target(Libalgebra.headers SOURCES
         libalgebra/operators/tensor_operator.h
         libalgebra/operators/scalar_multiply_operator.h
         libalgebra/operators/sum_operator.h
+        libalgebra/operators/composition_operator.h
         libalgebra/poly_basis.h
         libalgebra/poly_lie.h
         libalgebra/poly_lie_basis.h

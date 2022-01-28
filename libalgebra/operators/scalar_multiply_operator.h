@@ -16,14 +16,13 @@ class scalar_multiply_operator : protected Impl
     Scalar m_scalar;
 
 public:
-
     explicit scalar_multiply_operator(const Impl& implementation, const Scalar& s)
         : Impl(implementation), m_scalar(s)
     {}
 
     ResultType operator()(const ArgumentType& arg) const
     {
-        return m_scalar * Impl::operator()(arg);
+        return Impl::operator()(arg) * m_scalar;
     }
 
     scalar_multiply_operator& operator*=(const Scalar& other)
@@ -34,7 +33,7 @@ public:
 
     scalar_multiply_operator operator*(const Scalar& other) const
     {
-        return {*this, m_scalar*other};
+        return {*this, m_scalar * other};
     }
 };
 

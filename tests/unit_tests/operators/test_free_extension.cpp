@@ -6,6 +6,7 @@
 
 #include <libalgebra/alg_types.h>
 #include <libalgebra/libalgebra.h>
+#include <libalgebra/operators/free_extension.h>
 #include <libalgebra/operators/operators.h>
 
 template<typename Coeffs, unsigned Width, unsigned Depth>

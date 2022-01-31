@@ -35,7 +35,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/)
 find_package(Bignum)
 
 # Interface libraries sometimes complain if you list sources, see below.
-add_library(Libalgebra INTERFACE)
+add_library(Libalgebra INTERFACE libalgebra/vectors/flat_sparse_vector.h)
 
 # For IDEs that use target sources lists to generate project information
 # we add a custom target that attaches these sources.

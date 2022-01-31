@@ -19,6 +19,7 @@
 #include "libalgebra/vectors/hybrid_vector.h"
 #include "libalgebra/vectors/sparse_vector.h"
 #include "libalgebra/vectors/vector.h"
+#include <libalgebra/vectors/flat_sparse_vector.h>
 
 namespace alg {
 namespace vectors {
@@ -32,18 +33,14 @@ struct vector_type_selector {
                                                dense_vect>::type type;
 };
 
-
-template <typename Basis, typename Coeffs>
-struct template_vector_type_selector
-{
+template<typename Basis, typename Coeffs>
+struct template_vector_type_selector {
     template<typename B, typename C>
     using type = typename alg::utils::template_selector<
             boost::is_pod<typename Coeffs::S>::value,
             sparse_vector,
-            dense_vector
-    >::template type<B, C>;
+            dense_vector>::template type<B, C>;
 };
-
 
 }// namespace vectors
 }// namespace alg

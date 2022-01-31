@@ -555,6 +555,14 @@ public:
     }
 
 public:
+
+    reference emplace(size_type pos, value_type value) noexcept
+    {
+        return m_base.emplace(pos, value);
+    }
+
+
+public:
     /// Get the size of storage
     constexpr size_type size() const
     {

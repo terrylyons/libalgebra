@@ -60,6 +60,7 @@ struct lookup_table_tag {
     Predicate predicate;
 };
 
+
 struct lazy_cache_on_object_tag {
 };
 

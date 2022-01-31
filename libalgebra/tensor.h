@@ -207,11 +207,7 @@ public:
     {}
 
     /// Constructs a unidimensional instance from a letter and a scalar.
-    free_tensor(LET
-                        letter,
-                const SCA& s) : ALG(VECT::basis
-                                            .keyofletter(letter),
-                                    s)
+    free_tensor(LET letter, const SCA& s) : ALG(VECT::basis.keyofletter(letter), s)
     {
     }
 
@@ -448,17 +444,14 @@ public:
         return ans;
     }
 
-
 private:
+    friend class boost::serialization::access;
 
-friend class boost::serialization::access;
-
-template <typename Archive>
-void serialize(Archive &ar, unsigned int const /* version */) {
-    ar & boost::serialization::base_object<ALG>(*this);
-}
-
-
+    template<typename Archive>
+    void serialize(Archive& ar, unsigned int const /* version */)
+    {
+        ar& boost::serialization::base_object<ALG>(*this);
+    }
 };
 
 template<typename Coeff>
@@ -645,7 +638,6 @@ public:
     typedef typename ALG::const_iterator const_iterator;
 
 public:
-
     using ALG::ALG;
 
     /// Default constructor.
@@ -743,15 +735,14 @@ public:
     /// Ensures that the return type is a shuffle_tensor.
     inline shuffle_tensor operator-(void) const { return shuffle_tensor(ALG::operator-()); }
 
-
 private:
+    friend class boost::serialization::access;
 
-friend class boost::serialization::access;
-
-template <typename Archive>
-void serialize(Archive &ar, unsigned int const /* version */) {
-    ar & boost::serialization::base_object<ALG>(*this);
-}
+    template<typename Archive>
+    void serialize(Archive& ar, unsigned int const /* version */)
+    {
+        ar& boost::serialization::base_object<ALG>(*this);
+    }
 };
 
 }// namespace alg

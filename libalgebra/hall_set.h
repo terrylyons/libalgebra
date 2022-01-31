@@ -18,6 +18,7 @@
 #include "implementation_types.h"
 #include "utils/integer_maths.h"
 #include <libalgebra/utils/caching_tags.h>
+#include <libalgebra/utils/function_extension_cache_base.h>
 
 namespace alg {
 
@@ -574,6 +575,10 @@ public:
             else {
                 return eval_impl(k);
             }
+        }
+
+        output_type eval(const key_type& k, lazy_cache_on_object_tag) const
+        {
         }
 
     public:

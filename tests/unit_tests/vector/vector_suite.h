@@ -16,22 +16,23 @@
 
 #include <multi_test.h>
 #include <random_vector_generator.h>
+#include <rng.h>
 
 using alg::LET;
 
 NEW_AUTO_SUITE(vector_suite, template<typename, typename, typename...> class VectorType)
 {
-    using basis_type = alg::tensor_basis<5, 5>;
+    using basis_type = alg::tensor_basis<5, 2>;
     using coeff_type = alg::coefficients::rational_field;
     using tensor_vec = VectorType<basis_type, coeff_type>;
 
     using tkey_type = typename basis_type::KEY;
 
-    std::mt19937 rng(std::random_device{}());
-
     using S = typename alg::coefficients::rational_field::SCA;
 
-    la_testing::random_vector_generator<tensor_vec> vector_generator;
+    using skip_dist = std::uniform_int_distribution<alg::DIMN>;
+    using random_vect_gen = la_testing::random_vector_generator<tensor_vec,
+                                                                la_testing::uniform_rational_distribution<S>, skip_dist>;
 
     ADD_TEST(test_default_constructor_equal)
     {
@@ -106,6 +107,114 @@ NEW_AUTO_SUITE(vector_suite, template<typename, typename, typename...> class Vec
         tensor_vec left, right, expected;
 
         CHECK_EQUAL(expected, left + right);
+    };
+
+    ADD_TEST(test_addition_neutral_random)
+    {
+        std::mt19937 rng(std::random_device{}());
+        random_vect_gen gen(10UL, -2, 2);
+        tensor_vec left, right(gen(rng)), expected(right);
+
+        auto result = left + right;
+        CHECK_EQUAL(expected, result);
+    };
+
+    ADD_TEST(test_inplace_vs_external_addition)
+    {
+        std::mt19937 rng(std::random_device{}());
+        random_vect_gen gen(10UL, -2, 2);
+
+        tensor_vec left_inplace(gen(rng)), left(left_inplace), right(gen(rng));
+
+        left_inplace += right;
+        CHECK_EQUAL(left_inplace, left + right);
+    };
+
+    ADD_TEST(test_subtraction_neutral_neutral)
+    {
+        tensor_vec left, right, expected;
+
+        CHECK_EQUAL(expected, left - right);
+    };
+
+    ADD_TEST(test_subtraction_neutral_random_vs_uminus)
+    {
+        std::mt19937 rng(std::random_device{}());
+        random_vect_gen gen(10UL, -2, 2);
+        tensor_vec left, right(gen(rng)), expected(-right);
+
+        CHECK_EQUAL(expected, left - right);
+    };
+
+    ADD_TEST(test_inplace_vs_external_subtraction)
+    {
+        std::mt19937 rng(std::random_device{}());
+        random_vect_gen gen(10UL, -2, 2);
+
+        tensor_vec left_inplace(gen(rng)), left(left_inplace), right(gen(rng));
+
+        left_inplace -= right;
+        CHECK_EQUAL(left_inplace, left - right);
+    };
+
+    ADD_TEST(test_fused_add_scal_prod_vs_separate)
+    {
+        std::mt19937 rng(std::random_device{}());
+        random_vect_gen gen(10UL, -2, 2);
+
+        tensor_vec left1(gen(rng)), left2(left1), right(gen(rng));
+        S scalar(2);
+
+        left1.add_scal_prod(right, scalar);
+
+        left2 += (right * scalar);
+
+        CHECK_EQUAL(left1, left2);
+    };
+
+    ADD_TEST(test_fused_sub_scal_prod_vs_separate)
+    {
+        std::mt19937 rng(std::random_device{}());
+        random_vect_gen gen(10UL, -2, 2);
+
+        tensor_vec left1(gen(rng)), left2(left1), right(gen(rng));
+        S scalar(2);
+
+        left1.sub_scal_prod(right, scalar);
+
+        left2 -= (right * scalar);
+
+        CHECK_EQUAL(left1, left2);
+    };
+
+    ADD_TEST(test_fused_add_scal_div_vs_separate)
+    {
+        std::mt19937 rng(std::random_device{}());
+        random_vect_gen gen(10UL, -2, 2);
+
+        tensor_vec left1(gen(rng)), left2(left1), right(gen(rng));
+        S scalar(2);
+
+        left1.add_scal_div(right, scalar);
+
+        left2 += (right / scalar);
+
+        CHECK_EQUAL(left1, left2);
+    };
+
+    ADD_TEST(test_fused_sub_scal_div_vs_separate)
+    {
+        std::mt19937 rng(std::random_device{}());
+        random_vect_gen gen(10UL, -2, 2);
+
+        tensor_vec left1(gen(rng)), left2(left1), right(gen(rng));
+        S scalar(2);
+
+        left1.sub_scal_div(right, scalar);
+
+        left2 -= (right / scalar);
+
+        CHECK_EQUAL(left1, left2);
     };
 }
 

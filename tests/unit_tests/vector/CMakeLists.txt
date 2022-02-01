@@ -5,7 +5,7 @@ add_library(Libalgebra_tests_vector_tests OBJECT EXCLUDE_FROM_ALL
         test_dense_storage.cpp
         test_hybrid.cpp
         test_sparse.cpp
-        )
+        vector_suite.h test_flat_sparse_vector.cpp)
 target_link_libraries(Libalgebra_tests_vector_tests PUBLIC Libalgebra::Libalgebra UnitTest++ la_unittests::utilities)
 
 add_library(la_unittests::vector_tests ALIAS Libalgebra_tests_vector_tests)

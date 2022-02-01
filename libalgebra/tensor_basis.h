@@ -20,6 +20,18 @@ Version 3. (See accompanying file License.txt)
 #include <libalgebra/basis/key_iterators.h>
 #include <limits>
 
+#include <libalgebra/basis/basis.h>
+#include <libalgebra/basis/tags.h>
+#include <libalgebra/utils/integer_maths.h>
+#include <libalgebra/utils/meta.h>
+
+#include <boost/thread/lock_guard.hpp>
+#include <boost/thread/recursive_mutex.hpp>
+#include <libalgebra/constlog2.h>
+#include <libalgebra/constpower.h>
+
+#include <libalgebra/vectors/vectors.h>
+
 namespace alg {
 
 namespace dtl {
@@ -433,38 +445,6 @@ public:
     }
 };
 
-namespace vectors {
-
-template<DEG n_letters, DEG max_depth, typename Field>
-struct vector_type_selector<free_tensor_basis<n_letters, max_depth>, Field> {
-    typedef free_tensor_basis<n_letters, max_depth> BASIS;
-    typedef typename BASIS::KEY KEY;
-    typedef vectors::sparse_vector<BASIS, Field,
-#ifndef ORDEREDMAP
-                                   MY_UNORDERED_MAP<KEY, typename Field::S, typename KEY::hash>
-#else
-                                   std::map<KEY, typename Field::S>
-#endif
-                                   >
-            sparse_vect;
-
-    typedef vectors::dense_vector<BASIS, Field> dense_vect;
-
-    typedef vectors::hybrid_vector<BASIS, Field, vectors::policy::basic_resize_policy,
-#ifndef ORDEREDMAP
-                                   MY_UNORDERED_MAP<KEY, typename Field::S, typename KEY::hash>
-#else
-                                   std::map<KEY, typename Field::S>
-#endif
-                                   >
-            hybrid_vect;
-
-    typedef typename alg::utils::type_selector<boost::is_pod<typename Field::S>::value, sparse_vect, dense_vect>::type
-            type;
-};
-
-}// namespace vectors
-
 /**
  * @brief The monoid of words of a finite number of letters with shuffle product.
  *
@@ -499,24 +479,6 @@ public:
     {}
 };
 //#endif
-
-namespace vectors {
-
-template<DEG n_letters, DEG max_depth, typename Field>
-struct vector_type_selector<shuffle_tensor_basis<n_letters, max_depth>, Field> {
-    typedef shuffle_tensor_basis<n_letters, max_depth> BASIS;
-    typedef typename BASIS::KEY KEY;
-    typedef sparse_vector<BASIS, Field,
-#ifndef ORDEREDMAP
-                          MY_UNORDERED_MAP<KEY, typename Field::S, typename KEY::hash>
-#else
-                          std::map<KEY, typename Field::S>
-#endif
-                          >
-            type;
-};
-
-}// namespace vectors
 
 }// namespace alg
 // Include once wrapper

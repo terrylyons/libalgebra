@@ -178,8 +178,6 @@ public:
         }
     }
 
-#if __cplusplus >= 201103UL
-
     _tensor_basis(std::initializer_list<LET> letters) : _word{1.0}
     {
         for (auto let : letters) {
@@ -188,7 +186,6 @@ public:
         }
     }
 
-#endif
 
     /// Concatenates two words
     inline _tensor_basis& push_back(const _tensor_basis& rhs)

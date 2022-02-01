@@ -7,6 +7,8 @@
 
 #include <array>
 #include <boost/type_traits.hpp>
+#include <libalgebra/implementation_types.h>
+#include <limits>
 
 namespace alg {
 namespace utils {

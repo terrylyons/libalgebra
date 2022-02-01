@@ -347,9 +347,9 @@ public:
     /// Move constructor
     dense_storage& operator=(dense_storage&& other)
     {
-        if (m_base.is_owned()) {
-            destroy_range(m_base.m_data, m_base.m_data + m_base.m_size);
-        }
+        //if (m_base.is_owned()) {
+        //    destroy_range(m_base.m_data, m_base.m_data + m_base.m_size);
+        //}
         m_base = std::move(other.m_base);
         return *this;
     }
@@ -555,12 +555,10 @@ public:
     }
 
 public:
-
     reference emplace(size_type pos, value_type value) noexcept
     {
         return m_base.emplace(pos, value);
     }
-
 
 public:
     /// Get the size of storage

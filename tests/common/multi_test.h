@@ -84,7 +84,7 @@ public:
         tests.push_back(std::unique_ptr<UnitTest::Test>(new test_type<Fn>(current, std::forward<Fn>(fn))));
     }
 
-    ~generative_suite()
+    void add_tests() const
     {
         auto& list = UnitTest::Test::GetTestList();
         for (auto& t : tests) {
@@ -93,27 +93,22 @@ public:
     }
 };
 
-#define NEW_AUTO_SUITE(NAME, ...)                                                    \
-    template<__VA_ARGS__>                                                            \
-    void create_tests_##NAME(la_testing::generative_suite s);                        \
-                                                                                     \
-    template<typename... Args>                                                       \
-    std::vector<std::unique_ptr<UnitTest::Test>> make_suite_##NAME(const char* name) \
-    {                                                                                \
-        std::vector<std::unique_ptr<UnitTest::Test>> tests;                          \
-        create_tests_##NAME<Args...>(la_testing::generative_suite(tests, name));     \
-        return tests;                                                                \
-    }                                                                                \
-                                                                                     \
-    template<__VA_ARGS__>                                                            \
+#define NEW_AUTO_SUITE(NAME, ...) \
+    template<__VA_ARGS__>         \
     void create_tests_##NAME(la_testing::generative_suite s)
 
 #define ADD_TEST(NAME)                         \
     s.set_metadata(#NAME, __FILE__, __LINE__); \
     s + []()
 
-#define MAKE_SUITE_FOR(INSTANCE_NAME, SUITE_NAME, ...) \
-    static auto INSTANCE_NAME = make_suite_##SUITE_NAME<__VA_ARGS__>(#INSTANCE_NAME);
+#define MAKE_SUITE_FOR(INSTANCE_NAME, SUITE_NAME, ...)             \
+    static auto INSTANCE_NAME = []() {                             \
+        std::vector<std::unique_ptr<UnitTest::Test>> tests;        \
+        la_testing::generative_suite suite(tests, #INSTANCE_NAME); \
+        create_tests_##SUITE_NAME<__VA_ARGS__>(suite);             \
+        suite.add_tests();                                         \
+        return tests;                                              \
+    }();
 
 }// namespace la_testing
 

@@ -59,6 +59,9 @@ public:
     // Constructors - We're only defining non-trivial constructors that won't
     // be filled in by the compiler
 
+    flat_sparse_vector() : m_storage()
+    {}
+
     explicit flat_sparse_vector(const key_type& key, const scalar_type& scalar = base_vector_type::one)
         : m_storage{{key, scalar}}
     {}
@@ -93,7 +96,6 @@ public:
     }
 
 public:
-
     // Vector information methods
 
     size_type size() const
@@ -107,7 +109,7 @@ public:
             return 0;
         }
         // Short cut assuming that the ordering respects degree. Will have to be changed
-        return base_vector_type::basis.degree(m_storage[m_storage.size() - 1]);
+        return base_vector_type::basis.degree(m_storage[m_storage.size() - 1].first);
     }
 
     /*
@@ -132,16 +134,18 @@ private:
 
     pair_type* find_key(const key_type& key)
     {
-        return std::binary_search(m_storage.begin(), m_storage.end(),
-                                  pair_type(key, zero),
-                                  typename basis_type::ordering_tag::pair_order());
+        return std::find_if(m_storage.begin(), m_storage.end(),
+                            [&key](pair_type& arg) {
+                                return arg.first == key;
+                            });
     }
 
     const pair_type* find_key(const key_type& key) const
     {
-        return std::binary_search(m_storage.begin(), m_storage.end(),
-                                  pair_type(key, zero),
-                                  typename basis_type::ordering_tag::pair_order());
+        return std::find_if(m_storage.begin(), m_storage.end(),
+                            [&key](const pair_type& arg) {
+                                return arg.first == key;
+                            });
     }
 
 public:
@@ -213,8 +217,7 @@ public:
     }
 
 private:
-
-    template <typename SortedInputIt>
+    template<typename SortedInputIt>
     storage_type copy_insert(size_type count, SortedInputIt cit, SortedInputIt cend) const
     {
         storage_type new_storage;
@@ -239,8 +242,6 @@ private:
 
     storage_type copy_insert(std::initializer_list<pair_type> args) const
     {
-        std::sort(args.begin(), args.end(), typename basis_type::ordering_tag::pair_order());
-
         return copy_insert(args.size(), args.begin(), args.end());
     }
 
@@ -261,12 +262,13 @@ public:
         auto* found = find_key(arg.first);
         if (found != m_storage.end()) {
             return {iterator(*this, found), false};
-        } else {
+        }
+        else {
             m_storage = copy_insert({arg});
         }
     }
 
-    template <typename InputIt>
+    template<typename InputIt>
     void insert(InputIt begin, InputIt end)
     {
         std::vector<pair_type> buffer(begin, end);
@@ -276,8 +278,7 @@ public:
     }
 
 private:
-
-    template <typename SortedInputIt>
+    template<typename SortedInputIt>
     storage_type copy_erase(size_type count, SortedInputIt cit, SortedInputIt cend) const
     {
         storage_type new_storage;
@@ -303,7 +304,6 @@ private:
     }
 
 public:
-
     void erase(iterator& it)
     {
         m_storage = copy_erase({it->first});
@@ -314,12 +314,10 @@ public:
         m_storage = copy_erase({key});
     }
 
-
     void clear()
     {
         m_storage.clear();
     }
-
 
 public:
     // Swap operation
@@ -371,10 +369,10 @@ public:
 
 private:
     template<typename Fn>
-    storage_type apply_operation(const flat_sparse_vector& rhs, Fn&& function)
+    storage_type apply_operation(const flat_sparse_vector& rhs, Fn&& function) const
     {
-        const pair_type *lhs_ptr = m_storage.begin(), lhs_end = m_storage.end();
-        const pair_type *rhs_ptr = rhs.m_storage.begin(), rhs_end = rhs.m_storage.end();
+        const pair_type *lhs_ptr = m_storage.begin(), *lhs_end = m_storage.end();
+        const pair_type *rhs_ptr = rhs.m_storage.begin(), *rhs_end = rhs.m_storage.end();
 
         std::vector<pair_type> buffer;
         buffer.reserve(m_storage.size() + rhs.m_storage.size());
@@ -407,7 +405,6 @@ private:
 
         return storage_type(buffer.data(), buffer.data() + buffer.size());
     }
-
 
 public:
     flat_sparse_vector& operator+=(const flat_sparse_vector& rhs)
@@ -533,8 +530,8 @@ private:
             storage_type new_storage;
             new_storage.reserve(m_storage.size());
             size_type idx = 0;
-            for (auto item : m_storage) {
-                if (item->first != key) {
+            for (auto& item : m_storage) {
+                if (item.first != key) {
                     new_storage.emplace(idx++, item);
                 }
             }
@@ -615,9 +612,9 @@ public:
         token.first = &base_vector_type::basis;
 
         os << '{';
-        for (auto item : rhs.m_storage) {
-            token.second = item->first;
-            os << ' ' << item->second << '(' << token << ')';
+        for (auto& item : rhs.m_storage) {
+            token.second = item.first;
+            os << ' ' << item.second << '(' << token << ')';
         }
 
         return os << " }";
@@ -667,7 +664,6 @@ public:
     }
 
 public:
-
     bool degree_equals(const DEG degree) const
     {
         bool result(false);
@@ -691,11 +687,9 @@ class flat_sparse_vector<Basis, Coeffs>::iterator_item
     friend class flat_sparse_vector;
 
 private:
-
     pair_type* m_ptr;
 
 public:
-
     iterator_item(flat_sparse_vector& vect, pair_type* ptr) : m_ptr(ptr)
     {}
 
@@ -710,7 +704,6 @@ public:
     }
 
 private:
-
     bool compare_iterators(const iterator_item& other) const
     {
         return (m_ptr == other.m_ptr);
@@ -722,12 +715,10 @@ private:
     }
 
 public:
-
     DIMN index() const
     {
         return base_vector_type::basis.key_to_index(m_ptr->first);
     }
-
 };
 
 template<typename Basis, typename Coeffs>
@@ -737,11 +728,9 @@ class flat_sparse_vector<Basis, Coeffs>::const_iterator_item
     friend class flat_sparse_vector;
 
 private:
-
     const pair_type* m_ptr;
 
 public:
-
     const_iterator_item(const flat_sparse_vector& vect, const pair_type* ptr) : m_ptr(ptr)
     {}
 
@@ -756,7 +745,6 @@ public:
     }
 
 private:
-
     bool compare_iterators(const const_iterator_item& other) const
     {
         return (m_ptr == other.m_ptr);
@@ -768,15 +756,11 @@ private:
     }
 
 public:
-
     DIMN index() const
     {
         return base_vector_type::basis.key_to_index(m_ptr->first);
     }
-
 };
-
-
 
 }// namespace vectors
 }// namespace alg

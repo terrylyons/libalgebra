@@ -403,7 +403,7 @@ private:
             buffer.emplace_back(rhs_ptr->first, function(zero, rhs_ptr->second));
         }
 
-        return storage_type(buffer.data(), buffer.data() + buffer.size());
+        return storage_type::make_owned(buffer.data(), buffer.size());
     }
 
 public:
@@ -435,7 +435,7 @@ public:
             result_storage.emplace(idx++, {item.first, coeff_type::mul(item.second, scalar)});
         }
 
-        return flat_sparse_vector(result_storage);
+        return flat_sparse_vector(std::move(result_storage));
     }
 
     flat_sparse_vector operator/(const RATIONAL& rational) const
@@ -448,7 +448,7 @@ public:
             result_storage.emplace(idx++, {item.first, coeff_type::div(item.second, rational)});
         }
 
-        return flat_sparse_vector(result_storage);
+        return flat_sparse_vector(std::move(result_storage));
     }
 
 public:
@@ -459,7 +459,7 @@ public:
 
     flat_sparse_vector operator-(const flat_sparse_vector& rhs) const
     {
-        return flat_sparse_Vector(apply_operation(rhs, coeff_type::sub));
+        return flat_sparse_vector(apply_operation(rhs, coeff_type::sub));
     }
 
     // Fused operations

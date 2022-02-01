@@ -27,7 +27,7 @@ class flat_sparse_vector : public base_vector<Basis, Coeffs>
     using key_type = typename Basis::KEY;
     using scalar_type = typename Coeffs::SCA;
 
-    using pair_type = std::pair<key_type, scalar_type>;
+    using pair_type = std::pair<const key_type, scalar_type>;
     using storage_type = dense_storage<pair_type>;
 
     using base_vector_type = base_vector<Basis, Coeffs>;
@@ -92,6 +92,40 @@ public:
         }
     }
 
+public:
+
+    // Vector information methods
+
+    size_type size() const
+    {
+        return m_storage.size();
+    }
+
+    DEG degree() const
+    {
+        if (m_storage.empty()) {
+            return 0;
+        }
+        // Short cut assuming that the ordering respects degree. Will have to be changed
+        return base_vector_type::basis.degree(m_storage[m_storage.size() - 1]);
+    }
+
+    /*
+    DEG degree() const
+    {
+        DEG ans(0);
+        for (auto item : m_storage) {
+            ans = std::max(ans, base_vector_type::basis.degree(item->first));
+        }
+        return ans;
+    }
+     */
+
+    bool empty() const
+    {
+        return m_storage.empty();
+    }
+
 private:
     explicit flat_sparse_vector(storage_type&& storage) : m_storage(std::move(storage))
     {}
@@ -136,11 +170,179 @@ public:
     }
 
 public:
+    // Iterator interaction methods
+
+    iterator begin()
+    {
+        return iterator(*this, m_storage.begin());
+    }
+
+    iterator end()
+    {
+        return iterator(*this, m_storage.end());
+    }
+
+    const_iterator begin() const
+    {
+        return const_iterator(*this, m_storage.begin());
+    }
+
+    const_iterator end() const
+    {
+        return const_iterator(*this, m_storage.end());
+    }
+
+    const_iterator cbegin() const
+    {
+        return begin();
+    }
+
+    const_iterator cend() const
+    {
+        return end();
+    }
+
+    iterator find(const key_type& key)
+    {
+        return iterator(*this, find_key(key));
+    }
+
+    const_iterator find(const key_type& key) const
+    {
+        return const_iterator(*this, find_key(key));
+    }
+
+private:
+
+    template <typename SortedInputIt>
+    storage_type copy_insert(size_type count, SortedInputIt cit, SortedInputIt cend) const
+    {
+        storage_type new_storage;
+        new_storage.reserve(m_storage.size() + count);
+        typename basis_type::ordering_tag::order order;
+
+        size_type idx = 0;
+        auto it = m_storage.begin();
+        for (; cit != cend; ++cit) {
+            for (; it != m_storage.end() && order(it->first, cit->first); ++it) {
+                new_storage.emplace(idx++, *it);
+            }
+
+            new_storage.emplace(idx++, {cit->first, cit->second});
+        }
+
+        for (; it != m_storage.end(); ++it) {
+            new_storage.emplace(idx++, *it);
+        }
+        return new_storage;
+    }
+
+    storage_type copy_insert(std::initializer_list<pair_type> args) const
+    {
+        std::sort(args.begin(), args.end(), typename basis_type::ordering_tag::pair_order());
+
+        return copy_insert(args.size(), args.begin(), args.end());
+    }
+
+public:
+    void insert(const key_type& key, scalar_type val)
+    {
+        auto* found = find_key(key);
+        if (found != m_storage.end()) {
+            found->second = std::move(val);
+        }
+        else {
+            m_storage = copy_insert({{key, val}});
+        }
+    }
+
+    std::pair<iterator, bool> insert(pair_type& arg)
+    {
+        auto* found = find_key(arg.first);
+        if (found != m_storage.end()) {
+            return {iterator(*this, found), false};
+        } else {
+            m_storage = copy_insert({arg});
+        }
+    }
+
+    template <typename InputIt>
+    void insert(InputIt begin, InputIt end)
+    {
+        std::vector<pair_type> buffer(begin, end);
+        std::sort(buffer.begin(), buffer.end(), typename basis_type::ordering_type::pair_order());
+
+        m_storage = copy_insert(buffer.size(), buffer.begin(), buffer.end());
+    }
+
+private:
+
+    template <typename SortedInputIt>
+    storage_type copy_erase(size_type count, SortedInputIt cit, SortedInputIt cend) const
+    {
+        storage_type new_storage;
+        new_storage.reserve(m_storage.size() + count);
+        typename basis_type::ordering_tag::order order;
+
+        size_type idx = 0;
+        auto it = m_storage.begin();
+        for (; cit != cend; ++cit) {
+            for (; it != m_storage.end() && order(it->first, *cit); ++it) {
+                new_storage.emplace(idx++, *it);
+            }
+            ++it;
+        }
+
+        return new_storage;
+    }
+
+    storage_type copy_erase(std::initializer_list<key_type> args) const
+    {
+        std::sort(args.begin(), args.end(), typename basis_type::ordering_tag::order());
+        copy_erase(args.size(), args.begin(), args.end());
+    }
+
+public:
+
+    void erase(iterator& it)
+    {
+        m_storage = copy_erase({it->first});
+    }
+
+    void erase(const key_type& key)
+    {
+        m_storage = copy_erase({key});
+    }
+
+
+    void clear()
+    {
+        m_storage.clear();
+    }
+
+
+public:
     // Swap operation
 
     void swap(flat_sparse_vector& rhs)
     {
         std::swap(m_storage, rhs.m_storage);
+    }
+
+public:
+    // Unary minus
+
+    flat_sparse_vector operator-() const
+    {
+        storage_type new_storage;
+        new_storage.reserve(m_storage.size());
+
+        size_type idx = 0;
+        for (auto& item : m_storage) {
+            new_storage.emplace(idx++, {item.first, coeff_type::uminus(item.second)});
+        }
+
+        return flat_sparse_vector(std::move(new_storage));
     }
 
 public:
@@ -205,6 +407,7 @@ private:
 
         return storage_type(buffer.data(), buffer.data() + buffer.size());
     }
+
 
 public:
     flat_sparse_vector& operator+=(const flat_sparse_vector& rhs)
@@ -338,22 +541,7 @@ private:
             m_storage = std::move(new_storage);
         }
         else {
-            storage_type new_storage;
-            new_storage.reserve(m_storage.size() + 1);
-            typename basis_type::ordering_tag::order order;
-
-            size_type idx = 0;
-            auto it = m_storage.begin();
-            for (; it != m_storage.end() && order(it->first, key); ++it) {
-                new_storage.emplace(idx++, *it);
-            }
-
-            new_storage.emplace(idx++, {key, function(zero)});
-
-            for (; it != m_storage.end(); ++it) {
-                new_storage.emplace(idx++, *it);
-            }
-            m_storage = std::move(new_storage);
+            m_storage = copy_insert({{key, function(zero)}});
         }
     }
 
@@ -436,7 +624,6 @@ public:
     }
 
 public:
-
     // Norms
 
     scalar_type NormL1() const
@@ -481,15 +668,6 @@ public:
 
 public:
 
-    DEG degree() const
-    {
-        DEG ans(0);
-        for (auto item : m_storage) {
-            ans = std::max(ans, base_vector_type::basis.degree(item->first));
-        }
-        return ans;
-    }
-
     bool degree_equals(const DEG degree) const
     {
         bool result(false);
@@ -497,15 +675,108 @@ public:
             auto deg = base_vector_type::basis.degree(item->first);
             if (deg > degree) {
                 return false;
-            } else if (!result && deg == degree) {
+            }
+            else if (!result && deg == degree) {
                 result = true;
             }
         }
         return result;
     }
+};
 
+template<typename Basis, typename Coeffs>
+class flat_sparse_vector<Basis, Coeffs>::iterator_item
+{
+    friend class iterators::vector_iterator<iterator_item>;
+    friend class flat_sparse_vector;
+
+private:
+
+    pair_type* m_ptr;
+
+public:
+
+    iterator_item(flat_sparse_vector& vect, pair_type* ptr) : m_ptr(ptr)
+    {}
+
+    key_type key()
+    {
+        return m_ptr->first;
+    }
+
+    scalar_type& value()
+    {
+        return m_ptr->second;
+    }
+
+private:
+
+    bool compare_iterators(const iterator_item& other) const
+    {
+        return (m_ptr == other.m_ptr);
+    }
+
+    void advance()
+    {
+        ++m_ptr;
+    }
+
+public:
+
+    DIMN index() const
+    {
+        return base_vector_type::basis.key_to_index(m_ptr->first);
+    }
 
 };
+
+template<typename Basis, typename Coeffs>
+class flat_sparse_vector<Basis, Coeffs>::const_iterator_item
+{
+    friend class iterators::vector_iterator<const_iterator_item>;
+    friend class flat_sparse_vector;
+
+private:
+
+    const pair_type* m_ptr;
+
+public:
+
+    const_iterator_item(const flat_sparse_vector& vect, const pair_type* ptr) : m_ptr(ptr)
+    {}
+
+    key_type key()
+    {
+        return m_ptr->first;
+    }
+
+    const scalar_type& value()
+    {
+        return m_ptr->second;
+    }
+
+private:
+
+    bool compare_iterators(const const_iterator_item& other) const
+    {
+        return (m_ptr == other.m_ptr);
+    }
+
+    void advance()
+    {
+        ++m_ptr;
+    }
+
+public:
+
+    DIMN index() const
+    {
+        return base_vector_type::basis.key_to_index(m_ptr->first);
+    }
+
+};
+
+
 
 }// namespace vectors
 }// namespace alg

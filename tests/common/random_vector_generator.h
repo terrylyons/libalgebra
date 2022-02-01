@@ -25,6 +25,11 @@ struct random_vector_generator {
         : m_coeff_dist(std::forward<Args>(args)...), m_skip_dist(skip)
     {}
 
+    template<typename... Args>
+    explicit random_vector_generator(size_t max_skip, Args&&... args)
+        : m_coeff_dist(std::forward<Args>(args)...), m_skip_dist(1, max_skip)
+    {}
+
     template<typename Rng>
     Vector operator()(Rng& rng)
     {
@@ -87,4 +92,3 @@ private:
 }// namespace la_testing
 
 #endif//LIBALGEBRA_RANDOM_VECTOR_GENERATOR_H
-

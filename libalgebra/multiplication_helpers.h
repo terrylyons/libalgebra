@@ -37,7 +37,7 @@ struct scalar_post_mult {
         : m_factor(factor)
     {}
 
-    constexpr scalar_t operator()(scalar_t val) const noexcept(noexcept(Coeff::mul(val, m_factor)))
+    constexpr scalar_t operator()(scalar_t val) const noexcept(noexcept(Coeff::mul(val, std::declval<scalar_t>())))
     {
         return Coeff::mul(val, m_factor);
     }
@@ -56,7 +56,7 @@ struct rational_post_div {
         : m_factor(Coeff::div(Coeff::one, factor))
     {}
 
-    constexpr scalar_t operator()(scalar_t val) const noexcept(noexcept(Coeff::mul(val, m_factor)))
+    constexpr scalar_t operator()(scalar_t val) const noexcept(noexcept(Coeff::mul(val, std::declval<scalar_t>())))
     {
         return Coeff::mul(val, m_factor);
     }

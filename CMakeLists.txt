@@ -35,8 +35,60 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/)
 find_package(Bignum)
 
 # Interface libraries sometimes complain if you list sources, see below.
-add_library(Libalgebra INTERFACE libalgebra/vectors/flat_sparse_vector.h)
+add_library(Libalgebra INTERFACE)
 
+target_sources(Libalgebra PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/basis/tags.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/basis/basis.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/basis/key_iterators.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/coefficients/coefficients.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/utils/caching_tags.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/utils/function_extension_cache_base.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/utils/integer_maths.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/utils/iterators.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/utils/meta.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/utils/order_trait.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/vectors/base_vector.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/vectors/dense_storage.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/vectors/dense_vector.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/vectors/hybrid_vector.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/vectors/iterators.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/vectors/sparse_vector.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/vectors/flat_sparse_vector.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/vectors/vector.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/vectors/vectors.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/_tensor_basis.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/alg_types.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/algebra.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/basis_traits.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/constlog2.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/constpower.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/hall_set.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/implementation_types.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/libalgebra.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/lie.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/lie_basis.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/monomial_basis.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/multi_polynomial.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/multiplication_helpers.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/operators/operators.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/operators/dot_product_implementations.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/operators/functionals.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/operators/free_extension.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/operators/tensor_operator.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/operators/lie_inner_product.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/operators/scalar_multiply_operator.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/operators/sum_operator.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/operators/composition_operator.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/operators/multi_linear_operators.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/poly_basis.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/poly_lie.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/poly_lie_basis.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/polynomials.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/tensor.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/tensor_basis.h
+        ${CMAKE_CURRENT_LIST_DIR}/libalgebra/utils.h
+        )
 # For IDEs that use target sources lists to generate project information
 # we add a custom target that attaches these sources.
 add_custom_target(Libalgebra_headers SOURCES

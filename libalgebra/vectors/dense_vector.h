@@ -108,7 +108,7 @@ public:
           m_degree(0)
     {
         if (m_data.size() != adjust_dimension(m_data.size(), degree_tag)) {
-            resize_to_dimension(m_dimension);
+            resize_to_dimension(m_data.size());
         }
     }
 
@@ -129,7 +129,7 @@ public:
           m_degree(0)
     {
         if (m_data.size() != adjust_dimension(m_data.size(), degree_tag)) {
-            resize_to_dimension(m_dimension);
+            resize_to_dimension(m_data.size());
         }
     }
 
@@ -150,7 +150,7 @@ public:
           m_degree(0)
     {
         if (m_data.size() != adjust_dimension(m_data.size(), degree_tag)) {
-            resize_to_dimension(m_dimension);
+            resize_to_dimension(m_data.size());
         }
     }
 

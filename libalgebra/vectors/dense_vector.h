@@ -107,7 +107,9 @@ public:
           m_dimension(m_data.size()),
           m_degree(0)
     {
-        set_degree(degree_tag);
+        if (m_data.size() != adjust_dimension(m_data.size())) {
+            resize_to_dimension(m_dimension);
+        }
     }
 
     /**
@@ -1425,18 +1427,15 @@ public:
     }
 
 private:
-
     friend class boost::serialization::access;
 
-    template <typename Archive>
+    template<typename Archive>
     void serialize(Archive& ar, const unsigned /*version*/)
     {
-        ar & m_dimension;
-        ar & m_degree;
-        ar & m_data;
+        ar& m_dimension;
+        ar& m_degree;
+        ar& m_data;
     }
-
-
 };
 
 #undef DECLARE_FUSED_OP

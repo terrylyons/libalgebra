@@ -73,6 +73,8 @@ class sparse_vector : /*private*/ MapType, protected base_vector<Basis, Coeffs>
     typedef MapType MAP;
     typedef base_vector<Basis, Coeffs> BASE_VEC;
 
+    friend class dtl::data_access_base<sparse_vector>;
+
 public:
     typedef Basis BASIS;
     using MAP::operator[];
@@ -1335,6 +1337,39 @@ private:
         ar& boost::serialization::base_object<MapType>(*this);
     }
 };
+
+namespace dtl {
+
+template<typename Basis, typename Coeffs, typename Map>
+struct data_access_base<sparse_vector<Basis, Coeffs, Map>> {
+
+    using vector_type = sparse_vector<Basis, Coeffs, Map>;
+    using tag = access_type_sparse;
+
+    static typename Map::const_iterator range_begin(const vector_type& vect)
+    {
+        return vect.map_begin();
+    }
+
+    static typename Map::const_iterator range_end(const vector_type& vect)
+    {
+        return vect.map_end();
+    }
+
+    static typename Map::iterator range_begin(vector_type& vect)
+    {
+        return vect.map_begin();
+    }
+
+    static typename Map::iterator range_end(vector_type& vect)
+    {
+        return vect.map_end();
+    }
+
+
+};
+
+}// namespace dtl
 
 }// namespace vectors
 }// namespace alg

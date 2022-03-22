@@ -34,6 +34,11 @@ public:
         return arg;
     }
 };
+
+template<typename Vector>
+struct data_access : public data_access_base<Vector> {
+};
+
 }// namespace dtl
 
 /// Main vector interface

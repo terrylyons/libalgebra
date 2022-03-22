@@ -44,6 +44,8 @@ class dense_vector : protected base_vector<Basis, Coeffs>, dtl::requires_order<B
     typedef dense_storage<typename Coeffs::S> STORAGE;
     typedef base_vector<Basis, Coeffs> BASE_VEC;
 
+    friend class dtl::data_access_base<dense_vector>;
+
 private:
     // Data members
     STORAGE m_data;
@@ -1443,6 +1445,40 @@ private:
 };
 
 #undef DECLARE_FUSED_OP
+
+namespace dtl {
+
+template<typename Basis, typename Coeffs>
+struct data_access_base<dense_vector<Basis, Coeffs>> {
+
+    using vector_type = dense_vector<Basis, Coeffs>;
+    using tag = access_type_dense;
+
+    static const typename Coeffs::S* range_begin(const vector_type& vect)
+    {
+        return vect.m_data.begin();
+    }
+
+    static const typename Coeffs::S* range_end(const vector_type& vect)
+    {
+        return vect.m_data.end();
+    }
+
+    static typename Coeffs::S* range_begin(vector_type& vect)
+    {
+        return vect.m_data.begin();
+    }
+
+    static typename Coeffs::S* range_end(vector_type& vect)
+    {
+        return vect.m_data.end();
+    }
+
+
+
+};
+
+}// namespace dtl
 
 }// namespace vectors
 }// namespace alg

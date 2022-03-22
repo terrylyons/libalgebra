@@ -10,57 +10,69 @@
 namespace alg {
 namespace vectors {
 
+namespace dtl {
+
+struct access_type_dense {
+};
+struct access_type_sparse {
+};
+
+template<typename vector>
+struct data_access_base;
+
+}// namespace dtl
+
 /**
- * @brief Base class for vectors
+ * @brief base class for vectors
  *
- * Provides static members for useful scalar constants, basis instance,
+ * provides static members for useful scalar constants, basis instance,
  * and the degree tag, which is used to dispatch to the correct function
  * in various places in the vector hierarchy.
  *
- * All vector types should inherit from this class.
+ * all vector types should inherit from this class.
  *
- * @tparam Basis Basis type
- * @tparam Coeff Coefficient field
+ * @tparam basis basis type
+ * @tparam coeff coefficient field
  */
-template<typename Basis, typename Coeff>
+template<typename basis, typename coeff>
 class base_vector
 {
 public:
-    typedef Basis BASIS;
-    typedef typename Coeff::S SCALAR;
-    typedef typename Coeff::Q RATIONAL;
+    typedef basis basis;
+    typedef typename coeff::s scalar;
+    typedef typename coeff::q rational;
 
-    typedef typename alg::basis::basis_traits<Basis> BASIS_TRAITS;
+    typedef typename alg::basis::basis_traits<basis> basis_traits;
 
-    static const typename BASIS_TRAITS::degree_tag degree_tag;
+    static const typename basis_traits::degree_tag degree_tag;
 
-    static BASIS basis;
-    static const SCALAR one;
-    static const SCALAR mone;
-    static const SCALAR zero;
+    static basis basis;
+    static const scalar one;
+    static const scalar mone;
+    static const scalar zero;
 };
 
-// Initialisation of static members of base_vector
+// initialisation of static members of base_vector
 
-/// Static initialisation of the sparse_vector basis.
-template<typename Basis, typename Coeff>
-Basis base_vector<Basis, Coeff>::basis;
+/// static initialisation of the sparse_vector basis.
+template<typename basis, typename coeff>
+basis base_vector<basis, coeff>::basis;
 
-/// Static initialisation of the scalar constant +1.
-template<typename Basis, typename Coeff>
-const typename Coeff::S base_vector<Basis, Coeff>::one(+1);
+/// static initialisation of the scalar constant +1.
+template<typename basis, typename coeff>
+const typename coeff::s base_vector<basis, coeff>::one(+1);
 
-/// Static initialisation of the scalar constant 0.
-template<typename Basis, typename Coeff>
-const typename Coeff::S base_vector<Basis, Coeff>::zero(0);
+/// static initialisation of the scalar constant 0.
+template<typename basis, typename coeff>
+const typename coeff::s base_vector<basis, coeff>::zero(0);
 
-/// Static initialisation of the scalar constant -1.
-template<typename Basis, typename Coeff>
-const typename Coeff::S base_vector<Basis, Coeff>::mone(-1);
+/// static initialisation of the scalar constant -1.
+template<typename basis, typename coeff>
+const typename coeff::s base_vector<basis, coeff>::mone(-1);
 
-template<typename Basis, typename Coeff>
-const typename alg::basis::basis_traits<Basis>::degree_tag
-        base_vector<Basis, Coeff>::degree_tag;
+template<typename basis, typename coeff>
+const typename alg::basis::basis_traits<basis>::degree_tag
+        base_vector<basis, coeff>::degree_tag;
 
 }// namespace vectors
 }// namespace alg

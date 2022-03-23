@@ -34,19 +34,18 @@ struct data_access_base;
  * @tparam basis basis type
  * @tparam coeff coefficient field
  */
-template<typename basis, typename coeff>
+template<typename Basis, typename Coeff>
 class base_vector
 {
 public:
-    typedef basis basis;
-    typedef typename coeff::s scalar;
-    typedef typename coeff::q rational;
+    typedef typename Coeff::S scalar;
+    typedef typename Coeff::Q rational;
 
-    typedef typename alg::basis::basis_traits<basis> basis_traits;
+    typedef typename alg::basis::basis_traits<Basis> basis_traits;
 
     static const typename basis_traits::degree_tag degree_tag;
 
-    static basis basis;
+    static Basis basis;
     static const scalar one;
     static const scalar mone;
     static const scalar zero;
@@ -60,15 +59,15 @@ basis base_vector<basis, coeff>::basis;
 
 /// static initialisation of the scalar constant +1.
 template<typename basis, typename coeff>
-const typename coeff::s base_vector<basis, coeff>::one(+1);
+const typename coeff::S base_vector<basis, coeff>::one(+1);
 
 /// static initialisation of the scalar constant 0.
 template<typename basis, typename coeff>
-const typename coeff::s base_vector<basis, coeff>::zero(0);
+const typename coeff::S base_vector<basis, coeff>::zero(0);
 
 /// static initialisation of the scalar constant -1.
 template<typename basis, typename coeff>
-const typename coeff::s base_vector<basis, coeff>::mone(-1);
+const typename coeff::S base_vector<basis, coeff>::mone(-1);
 
 template<typename basis, typename coeff>
 const typename alg::basis::basis_traits<basis>::degree_tag

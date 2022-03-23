@@ -16,8 +16,9 @@ Version 3. (See accompanying file License.txt)
 
 #include "_tensor_basis.h"
 #include "basis_traits.h"
-#include <limits>
 #include <cmath>
+#include <libalgebra/basis/key_iterators.h>
+#include <limits>
 
 namespace alg {
 
@@ -25,30 +26,29 @@ namespace dtl {
 
 using alg::integer_maths::power;
 
-
-
-template <DEG NoLetters> struct tensor_size_info
-{
+template<DEG NoLetters>
+struct tensor_size_info {
     static constexpr DEG bits_per_letter = ConstLog2<NoLetters - 1>::ans + 1;
     static constexpr DEG mantissa_bits_stored = std::numeric_limits<word_t>::digits - 1;
     static constexpr DEG max_depth = mantissa_bits_stored / bits_per_letter;
 
-    template <DIMN Depth>
-    struct helper
-    {
+    template<DIMN Depth>
+    struct helper {
         static constexpr DIMN value = (power(NoLetters, Depth + 1) - 1) / (NoLetters - 1);
     };
 
-    using holder = typename alg::utils::generate_array<max_depth+1, helper>::result;
+    using holder = typename alg::utils::generate_array<max_depth + 1, helper>::result;
 
     static const std::array<DIMN, max_depth + 2> degree_sizes;
 };
 
-template <DEG N>
-const std::array<DIMN, tensor_size_info<N>::max_depth+2> tensor_size_info<N>::degree_sizes = tensor_size_info<N>::holder::data;
+template<DEG N>
+const std::array<DIMN,
+                 tensor_size_info<N>::max_depth
+                         + 2>
+        tensor_size_info<N>::degree_sizes = tensor_size_info<N>::holder::data;
 
-
-} // namespace dtl
+}// namespace dtl
 
 /// Implements an interface for the set of words of a finite number of letters.
 /**
@@ -76,7 +76,8 @@ The implementation of the prod() member function constitutes the essential
 difference between free_tensor_basis and shuffle_tensor_basis.
 */
 template<DEG n_letters, DEG max_degree>
-class tensor_basis : dtl::tensor_size_info<n_letters> {
+class tensor_basis : dtl::tensor_size_info<n_letters>
+{
     typedef dtl::tensor_size_info<n_letters> SIZE_INFO;
 
 public:
@@ -94,7 +95,7 @@ public:
 #else
     typedef btree::safe_btree_map<KEY, SCA, std::less<KEY>, std::allocator<std::pair<const KEY, SCA> >, 256> MAP;
 #endif
-#endif // !ORDEREDMAP
+#endif// !ORDEREDMAP
 #endif
     typedef alg::basis::with_degree<max_degree> degree_tag;
     typedef alg::basis::ordered<std::less<KEY>> ordering_tag;
@@ -112,32 +113,57 @@ public:
     /// We statically compute the size (n^{d+1}-1)/(n-1)
     /// where n == n_letters and d == max_degree.
     tensor_basis(void)
-            :_size((LET(ConstPower<n_letters, max_degree+1>::ans)-1)/(n_letters-1)) { }
+        : _size((LET(ConstPower<n_letters, max_degree + 1>::ans) - 1) / (n_letters - 1))
+    {}
 
 public:
     /// Returns the key corresponding to a letter.
-    inline KEY keyofletter(LET letter) const { return KEY(letter); }
+    inline KEY keyofletter(LET letter) const
+    {
+        return KEY(letter);
+    }
 
     /// Tells if a key is a letter (i.e. word of length one).
-    inline bool letter(const KEY& k) const { return k.size()==1; }
+    inline bool letter(const KEY& k) const
+    {
+        return k.size() == 1;
+    }
 
     /// Returns the first letter of a key.
-    inline LET getletter(const KEY& k) const { return k.FirstLetter(); }
+    inline LET getletter(const KEY& k) const
+    {
+        return k.FirstLetter();
+    }
 
     /// Returns the first letter of a key. For compatibility with lie_basis.
-    inline KEY lparent(const KEY& k) const { return k.lparent(); }
+    inline KEY lparent(const KEY& k) const
+    {
+        return k.lparent();
+    }
 
     /// Returns the key which corresponds to the sub-word after the first letter.
-    inline KEY rparent(const KEY& k) const { return k.rparent(); }
+    inline KEY rparent(const KEY& k) const
+    {
+        return k.rparent();
+    }
 
     /// Returns the length of the key viewed as a word of letters.
-    inline DEG degree(const KEY& k) const { return k.size(); }
+    inline DEG degree(const KEY& k) const
+    {
+        return k.size();
+    }
 
     /// Returns the size of the basis.
-    inline LET size(void) const { return LET(_size); }
+    inline LET size(void) const
+    {
+        return LET(_size);
+    }
 
     /// Returns the value of the smallest key in the basis.
-    inline static KEY begin(void) { return KEY(); }
+    inline static KEY begin(void)
+    {
+        return KEY();
+    }
 
     /// Returns the key next the biggest key of the basis.
     inline static KEY end(void)
@@ -154,20 +180,20 @@ public:
         // tjl  25/08/2012
         size_t i = k.size();
         KEY result(k);
-        for (size_t j = 0; j<i; ++j) {
-            if (k[i-1-j]<LET(n_letters)) {
-                result[i-1-j] += 1;
+        for (size_t j = 0; j < i; ++j) {
+            if (k[i - 1 - j] < LET(n_letters)) {
+                result[i - 1 - j] += 1;
                 return result;
             }
             else {
-                result[i-1-j] = KEY(LET(1)).FirstLetter();
+                result[i - 1 - j] = KEY(LET(1)).FirstLetter();
             }
         }
-        if (k.size()==max_degree) {
+        if (k.size() == max_degree) {
             return end();
         }
         else {
-            return KEY(LET(1))*result;
+            return KEY(LET(1)) * result;
         }
     }
 
@@ -176,10 +202,10 @@ public:
     {
         std::ostringstream oss;
 
-        if (k.size()>0) {
+        if (k.size() > 0) {
             oss << k.FirstLetter();
             KEY kk = k.rparent();
-            for (unsigned i = 1; i<k.size(); ++i) {
+            for (unsigned i = 1; i < k.size(); ++i) {
                 oss << "," << kk.FirstLetter();
                 kk = kk.rparent();
             }
@@ -187,14 +213,36 @@ public:
         return oss.str();
     }
 
+    // Key iteration methods
+
+    basis::key_range<tensor_basis> iterate_keys() const noexcept
+    {
+        return basis::key_range<tensor_basis>(*this);
+    }
+
+    basis::key_range<tensor_basis> iterate_keys(const KEY& begin, const KEY& end) const noexcept
+    {
+        return basis::key_range<tensor_basis>{*this, begin, end};
+    }
+
+    basis::key_range<tensor_basis> iterate_keys_from(const KEY& begin) const noexcept
+    {
+        return basis::key_range<tensor_basis>{*this, begin};
+    }
+
+    basis::key_range<tensor_basis> iterate_keys_to(const KEY& end) const noexcept
+    {
+        return basis::key_range<tensor_basis>{*this, begin(), end};
+    }
+
 private:
-/*
+    /*
     static DIMN key_to_index_impl(KEY const& key) {
 
     }
 */
 public:
-/*    static DIMN key_to_index(const KEY &key)
+    /*    static DIMN key_to_index(const KEY &key)
     {
         //assert(key.valid());
         DEG size = key.size();
@@ -234,12 +282,12 @@ public:
         assert(key.valid());
 
         DIMN idx = 0;
-        if (key.size()==0) {
+        if (key.size() == 0) {
             return idx;
         }
 
         KEY tmp(key);
-        while (tmp.size()>0) {
+        while (tmp.size() > 0) {
             idx *= n_letters;
             idx += static_cast<DIMN>(tmp.FirstLetter());
             tmp = tmp.rparent();
@@ -249,10 +297,10 @@ public:
 
     static KEY index_to_key(const DIMN idx)
     {
-        if (idx==0) {
+        if (idx == 0) {
             return KEY();
         }
-        else if (1<=idx && idx<=n_letters) {
+        else if (1 <= idx && idx <= n_letters) {
             return KEY(LET(idx));
         }
 
@@ -274,7 +322,7 @@ public:
 
         KEY& rv = cache[idx];
 
-        if (rv.size()>0) {
+        if (rv.size() > 0) {
             return rv;
         }
 
@@ -284,19 +332,18 @@ public:
         KEY val;
         while (i) {
             i -= 1;
-            l = i%n_letters;
-            val.push_back(LET(1+l));
+            l = i % n_letters;
+            val.push_back(LET(1 + l));
             i /= n_letters;
         }
 
         return rv = val.reverse();
-
     }
 
     static DIMN start_of_degree(const DEG deg)
     {
-        assert(deg<=max_degree+1);
-        return (deg == 0) ? 0 : SIZE_INFO::degree_sizes[deg-1];
+        assert(deg <= max_degree + 1);
+        return (deg == 0) ? 0 : SIZE_INFO::degree_sizes[deg - 1];
     }
 
 public:
@@ -305,7 +352,6 @@ public:
     {
         return os << (t.first)->key2string(t.second);
     }
-
 };
 
 /**
@@ -323,8 +369,8 @@ public:
 */
 template<DEG n_letters, DEG max_degree>
 class free_tensor_basis : public tensor_basis<n_letters, max_degree>,
-                          public basis_traits<With_Degree, n_letters,
-                                              max_degree> {
+                          public basis_traits<With_Degree, n_letters, max_degree>
+{
 public:
     /// The tensor_basis type.
     typedef tensor_basis<n_letters, max_degree> TBASIS;
@@ -335,7 +381,8 @@ public:
 
 public:
     /// Default constructor.
-    free_tensor_basis(void) { }
+    free_tensor_basis(void)
+    {}
 
 public:
     /// The concatenation product of two basis elements.
@@ -366,8 +413,8 @@ public:
 
     static inline typename TBASIS::KEY prod(const typename TBASIS::KEY& k1, const typename TBASIS::KEY& k2)
     {
-        assert((max_degree==0) || (k1.size()+k2.size()<=max_degree));
-        return k1*k2;
+        assert((max_degree == 0) || (k1.size() + k2.size() <= max_degree));
+        return k1 * k2;
     }
 
     // static inline TENSOR& prod(const typename alg::tensor_basis<SCA, n_letters,
@@ -393,29 +440,30 @@ struct vector_type_selector<free_tensor_basis<n_letters, max_depth>, Field> {
     typedef free_tensor_basis<n_letters, max_depth> BASIS;
     typedef typename BASIS::KEY KEY;
     typedef vectors::sparse_vector<BASIS, Field,
-                                   #ifndef ORDEREDMAP
+#ifndef ORDEREDMAP
                                    MY_UNORDERED_MAP<KEY, typename Field::S, typename KEY::hash>
 #else
-            std::map<KEY, typename Field::S>
+                                   std::map<KEY, typename Field::S>
 #endif
-    > sparse_vect;
+                                   >
+            sparse_vect;
 
     typedef vectors::dense_vector<BASIS, Field> dense_vect;
 
     typedef vectors::hybrid_vector<BASIS, Field, vectors::policy::basic_resize_policy,
-                                   #ifndef ORDEREDMAP
+#ifndef ORDEREDMAP
                                    MY_UNORDERED_MAP<KEY, typename Field::S, typename KEY::hash>
 #else
-            std::map<KEY, typename Field::S>
+                                   std::map<KEY, typename Field::S>
 #endif
-    > hybrid_vect;
+                                   >
+            hybrid_vect;
 
     typedef typename alg::utils::type_selector<boost::is_pod<typename Field::S>::value, sparse_vect, dense_vect>::type
             type;
 };
 
-} // namespace vectors
-
+}// namespace vectors
 
 /**
  * @brief The monoid of words of a finite number of letters with shuffle product.
@@ -432,8 +480,8 @@ struct vector_type_selector<free_tensor_basis<n_letters, max_depth>, Field> {
 */
 template<DEG n_letters, DEG max_degree>
 class shuffle_tensor_basis : public tensor_basis<n_letters, max_degree>,
-                             public basis_traits<With_Degree, n_letters,
-                                                 max_degree> {
+                             public basis_traits<With_Degree, n_letters, max_degree>
+{
 public:
     /// The tensor_basis type.
     typedef tensor_basis<n_letters, max_degree> TBASIS;
@@ -447,8 +495,8 @@ public:
 
 public:
     /// Default constructor.
-    shuffle_tensor_basis(void) { }
-
+    shuffle_tensor_basis(void)
+    {}
 };
 //#endif
 
@@ -460,18 +508,18 @@ struct vector_type_selector<shuffle_tensor_basis<n_letters, max_depth>, Field> {
     typedef typename BASIS::KEY KEY;
     typedef sparse_vector<BASIS, Field,
 #ifndef ORDEREDMAP
-    MY_UNORDERED_MAP<KEY, typename Field::S, typename KEY::hash>
+                          MY_UNORDERED_MAP<KEY, typename Field::S, typename KEY::hash>
 #else
-    std::map<KEY, typename Field::S>
+                          std::map<KEY, typename Field::S>
 #endif
-    > type;
+                          >
+            type;
 };
 
-} // namespace vectors
+}// namespace vectors
 
-
-} // namespace alg
+}// namespace alg
 // Include once wrapper
-#endif // DJC_COROPA_LIBALGEBRA_TENSORBASISH_SEEN
+#endif// DJC_COROPA_LIBALGEBRA_TENSORBASISH_SEEN
 
 // EOF.

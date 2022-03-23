@@ -145,4 +145,17 @@ SUITE (hall_set_properties) {
         CHECK_EQUAL("[1,[1,2]]", hall_set.key2string(16));
     }
 
+
+    TEST_FIXTURE(fixture, test_begin_end_exhaustive) {
+        grow_up(3); // make sure we have some elements
+
+        key_type k1 = hall_set.begin();
+        for (key_type k=1; k <= hall_set.size(); ++k) {
+            CHECK_EQUAL(k, k1);
+            k1 = hall_set.next_key(k1);
+        }
+        CHECK_EQUAL(key_type(0), k1);
+    }
+
+
 }

@@ -5,15 +5,17 @@
 #ifndef LIBALGEBRA_DENSE_STORAGE_H
 #define LIBALGEBRA_DENSE_STORAGE_H
 
-#include <memory>
 #include <cassert>
+#include <initializer_list>
 #include <iostream>
+#include <memory>
+
+#include <boost/serialization/array.hpp>
 
 #include "libalgebra/implementation_types.h"
 
 namespace alg {
 namespace vectors {
-
 
 namespace dtl {
 
@@ -26,15 +28,14 @@ namespace dtl {
  * @tparam S Scalar type to be held in the vector.
  * @tparam Alloc Allocator type to use for allocation.
  */
-template <typename S, typename Alloc>
-struct dense_storage_base
-{
+template<typename S, typename Alloc>
+struct dense_storage_base {
     using allocator_type = Alloc;
-    using alloc_traits   = std::allocator_traits<allocator_type>;
-    using value_type     = S;
-    using pointer        = S*;
-    using const_pointer  = S const*;
-    using size_type      = typename allocator_type::size_type;
+    using alloc_traits = std::allocator_traits<allocator_type>;
+    using value_type = S;
+    using pointer = S*;
+    using const_pointer = S const*;
+    using size_type = typename allocator_type::size_type;
 
     /**
      * The vector can be owned where the container is responsible for the
@@ -44,7 +45,9 @@ struct dense_storage_base
      */
     enum vec_type
     {
-        owned, borrowed_mut, borrowed
+        owned,
+        borrowed_mut,
+        borrowed
     };
 
     allocator_type m_alloc;
@@ -53,10 +56,10 @@ struct dense_storage_base
     vec_type m_type;
 
     /// Create new storage (default initialised) with size
-    explicit dense_storage_base(size_type sz=0)
+    explicit dense_storage_base(size_type sz = 0)
         : m_alloc{},
-        m_data{(sz > 0) ? alloc_traits::allocate(m_alloc, sz) : nullptr},
-        m_size{sz}, m_type{owned}
+          m_data{(sz > 0) ? alloc_traits::allocate(m_alloc, sz) : nullptr},
+          m_size{sz}, m_type{owned}
     {
     }
 
@@ -121,11 +124,16 @@ struct dense_storage_base
         return m_type == borrowed_mut;
     }
 
+    template<typename... Args>
+    value_type& emplace(size_type idx, Args&&... args) noexcept(noexcept(alloc_traits::construct(m_alloc, m_data + idx, std::forward<Args>(args)...)))
+    {
+        assert(idx < m_size);
+        alloc_traits::construct(m_alloc, m_data + idx, std::forward<Args>(args)...);
+        return m_data[idx];
+    }
 };
 
-
-}
-
+}// namespace dtl
 
 /**
  * @brief Storage class for dense vectors.
@@ -144,31 +152,31 @@ struct dense_storage_base
  * @tparam S Scalar type to store.
  * @tparam Alloc Allocator to use for allocating and deallocating vectors. Default is std::allocator<S>.
  */
-template <typename S, typename Alloc = std::allocator<S> >
+template<typename S, typename Alloc = std::allocator<S>>
 class dense_storage
 {
     using base_type = dtl::dense_storage_base<S, Alloc>;
+
 public:
     using allocator_type = typename base_type::allocator_type;
-    using alloc_traits   = typename base_type::alloc_traits;
+    using alloc_traits = typename base_type::alloc_traits;
 
     using size_type = typename base_type::size_type;
 
     using is_pod_t = std::is_pod<S>;
 
     using value_type = S;
-    using reference = S &;
-    using const_reference = S const &;
-    using pointer = S *;
-    using const_pointer = S const *;
+    using reference = S&;
+    using const_reference = S const&;
+    using pointer = S*;
+    using const_pointer = S const*;
 
-    using iterator = S *;
-    using const_iterator = S const *;
+    using iterator = S*;
+    using const_iterator = S const*;
 
     using vec_type = typename base_type::vec_type;
 
 private:
-
     dtl::dense_storage_base<value_type, allocator_type> m_base;
 
     static void destroy_range(pointer, pointer, std::true_type)
@@ -194,9 +202,7 @@ private:
         std::uninitialized_fill(start, end, value_type());
     }
 
-
 public:
-
     /**
      * @brief Constructor for blank data with given size
      *
@@ -204,7 +210,8 @@ public:
      *
      * @param size Size of buffer to allocate
      */
-    explicit dense_storage(size_type size = 0) : m_base{size}
+    explicit dense_storage(size_type size = 0)
+        : m_base{size}
     {
         fill_range_default_construct(m_base.m_data, m_base.m_data + m_base.m_size);
     }
@@ -216,7 +223,8 @@ public:
      *
      * @param other Storage to copy data from
      */
-    dense_storage(dense_storage const &other) : m_base{other.size()}
+    dense_storage(dense_storage const& other)
+        : m_base{other.size()}
     {
         std::uninitialized_copy(other.begin(), other.end(), m_base.m_data);
     }
@@ -229,7 +237,8 @@ public:
      * @param ptr Start of data range to borrow
      * @param size Size of data range to borrow
      */
-    dense_storage(pointer ptr, size_type size) : m_base{ptr, ptr + size}
+    dense_storage(pointer ptr, size_type size)
+        : m_base{ptr, ptr + size}
     {
     }
 
@@ -241,7 +250,8 @@ public:
      * @param ptr Start of data range to borrow
      * @param size Size of data range to borrow
      */
-    dense_storage(const_pointer ptr, size_type size) : m_base{ptr, ptr + size}
+    dense_storage(const_pointer ptr, size_type size)
+        : m_base{ptr, ptr + size}
     {
     }
 
@@ -253,7 +263,8 @@ public:
      * @param begin Pointer to beginning of range to borrow
      * @param end Pointer to one past end of the range to borrow.
      */
-    dense_storage(pointer begin, pointer end) : m_base{begin, end}
+    dense_storage(pointer begin, pointer end)
+        : m_base{begin, end}
     {
     }
 
@@ -265,7 +276,8 @@ public:
      * @param begin Pointer to beginning of range to borrow
      * @param end Pointer to one past end of the range to borrow.
      */
-    dense_storage(const_pointer begin, const_pointer end) : m_base{begin, end}
+    dense_storage(const_pointer begin, const_pointer end)
+        : m_base{begin, end}
     {
     }
 
@@ -284,7 +296,7 @@ public:
         : m_base{offset + static_cast<size_type>(end - start)}
     {
         fill_range_default_construct(m_base.m_data, m_base.m_data + offset);
-        std::uninitialized_copy(start, end, m_base.m_data+offset);
+        std::uninitialized_copy(start, end, m_base.m_data + offset);
     }
 
     /**
@@ -305,15 +317,27 @@ public:
         std::uninitialized_copy(std::make_move_iterator(start), std::make_move_iterator(end), m_base.m_data + offset);
     }
 
+    /**
+     * @brief Initializer list constructor
+     *
+     */
+    dense_storage(std::initializer_list<S> args) : m_base(args.size())
+    {
+        size_type i = 0;
+        for (auto v : args) {
+            m_base.emplace(i++, v);
+        }
+    }
+
     ~dense_storage()
     {
         if (m_base.is_owned()) {
-            destroy_range(m_base.m_data, m_base.m_data+m_base.m_size);
+            destroy_range(m_base.m_data, m_base.m_data + m_base.m_size);
         }
     }
 
     /// Copy constructor - the new storage owns its data even if other borrows data.
-    dense_storage &operator=(dense_storage const &other)
+    dense_storage& operator=(dense_storage const& other)
     {
         dense_storage tmp(other);
         this->swap(tmp);
@@ -321,7 +345,7 @@ public:
     }
 
     /// Move constructor
-    dense_storage &operator=(dense_storage &&other)
+    dense_storage& operator=(dense_storage&& other)
     {
         if (m_base.is_owned()) {
             destroy_range(m_base.m_data, m_base.m_data + m_base.m_size);
@@ -329,7 +353,6 @@ public:
         m_base = std::move(other.m_base);
         return *this;
     }
-
 
     /**
      * @brief Copy stored data to owned data into a new buffer
@@ -347,9 +370,7 @@ public:
         return result;
     }
 
-
 private:
-
     void maybe_fill(pointer, pointer, const_reference, std::true_type)
     {}
 
@@ -370,9 +391,9 @@ private:
         base_type new_base(alloc_size);
         size_type mid = std::min(alloc_size, size());
 
-        std::uninitialized_copy(m_base.m_data, m_base.m_data+mid, new_base.m_data);
+        std::uninitialized_copy(m_base.m_data, m_base.m_data + mid, new_base.m_data);
         if (alloc_size > mid) {
-            maybe_fill(new_base.m_data+mid, new_base.m_data+new_base.m_size, value_type());
+            maybe_fill(new_base.m_data + mid, new_base.m_data + new_base.m_size, value_type());
         }
 
         m_base = std::move(new_base);
@@ -384,11 +405,11 @@ private:
         base_type new_base(alloc_size);
         size_type mid = std::min(alloc_size, size());
 
-        std::uninitialized_copy(m_base.m_data, m_base.m_data+m_base.m_size, new_base.m_data);
+        std::uninitialized_copy(m_base.m_data, m_base.m_data + m_base.m_size, new_base.m_data);
 
         if (mid < alloc_size) {
             // new larger than old
-            std::uninitialized_fill(new_base.m_data+m_base.m_size, new_base.m_data+alloc_size, val);
+            std::uninitialized_fill(new_base.m_data + m_base.m_size, new_base.m_data + alloc_size, val);
         }
 
         m_base = std::move(new_base);
@@ -404,14 +425,14 @@ private:
         base_type new_base(sz);
         std::uninitialized_copy(
                 std::make_move_iterator(m_base.m_data),
-                std::make_move_iterator(m_base.m_data+mid),
-                new_base.m_data
-                );
+                std::make_move_iterator(m_base.m_data + mid),
+                new_base.m_data);
 
         if (mid >= sz) {
-            destroy_range(m_base.m_data + mid, m_base.m_data+m_base.m_size);
-        } else {
-            maybe_fill(new_base.m_data+mid, new_base.m_data+new_base.m_size, value_type());
+            destroy_range(m_base.m_data + mid, m_base.m_data + m_base.m_size);
+        }
+        else {
+            maybe_fill(new_base.m_data + mid, new_base.m_data + new_base.m_size, value_type());
         }
 
         m_base = std::move(new_base);
@@ -427,13 +448,13 @@ private:
         base_type new_base(sz);
         std::uninitialized_copy(
                 std::make_move_iterator(m_base.m_data),
-                std::make_move_iterator(m_base.m_data+mid),
-                new_base.m_data
-                );
+                std::make_move_iterator(m_base.m_data + mid),
+                new_base.m_data);
 
         if (mid < size()) {
-            destroy_range(m_base.m_data + mid, m_base.m_data+m_base.m_size);
-        } else {
+            destroy_range(m_base.m_data + mid, m_base.m_data + m_base.m_size);
+        }
+        else {
             std::uninitialized_fill(new_base.m_data + mid, new_base.m_data + sz, val);
         }
 
@@ -446,7 +467,6 @@ private:
     }
 
 public:
-
     /// Const pointer to beginning of storage
     const_iterator begin() const
     {
@@ -479,7 +499,6 @@ public:
     }
 
 public:
-
     /**
      * @brief Pointer to beginning of storage
      *
@@ -528,7 +547,7 @@ public:
      */
     reference operator[](size_type index)
     {
-        assert (index < size());
+        assert(index < size());
         if (m_base.is_borrowed()) {
             to_owned();
         }
@@ -536,7 +555,6 @@ public:
     }
 
 public:
-
     /// Get the size of storage
     constexpr size_type size() const
     {
@@ -560,13 +578,13 @@ public:
     }
 
 private:
-
     void resize_up(size_type sz)
     {
         assert(sz > size());
         if (!m_base.is_owned()) {
             to_owned(sz);
-        } else {
+        }
+        else {
             resize_owned(sz);
         }
     }
@@ -577,10 +595,10 @@ private:
 
         if (!m_base.is_owned()) {
             to_owned(sz, val);
-        } else {
+        }
+        else {
             resize_owned(sz, val);
         }
-
     }
 
     void resize_down(size_type sz)
@@ -588,13 +606,13 @@ private:
         assert(sz < size());
         if (!m_base.is_owned()) {
             to_owned(sz);
-        } else {
+        }
+        else {
             resize_owned(sz);
         }
     }
 
 public:
-
     /**
      * @brief Resize the storage to new size.
      *
@@ -608,7 +626,8 @@ public:
         size_type csz = size();
         if (sz > csz) {
             resize_up(sz, value_type());
-        } else if (sz < csz) {
+        }
+        else if (sz < csz) {
             resize_down(sz);
         }
         assert(size() == sz);
@@ -628,15 +647,14 @@ public:
         size_type csz = size();
         if (sz > csz) {
             resize_up(sz, val);
-        } else if (sz < csz) {
+        }
+        else if (sz < csz) {
             resize_down(sz);
         }
         assert(size() == sz);
     }
 
-
 public:
-
     /**
      * @brief Grow the storage without initialising new values
      *
@@ -649,11 +667,12 @@ public:
      */
     void reserve(size_type sz)
     {
-        assert (sz > size());
+        assert(sz > size());
 
         if (!m_base.is_owned()) {
             to_owned(sz);
-        } else {
+        }
+        else {
             resize_owned(sz);
         }
         //reserve_fill(old_size, is_pod_t());
@@ -671,14 +690,12 @@ public:
     }
 
     /// Swap this storage with another
-    void swap(dense_storage &other)
+    void swap(dense_storage& other)
     {
         std::swap(m_base, other.m_base);
     }
 
-
 private:
-
     void copy_extend_impl(pointer start, const_pointer begin, const_pointer end, std::true_type)
     {
         std::uninitialized_copy(begin, end, start);
@@ -699,9 +716,7 @@ private:
         std::copy(std::make_move_iterator(begin), std::make_move_iterator(end), start);
     }
 
-
 public:
-
     /**
      * @brief Extend the storage by copying data from the range [start_ptr, end_ptr)
      *
@@ -726,14 +741,13 @@ public:
             std::uninitialized_copy(
                     std::make_move_iterator(begin()),
                     std::make_move_iterator(end()),
-                    new_base.m_data
-                    );
-        } else {
+                    new_base.m_data);
+        }
+        else {
             std::uninitialized_copy(
                     begin(),
                     end(),
-                    new_base.m_data
-                    );
+                    new_base.m_data);
         }
         std::uninitialized_copy(start_ptr, end_ptr, new_base.m_data + m_base.m_size);
         m_base = std::move(new_base);
@@ -763,26 +777,24 @@ public:
             std::uninitialized_copy(
                     std::make_move_iterator(begin()),
                     std::make_move_iterator(end()),
-                    new_base.m_data
-                    );
-        } else {
+                    new_base.m_data);
+        }
+        else {
             std::uninitialized_copy(
                     begin(),
                     end(),
-                    new_base.m_data
-                    );
+                    new_base.m_data);
         }
         std::uninitialized_copy(
                 std::make_move_iterator(start_ptr),
                 std::make_move_iterator(end_ptr),
-                new_base.m_data+m_base.m_size);
+                new_base.m_data + m_base.m_size);
         m_base = std::move(new_base);
     }
 
 public:
-
     /// Equality operator
-    bool operator==(dense_storage const &other) const
+    bool operator==(dense_storage const& other) const
     {
         if (size() != other.size()) {
             return false;
@@ -798,7 +810,7 @@ public:
     }
 
     /// Print data to stream (useful for debugging)
-    friend std::ostream &operator<<(std::ostream &os, dense_storage const &arg)
+    friend std::ostream& operator<<(std::ostream& os, dense_storage const& arg)
     {
         os << '{';
         for (size_type i = 0; i < arg.size(); ++i) {
@@ -808,10 +820,31 @@ public:
         return os;
     }
 
+private:
+    friend class boost::serialization::access;
 
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+    template<typename Archive>
+    void load(Archive& ar, const unsigned /* version */)
+    {
+        size_type sz = 0;
+        ar >> sz;
+        m_base = base_type(sz);
+        if (sz > 0) {
+            fill_range_default_construct(m_base.m_data, m_base.m_data + m_base.m_size);
+            ar >> boost::serialization::make_array(m_base.m_data, m_base.m_size);
+        }
+    }
+
+    template<typename Archive>
+    void save(Archive& ar, const unsigned int /*version*/) const
+    {
+        ar << boost::serialization::make_nvp("size", m_base.m_size);
+        ar << boost::serialization::make_array(m_base.m_data, m_base.m_size);
+    }
 };
 
-
-} // namespace vectors
-} // namespace alg
-#endif //LIBALGEBRA_DENSE_STORAGE_H
+}// namespace vectors
+}// namespace alg
+#endif//LIBALGEBRA_DENSE_STORAGE_H

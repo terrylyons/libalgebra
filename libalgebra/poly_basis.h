@@ -30,7 +30,8 @@ the member functions are provided.
 An empty monomial corresponds to a constant term, i.e. a scalar SCA.
 */
 
-class poly_basis {
+class poly_basis
+{
 public:
     /// A key is a map from letters to degrees (i.e. a monomial of letters).
     typedef std::map<LET, DEG> KEY;
@@ -48,7 +49,8 @@ public:
 
 public:
     /// Default constructor. Empty basis.
-    poly_basis(void) { }
+    poly_basis(void)
+    {}
 
 public:
     // tjl the code below is strange -
@@ -60,20 +62,19 @@ public:
     {
         typename Coeff::SCA result(Coeff::one);
         typename KEY::const_iterator it;
-        for (it = k.begin(); it!=k.end(); ++it) {
-            if (it->second>0) {
+        for (it = k.begin(); it != k.end(); ++it) {
+            if (it->second > 0) {
                 typename std::map<LET, typename Coeff::SCA>::const_iterator iit;
                 iit = values.find(it->first);
                 try {
-                    if (iit!=values.end()) {
-                        for (DEG j = 1; j<=it->second; ++j) {
+                    if (iit != values.end()) {
+                        for (DEG j = 1; j <= it->second; ++j) {
                             Coeff::mul_inplace(result, iit->second);
                         }
                     }
                     else {
                         throw "not all variables have values!";
                     }
-
                 }
                 catch (char* str) {
                     std::cerr << "Exception raised: " << str << '\n';
@@ -98,7 +99,7 @@ public:
     {
         DEG result(0);
         typename KEY::const_iterator it;
-        for (it = k.begin(); it!=k.end(); ++it) {
+        for (it = k.begin(); it != k.end(); ++it) {
             result += DEG(it->second);
         }
         return result;
@@ -107,12 +108,15 @@ public:
     struct KEY_LESS {
         bool inline operator()(const KEY& lhs, const KEY& rhs) const
         {
-            return ((degree(lhs)<degree(rhs)) || ((degree(lhs)==degree(rhs)) && lhs<rhs));
+            return ((degree(lhs) < degree(rhs)) || ((degree(lhs) == degree(rhs)) && lhs < rhs));
         }
     };
 
     /// Returns the value of the smallest key in the basis.
-    inline KEY begin(void) const { return empty_key; }
+    inline KEY begin(void) const
+    {
+        return empty_key;
+    }
     ///// Returns the key next the biggest key of the basis.
     //// this doesn't make sense without a maximum degree.
     // inline KEY end(void) const
@@ -136,8 +140,8 @@ public:
     {
         bool first(true);
         typename KEY::const_iterator it;
-        for (it = t.second.begin(); it!=t.second.end(); ++it) {
-            if (it->second>0) {
+        for (it = t.second.begin(); it != t.second.end(); ++it) {
+            if (it->second > 0) {
                 if (!first) {
                     os << ' ';
                 }
@@ -145,7 +149,7 @@ public:
                     first = false;
                 }
                 os << "x" << it->first;
-                if (it->second>1) {
+                if (it->second > 1) {
                     os << '^' << it->second;
                 }
             }
@@ -159,16 +163,22 @@ namespace vectors {
 template<typename Coeff>
 struct vector_type_selector<poly_basis, Coeff> {
     typedef poly_basis BASIS;
-    typedef sparse_vector<BASIS, Coeff, std::map<typename BASIS::KEY, typename Coeff::S,
-                                                 typename BASIS::KEY_LESS>> type;
+    typedef sparse_vector<BASIS, Coeff, std::map<typename BASIS::KEY, typename Coeff::S, typename BASIS::KEY_LESS>> type;
 };
 
-} // namespace vectors
+template <typename Coeff>
+struct template_vector_type_selector<poly_basis, Coeff>
+{
+    typedef poly_basis BASIS;
+    template <typename B, typename C>
+    using type = sparse_vector<B, C, std::map<typename B::KEY, typename C::S, typename B::KEY_LESS> >;
+};
 
+}// namespace vectors
 
-} // namespace alg
+}// namespace alg
 
 // Include once wrapper
-#endif // DJC_COROPA_LIBALGEBRA_POLYBASISH_SEEN
+#endif// DJC_COROPA_LIBALGEBRA_POLYBASISH_SEEN
 
 // EOF.

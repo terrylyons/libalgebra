@@ -444,6 +444,22 @@ public:
         return ans;
     }
 
+    /// Computes the involute of a free_tensor instance.
+    inline friend free_tensor involute(const free_tensor& arg)
+    {
+        // Computes the involute of arg
+
+        KEY kunit;
+        free_tensor result(kunit);
+
+//        for (DEG i = max_degree; i >= 1; --i) {
+//            result.mul_scal_div(arg, (RAT)i);
+//            result += (free_tensor)
+//            kunit;
+//        }
+        return result;
+    }
+
 private:
     friend class boost::serialization::access;
 

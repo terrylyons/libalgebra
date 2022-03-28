@@ -1,79 +1,84 @@
 #include <UnitTest++/UnitTest++.h>
 
+
 #include <libalgebra/libalgebra.h>
+
+#include <vector>
 
 #include <libalgebra/alg_types.h>
 #include <libalgebra/multiplication_helpers.h>
 
 #include <libalgebra/tensor.h>
 
-#include "../../common/random_vector_generator.h"
-#include "../../common/rng.h"
-
-using alg::DEG;
 using alg::LET;
+
+
+template <typename Coeff, unsigned Width, unsigned Depth>
+struct DenseFixture
+{
+
+    typedef typename Coeff::S S;
+    typedef typename Coeff::Q Q;
+
+    typedef alg::free_tensor_basis<Width, Depth> TBASIS;
+    typedef alg::vectors::dense_vector<TBASIS, Coeff> VECT;
+    typedef alg::free_tensor<Coeff, Width, Depth, alg::vectors::dense_vector> TENSOR;
+
+    typedef typename TBASIS::KEY KEY;
+
+    const TENSOR tunit;
+    const TENSOR tzero;
+
+    DenseFixture() : tunit(KEY()), tzero()
+    {}
+
+    KEY make_key(const LET* arg, const std::size_t N)
+    {
+        KEY k;
+        for (std::size_t i = 0; i < N; ++i) {
+            k.push_back(arg[i]);
+        }
+        return k;
+    }
+
+};
+
 
 SUITE(involute)
 {
-    struct Fixture : public alg_types<5, 5, Rational> {
-        typedef alg_types<5, 5, Rational> ALG_TYPES;
-        typedef typename ALG_TYPES::TENSOR TENSOR;
-        typedef typename TENSOR::BASIS TBASIS;
-        typedef typename TENSOR::KEY KEY;
+        typedef alg::coefficients::coefficient_field<float> float_field;
+        typedef DenseFixture<float_field, 5, 5> dense_fixture;
 
-         const TENSOR tunit;
-         const TENSOR tzero;
+        // involute({12(1,2) 21(2,1)}) == {21(1,2) 12(2,1)}
 
-         Fixture() : tunit(KEY()), tzero()
-         {}
+        TEST_FIXTURE(dense_fixture, dense_unit_test)
+        {
 
-//         TENSOR reference_tensor;
-//         alg::operators::left_multiplication_operator<TENSOR> op;
-//
-//         using rat_dist = la_testing::uniform_rational_distribution<S>;
-//         using rvg_t = la_testing::random_vector_generator<TENSOR, rat_dist>;
-//
-//         std::mt19937 rng;
-//         rvg_t rvg;
-//
-//         Fixture() : reference_tensor(typename TENSOR::KEY(alg::LET(1))),
-//                     op(TENSOR(reference_tensor)), rng(std::random_device()()), rvg(-1, 1),
-//                     tunit(KEY()), tzero()
-//         {}
+            LET k12[] = {1, 2};
+            LET k21[] = {2, 1};
 
-//         KEY make_key(const LET* arg, const std::size_t N)
-//         {
-//             KEY k;
-//             for (std::size_t i = 0; i < N; ++i) {
-//                 k.push_back(arg[i]);
-//             }
-//             return k;
-//         }
-    };
+            TENSOR input_tensor;
 
-//    TEST_FIXTURE(Fixture, UnitTest1)
-//    {
-//
-//        CHECK_EQUAL(0, 0);
-//
-//    }
+            input_tensor.add_scal_prod(make_key(k12, 2), 12.0);
+            input_tensor.add_scal_prod(make_key(k21, 2), 21.0);
 
-//    TEST_FIXTURE(Fixture, UnitTest2) {
-//
-//        TENSOR my_random_tensor = rvg(rng);
-//
-////        std::cout << "my_random_tensor=" << my_random_tensor << std::endl;
-//
-//        CHECK_EQUAL(0, 0);
-//    }
+            TENSOR expected;
 
-    TEST_FIXTURE(Fixture, UnitTest) {
+            expected.add_scal_prod(make_key(k12, 2), 21.0);
+            expected.add_scal_prod(make_key(k21, 2), 12.0);
 
-        TENSOR my_tensor(tunit);
+            TENSOR result;
 
-//        alg::vectors::dtl::data_access_base<> my_data_access_base;
+            result = involute(input_tensor);
 
-        CHECK_EQUAL(0, 1);
-    }
+            std::cout << "input_tensor=" << input_tensor << std::endl;
+
+            std::cout << "expected=" << expected << std::endl;
+
+            std::cout << "result=" << result << std::endl;
+
+            CHECK_EQUAL(expected, result);
+        }
+
 
 }// SUITE involute

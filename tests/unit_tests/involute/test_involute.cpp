@@ -50,22 +50,29 @@ SUITE(involute)
         typedef DenseFixture<float_field, 5, 5> dense_fixture;
 
         // involute({12(1,2) 21(2,1)}) == {21(1,2) 12(2,1)}
+        // involute({ 1.0{11} 2.0{12} 3.0{21} 4.0{22} }) == { 1.0{11} 3.0{12} 2.0{21} 4.0{22} }
 
         TEST_FIXTURE(dense_fixture, dense_unit_test)
         {
 
+            LET k11[] = {1, 1};
             LET k12[] = {1, 2};
             LET k21[] = {2, 1};
+            LET k22[] = {2, 2};
 
             TENSOR input_tensor;
 
-            input_tensor.add_scal_prod(make_key(k12, 2), 12.0);
-            input_tensor.add_scal_prod(make_key(k21, 2), 21.0);
+            input_tensor.add_scal_prod(make_key(k11, 2), 1.0);
+            input_tensor.add_scal_prod(make_key(k12, 2), 2.0);
+            input_tensor.add_scal_prod(make_key(k21, 2), 3.0);
+            input_tensor.add_scal_prod(make_key(k22, 2), 4.0);
 
             TENSOR expected;
 
-            expected.add_scal_prod(make_key(k12, 2), 21.0);
-            expected.add_scal_prod(make_key(k21, 2), 12.0);
+            expected.add_scal_prod(make_key(k11, 2), 1.0);
+            expected.add_scal_prod(make_key(k12, 2), 3.0);
+            expected.add_scal_prod(make_key(k21, 2), 2.0);
+            expected.add_scal_prod(make_key(k22, 2), 4.0);
 
             TENSOR result;
 

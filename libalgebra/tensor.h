@@ -449,14 +449,59 @@ public:
     {
         // Computes the involute of arg
 
-        KEY kunit;
-        free_tensor result(kunit);
+        free_tensor result;
 
-//        for (DEG i = max_degree; i >= 1; --i) {
-//            result.mul_scal_div(arg, (RAT)i);
-//            result += (free_tensor)
-//            kunit;
-//        }
+        // TODO: implement tiled_inverse_operator template args properly
+
+        // int Width = 5;
+        unsigned MaxDepth = 5;
+        unsigned BlockLetters = 1;
+
+        // TODO: add tensor_start_of_degree() function
+
+        unsigned max_middle_word_length = MaxDepth - 2*BlockLetters;
+
+        for (auto length = 0; length <= max_middle_word_length; ++length)
+        {
+            auto istart = 1; //TODO: define istart, tensor_start_of_degree(length)
+            auto iend = 3; //TODO: define iend, tensor_start_of_degree(length + 1)
+
+            auto src_dst_offset = 2; //TODO: define src_dst_offset, tensor_start_of_degree(length+2*BlockLetters)
+
+//            TODO:
+////            assert(src_dst_offset + block_size*(iend - istart) <= arg.size());
+////            assert(src_dst_offset + block_size*(iend - istart) <= result.size());
+
+//            TODO:
+////            auto src_ptr = arg.data() + src_dst_offset;
+////            auto dst_ptr = result.data() + src_dst_offset;
+
+//            TODO:
+////            #pragma omp parallel for
+            for (auto i = istart; i < iend; ++i)
+            {
+                std::cout << "word = ..." << std::endl;
+//                TODO: implement word_list[]
+////                auto& word = word_list[i];
+
+                std::cout << "rword_index = ..." << std::endl;
+//                TODO: implement key_to_index()
+////                auto rword_index = key_to_index(word.reverse());
+
+                if (length % 2 == 0)
+                {
+                    std::cout << "process_tile()" << std::endl;
+//                    TODO: implement process_tile()
+////                    process_tile(src_ptr, dst_ptr, i - istart, rword_index-istart, length, identity);
+                }
+                else
+                {
+                    std::cout << "process_tile()" << std::endl;
+//                    TODO: implement process_tile()
+////                    process_tile(src_ptr, dst_ptr, i - istart, rword_index-istart, length, scalar_minus);
+                }
+            }
+        }
         return result;
     }
 

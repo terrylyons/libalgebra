@@ -47,9 +47,8 @@ struct DenseFixture
 SUITE(involute)
 {
         typedef alg::coefficients::coefficient_field<float> float_field;
-        typedef DenseFixture<float_field, 5, 5> dense_fixture;
+        typedef DenseFixture<float_field, 4, 4> dense_fixture;
 
-        // involute({12(1,2) 21(2,1)}) == {21(1,2) 12(2,1)}
         // involute({ 1.0{11} 2.0{12} 3.0{21} 4.0{22} }) == { 1.0{11} 3.0{12} 2.0{21} 4.0{22} }
 
         TEST_FIXTURE(dense_fixture, dense_unit_test)

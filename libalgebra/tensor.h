@@ -448,6 +448,63 @@ public:
     }
 
 private:
+//
+//    free_tensor involute_impl(vectors::dtl::access_type_sparse) const
+//    {
+//        free tensor result;
+//
+//        // TODO: implement tiled_inverse_operator template args properly
+//
+//
+//        // Get the pointers to the start of the data blob in memory.
+//        const SCA* src_ptr = vectors::dtl::data_access<VectorType<Coeff, BASIS>>::range_begin(vectors::dtl::vector_base_access::convert(*this));
+//        SCA* dst_ptr = vectors::dtl::data_access<VectorType<Coeff, BASIS>>::range_begin(vectors::dtl::vector_base_access::convert(result));
+//
+//        for (deg_t d = 2; d <= DEPTH; ++d)
+//        {
+//            for (size_t i = BASIS::start_of_degree(d); i < BASIS::start_of_degree(d + 1); ++i)
+//            {
+//                if (d % 2 == 0)
+//                {
+//
+//                }
+//                else
+//                {
+//
+//                }
+//
+//
+//            }
+//
+//        }
+//
+////        ########### from tensor_inverse: ##################
+////        result[0] = arg[0];
+////
+////        // As is degree = 1
+////        for (size_t i = 1; i <= WIDTH; ++i) {
+////            result[i] = -arg[i];
+////        }
+////
+////        for (deg_t d = 2; d <= DEPTH; ++d) {
+////            // Stupid implementation to check it works;
+////            for (size_t i = tensor_start_of_degree(d); i < tensor_start_of_degree(d + 1); ++i) {
+////                auto& k = word_list[i];
+////                if (d % 2 == 0) {
+////                    result[key_to_index(k.reverse())] = arg[i];
+////                }
+////                else {
+////                    result[key_to_index(k.reverse())] = -arg[i];
+////                }
+////            }
+////        }
+////        ########### end from tensor_inverse ##################
+//
+//
+//
+//        return result;
+//
+//    }
 
     /// Implementation of the antipode for dense vector types.
     free_tensor involute_impl(vectors::dtl::access_type_dense) const

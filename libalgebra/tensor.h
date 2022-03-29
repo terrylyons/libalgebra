@@ -450,7 +450,7 @@ public:
 private:
 
     /// Implementation of the antipode for dense vector types.
-    free_tensor involute_impl(vectors::dtl::access_type_dense)
+    free_tensor involute_impl(vectors::dtl::access_type_dense) const
     {
         free_tensor result;
 

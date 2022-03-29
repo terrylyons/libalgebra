@@ -449,6 +449,48 @@ public:
 
 private:
 
+/// Implementation of the antipode for sparse vector types.
+    free_tensor involute_impl(vectors::dtl::access_type_sparse) const
+    {
+        free_tensor result;
+
+        for (auto cit = (*this).begin(); cit != (*this).end(); ++cit)
+        {
+            KEY temp_key = cit->key();
+            KEY temp_key_reverse = temp_key.reverse();
+            SCA temp_value = cit->value();
+
+            int sign;
+
+            if (temp_key.size() % 2 == 0)
+            {
+                sign = 1;
+            }
+            else
+            {
+                sign = -1;
+            }
+
+            std::cout << "KEY = " << temp_key << std::endl;
+            std::cout << "REVERSED KEY = " << temp_key_reverse << std::endl;
+            std::cout << "VALUE = " << temp_value << std::endl;
+            std::cout << "SIGN = " << sign << std::endl;
+
+            free_tensor temp_tensor(temp_key_reverse);
+
+            temp_tensor.add_scal_prod(temp_key_reverse, sign*temp_value);
+
+            std::cout << "temp_tensor = " << temp_tensor << std::endl;
+
+            result = result + temp_tensor;
+
+            std::cout << "result = " << result << std::endl;
+        }
+
+        return result;
+
+    }
+
     /// Implementation of the antipode for dense vector types.
     free_tensor involute_impl(vectors::dtl::access_type_dense) const
     {

@@ -14,6 +14,9 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 #define DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 
+
+#include <libalgebra/vectors/base_vector.h>
+
 namespace alg {
 
 template<typename Coeff>
@@ -444,12 +447,13 @@ public:
         return ans;
     }
 
-    /// Computes the involute of a free_tensor instance.
-    inline friend free_tensor involute(const free_tensor& arg)
-    {
-        // Computes the involute of arg
+private:
 
+    /// Implementation of the antipode for dense vector types.
+    free_tensor involute_impl(vectors::dtl::access_type_dense) const
+    {
         free_tensor result;
+
 
         // TODO: implement tiled_inverse_operator template args properly
 
@@ -457,52 +461,71 @@ public:
         unsigned MaxDepth = 5;
         unsigned BlockLetters = 1;
 
-        // TODO: add tensor_start_of_degree() function
 
-        unsigned max_middle_word_length = MaxDepth - 2*BlockLetters;
+        unsigned max_middle_word_length = MaxDepth - 2 * BlockLetters;
 
-        for (auto length = 0; length <= max_middle_word_length; ++length)
-        {
-            auto istart = 1; //TODO: define istart, tensor_start_of_degree(length)
-            auto iend = 3; //TODO: define iend, tensor_start_of_degree(length + 1)
+        // Get the pointers to the start of the data blob in memory.
+        const SCA* src_ptr = vectors::dtl::data_access<VectorType<Coeff, BASIS>>::range_begin(vectors::dtl::vector_base_access::convert(*this));
+        SCA* dst_ptr = vectors::dtl::data_access<VectorType<Coeff, BASIS>>::range_begin(vectors::dtl::vector_base_access::convert(result));
 
-            auto src_dst_offset = 2; //TODO: define src_dst_offset, tensor_start_of_degree(length+2*BlockLetters)
+        for (auto length = 0; length <= max_middle_word_length; ++length) {
+            auto istart = BASIS::start_of_degree(length);//TODO: define istart, tensor_start_of_degree(length)
+            auto iend = BASIS::start_of_degree(length+1);  //TODO: define iend, tensor_start_of_degree(length + 1)
 
-//            TODO:
-////            assert(src_dst_offset + block_size*(iend - istart) <= arg.size());
-////            assert(src_dst_offset + block_size*(iend - istart) <= result.size());
+            auto src_dst_offset = 2;//TODO: define src_dst_offset, tensor_start_of_degree(length+2*BlockLetters)
 
-//            TODO:
-////            auto src_ptr = arg.data() + src_dst_offset;
-////            auto dst_ptr = result.data() + src_dst_offset;
+            //            TODO:
+            ////            assert(src_dst_offset + block_size*(iend - istart) <= arg.size());
+            ////            assert(src_dst_offset + block_size*(iend - istart) <= result.size());
 
-//            TODO:
-////            #pragma omp parallel for
-            for (auto i = istart; i < iend; ++i)
-            {
+            //            TODO:
+            ////            auto src_ptr = arg.data() + src_dst_offset;
+            ////            auto dst_ptr = result.data() + src_dst_offset;
+
+            //            TODO:
+            ////            #pragma omp parallel for
+
+            // This is not a good solution, but it will work for now
+            auto key_start = VECT::basis.index_to_key(istart);
+            auto key_end = VECT::basis.index_to_key(iend);
+
+            auto word_idx = istart;
+            for (auto word = key_start; word != key_end; word = VECT::basis.nextkey(word), ++word_idx) {
                 std::cout << "word = ..." << std::endl;
-//                TODO: implement word_list[]
-////                auto& word = word_list[i];
+                //                TODO: implement word_list[]
+                ////                auto& word = word_list[i];
 
                 std::cout << "rword_index = ..." << std::endl;
-//                TODO: implement key_to_index()
-////                auto rword_index = key_to_index(word.reverse());
+                //                TODO: implement key_to_index()
+                auto rword_index = VECT::basis.key_to_index(word.reverse());
 
-                if (length % 2 == 0)
-                {
+                if (length % 2 == 0) {
                     std::cout << "process_tile()" << std::endl;
-//                    TODO: implement process_tile()
-////                    process_tile(src_ptr, dst_ptr, i - istart, rword_index-istart, length, identity);
+                    //                    TODO: implement process_tile()
+                    ////                    process_tile(src_ptr, dst_ptr, i - istart, rword_index-istart, length, identity);
                 }
-                else
-                {
+                else {
                     std::cout << "process_tile()" << std::endl;
-//                    TODO: implement process_tile()
-////                    process_tile(src_ptr, dst_ptr, i - istart, rword_index-istart, length, scalar_minus);
+                    //                    TODO: implement process_tile()
+                    ////                    process_tile(src_ptr, dst_ptr, i - istart, rword_index-istart, length, scalar_minus);
                 }
             }
         }
         return result;
+    }
+
+
+public:
+    /// Computes the involute of a free_tensor instance.
+    inline friend free_tensor involute(const free_tensor& arg)
+    {
+        // Get the trait to access the storage tag, although it now occurs to me that we already had
+        // the vector type as a template argument, so we might be able to dispatch off that instead
+        // of a tag. But the tag will do for now.
+        using trait = vectors::dtl::data_access<VectorType<Coeff, BASIS>>;
+
+        // Now use tagged dispatch to pick the correct implementation
+        return arg.involute_impl(typename trait::tag());
     }
 
 private:

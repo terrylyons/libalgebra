@@ -465,8 +465,8 @@ private:
         unsigned max_middle_word_length = MaxDepth - 2 * BlockLetters;
 
         // Get the pointers to the start of the data blob in memory.
-        const SCA* src_ptr = vectors::dtl::data_access<VectorType<Coeff, BASIS>>::range_begin(vectors::dtl::vector_base_access::convert(*this));
-        SCA* dst_ptr = vectors::dtl::data_access<VectorType<Coeff, BASIS>>::range_begin(vectors::dtl::vector_base_access::convert(result));
+        const SCA* src_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(*this));
+        SCA* dst_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(result));
 
         for (auto length = 0; length <= max_middle_word_length; ++length) {
             auto istart = BASIS::start_of_degree(length);//TODO: define istart, tensor_start_of_degree(length)
@@ -522,7 +522,7 @@ public:
         // Get the trait to access the storage tag, although it now occurs to me that we already had
         // the vector type as a template argument, so we might be able to dispatch off that instead
         // of a tag. But the tag will do for now.
-        using trait = vectors::dtl::data_access<VectorType<Coeff, BASIS>>;
+        using trait = vectors::dtl::data_access<VectorType<BASIS, Coeff>>;
 
         // Now use tagged dispatch to pick the correct implementation
         return arg.involute_impl(typename trait::tag());

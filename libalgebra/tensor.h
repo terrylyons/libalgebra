@@ -484,14 +484,20 @@ private:
 
             //            TODO:
             ////            #pragma omp parallel for
-            for (auto i = istart; i < iend; ++i) {
+
+            // This is not a good solution, but it will work for now
+            auto key_start = VECT::basis.index_to_key(istart);
+            auto key_end = VECT::basis.index_to_key(iend);
+
+            auto word_idx = istart;
+            for (auto word = key_start; word != key_end; word = VECT::basis.nextkey(word), ++word_idx) {
                 std::cout << "word = ..." << std::endl;
                 //                TODO: implement word_list[]
                 ////                auto& word = word_list[i];
 
                 std::cout << "rword_index = ..." << std::endl;
                 //                TODO: implement key_to_index()
-                ////                auto rword_index = key_to_index(word.reverse());
+                auto rword_index = VECT::basis.key_to_index(word.reverse());
 
                 if (length % 2 == 0) {
                     std::cout << "process_tile()" << std::endl;

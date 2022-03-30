@@ -502,6 +502,8 @@ private:
 
     void sign_tile(SCA* tile, int sign, int block_size) const
     {
+        // TODO: use tile[block_size] above
+
         std::cout << "sign_tile" << std::endl;
 
         for (int i = 0; i < block_size; ++i)
@@ -511,9 +513,19 @@ private:
     }
 
 
-    void write_tile(SCA* tile, SCA* data_ptr, int stride) const
+    void write_tile(SCA* tile_ptr, SCA* data_ptr, int stride, int block_width) const
     {
         std::cout << "write_tile" << std::endl;
+
+        for (int row=0; row<block_width; ++row)
+        {
+            int row_offset = row * stride;
+
+            for (int col=0; col <block_width; ++col)
+            {
+                data_ptr[row_offset + col] = *(tile_ptr++);
+            }
+        }
     }
 
     void process_tile(
@@ -544,7 +556,7 @@ private:
         permutation(tile);
 
         sign_tile(tile, sign, block_size);
-        write_tile(tile, output_data + rword_index*block_offset, stride);
+        write_tile(tile, output_data + rword_index*block_offset, stride, block_width);
 
     }
     // Implementation of the antipode for dense vector types.

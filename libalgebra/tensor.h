@@ -454,7 +454,7 @@ private:
     {
         free_tensor result;
 
-        for (auto cit = (*this).begin(); cit != (*this).end(); ++cit)
+        for (auto cit = this->begin(); cit != this->end(); ++cit)
         {
             KEY temp_key = cit->key();
             KEY temp_key_reverse = temp_key.reverse();

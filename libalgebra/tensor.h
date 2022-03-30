@@ -483,9 +483,16 @@ private:
 
     }
 
-    void read_tile(const SCA* data_ptr, SCA* tile, int stride) const
+    void read_tile(const SCA* data_ptr, SCA* tile_ptr, int stride, int block_width) const
     {
         std::cout << "read_tile" << std::endl;
+
+        for (int row=0; row < block_width; ++row) {
+            int row_offset = row * stride;
+            for (int col=0; col <block_width; ++col) {
+                *(tile_ptr++) = data_ptr[row_offset + col];
+            }
+        }
     }
 
     void permutation(SCA* tile) const
@@ -513,17 +520,18 @@ private:
             int block_offset,
             int block_size,
             int BlockLetters,
-            int Width
+            int Width,
+            int block_width
             ) const
     {
         // TODO: add correct types in args instead of int
 
         std::cout << "process_tile" << std::endl;
 
-        SCA* tile[block_size];
+        SCA* tile; // TODO: use tile[block_size]
         int stride = power(Width, degree+BlockLetters);
 
-        read_tile(input_data + word_index*block_offset, tile,stride);
+        read_tile(input_data + word_index*block_offset, tile, stride, block_width);
         permutation(tile);
         sign_tile(tile, sign);
         write_tile(tile, output_data + rword_index*block_offset, stride);
@@ -542,6 +550,7 @@ private:
 
         int block_offset = power(Width, BlockLetters); // TODO: Quick fix, change scope
         int block_size = power(Width, 2*BlockLetters); // TODO: Quick fix, change scope
+        int block_width = block_width = power(Width, BlockLetters); // TODO: Quick fix, change scope
 
         unsigned max_middle_word_length = MaxDepth - 2 * BlockLetters;
 
@@ -576,11 +585,11 @@ private:
 
                 if (length % 2 == 0)
                 {
-                    process_tile(src_ptr, dst_ptr, word_idx - istart, rword_index-istart, length, 1, block_offset, block_size, BlockLetters, Width);
+                    process_tile(src_ptr, dst_ptr, word_idx - istart, rword_index-istart, length, 1, block_offset, block_size, BlockLetters, Width, block_width);
                 }
                 else
                 {
-                    process_tile(src_ptr, dst_ptr, word_idx - istart, rword_index-istart, length, -1, block_offset, block_size, BlockLetters, Width);
+                    process_tile(src_ptr, dst_ptr, word_idx - istart, rword_index-istart, length, -1, block_offset, block_size, BlockLetters, Width, block_width);
                 }
             }
         }

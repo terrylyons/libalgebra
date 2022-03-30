@@ -105,7 +105,7 @@ SUITE(involute)
 
             TENSOR result;
 
-//            result = involute(input_tensor);
+            result = involute(input_tensor);
 
             std::cout << "input_tensor=" << input_tensor << std::endl;
 

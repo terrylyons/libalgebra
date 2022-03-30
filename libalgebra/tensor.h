@@ -449,7 +449,7 @@ public:
 
 private:
 
-/// Implementation of the antipode for sparse vector types.
+    // Implementation of the antipode for sparse vector types.
     free_tensor involute_impl(vectors::dtl::access_type_sparse) const
     {
         free_tensor result;
@@ -483,18 +483,65 @@ private:
 
     }
 
-    /// Implementation of the antipode for dense vector types.
+    void read_tile(const SCA* data_ptr, SCA* tile, int stride) const
+    {
+        std::cout << "read_tile" << std::endl;
+    }
+
+    void permutation(SCA* tile) const
+    {
+        std::cout << "permutation" << std::endl;
+    }
+
+    void sign_tile(SCA* tile, int sign) const
+    {
+        std::cout << "sign_tile" << std::endl;
+    }
+
+    void write_tile(SCA* tile, SCA* data_ptr, int stride) const
+    {
+        std::cout << "write_tile" << std::endl;
+    }
+
+    void process_tile(
+            const SCA* input_data,
+            SCA* output_data,
+            int word_index,
+            int rword_index,
+            int degree,
+            int sign,
+            int block_offset,
+            int block_size,
+            int BlockLetters,
+            int Width
+            ) const
+    {
+        // TODO: add correct types in args instead of int
+
+        std::cout << "process_tile" << std::endl;
+
+        SCA* tile[block_size];
+        int stride = power(Width, degree+BlockLetters);
+
+        read_tile(input_data + word_index*block_offset, tile,stride);
+        permutation(tile);
+        sign_tile(tile, sign);
+        write_tile(tile, output_data + rword_index*block_offset, stride);
+
+    }
+    // Implementation of the antipode for dense vector types.
     free_tensor involute_impl(vectors::dtl::access_type_dense) const
     {
         free_tensor result;
 
-
-        // TODO: implement tiled_inverse_operator template args properly
-
-        // int Width = 5;
-        unsigned MaxDepth = 5;
+        // TODO: implement tiled_inverse_operator template args properly.
+        //  Currently set to match tensor inverse repository tests
+        unsigned Width = 4;
+        unsigned MaxDepth = 4;
         unsigned BlockLetters = 1;
 
+        int block_offset = power(Width, BlockLetters); // TODO: Quick fix, change scope
+        int block_size = power(Width, 2*BlockLetters); // TODO: Quick fix, change scope
 
         unsigned max_middle_word_length = MaxDepth - 2 * BlockLetters;
 
@@ -508,22 +555,16 @@ private:
 
             auto src_dst_offset = BASIS::start_of_degree(length + 2*BlockLetters);
 
-            //            TODO:
-            ////            assert(src_dst_offset + block_size*(iend - istart) <= arg.size());
-            ////            assert(src_dst_offset + block_size*(iend - istart) <= result.size());
-
-            //            TODO:
-            ////            auto src_ptr = arg.data() + src_dst_offset;
-            ////            auto dst_ptr = result.data() + src_dst_offset;
-
-            //            TODO:
-            ////            #pragma omp parallel for
+            assert(src_dst_offset + block_size*(iend - istart) <= arg.size());
+            assert(src_dst_offset + block_size*(iend - istart) <= result.size());
 
             // This is not a good solution, but it will work for now
             auto key_start = VECT::basis.index_to_key(istart);
             auto key_end = VECT::basis.index_to_key(iend);
 
             auto word_idx = istart;
+
+            // TODO: #pragma omp parallel for
             for (auto word = key_start; word != key_end; word = VECT::basis.nextkey(word), ++word_idx)
             {
 
@@ -533,15 +574,13 @@ private:
 
                 std::cout << "rword_index = " << rword_index << std::endl;
 
-                if (length % 2 == 0) {
-                    std::cout << "process_tile()" << std::endl;
-                    //                    TODO: implement process_tile()
-                    ////                    process_tile(src_ptr, dst_ptr, i - istart, rword_index-istart, length, identity);
+                if (length % 2 == 0)
+                {
+                    process_tile(src_ptr, dst_ptr, word_idx - istart, rword_index-istart, length, 1, block_offset, block_size, BlockLetters, Width);
                 }
-                else {
-                    std::cout << "process_tile()" << std::endl;
-                    //                    TODO: implement process_tile()
-                    ////                    process_tile(src_ptr, dst_ptr, i - istart, rword_index-istart, length, scalar_minus);
+                else
+                {
+                    process_tile(src_ptr, dst_ptr, word_idx - istart, rword_index-istart, length, -1, block_offset, block_size, BlockLetters, Width);
                 }
             }
         }

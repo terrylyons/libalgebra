@@ -500,10 +500,16 @@ private:
         std::cout << "permutation" << std::endl;
     }
 
-    void sign_tile(SCA* tile, int sign) const
+    void sign_tile(SCA* tile, int sign, int block_size) const
     {
         std::cout << "sign_tile" << std::endl;
+
+        for (int i = 0; i < block_size; ++i)
+        {
+            tile[i] = sign*tile[i];
+        }
     }
+
 
     void write_tile(SCA* tile, SCA* data_ptr, int stride) const
     {
@@ -532,8 +538,12 @@ private:
         int stride = power(Width, degree+BlockLetters);
 
         read_tile(input_data + word_index*block_offset, tile, stride, block_width);
+
+        // TODO: reversing_permutation<Width, 2*BlockLetters> permutation;
+
         permutation(tile);
-        sign_tile(tile, sign);
+
+        sign_tile(tile, sign, block_size);
         write_tile(tile, output_data + rword_index*block_offset, stride);
 
     }

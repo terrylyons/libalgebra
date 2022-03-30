@@ -471,10 +471,10 @@ private:
                 sign = -1;
             }
 
-            std::cout << "KEY = " << temp_key << std::endl;
-            std::cout << "REVERSED KEY = " << temp_key_reverse << std::endl;
-            std::cout << "VALUE = " << temp_value << std::endl;
-            std::cout << "SIGN = " << sign << std::endl;
+//            std::cout << "KEY = " << temp_key << std::endl;
+//            std::cout << "REVERSED KEY = " << temp_key_reverse << std::endl;
+//            std::cout << "VALUE = " << temp_value << std::endl;
+//            std::cout << "SIGN = " << sign << std::endl;
 
             result.add_scal_prod(temp_key_reverse, sign*temp_value);
         }
@@ -503,10 +503,10 @@ private:
         SCA* dst_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(result));
 
         for (auto length = 0; length <= max_middle_word_length; ++length) {
-            auto istart = BASIS::start_of_degree(length);//TODO: define istart, tensor_start_of_degree(length)
-            auto iend = BASIS::start_of_degree(length+1);  //TODO: define iend, tensor_start_of_degree(length + 1)
+            auto istart = BASIS::start_of_degree(length);
+            auto iend = BASIS::start_of_degree(length+1);
 
-            auto src_dst_offset = 2;//TODO: define src_dst_offset, tensor_start_of_degree(length+2*BlockLetters)
+            auto src_dst_offset = BASIS::start_of_degree(length + 2*BlockLetters);
 
             //            TODO:
             ////            assert(src_dst_offset + block_size*(iend - istart) <= arg.size());
@@ -524,14 +524,14 @@ private:
             auto key_end = VECT::basis.index_to_key(iend);
 
             auto word_idx = istart;
-            for (auto word = key_start; word != key_end; word = VECT::basis.nextkey(word), ++word_idx) {
-                std::cout << "word = ..." << std::endl;
-                //                TODO: implement word_list[]
-                ////                auto& word = word_list[i];
+            for (auto word = key_start; word != key_end; word = VECT::basis.nextkey(word), ++word_idx)
+            {
 
-                std::cout << "rword_index = ..." << std::endl;
-                //                TODO: implement key_to_index()
+                std::cout << "word = " << word << std::endl;
+
                 auto rword_index = VECT::basis.key_to_index(word.reverse());
+
+                std::cout << "rword_index = " << rword_index << std::endl;
 
                 if (length % 2 == 0) {
                     std::cout << "process_tile()" << std::endl;

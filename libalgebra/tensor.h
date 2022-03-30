@@ -476,15 +476,7 @@ private:
             std::cout << "VALUE = " << temp_value << std::endl;
             std::cout << "SIGN = " << sign << std::endl;
 
-            free_tensor temp_tensor(temp_key_reverse);
-
-            temp_tensor.add_scal_prod(temp_key_reverse, sign*temp_value);
-
-            std::cout << "temp_tensor = " << temp_tensor << std::endl;
-
-            result = result + temp_tensor;
-
-            std::cout << "result = " << result << std::endl;
+            result.add_scal_prod(temp_key_reverse, sign*temp_value);
         }
 
         return result;

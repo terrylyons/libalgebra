@@ -118,7 +118,7 @@ SUITE(involute)
 
         typedef SparseFixture<float_field, 4, 4> sparse_fixture;
 
-        // involute({ 1.0{11} 2.0{12} 3.0{21} 4.0{22} }) == { 1.0{11} 3.0{12} 2.0{21} 4.0{22} }
+        // involute({ 1.0{11} 2.0{12} 3.0{21} 4.0{22} 5.0{123}}) == { 1.0{11} 3.0{12} 2.0{21} 4.0{22} -5.0{321}}
 
         TEST_FIXTURE(sparse_fixture, sparse_unit_test)
         {
@@ -128,12 +128,19 @@ SUITE(involute)
             LET k21[] = {2, 1};
             LET k22[] = {2, 2};
 
+            LET k123[] = {1, 2, 3};
+            LET k321[] = {3, 2, 1};
+
             TENSOR input_tensor;
 
             input_tensor.add_scal_prod(make_key(k11, 2), 1.0);
             input_tensor.add_scal_prod(make_key(k12, 2), 2.0);
             input_tensor.add_scal_prod(make_key(k21, 2), 3.0);
             input_tensor.add_scal_prod(make_key(k22, 2), 4.0);
+
+            input_tensor.add_scal_prod(make_key(k123, 3), 5.0);
+
+
 
             TENSOR expected;
 
@@ -142,15 +149,19 @@ SUITE(involute)
             expected.add_scal_prod(make_key(k21, 2), 2.0);
             expected.add_scal_prod(make_key(k22, 2), 4.0);
 
+            expected.add_scal_prod(make_key(k321, 3), -5.0);
+
+
+
             TENSOR result;
 
-//            result = involute(input_tensor);
+            result = involute(input_tensor);
 
-            std::cout << "input_tensor=" << input_tensor << std::endl;
-
-            std::cout << "expected=" << expected << std::endl;
-
-            std::cout << "result=" << result << std::endl;
+//            std::cout << "input_tensor=" << input_tensor << std::endl;
+//
+//            std::cout << "expected=" << expected << std::endl;
+//
+//            std::cout << "result=" << result << std::endl;
 
             CHECK_EQUAL(expected, result);
         }

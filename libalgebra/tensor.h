@@ -724,7 +724,7 @@ private:
 
     };
 
-    template <unsigned Width, unsigned MaxDepth, unsigned BlockLetters>
+    template <DEG Width, DEG MaxDepth, DEG BlockLetters>
     class tiled_inverse_operator{
 
     public:
@@ -757,7 +757,7 @@ private:
             std::cout << "process_tile" << std::endl;
 
             SCA tile[block_size];
-            int stride = power(Width, degree+BlockLetters);
+            auto stride = power(Width, degree+BlockLetters);
 
             read_tile(input_data + word_index*block_offset, tile, stride);
 
@@ -825,7 +825,8 @@ private:
         const unsigned MaxDepth = 4;
         const unsigned BlockLetters = 1;
 
-        tiled_inverse_operator<Width, MaxDepth, BlockLetters> t;
+        tiled_inverse_operator<n_letters, max_degree, 1> t;
+        vectors::dtl::vector_base_access::convert(result).resize_to_degree(vectors::dtl::vector_base_access::convert(*this).dimension());
 
         // Get the pointers to the start of the data blob in memory.
         const SCA* src_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(*this));
@@ -836,9 +837,9 @@ private:
             auto iend = BASIS::start_of_degree(length + 1);
 
             auto src_dst_offset = BASIS::start_of_degree(length + 2 * BlockLetters);
-
-            assert(src_dst_offset + t.block_size * (iend - istart) <= arg.size());
-            assert(src_dst_offset + t.block_size * (iend - istart) <= result.size());
+            
+            //assert(src_dst_offset + t.block_size*(iend - istart) <= arg.size());
+            //assert(src_dst_offset + t.block_size*(iend - istart) <= result.size());
 
             // This is not a good solution, but it will work for now
             auto key_start = VECT::basis.index_to_key(istart);

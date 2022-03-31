@@ -735,6 +735,68 @@ private:
 //        static constexpr size_type middle_word_count = tensor_alg_size(max_middle_word_length);
         static constexpr size_t block_offset = power(Width, BlockLetters);
 
+        template <DEG Level, DEG MaxLevel>
+        struct recursive_untiled_compute
+        {
+            using permutation_t = reversing_permutation<Width, Level>;
+//            using signer_t = signing_operator<Level % 2>;
+            using next_t = recursive_untiled_compute<Level+1, MaxLevel>;
+            static constexpr size_t level_size = power(Width, Level);
+
+            /*
+             * Everything here is supposed to fit in cache, so we really don't need to worry
+             * about locality etc when manipulating arrays. This should be very fast.
+             */
+            void operator()(const SCA* __restrict src_ptr, SCA* __restrict dst_ptr) const noexcept
+            {
+                // Copy from src to test and adjust sign.
+//                signer_t signer;
+                for (int i=0; i<level_size; ++i) {
+                    dst_ptr[i] = src_ptr[i];
+//                    dst_ptr[i] = signer(src_ptr[i]);
+                }
+
+                // Operate on the pointer as if it were a tile of size Width^Level
+                permutation_t permutation;
+                permutation(dst_ptr);
+
+                // Recurse down to the next level.
+                next_t next;
+                next(src_ptr + level_size, dst_ptr + level_size);
+            }
+        };
+
+        template <DEG MaxLevel>
+        struct recursive_untiled_compute<MaxLevel, MaxLevel>
+        {
+            // So the code doesn't change too much, set Level = MaxLevel
+            static constexpr DEG Level = MaxLevel;
+            using permutation_t = reversing_permutation<Width, Level>;
+//            using signer_t = signing_operator<Level % 2>;
+            static constexpr size_t level_size = power(Width, Level);
+
+            /*
+             * Everything here is supposed to fit in cache, so we really don't need to worry
+             * about locality etc when manipulating arrays. This should be very fast.
+             */
+            void operator()(const SCA* __restrict src_ptr, SCA* __restrict dst_ptr) const noexcept
+            {
+                // Copy from src to test and adjust sign.
+//                signer_t signer;
+                for (int i = 0; i<level_size; ++i) {
+                    dst_ptr[i] = src_ptr[i];
+//                    dst_ptr[i] = signer(src_ptr[i]);
+                }
+
+                // Operate on the pointer as if it were a tile of size Width^Level
+                permutation_t permutation;
+                permutation(dst_ptr);
+
+
+                // No more recursing!
+            }
+        };
+
         void recurse(const SCA* input_data, SCA* output_data)
         {
         }
@@ -840,6 +902,8 @@ private:
 //        // Recursively fill the first 2*BlockLetters - 1 levels
 //        recursive_untiled_compute<0U, 2*BlockLetters-1> recurse;
 //        recurse(arg.data(), result.data());
+
+
 
         t.recurse(src_ptr, dst_ptr);
 

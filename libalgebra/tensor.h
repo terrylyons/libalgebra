@@ -724,8 +724,6 @@ private:
 
     };
 
-
-
     template <int Width, int MaxDepth, int BlockLetters>
     class tiled_inverse_operator{
 
@@ -736,24 +734,6 @@ private:
         static constexpr unsigned max_middle_word_length = MaxDepth - 2*BlockLetters;
 //        static constexpr size_type middle_word_count = tensor_alg_size(max_middle_word_length);
         static constexpr size_t block_offset = power(Width, BlockLetters);
-
-        struct passthrough
-        {
-            SCA operator()(SCA s) noexcept
-            {
-                return s;
-            }
-
-        };
-
-        struct sminus
-        {
-            SCA operator()(SCA s) noexcept
-            {
-                return -s;
-            }
-
-        };
 
         void process_tile(
                 const SCA* input_data,

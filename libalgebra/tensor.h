@@ -487,12 +487,14 @@ private:
     {
         std::cout << "read_tile" << std::endl;
 
-        for (int row=0; row < block_width; ++row) {
-            int row_offset = row * stride;
-            for (int col=0; col <block_width; ++col) {
-                *(tile_ptr++) = data_ptr[row_offset + col];
-            }
-        }
+//        for (int row=0; row < block_width; ++row)
+//        {
+//            int row_offset = row * stride;
+//            for (int col=0; col <block_width; ++col)
+//            {
+//                *(tile_ptr++) = data_ptr[row_offset + col];
+//            }
+//        }
     }
 
     void permutation(SCA* tile) const
@@ -506,10 +508,10 @@ private:
 
         std::cout << "sign_tile" << std::endl;
 
-        for (int i = 0; i < block_size; ++i)
-        {
-            tile[i] = sign*tile[i];
-        }
+//        for (int i = 0; i < block_size; ++i)
+//        {
+//            tile[i] = sign*tile[i];
+//        }
     }
 
 
@@ -517,15 +519,15 @@ private:
     {
         std::cout << "write_tile" << std::endl;
 
-        for (int row=0; row<block_width; ++row)
-        {
-            int row_offset = row * stride;
-
-            for (int col=0; col <block_width; ++col)
-            {
-                data_ptr[row_offset + col] = *(tile_ptr++);
-            }
-        }
+//        for (int row=0; row<block_width; ++row)
+//        {
+//            int row_offset = row * stride;
+//
+//            for (int col=0; col <block_width; ++col)
+//            {
+//                data_ptr[row_offset + col] = *(tile_ptr++);
+//            }
+//        }
     }
 
     void process_tile(

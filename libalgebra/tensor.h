@@ -14,6 +14,7 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 #define DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 
+#include <unordered_set>
 
 #include <libalgebra/vectors/base_vector.h>
 
@@ -482,6 +483,248 @@ private:
         return result;
 
     }
+
+    template <unsigned Width, unsigned Level>
+    struct reversing_permutation
+    {
+        using size_type  = size_t;
+        using cycle_type = std::pair<size_type, size_type>;
+
+        //static const std::vector<cycle_type> cycles;
+        static constexpr size_type factor = power(Width, Level - 1);
+
+        static std::vector<cycle_type> make_permutation()
+        {
+            constexpr size_type tile_size = power(Width, Level);
+            std::vector<cycle_type> result;
+
+            std::array<size_type, Level> word{};
+            std::array<size_type, Level> rword{};
+
+            auto idx = [](std::array<size_type, Level>& w) {
+                size_type result = 0;
+                for (auto& v: w) {
+                    result *= Width;
+                    result += v;
+                }
+                return result;
+            };
+
+            result.reserve(tile_size); // over-sized, but that's fine
+            std::unordered_set<size_type> seen;
+
+            for (size_type lhs = 0; lhs<tile_size; ++lhs) {
+
+                size_type rhs = idx(rword);
+                if (lhs!=rhs && seen.count(lhs)==0 && seen.count(rhs)==0) {
+                    result.emplace_back(lhs, rhs);
+                }
+
+                seen.insert(lhs);
+                seen.insert(rhs);
+
+                for (int i = 0; i<Level; ++i) {
+                    if (word[Level-i-1]<Width-1) {
+                        ++word[Level-i-1];
+                        ++rword[i];
+                        break;
+                    }
+                    else {
+                        word[Level-i-1] = 0;
+                        rword[i] = 0;
+                    }
+                }
+            }
+
+            result.shrink_to_fit();
+            return result;
+        }
+
+        static constexpr size_type first_letter(size_type idx)
+        {
+            return idx / factor;
+        }
+
+        static constexpr size_type last_letter(size_type idx)
+        {
+            return idx % Width;
+        }
+
+        static constexpr size_type middle_word(size_type idx)
+        {
+            /*
+             * Writing idx = l_2*Width^{Level-1} + index(middle_word)*Width + l1
+             * we can rearrange to get index(middle_word) = (idx - l1 - l2*Width^{Level-1})/Width.
+             * Although since l1 < Width, we can ignore it since floor division will take care of it.
+             * The brackets on the right hand side can then be realised as idx % Width^{Level-1}
+             */
+            return (idx % factor) / Width;
+        }
+
+        static constexpr size_type permute_idx(size_type idx)
+        {
+            static_assert(Level-2 > 0, "Level must be at least 3 in this specialisation");
+            using next = reversing_permutation<Width, Level-2>;
+
+            constexpr size_type shift = power(Width, Level-1);
+            return last_letter(idx)*shift + next::permute_idx(middle_word(idx)) * Width + first_letter(idx);
+        }
+
+
+        template<typename T>
+        void operator()(T* __restrict tile)  const noexcept
+        {
+            T tmp;
+
+            for (size_type i=0; i < power(Width, Level); ++i) {
+                auto j = permute_idx(i);
+                tmp = tile[i];
+                tile[i] = tile[j];
+                tile[j] = tmp;
+            }
+        }
+
+
+    /*
+        /// Operate inplace on a single tile
+        template <typename T>
+        void operator()(T* tile) const noexcept
+        {
+            T tmp;
+            for (auto& cycle : cycles) {
+                tmp = tile[cycle.first];
+                tile[cycle.first] = tile[cycle.second];
+                tile[cycle.second] = tmp;
+            }
+        }
+
+        /// Operate on different input/ouptut
+        template <typename T>
+        void operator()(const T* src, T* dst) const noexcept
+        {
+            for (auto& cycle : cycles) {
+                dst[cycle.first] = src[cycle.second];
+                dst[cycle.second] = src[cycle.first];
+            }
+        }
+
+
+        size_type operator()(size_type idx) const
+        {
+            for (auto& cycle : cycles) {
+                if (idx == cycle.first) {
+                    return cycle.second;
+                } else if (idx == cycle.second) {
+                    return cycle.first;
+                }
+            }
+            return idx;
+        }
+    */
+
+    };
+
+    template<unsigned Width>
+    struct reversing_permutation<Width, 2> {
+        using size_type = size_t;
+        using cycle_type = std::pair<size_type, size_type>;
+        static const unsigned Level = 2;
+
+        static constexpr size_type first_letter(size_type idx)
+        {
+            return idx / Width;
+        }
+
+        static constexpr size_type last_letter(size_type idx)
+        {
+            return idx % Width;
+        }
+
+        static constexpr size_type permute_idx(size_type idx)
+        {
+            return last_letter(idx) * Width + first_letter(idx);
+        }
+
+        /// Operate inplace on a single tile
+        template<typename T>
+        void operator()(T * __restrict tile) const noexcept
+        {
+            T tmp;
+
+            for (size_type i = 0; i < power(Width, Level); ++i) {
+                auto j = permute_idx(i);
+                if (j > i)
+                {
+                    tmp = tile[i];
+                    tile[i] = tile[j];
+                    tile[j] = tmp;
+                }
+                // tmp = tile[i];
+                // tile[i] = tile[j];
+                // tile[j] = tmp;
+            }
+        }
+
+        constexpr size_type operator()(size_type idx) const noexcept
+        {
+            return permute_idx(idx);
+        }
+
+    };
+
+    template<unsigned Width>
+    struct reversing_permutation<Width, 1> {
+        using size_type = size_t;
+        using cycle_type = std::pair<size_type, size_type>;
+        static const unsigned Level = 1;
+
+
+        static constexpr size_type permute_idx(size_type idx)
+        {
+            return idx;
+        }
+
+        /// Operate inplace on a single tile
+        template<typename T>
+        void operator()(T* __restrict tile) const noexcept
+        {
+            // Do Nothing!
+        }
+
+        constexpr size_type operator()(size_type idx) const noexcept
+        {
+            return permute_idx(idx);
+        }
+
+    };
+
+    template<unsigned Width>
+    struct reversing_permutation<Width, 0> {
+        using size_type = size_t;
+        using cycle_type = std::pair<size_type, size_type>;
+        static const unsigned Level = 0;
+
+
+        static constexpr size_type permute_idx(size_type idx)
+        {
+            return idx;
+        }
+
+        /// Operate inplace on a single tile
+        template<typename T>
+        void operator()(T* __restrict tile) const noexcept
+        {
+            // Do nothing!
+        }
+
+        constexpr size_type operator()(size_type idx) const noexcept
+        {
+            return permute_idx(idx);
+        }
+
+    };
+
+
 
     template <int Width, int MaxDepth, int BlockLetters>
     class tiled_inverse_operator{

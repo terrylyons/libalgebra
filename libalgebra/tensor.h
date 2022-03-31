@@ -755,7 +755,7 @@ private:
 
             read_tile(input_data + word_index*block_offset, tile, stride);
 
-            // TODO: reversing_permutation<Width, 2*BlockLetters> permutation;
+            reversing_permutation<Width, 2*BlockLetters> permutation;
 
             permutation(tile);
 

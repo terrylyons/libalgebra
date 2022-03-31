@@ -735,6 +735,10 @@ private:
 //        static constexpr size_type middle_word_count = tensor_alg_size(max_middle_word_length);
         static constexpr size_t block_offset = power(Width, BlockLetters);
 
+        void recurse(const SCA* input_data, SCA* output_data)
+        {
+        }
+
         void process_tile(
                 const SCA* input_data,
                 SCA* output_data,
@@ -832,12 +836,19 @@ private:
         const SCA* src_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(*this));
         SCA* dst_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(result));
 
+// TODO: copy over small cases
+//        // Recursively fill the first 2*BlockLetters - 1 levels
+//        recursive_untiled_compute<0U, 2*BlockLetters-1> recurse;
+//        recurse(arg.data(), result.data());
+
+        t.recurse(src_ptr, dst_ptr);
+
         for (auto length = 0; length <= t.max_middle_word_length; ++length) {
             auto istart = BASIS::start_of_degree(length);
             auto iend = BASIS::start_of_degree(length + 1);
 
             auto src_dst_offset = BASIS::start_of_degree(length + 2 * BlockLetters);
-            
+
             //assert(src_dst_offset + t.block_size*(iend - istart) <= arg.size());
             //assert(src_dst_offset + t.block_size*(iend - istart) <= result.size());
 

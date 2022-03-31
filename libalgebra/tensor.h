@@ -818,6 +818,7 @@ private:
         const int BlockLetters = 1;
 
         tiled_inverse_operator<Width, MaxDepth, BlockLetters> t;
+        vectors::dtl::vector_base_access::convert(result).resize_to_degree(vectors::dtl::vector_base_access::convert(*this).dimension());
 
         // Get the pointers to the start of the data blob in memory.
         const SCA* src_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(*this));
@@ -829,8 +830,8 @@ private:
 
             auto src_dst_offset = BASIS::start_of_degree(length + 2*BlockLetters);
 
-            assert(src_dst_offset + t.block_size*(iend - istart) <= arg.size());
-            assert(src_dst_offset + t.block_size*(iend - istart) <= result.size());
+            //assert(src_dst_offset + t.block_size*(iend - istart) <= arg.size());
+            //assert(src_dst_offset + t.block_size*(iend - istart) <= result.size());
 
             // This is not a good solution, but it will work for now
             auto key_start = VECT::basis.index_to_key(istart);

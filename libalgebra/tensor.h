@@ -738,13 +738,21 @@ private:
         void process_tile(
                 const SCA* input_data,
                 SCA* output_data,
-                int word_index,
-                int rword_index,
+                size_t word_index,
+                size_t rword_index,
                 int degree,
                 int sign
         ) const
         {
-            // TODO: add correct types in args instead of int
+            // TODO: add correct types in args instead of int:
+            //  static void process_tile(
+            //            const scalar_type* __restrict input_data,
+            //            scalar_type* __restrict output_data,
+            //            size_type word_index,
+            //            size_type rword_index,
+            //            degree_type degree,
+            //            Op op
+            //            )
 
             std::cout << "process_tile" << std::endl;
 
@@ -825,12 +833,12 @@ private:
 
         for (auto length = 0; length <= t.max_middle_word_length; ++length) {
             auto istart = BASIS::start_of_degree(length);
-            auto iend = BASIS::start_of_degree(length+1);
+            auto iend = BASIS::start_of_degree(length + 1);
 
-            auto src_dst_offset = BASIS::start_of_degree(length + 2*BlockLetters);
+            auto src_dst_offset = BASIS::start_of_degree(length + 2 * BlockLetters);
 
-            assert(src_dst_offset + t.block_size*(iend - istart) <= arg.size());
-            assert(src_dst_offset + t.block_size*(iend - istart) <= result.size());
+            assert(src_dst_offset + t.block_size * (iend - istart) <= arg.size());
+            assert(src_dst_offset + t.block_size * (iend - istart) <= result.size());
 
             // This is not a good solution, but it will work for now
             auto key_start = VECT::basis.index_to_key(istart);
@@ -839,8 +847,7 @@ private:
             auto word_idx = istart;
 
             // TODO: #pragma omp parallel for
-            for (auto word = key_start; word != key_end; word = VECT::basis.nextkey(word), ++word_idx)
-            {
+            for (auto word = key_start; word != key_end; word = VECT::basis.nextkey(word), ++word_idx) {
 
                 std::cout << "word = " << word << std::endl;
 
@@ -848,16 +855,14 @@ private:
 
                 std::cout << "rword_index = " << rword_index << std::endl;
 
-                if (length % 2 == 0)
-                {
-                    t.process_tile(src_ptr, dst_ptr, word_idx - istart, rword_index-istart, length, 1);
-                }
-                else
-                {
-                    t.process_tile(src_ptr, dst_ptr, word_idx - istart, rword_index-istart, length, -1);
+                if (length % 2 == 0) {
+                    t.process_tile(src_ptr, dst_ptr, word_idx - istart, rword_index - istart, length, 1);
+                } else {
+                    t.process_tile(src_ptr, dst_ptr, word_idx - istart, rword_index - istart, length, -1);
                 }
             }
         }
+
         return result;
     }
 

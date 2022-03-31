@@ -797,9 +797,7 @@ private:
             }
         };
 
-        void recurse(const SCA* input_data, SCA* output_data)
-        {
-        }
+        recursive_untiled_compute<0U, 2*BlockLetters-1> recurse;
 
         void process_tile(
                 const SCA* input_data,
@@ -897,13 +895,6 @@ private:
         // Get the pointers to the start of the data blob in memory.
         const SCA* src_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(*this));
         SCA* dst_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(result));
-
-// TODO: copy over small cases
-//        // Recursively fill the first 2*BlockLetters - 1 levels
-//        recursive_untiled_compute<0U, 2*BlockLetters-1> recurse;
-//        recurse(arg.data(), result.data());
-
-
 
         t.recurse(src_ptr, dst_ptr);
 

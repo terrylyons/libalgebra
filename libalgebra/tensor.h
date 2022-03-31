@@ -748,7 +748,7 @@ private:
 
             std::cout << "process_tile" << std::endl;
 
-            SCA* tile; // TODO: use tile[block_size], fix error: cannot convert  ... {aka 'float* [16]'} to ... {aka 'float*'}
+            SCA tile[block_size];
             int stride = power(Width, degree+BlockLetters);
 
             read_tile(input_data + word_index*block_offset, tile, stride);
@@ -767,12 +767,6 @@ private:
 
         static void read_tile(const SCA* __restrict data_ptr, SCA* __restrict tile_ptr, int stride)
         {
-            // TODO: Changes to args compared to tensor inverse repo (
-            //            const scalar_type* __restrict data_ptr,
-            //            scalar_type* __restrict tile_ptr,
-            //            size_type stride
-            //            )
-
             std::cout << "read_tile" << std::endl;
 
             for (int row=0; row < block_width; ++row)
@@ -785,15 +779,8 @@ private:
             }
         }
 
-        void permutation(SCA* tile) const noexcept
+        static void sign_tile(SCA tile[block_size], int sign) noexcept
         {
-            std::cout << "permutation" << std::endl;
-        }
-
-        static void sign_tile(SCA* tile, int sign) noexcept
-        {
-            // TODO: arguments changed from tensor inverse repo (scalar_type tile[block_size], const Op& op)
-
             std::cout << "sign_tile" << std::endl;
 
             for (int i = 0; i < block_size; ++i)
@@ -804,12 +791,6 @@ private:
 
         static void write_tile(SCA* __restrict tile_ptr, SCA* __restrict data_ptr, int stride)
         {
-            // TODO: arguments changed from tensor inverse repo (
-            //            const scalar_type* __restrict tile_ptr,
-            //            scalar_type* __restrict data_ptr,
-            //            size_type stride
-            //            )
-
             std::cout << "write_tile" << std::endl;
 
             for (int row=0; row<block_width; ++row)

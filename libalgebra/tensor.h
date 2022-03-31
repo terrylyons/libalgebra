@@ -724,7 +724,7 @@ private:
 
     };
 
-    template <int Width, int MaxDepth, int BlockLetters>
+    template <DEG Width, DEG MaxDepth, DEG BlockLetters>
     class tiled_inverse_operator{
 
     public:
@@ -749,7 +749,7 @@ private:
             std::cout << "process_tile" << std::endl;
 
             SCA tile[block_size];
-            int stride = power(Width, degree+BlockLetters);
+            auto stride = power(Width, degree+BlockLetters);
 
             read_tile(input_data + word_index*block_offset, tile, stride);
 
@@ -817,7 +817,7 @@ private:
         const int MaxDepth = 4;
         const int BlockLetters = 1;
 
-        tiled_inverse_operator<Width, MaxDepth, BlockLetters> t;
+        tiled_inverse_operator<n_letters, max_degree, 1> t;
         vectors::dtl::vector_base_access::convert(result).resize_to_degree(vectors::dtl::vector_base_access::convert(*this).dimension());
 
         // Get the pointers to the start of the data blob in memory.

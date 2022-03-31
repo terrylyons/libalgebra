@@ -483,9 +483,50 @@ private:
 
     }
 
-    void read_tile(const SCA* data_ptr, SCA* tile_ptr, int stride, int block_width) const
-    {
-        std::cout << "read_tile" << std::endl;
+    template <int Width, int MaxDepth, int BlockLetters>
+    class tiled_inverse_operator{
+
+    public:
+
+        static constexpr size_t block_width = power(Width, BlockLetters);
+        static constexpr size_t block_size = power(Width, 2*BlockLetters);
+        static constexpr unsigned max_middle_word_length = MaxDepth - 2*BlockLetters;
+//        static constexpr size_type middle_word_count = tensor_alg_size(max_middle_word_length);
+        static constexpr size_t block_offset = power(Width, BlockLetters);
+
+        void process_tile(
+                const SCA* input_data,
+                SCA* output_data,
+                int word_index,
+                int rword_index,
+                int degree,
+                int sign
+        ) const
+        {
+            // TODO: add correct types in args instead of int
+
+            std::cout << "process_tile" << std::endl;
+
+            SCA* tile; // TODO: use tile[block_size]
+            int stride = power(Width, degree+BlockLetters);
+
+            read_tile(input_data + word_index*block_offset, tile, stride);
+
+            // TODO: reversing_permutation<Width, 2*BlockLetters> permutation;
+
+            permutation(tile);
+
+            sign_tile(tile, sign);
+
+            write_tile(tile, output_data + rword_index*block_offset, stride);
+
+        }
+
+    private:
+
+        void read_tile(const SCA* __restrict data_ptr, SCA* __restrict tile_ptr, int stride) const
+        {
+            std::cout << "read_tile" << std::endl;
 
 //        for (int row=0; row < block_width; ++row)
 //        {
@@ -495,29 +536,28 @@ private:
 //                *(tile_ptr++) = data_ptr[row_offset + col];
 //            }
 //        }
-    }
+        }
 
-    void permutation(SCA* tile) const
-    {
-        std::cout << "permutation" << std::endl;
-    }
+        void permutation(SCA* tile) const
+        {
+            std::cout << "permutation" << std::endl;
+        }
 
-    void sign_tile(SCA* tile, int sign, int block_size) const
-    {
-        // TODO: use tile[block_size] above
+        void sign_tile(SCA* tile, int sign) const
+        {
+            // TODO: use tile[block_size] above
 
-        std::cout << "sign_tile" << std::endl;
+            std::cout << "sign_tile" << std::endl;
 
 //        for (int i = 0; i < block_size; ++i)
 //        {
 //            tile[i] = sign*tile[i];
 //        }
-    }
+        }
 
-
-    void write_tile(SCA* tile_ptr, SCA* data_ptr, int stride, int block_width) const
-    {
-        std::cout << "write_tile" << std::endl;
+        void write_tile(const SCA* __restrict tile_ptr, SCA* __restrict data_ptr, int stride) const
+        {
+            std::cout << "write_tile" << std::endl;
 
 //        for (int row=0; row<block_width; ++row)
 //        {
@@ -528,68 +568,35 @@ private:
 //                data_ptr[row_offset + col] = *(tile_ptr++);
 //            }
 //        }
-    }
+        }
+    };
 
-    void process_tile(
-            const SCA* input_data,
-            SCA* output_data,
-            int word_index,
-            int rword_index,
-            int degree,
-            int sign,
-            int block_offset,
-            int block_size,
-            int BlockLetters,
-            int Width,
-            int block_width
-            ) const
-    {
-        // TODO: add correct types in args instead of int
-
-        std::cout << "process_tile" << std::endl;
-
-        SCA* tile; // TODO: use tile[block_size]
-        int stride = power(Width, degree+BlockLetters);
-
-        read_tile(input_data + word_index*block_offset, tile, stride, block_width);
-
-        // TODO: reversing_permutation<Width, 2*BlockLetters> permutation;
-
-        permutation(tile);
-
-        sign_tile(tile, sign, block_size);
-        write_tile(tile, output_data + rword_index*block_offset, stride, block_width);
-
-    }
     // Implementation of the antipode for dense vector types.
     free_tensor involute_impl(vectors::dtl::access_type_dense) const
     {
         free_tensor result;
 
-        // TODO: implement tiled_inverse_operator template args properly.
+        // TODO: implement template args properly: Width, MaxDepth, BlockLetters
         //  Currently set to match tensor inverse repository tests
-        unsigned Width = 4;
-        unsigned MaxDepth = 4;
-        unsigned BlockLetters = 1;
 
-        int block_offset = power(Width, BlockLetters); // TODO: Quick fix, change scope
-        int block_size = power(Width, 2*BlockLetters); // TODO: Quick fix, change scope
-        int block_width = block_width = power(Width, BlockLetters); // TODO: Quick fix, change scope
+        const int Width = 4;
+        const int MaxDepth = 4;
+        const int BlockLetters = 1;
 
-        unsigned max_middle_word_length = MaxDepth - 2 * BlockLetters;
+        tiled_inverse_operator<Width, MaxDepth, BlockLetters> t;
 
         // Get the pointers to the start of the data blob in memory.
         const SCA* src_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(*this));
         SCA* dst_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(result));
 
-        for (auto length = 0; length <= max_middle_word_length; ++length) {
+        for (auto length = 0; length <= t.max_middle_word_length; ++length) {
             auto istart = BASIS::start_of_degree(length);
             auto iend = BASIS::start_of_degree(length+1);
 
             auto src_dst_offset = BASIS::start_of_degree(length + 2*BlockLetters);
 
-            assert(src_dst_offset + block_size*(iend - istart) <= arg.size());
-            assert(src_dst_offset + block_size*(iend - istart) <= result.size());
+            assert(src_dst_offset + t.block_size*(iend - istart) <= arg.size());
+            assert(src_dst_offset + t.block_size*(iend - istart) <= result.size());
 
             // This is not a good solution, but it will work for now
             auto key_start = VECT::basis.index_to_key(istart);
@@ -609,11 +616,11 @@ private:
 
                 if (length % 2 == 0)
                 {
-                    process_tile(src_ptr, dst_ptr, word_idx - istart, rword_index-istart, length, 1, block_offset, block_size, BlockLetters, Width, block_width);
+                    t.process_tile(src_ptr, dst_ptr, word_idx - istart, rword_index-istart, length, 1);
                 }
                 else
                 {
-                    process_tile(src_ptr, dst_ptr, word_idx - istart, rword_index-istart, length, -1, block_offset, block_size, BlockLetters, Width, block_width);
+                    t.process_tile(src_ptr, dst_ptr, word_idx - istart, rword_index-istart, length, -1);
                 }
             }
         }

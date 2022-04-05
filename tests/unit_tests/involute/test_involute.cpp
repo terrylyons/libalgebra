@@ -74,15 +74,95 @@ struct DenseFixture
 };
 
 
-SUITE(involute)
+SUITE(Involute)
 {
         typedef alg::coefficients::coefficient_field<float> float_field;
         typedef DenseFixture<float_field, 4, 4> dense_fixture;
 
-        // involute({ 1.0{11} 2.0{12} 3.0{21} 4.0{22} }) == { 1.0{11} 3.0{12} 2.0{21} 4.0{22} }
+        // test: involute(zero) == zero
 
-        TEST_FIXTURE(dense_fixture, dense_unit_test)
+        TEST_FIXTURE(dense_fixture, DenseInvoluteZero)
         {
+            // check: { } --> { }
+
+            TENSOR result = involute(tzero);
+
+            CHECK_EQUAL(tzero, result);
+        }
+
+        // test: involute(identity) == identity
+
+        TEST_FIXTURE(dense_fixture, DenseInvoluteIdentiy)
+        {
+            // check: { 1{} } --> { 1{} }
+
+            TENSOR result = involute(tunit);
+
+            CHECK_EQUAL(tunit, result);
+        }
+
+        // test: involute(length 1 word) == - length 1 word
+
+        TEST_FIXTURE(dense_fixture, DenseInvoluteOneLetter)
+        {
+            // check: { 1{1} } --> { -1{1} }
+
+            LET k1[] = {1};
+
+            TENSOR input_tensor(make_key(k1, 1));
+
+            TENSOR expected;
+
+            expected.add_scal_prod(make_key(k1, 1), -1.0);
+
+            TENSOR result = involute(input_tensor);
+
+            CHECK_EQUAL(expected, result);
+        }
+
+        // test: key/index look-ups for single even word tensor
+
+        TEST_FIXTURE(dense_fixture, DenseInvoluteOneEvenWord) {
+
+            // check {1{12}} --> {1{21}}
+
+            LET k12[] = {1, 2};
+            LET k21[] = {2, 1};
+
+            TENSOR input_tensor(make_key(k12, 2));
+            TENSOR expected(make_key(k21, 2));
+
+            TENSOR result = involute(input_tensor);
+
+            CHECK_EQUAL(expected, result);
+
+        }
+
+        // test: key/index look-ups for single odd word tensor
+
+        TEST_FIXTURE(dense_fixture, DenseInvoluteOneOddWord) {
+
+            // check {1{123}} --> {-1{321}}
+
+            LET k123[] = {1, 2, 3};
+            LET k321[] = {3, 2, 1};
+
+            TENSOR input_tensor(make_key(k123, 3));
+
+            TENSOR expected;
+            expected.add_scal_prod(make_key(k321, 3),-1.0);
+
+            TENSOR result = involute(input_tensor);
+
+            CHECK_EQUAL(expected, result);
+
+        }
+
+        // test: key/index look-ups for multiple word tensor
+
+        TEST_FIXTURE(dense_fixture, DenseInvoluteMultipleWord)
+        {
+            // check: { 1.0{11} 2.0{12} 3.0{21} 4.0{22} } --> { 1.0{11} 3.0{12} 2.0{21} 4.0{22} }
 
             LET k11[] = {1, 1};
             LET k12[] = {1, 2};
@@ -103,9 +183,7 @@ SUITE(involute)
             expected.add_scal_prod(make_key(k21, 2), 2.0);
             expected.add_scal_prod(make_key(k22, 2), 4.0);
 
-            TENSOR result;
-
-            result = involute(input_tensor);
+            TENSOR result = involute(input_tensor);
 
             std::cout << "input_tensor=" << input_tensor << std::endl;
 
@@ -118,10 +196,11 @@ SUITE(involute)
 
         typedef SparseFixture<float_field, 4, 4> sparse_fixture;
 
-        // involute({ 1.0{11} 2.0{12} 3.0{21} 4.0{22} 5.0{123}}) == { 1.0{11} 3.0{12} 2.0{21} 4.0{22} -5.0{321}}
+        // test: key/index look-ups for multiple word tensor
 
-        TEST_FIXTURE(sparse_fixture, sparse_unit_test)
+        TEST_FIXTURE(sparse_fixture, SparseInvoluteMultipleWord)
         {
+            // check: { 1.0{11} 2.0{12} 3.0{21} 4.0{22} 5.0{123} } --> { 1.0{11} 3.0{12} 2.0{21} 4.0{22} -5.0{321} }
 
             LET k11[] = {1, 1};
             LET k12[] = {1, 2};

@@ -74,36 +74,36 @@ struct DenseFixture
 };
 
 
-SUITE(Involute)
+SUITE(Antipode)
 {
         typedef alg::coefficients::coefficient_field<float> float_field;
         typedef DenseFixture<float_field, 4, 4> dense_fixture;
 
-        // test: involute(zero) == zero
+        // test: antipode(zero) == zero
 
-        TEST_FIXTURE(dense_fixture, DenseInvoluteZero)
+        TEST_FIXTURE(dense_fixture, DenseAntipodeZero)
         {
             // check: { } --> { }
 
-            TENSOR result = involute(tzero);
+            TENSOR result = antipode(tzero);
 
             CHECK_EQUAL(tzero, result);
         }
 
-        // test: involute(identity) == identity
+        // test: antipode(identity) == identity
 
-        TEST_FIXTURE(dense_fixture, DenseInvoluteIdentiy)
+        TEST_FIXTURE(dense_fixture, DenseAntipodeIdentiy)
         {
             // check: { 1{} } --> { 1{} }
 
-            TENSOR result = involute(tunit);
+            TENSOR result = antipode(tunit);
 
             CHECK_EQUAL(tunit, result);
         }
 
-        // test: involute(length 1 word) == - length 1 word
+        // test: antipode(length 1 word) == - length 1 word
 
-        TEST_FIXTURE(dense_fixture, DenseInvoluteOneLetter)
+        TEST_FIXTURE(dense_fixture, DenseAntipodeOneLetter)
         {
             // check: { 1{1} } --> { -1{1} }
 
@@ -115,14 +115,14 @@ SUITE(Involute)
 
             expected.add_scal_prod(make_key(k1, 1), -1.0);
 
-            TENSOR result = involute(input_tensor);
+            TENSOR result = antipode(input_tensor);
 
             CHECK_EQUAL(expected, result);
         }
 
         // test: key/index look-ups for single even word tensor
 
-        TEST_FIXTURE(dense_fixture, DenseInvoluteOneEvenWord) {
+        TEST_FIXTURE(dense_fixture, DenseAntipodeOneEvenWord) {
 
             // check {1{12}} --> {1{21}}
 
@@ -132,7 +132,7 @@ SUITE(Involute)
             TENSOR input_tensor(make_key(k12, 2));
             TENSOR expected(make_key(k21, 2));
 
-            TENSOR result = involute(input_tensor);
+            TENSOR result = antipode(input_tensor);
 
             CHECK_EQUAL(expected, result);
 
@@ -140,7 +140,7 @@ SUITE(Involute)
 
         // test: key/index look-ups for single odd word tensor
 
-        TEST_FIXTURE(dense_fixture, DenseInvoluteOneOddWord) {
+        TEST_FIXTURE(dense_fixture, DenseAntipodeOneOddWord) {
 
             // check {1{123}} --> {-1{321}}
 
@@ -152,7 +152,7 @@ SUITE(Involute)
             TENSOR expected;
             expected.add_scal_prod(make_key(k321, 3),-1.0);
 
-            TENSOR result = involute(input_tensor);
+            TENSOR result = antipode(input_tensor);
 
             CHECK_EQUAL(expected, result);
 
@@ -160,7 +160,7 @@ SUITE(Involute)
 
         // test: key/index look-ups for multiple word tensor
 
-        TEST_FIXTURE(dense_fixture, DenseInvoluteMultipleWord)
+        TEST_FIXTURE(dense_fixture, DenseAntipodeMultipleWord)
         {
             // check: { 1.0{11} 2.0{12} 3.0{21} 4.0{22} } --> { 1.0{11} 3.0{12} 2.0{21} 4.0{22} }
 
@@ -183,7 +183,7 @@ SUITE(Involute)
             expected.add_scal_prod(make_key(k21, 2), 2.0);
             expected.add_scal_prod(make_key(k22, 2), 4.0);
 
-            TENSOR result = involute(input_tensor);
+            TENSOR result = antipode(input_tensor);
 
             std::cout << "input_tensor=" << input_tensor << std::endl;
 
@@ -198,7 +198,7 @@ SUITE(Involute)
 
         // test: key/index look-ups for multiple word tensor
 
-        TEST_FIXTURE(sparse_fixture, SparseInvoluteMultipleWord)
+        TEST_FIXTURE(sparse_fixture, SparseAntipodeMultipleWord)
         {
             // check: { 1.0{11} 2.0{12} 3.0{21} 4.0{22} 5.0{123} } --> { 1.0{11} 3.0{12} 2.0{21} 4.0{22} -5.0{321} }
 
@@ -234,7 +234,7 @@ SUITE(Involute)
 
             TENSOR result;
 
-            result = involute(input_tensor);
+            result = antipode(input_tensor);
 
 //            std::cout << "input_tensor=" << input_tensor << std::endl;
 //
@@ -246,4 +246,4 @@ SUITE(Involute)
         }
 
 
-}// SUITE involute
+}// SUITE antipode

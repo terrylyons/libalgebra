@@ -451,7 +451,7 @@ public:
 private:
 
     // Implementation of the antipode for sparse vector types.
-    free_tensor involute_impl(vectors::dtl::access_type_sparse) const
+    free_tensor antipode_impl(vectors::dtl::access_type_sparse) const
     {
         free_tensor result;
 
@@ -880,7 +880,7 @@ private:
     };
 
     // Implementation of the antipode for dense vector types.
-    free_tensor involute_impl(vectors::dtl::access_type_dense) const
+    free_tensor antipode_impl(vectors::dtl::access_type_dense) const
     {
         free_tensor result;
 
@@ -943,8 +943,8 @@ private:
 
 
 public:
-    /// Computes the involute of a free_tensor instance.
-    inline friend free_tensor involute(const free_tensor& arg)
+    /// Computes the antipode of a free_tensor instance.
+    inline friend free_tensor antipode(const free_tensor& arg)
     {
         // Get the trait to access the storage tag, although it now occurs to me that we already had
         // the vector type as a template argument, so we might be able to dispatch off that instead
@@ -952,7 +952,7 @@ public:
         using trait = vectors::dtl::data_access<VectorType<BASIS, Coeff>>;
 
         // Now use tagged dispatch to pick the correct implementation
-        return arg.involute_impl(typename trait::tag());
+        return arg.antipode_impl(typename trait::tag());
     }
 
 private:

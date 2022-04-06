@@ -4,9 +4,15 @@
 #include <libalgebra/libalgebra.h>
 
 #include <vector>
+#include <iostream>
 
 #include <libalgebra/alg_types.h>
 #include <libalgebra/multiplication_helpers.h>
+
+#include <libalgebra/operators/operators.h>
+
+#include "../../common/random_vector_generator.h"
+#include "../../common/rng.h"
 
 #include <libalgebra/tensor.h>
 
@@ -73,6 +79,25 @@ struct DenseFixture
 
 };
 
+struct RandomFixture : alg_types<5, 5, Rational> {
+    TENSOR reference_tensor;
+    alg::operators::left_multiplication_operator<TENSOR> op;
+
+    using rat_dist = la_testing::uniform_rational_distribution<S>;
+    using rvg_t = la_testing::random_vector_generator<TENSOR, rat_dist>;
+
+    std::mt19937 rng;
+    rvg_t rvg;
+
+    const TENSOR tunit;
+
+    typedef typename TENSOR::KEY KEY;
+    KEY kunit;
+
+    RandomFixture() : reference_tensor(typename TENSOR::KEY(alg::LET(1))),
+                op(TENSOR(reference_tensor)), rng(std::random_device()()), rvg(-1, 1)
+    {}
+};
 
 SUITE(Antipode)
 {
@@ -199,6 +224,34 @@ SUITE(Antipode)
             std::cout << "result=" << result << std::endl;
 
             CHECK_EQUAL(expected, result);
+        }
+
+
+        // tests using random tensors: antipode(a) * a == Identity
+
+        TEST_FIXTURE(RandomFixture, DenseAntipodeGroupLike)
+        {
+
+            auto input_tensor = rvg(rng);
+
+            auto result = antipode(input_tensor) * input_tensor;
+
+            double tolerance = 0.01; // TODO: change this!
+
+            for (auto cit = result.begin(); cit != result.end(); ++cit)
+            {
+                if (cit->key() == kunit)
+                {
+                    // check 1
+                    CHECK_CLOSE(1.0, cit->value(), tolerance);
+                }
+                else
+                {
+                    // check 0
+                    CHECK_CLOSE(0.0, cit->value(), tolerance);
+                }
+            }
+
         }
 
         typedef SparseFixture<float_field, 4, 4> sparse_fixture;

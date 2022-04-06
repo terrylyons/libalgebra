@@ -752,8 +752,16 @@ private:
                 // Copy from src to test and adjust sign.
 //                signer_t signer;
                 for (int i=0; i<level_size; ++i) {
-                    dst_ptr[i] = src_ptr[i];
-//                    dst_ptr[i] = signer(src_ptr[i]);
+                    if (Level % 2 == 0)
+                    {
+                        dst_ptr[i] = src_ptr[i];
+                        // dst_ptr[i] = signer(src_ptr[i]);
+                    }
+                    else
+                    {
+                        dst_ptr[i] = -src_ptr[i];
+                        // dst_ptr[i] = signer(src_ptr[i]);
+                    }
                 }
 
                 // Operate on the pointer as if it were a tile of size Width^Level
@@ -786,8 +794,16 @@ private:
                 // Copy from src to test and adjust sign.
 //                signer_t signer;
                 for (int i = 0; i<level_size; ++i) {
-                    dst_ptr[i] = src_ptr[i];
-//                    dst_ptr[i] = signer(src_ptr[i]);
+                    if (Level % 2 == 0)
+                    {
+                        dst_ptr[i] = src_ptr[i];
+                        // dst_ptr[i] = signer(src_ptr[i]);
+                    }
+                    else
+                    {
+                        dst_ptr[i] = -src_ptr[i];
+                        // dst_ptr[i] = signer(src_ptr[i]);
+                    }
                 }
 
                 // Operate on the pointer as if it were a tile of size Width^Level

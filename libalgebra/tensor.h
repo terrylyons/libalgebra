@@ -747,7 +747,7 @@ private:
              * Everything here is supposed to fit in cache, so we really don't need to worry
              * about locality etc when manipulating arrays. This should be very fast.
              */
-            void operator()(const SCA* __restrict src_ptr, SCA* __restrict dst_ptr) const noexcept
+            void operator()(const SCA* __restrict src_ptr, SCA* __restrict dst_ptr, DEG curr_deg) const noexcept
             {
                 // Copy from src to test and adjust sign.
 //                signer_t signer;
@@ -761,8 +761,10 @@ private:
                 permutation(dst_ptr);
 
                 // Recurse down to the next level.
-                next_t next;
-                next(src_ptr + level_size, dst_ptr + level_size);
+                if (curr_deg > Level) {
+                    next_t next;
+                    next(src_ptr + level_size, dst_ptr + level_size, curr_deg);
+                }
             }
         };
 
@@ -779,7 +781,7 @@ private:
              * Everything here is supposed to fit in cache, so we really don't need to worry
              * about locality etc when manipulating arrays. This should be very fast.
              */
-            void operator()(const SCA* __restrict src_ptr, SCA* __restrict dst_ptr) const noexcept
+            void operator()(const SCA* __restrict src_ptr, SCA* __restrict dst_ptr, DEG) const noexcept
             {
                 // Copy from src to test and adjust sign.
 //                signer_t signer;
@@ -902,9 +904,9 @@ private:
             return result; // return zero tensor
         }
 
-        t.recurse(src_ptr, dst_ptr);
+        t.recurse(src_ptr, dst_ptr, curr_degree);
 
-        for (auto length = 0; length <= t.max_middle_word_length; ++length) {
+        for (auto length = 0; length <= t.max_middle_word_length && length + 2*t.block_width <= curr_degree ; ++length) {
             auto istart = BASIS::start_of_degree(length);
             auto iend = BASIS::start_of_degree(length + 1);
 

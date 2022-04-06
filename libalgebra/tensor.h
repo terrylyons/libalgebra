@@ -888,9 +888,10 @@ private:
         const unsigned Width = 4;
         const unsigned MaxDepth = 4;
         const unsigned BlockLetters = 1;
+        const auto curr_degree = this->degree();
 
         tiled_inverse_operator<n_letters, max_degree, 1> t;
-        vectors::dtl::vector_base_access::convert(result).resize_to_degree(vectors::dtl::vector_base_access::convert(*this).dimension());
+        vectors::dtl::vector_base_access::convert(result).resize_to_degree(curr_degree);
 
         // Get the pointers to the start of the data blob in memory.
         const SCA* src_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(*this));

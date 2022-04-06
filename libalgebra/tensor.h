@@ -902,9 +902,7 @@ private:
 
         // TODO: implement template args properly: Width, MaxDepth, BlockLetters
         //  Currently set to match tensor inverse repository tests
-
-        const unsigned Width = 4;
-        const unsigned MaxDepth = 4;
+        
         const unsigned BlockLetters = 1;
         const auto curr_degree = this->degree();
 

@@ -900,13 +900,13 @@ private:
     {
         free_tensor result;
 
-        // TODO: implement template args properly: Width, MaxDepth, BlockLetters
+        // TODO: implement template args properly: BlockLetters
         //  Currently set to match tensor inverse repository tests
-        
+
         const unsigned BlockLetters = 1;
         const auto curr_degree = this->degree();
 
-        tiled_inverse_operator<n_letters, max_degree, 1> t;
+        tiled_inverse_operator<n_letters, max_degree, BlockLetters> t;
         vectors::dtl::vector_base_access::convert(result).resize_to_degree(curr_degree);
 
         // Get the pointers to the start of the data blob in memory.

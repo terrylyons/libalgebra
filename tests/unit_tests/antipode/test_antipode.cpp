@@ -169,6 +169,9 @@ SUITE(Antipode)
             LET k21[] = {2, 1};
             LET k22[] = {2, 2};
 
+            LET k123[] = {1, 2, 3};
+            LET k321[] = {3, 2, 1};
+
             TENSOR input_tensor;
 
             input_tensor.add_scal_prod(make_key(k11, 2), 1.0);
@@ -176,12 +179,16 @@ SUITE(Antipode)
             input_tensor.add_scal_prod(make_key(k21, 2), 3.0);
             input_tensor.add_scal_prod(make_key(k22, 2), 4.0);
 
+            input_tensor.add_scal_prod(make_key(k123, 3), 5.0);
+
             TENSOR expected;
 
             expected.add_scal_prod(make_key(k11, 2), 1.0);
             expected.add_scal_prod(make_key(k12, 2), 3.0);
             expected.add_scal_prod(make_key(k21, 2), 2.0);
             expected.add_scal_prod(make_key(k22, 2), 4.0);
+
+            expected.add_scal_prod(make_key(k321, 3), -5.0);
 
             TENSOR result = antipode(input_tensor);
 

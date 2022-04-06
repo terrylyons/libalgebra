@@ -45,7 +45,7 @@ target_link_libraries(all_tests PRIVATE
         la_unittests::serialization_tests
         la_unittests::shuffle_tensor_tests
         la_unittests::operators_tests
-        la_unittests::involute_tests
+        la_unittests::antipode_tests
         )
 
 if (LA_TESTING_INCLUDE_INTEGRATION)

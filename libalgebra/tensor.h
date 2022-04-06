@@ -896,6 +896,11 @@ private:
         const SCA* src_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(*this));
         SCA* dst_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(result));
 
+        if (src_ptr == nullptr) // if pointer to source is null
+        {
+            return result; // return zero tensor
+        }
+
         t.recurse(src_ptr, dst_ptr);
 
         for (auto length = 0; length <= t.max_middle_word_length; ++length) {

@@ -728,7 +728,7 @@ private:
     class tiled_inverse_operator{
 
     public:
-
+        static constexpr DEG block_letters = BlockLetters;
         static constexpr size_t block_width = power(Width, BlockLetters);
         static constexpr size_t block_size = power(Width, 2*BlockLetters);
         static constexpr unsigned max_middle_word_length = MaxDepth - 2*BlockLetters;
@@ -906,7 +906,7 @@ private:
 
         t.recurse(src_ptr, dst_ptr, curr_degree);
 
-        for (auto length = 0; length <= t.max_middle_word_length && length + 2*t.block_width <= curr_degree ; ++length) {
+        for (auto length = 0; length <= t.max_middle_word_length && length + 2*t.block_letters <= curr_degree ; ++length) {
             auto istart = BASIS::start_of_degree(length);
             auto iend = BASIS::start_of_degree(length + 1);
 

@@ -925,6 +925,8 @@ private:
             auto iend = BASIS::start_of_degree(length + 1);
 
             auto src_dst_offset = BASIS::start_of_degree(length + 2 * BlockLetters);
+            auto src_p = src_ptr + src_dst_offset;
+            auto dst_p = dst_ptr + src_dst_offset;
 
             //assert(src_dst_offset + t.block_size*(iend - istart) <= arg.size());
             //assert(src_dst_offset + t.block_size*(iend - istart) <= result.size());
@@ -934,6 +936,7 @@ private:
             auto key_end = VECT::basis.index_to_key(iend);
 
             auto word_idx = istart;
+
 
             // TODO: #pragma omp parallel for
             for (auto word = key_start; word != key_end; word = VECT::basis.nextkey(word), ++word_idx) {
@@ -945,9 +948,9 @@ private:
                 std::cout << "rword_index = " << rword_index << std::endl;
 
                 if (length % 2 == 0) {
-                    t.process_tile(src_ptr, dst_ptr, word_idx - istart, rword_index - istart, length, 1);
+                    t.process_tile(src_p, dst_p, word_idx - istart, rword_index - istart, length, 1);
                 } else {
-                    t.process_tile(src_ptr, dst_ptr, word_idx - istart, rword_index - istart, length, -1);
+                    t.process_tile(src_p, dst_p, word_idx - istart, rword_index - istart, length, -1);
                 }
             }
         }

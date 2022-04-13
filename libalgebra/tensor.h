@@ -472,11 +472,6 @@ private:
                 sign = -1;
             }
 
-//            std::cout << "KEY = " << temp_key << std::endl;
-//            std::cout << "REVERSED KEY = " << temp_key_reverse << std::endl;
-//            std::cout << "VALUE = " << temp_value << std::endl;
-//            std::cout << "SIGN = " << sign << std::endl;
-
             result.add_scal_prod(temp_key_reverse, sign*temp_value);
         }
 
@@ -836,8 +831,6 @@ private:
             //            Op op
             //            )
 
-            std::cout << "process_tile" << std::endl;
-
             SCA tile[block_size];
             auto stride = power(Width, degree+BlockLetters);
 
@@ -857,8 +850,6 @@ private:
 
         static void read_tile(const SCA* __restrict data_ptr, SCA* __restrict tile_ptr, int stride)
         {
-            std::cout << "read_tile" << std::endl;
-
             for (int row=0; row < block_width; ++row)
             {
                 int row_offset = row * stride;
@@ -871,8 +862,6 @@ private:
 
         static void sign_tile(SCA tile[block_size], int sign) noexcept
         {
-            std::cout << "sign_tile" << std::endl;
-
             for (int i = 0; i < block_size; ++i)
             {
                 tile[i] = sign*tile[i]; // tile[i] = op(tile[i]);
@@ -881,8 +870,6 @@ private:
 
         static void write_tile(SCA* __restrict tile_ptr, SCA* __restrict data_ptr, int stride)
         {
-            std::cout << "write_tile" << std::endl;
-
             for (int row=0; row<block_width; ++row)
             {
                 int row_offset = row * stride;
@@ -926,6 +913,9 @@ private:
 
             auto src_dst_offset = BASIS::start_of_degree(length + 2 * BlockLetters);
 
+            auto src_p = src_ptr + src_dst_offset;
+            auto dst_p = dst_ptr + src_dst_offset;
+
             //assert(src_dst_offset + t.block_size*(iend - istart) <= arg.size());
             //assert(src_dst_offset + t.block_size*(iend - istart) <= result.size());
 
@@ -938,16 +928,15 @@ private:
             // TODO: #pragma omp parallel for
             for (auto word = key_start; word != key_end; word = VECT::basis.nextkey(word), ++word_idx) {
 
-                std::cout << "word = " << word << std::endl;
-
                 auto rword_index = VECT::basis.key_to_index(word.reverse());
 
-                std::cout << "rword_index = " << rword_index << std::endl;
-
-                if (length % 2 == 0) {
-                    t.process_tile(src_ptr, dst_ptr, word_idx - istart, rword_index - istart, length, 1);
-                } else {
-                    t.process_tile(src_ptr, dst_ptr, word_idx - istart, rword_index - istart, length, -1);
+                if (length % 2 == 0)
+                {
+                    t.process_tile(src_p, dst_p, word_idx - istart, rword_index - istart, length, 1);
+                }
+                else
+                {
+                    t.process_tile(src_p, dst_p, word_idx - istart, rword_index - istart, length, -1);
                 }
             }
         }

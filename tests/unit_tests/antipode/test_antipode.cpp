@@ -17,6 +17,9 @@
 
 using alg::LET;
 
+typedef alg::coefficients::coefficient_field<float> float_field;
+typedef alg::coefficients::coefficient_field<alg::coefficients::rational> rational_field;
+
 template<typename Coeff, unsigned Width, unsigned Depth>
 struct SparseFixture {
 
@@ -58,7 +61,6 @@ struct DenseFixture {
     typedef alg::free_tensor_basis<Width, Depth> TBASIS;
     typedef alg::vectors::dense_vector<TBASIS, Coeff> VECT;
     typedef alg::free_tensor<Coeff, Width, Depth, alg::vectors::dense_vector> TENSOR;
-    typedef alg::lie<Coeff, Width, Depth, alg::vectors::dense_vector> LIE;
 
     typedef typename TBASIS::KEY KEY;
 
@@ -78,29 +80,35 @@ struct DenseFixture {
     }
 };
 
-struct RandomFixture : alg_types<4, 4, Rational> {
-    TENSOR reference_tensor;
-    alg::operators::left_multiplication_operator<TENSOR> op;
+struct RandomRationalDenseFixture : alg_types<4, 4, Rational> {
+
+    typedef alg::free_tensor<rational_field, 4, 4, alg::vectors::dense_vector> TENSOR;
 
     using rat_dist = la_testing::uniform_rational_distribution<S>;
     using rvg_t = la_testing::random_vector_generator<TENSOR, rat_dist>;
-
-    std::mt19937 rng;
-    rvg_t rvg;
+    using rvg_l = la_testing::random_vector_generator<LIE, rat_dist>;
 
     const TENSOR tunit;
+    const TENSOR tzero;
+
+    std::mt19937 rngt;
+    rvg_t rvgt;
+
+    std::mt19937 rngl;
+    rvg_l rvgl;
 
     typedef typename TENSOR::KEY KEY;
-    KEY kunit;
 
-    RandomFixture() : reference_tensor(typename TENSOR::KEY(alg::LET(1))),
-                      op(TENSOR(reference_tensor)), rng(std::random_device()()), rvg(-1, 1)
+    RandomRationalDenseFixture() : tunit(KEY()), tzero(),
+                      rngt(std::random_device()()), rvgt(-1, 1),
+                      rngl(std::random_device()()), rvgl(-1, 1)
+
     {}
 };
 
 SUITE(Antipode)
 {
-    typedef alg::coefficients::coefficient_field<float> float_field;
+
     typedef DenseFixture<float_field, 4, 4> dense_fixture;
 
     // test: antipode(zero) == zero
@@ -184,8 +192,8 @@ SUITE(Antipode)
 
     // test: key/index look-ups for multiple word tensor
 
-        TEST_FIXTURE(dense_fixture, DenseAntipodeMultipleWord)
-        {
+    TEST_FIXTURE(dense_fixture, DenseAntipodeMultipleWord)
+    {
             // check: { 1.0{11} 2.0{12} 3.0{21} 4.0{22} 5.0{123} } --> { 1.0{11} 3.0{12} 2.0{21} 4.0{22} -5.0{321} }
 
         LET k11[] = {1, 1};
@@ -219,21 +227,30 @@ SUITE(Antipode)
         CHECK_EQUAL(expected, result);
     }
 
-    // test using group like elements: antipode(antipode(a)) == a
+    // test using random tensor: antipode(antipode(random_tensor)) == random_tensor
 
-    TEST_FIXTURE(dense_fixture, DenseAntipodeGroupLike)
+    TEST_FIXTURE(RandomRationalDenseFixture, DenseAntipodeTwice)
     {
-        LIE incr;
-        incr.add_scal_prod(typename LIE::KEY(1), typename LIE::SCALAR(1));
-        incr.add_scal_prod(typename LIE::KEY(2), typename LIE::SCALAR(2));
-        incr.add_scal_prod(typename LIE::KEY(3), typename LIE::SCALAR(3));
-        incr.add_scal_prod(typename LIE::KEY(4), typename LIE::SCALAR(4));
 
-        alg::maps<dense_fixtureDenseAntipodeIdentiyHelper::coeffs, dense_fixtureDenseAntipodeIdentiyHelper::width, dense_fixtureDenseAntipodeIdentiyHelper::depth, TENSOR, LIE> maps;
+        auto random_tensor = rvgt(rngt);
 
-        auto input_tensor = exp(maps.l2t(incr));
+        CHECK_EQUAL(random_tensor, antipode(antipode(random_tensor)));
 
-        CHECK_EQUAL(input_tensor, antipode(antipode(input_tensor)));
+    }
+
+    // tests using group-like elements: antipode(group_like_tensor) * group_like_tensor == Identity
+
+    TEST_FIXTURE(RandomRationalDenseFixture, DenseAntipodeGroupLikeOld)
+    {
+        auto random_lie = rvgl(rngl);
+
+        alg::maps<rational_field, 4, 4, TENSOR, LIE> maps;
+
+        auto group_like_tensor = exp(maps.l2t(random_lie));
+
+        auto result = antipode(group_like_tensor) * group_like_tensor;
+
+        CHECK_EQUAL(tunit, result);
 
     }
 

@@ -78,7 +78,7 @@ struct DenseFixture {
     }
 };
 
-struct RandomFixture : alg_types<5, 5, Rational> {
+struct RandomFixture : alg_types<4, 4, Rational> {
     TENSOR reference_tensor;
     alg::operators::left_multiplication_operator<TENSOR> op;
 
@@ -216,44 +216,27 @@ SUITE(Antipode)
 
         TENSOR result = antipode(input_tensor);
 
-        std::cout << "input_tensor=" << input_tensor << std::endl;
-
-        std::cout << "expected=" << expected << std::endl;
-
-        std::cout << "result=" << result << std::endl;
-
         CHECK_EQUAL(expected, result);
     }
 
-    // tests using random tensors: antipode(a) * a == Identity
+    // test using group like elements: antipode(antipode(a)) == a
 
-//    TEST_FIXTURE(RandomFixture, DenseAntipodeGroupLike)
-//    {
-//        LIE incr;
-//        incr.add_scal_prod(typename LIE::KEY(1), typename LIE::SCALAR(1));
-//        incr.add_scal_prod(typename LIE::KEY(2), typename LIE::SCALAR(2));
-//        incr.add_scal_prod(typename LIE::KEY(3), typename LIE::SCALAR(3));
-//        incr.add_scal_prod(typename LIE::KEY(4), typename LIE::SCALAR(4));
-//
-//        alg::maps<dense_fixtureDenseAntipodeIdentiyHelper::coeffs, dense_fixtureDenseAntipodeIdentiyHelper::width, dense_fixtureDenseAntipodeIdentiyHelper::depth, TENSOR, LIE> maps;
-//
-//        auto input_tensor = exp(maps.l2t(incr));
-//
-//        auto result = antipode(input_tensor) * input_tensor;
-//
-//        double tolerance = 0.01;// TODO: change this!
-//
-//        for (auto cit = result.begin(); cit != result.end(); ++cit) {
-//            if (cit->key() == kunit) {
-//                // check 1
-//                CHECK_CLOSE(1.0, cit->value(), tolerance);
-//            }
-//            else {
-//                // check 0
-//                CHECK_CLOSE(0.0, cit->value(), tolerance);
-//            }
-//        }
-//    }
+    TEST_FIXTURE(dense_fixture, DenseAntipodeGroupLike)
+    {
+        LIE incr;
+        incr.add_scal_prod(typename LIE::KEY(1), typename LIE::SCALAR(1));
+        incr.add_scal_prod(typename LIE::KEY(2), typename LIE::SCALAR(2));
+        incr.add_scal_prod(typename LIE::KEY(3), typename LIE::SCALAR(3));
+        incr.add_scal_prod(typename LIE::KEY(4), typename LIE::SCALAR(4));
+
+        alg::maps<dense_fixtureDenseAntipodeIdentiyHelper::coeffs, dense_fixtureDenseAntipodeIdentiyHelper::width, dense_fixtureDenseAntipodeIdentiyHelper::depth, TENSOR, LIE> maps;
+
+        TENSOR input_tensor; // TODO: create group like from exp(l2t(Lie))
+        // auto input_tensor = exp(maps.l2t(incr));
+
+        CHECK_EQUAL(input_tensor, antipode(antipode(input_tensor)));
+
+    }
 
     typedef SparseFixture<float_field, 4, 4> sparse_fixture;
 
@@ -292,12 +275,6 @@ SUITE(Antipode)
         TENSOR result;
 
         result = antipode(input_tensor);
-
-        //            std::cout << "input_tensor=" << input_tensor << std::endl;
-        //
-        //            std::cout << "expected=" << expected << std::endl;
-        //
-        //            std::cout << "result=" << result << std::endl;
 
         CHECK_EQUAL(expected, result);
     }

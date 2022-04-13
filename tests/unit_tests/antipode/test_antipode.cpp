@@ -231,8 +231,7 @@ SUITE(Antipode)
 
         alg::maps<dense_fixtureDenseAntipodeIdentiyHelper::coeffs, dense_fixtureDenseAntipodeIdentiyHelper::width, dense_fixtureDenseAntipodeIdentiyHelper::depth, TENSOR, LIE> maps;
 
-        TENSOR input_tensor; // TODO: create group like from exp(l2t(Lie))
-        // auto input_tensor = exp(maps.l2t(incr));
+        auto input_tensor = exp(maps.l2t(incr));
 
         CHECK_EQUAL(input_tensor, antipode(antipode(input_tensor)));
 

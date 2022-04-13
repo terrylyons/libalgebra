@@ -746,7 +746,7 @@ private:
             {
                 // Copy from src to test and adjust sign.
 //                signer_t signer;
-                for (int i=0; i<level_size; ++i) {
+                for (size_t i=0; i<level_size; ++i) {
                     if (Level % 2 == 0)
                     {
                         dst_ptr[i] = src_ptr[i];
@@ -788,7 +788,7 @@ private:
             {
                 // Copy from src to test and adjust sign.
 //                signer_t signer;
-                for (int i = 0; i<level_size; ++i) {
+                for (size_t i = 0; i<level_size; ++i) {
                     if (Level % 2 == 0)
                     {
                         dst_ptr[i] = src_ptr[i];
@@ -850,10 +850,10 @@ private:
 
         static void read_tile(const SCA* __restrict data_ptr, SCA* __restrict tile_ptr, int stride)
         {
-            for (int row=0; row < block_width; ++row)
+            for (size_t row=0; row < block_width; ++row)
             {
                 int row_offset = row * stride;
-                for (int col=0; col <block_width; ++col)
+                for (size_t col=0; col <block_width; ++col)
                 {
                     *(tile_ptr++) = data_ptr[row_offset + col];
                 }
@@ -862,7 +862,7 @@ private:
 
         static void sign_tile(SCA tile[block_size], int sign) noexcept
         {
-            for (int i = 0; i < block_size; ++i)
+            for (size_t i = 0; i < block_size; ++i)
             {
                 tile[i] = sign*tile[i]; // tile[i] = op(tile[i]);
             }
@@ -870,11 +870,11 @@ private:
 
         static void write_tile(SCA* __restrict tile_ptr, SCA* __restrict data_ptr, int stride)
         {
-            for (int row=0; row<block_width; ++row)
+            for (size_t row=0; row<block_width; ++row)
             {
                 int row_offset = row * stride;
 
-                for (int col=0; col <block_width; ++col)
+                for (size_t col=0; col <block_width; ++col)
                 {
                     data_ptr[row_offset + col] = *(tile_ptr++);
                 }
@@ -907,7 +907,7 @@ private:
 
         t.recurse(src_ptr, dst_ptr, curr_degree);
 
-        for (auto length = 0; length <= t.max_middle_word_length && length + 2*t.block_letters <= curr_degree ; ++length) {
+        for (unsigned int length = 0; length <= t.max_middle_word_length && length + 2*t.block_letters <= curr_degree ; ++length) {
             auto istart = BASIS::start_of_degree(length);
             auto iend = BASIS::start_of_degree(length + 1);
 

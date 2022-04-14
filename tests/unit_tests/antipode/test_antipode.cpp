@@ -107,6 +107,8 @@ struct RandomRationalDenseFixture {
 SUITE(Antipode)
 {
 
+    // ##################### DENSE TESTS ##################### //
+
     typedef DenseFixture<float_field, 4, 4> dense_fixture;
 
     // test: antipode(zero) == zero
@@ -253,6 +255,8 @@ SUITE(Antipode)
         CHECK_EQUAL(tunit, result);
 
     }
+
+    // ##################### SPARSE TESTS ##################### //
 
     typedef SparseFixture<float_field, 4, 4> sparse_fixture;
 

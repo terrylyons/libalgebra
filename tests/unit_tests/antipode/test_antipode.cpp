@@ -1,19 +1,12 @@
 #include <UnitTest++/UnitTest++.h>
 
-#include <libalgebra/libalgebra.h>
-
 #include <iostream>
 #include <vector>
 
-#include <libalgebra/alg_types.h>
-#include <libalgebra/multiplication_helpers.h>
-
-#include <libalgebra/operators/operators.h>
-
+#include <libalgebra/libalgebra.h>
+#include <libalgebra/tensor.h>
 #include "../../common/random_vector_generator.h"
 #include "../../common/rng.h"
-
-#include <libalgebra/tensor.h>
 
 using alg::LET;
 
@@ -80,11 +73,16 @@ struct DenseFixture {
     }
 };
 
-struct RandomRationalDenseFixture : alg_types<4, 4, Rational> {
+template<unsigned Width, unsigned Depth>
+struct RandomRationalDenseFixture {
 
-    typedef alg::free_tensor<rational_field, 4, 4, alg::vectors::dense_vector> TENSOR;
+    static constexpr unsigned width = Width;
+    static constexpr unsigned depth = Depth;
 
-    using rat_dist = la_testing::uniform_rational_distribution<S>;
+    typedef alg::free_tensor<rational_field, Width, Depth, alg::vectors::dense_vector> TENSOR;
+    typedef alg::lie<rational_field, Width, Depth, alg::vectors::dense_vector> LIE;
+
+    using rat_dist = la_testing::uniform_rational_distribution<rational_field::S>;
     using rvg_t = la_testing::random_vector_generator<TENSOR, rat_dist>;
     using rvg_l = la_testing::random_vector_generator<LIE, rat_dist>;
 
@@ -109,11 +107,13 @@ struct RandomRationalDenseFixture : alg_types<4, 4, Rational> {
 SUITE(Antipode)
 {
 
+    // ##################### DENSE TESTS ##################### //
+
     typedef DenseFixture<float_field, 4, 4> dense_fixture;
 
     // test: antipode(zero) == zero
 
-    TEST_FIXTURE(dense_fixture, DenseAntipodeZero)
+    TEST_FIXTURE(dense_fixture, DenseAntipodeZeroTest)
     {
         // check: { } --> { }
 
@@ -124,7 +124,7 @@ SUITE(Antipode)
 
     // test: antipode(identity) == identity
 
-    TEST_FIXTURE(dense_fixture, DenseAntipodeIdentiy)
+    TEST_FIXTURE(dense_fixture, DenseAntipodeIdentiyTest)
     {
         // check: { 1{} } --> { 1{} }
 
@@ -135,7 +135,7 @@ SUITE(Antipode)
 
     // test: antipode(length 1 word) == - length 1 word
 
-    TEST_FIXTURE(dense_fixture, DenseAntipodeOneLetter)
+    TEST_FIXTURE(dense_fixture, DenseAntipodeOneLetterTest)
     {
         // check: { 1{1} } --> { -1{1} }
 
@@ -154,7 +154,7 @@ SUITE(Antipode)
 
     // test: key/index look-ups for single even word tensor
 
-    TEST_FIXTURE(dense_fixture, DenseAntipodeOneEvenWord)
+    TEST_FIXTURE(dense_fixture, DenseAntipodeOneEvenWordTest)
     {
 
         // check {1{12}} --> {1{21}}
@@ -172,7 +172,7 @@ SUITE(Antipode)
 
     // test: key/index look-ups for single odd word tensor
 
-    TEST_FIXTURE(dense_fixture, DenseAntipodeOneOddWord)
+    TEST_FIXTURE(dense_fixture, DenseAntipodeOneOddWordTest)
     {
 
         // check {1{123}} --> {-1{321}}
@@ -192,7 +192,7 @@ SUITE(Antipode)
 
     // test: key/index look-ups for multiple word tensor
 
-    TEST_FIXTURE(dense_fixture, DenseAntipodeMultipleWord)
+    TEST_FIXTURE(dense_fixture, DenseAntipodeMultipleWordTest)
     {
             // check: { 1.0{11} 2.0{12} 3.0{21} 4.0{22} 5.0{123} } --> { 1.0{11} 3.0{12} 2.0{21} 4.0{22} -5.0{321} }
 
@@ -227,9 +227,11 @@ SUITE(Antipode)
         CHECK_EQUAL(expected, result);
     }
 
+    typedef RandomRationalDenseFixture<4, 4> random_rational_dense_fixture;
+
     // test using random tensor: antipode(antipode(random_tensor)) == random_tensor
 
-    TEST_FIXTURE(RandomRationalDenseFixture, DenseAntipodeTwice)
+    TEST_FIXTURE(random_rational_dense_fixture, DenseAntipodeTwiceTest)
     {
 
         auto random_tensor = rvgt(rngt);
@@ -240,11 +242,11 @@ SUITE(Antipode)
 
     // tests using group-like elements: antipode(group_like_tensor) * group_like_tensor == Identity
 
-    TEST_FIXTURE(RandomRationalDenseFixture, DenseAntipodeGroupLikeOld)
+    TEST_FIXTURE(random_rational_dense_fixture, DenseAntipodeGroupLikeIdentityTest)
     {
         auto random_lie = rvgl(rngl);
 
-        alg::maps<rational_field, 4, 4, TENSOR, LIE> maps;
+        alg::maps<rational_field, width, depth, TENSOR, LIE> maps;
 
         auto group_like_tensor = exp(maps.l2t(random_lie));
 
@@ -254,11 +256,13 @@ SUITE(Antipode)
 
     }
 
+    // ##################### SPARSE TESTS ##################### //
+
     typedef SparseFixture<float_field, 4, 4> sparse_fixture;
 
     // test: key/index look-ups for multiple word tensor
 
-    TEST_FIXTURE(sparse_fixture, SparseAntipodeMultipleWord)
+    TEST_FIXTURE(sparse_fixture, SparseAntipodeMultipleWordTest)
     {
         // check: { 1.0{11} 2.0{12} 3.0{21} 4.0{22} 5.0{123} } --> { 1.0{11} 3.0{12} 2.0{21} 4.0{22} -5.0{321} }
 

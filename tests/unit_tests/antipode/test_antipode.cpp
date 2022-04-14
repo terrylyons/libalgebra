@@ -1,19 +1,13 @@
 #include <UnitTest++/UnitTest++.h>
 
-#include <libalgebra/libalgebra.h>
-
 #include <iostream>
 #include <vector>
 
+#include <libalgebra/libalgebra.h>
 #include <libalgebra/alg_types.h>
-#include <libalgebra/multiplication_helpers.h>
-
-#include <libalgebra/operators/operators.h>
-
+#include <libalgebra/tensor.h>
 #include "../../common/random_vector_generator.h"
 #include "../../common/rng.h"
-
-#include <libalgebra/tensor.h>
 
 using alg::LET;
 

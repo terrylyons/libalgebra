@@ -4,7 +4,6 @@
 #include <vector>
 
 #include <libalgebra/libalgebra.h>
-#include <libalgebra/alg_types.h>
 #include <libalgebra/tensor.h>
 #include "../../common/random_vector_generator.h"
 #include "../../common/rng.h"
@@ -74,11 +73,16 @@ struct DenseFixture {
     }
 };
 
-struct RandomRationalDenseFixture : alg_types<4, 4, Rational> {
+template<unsigned Width, unsigned Depth>
+struct RandomRationalDenseFixture {
 
-    typedef alg::free_tensor<rational_field, 4, 4, alg::vectors::dense_vector> TENSOR;
+    static constexpr unsigned width = Width;
+    static constexpr unsigned depth = Depth;
 
-    using rat_dist = la_testing::uniform_rational_distribution<S>;
+    typedef alg::free_tensor<rational_field, Width, Depth, alg::vectors::dense_vector> TENSOR;
+    typedef alg::lie<rational_field, Width, Depth, alg::vectors::dense_vector> LIE;
+
+    using rat_dist = la_testing::uniform_rational_distribution<rational_field::S>;
     using rvg_t = la_testing::random_vector_generator<TENSOR, rat_dist>;
     using rvg_l = la_testing::random_vector_generator<LIE, rat_dist>;
 
@@ -223,7 +227,9 @@ SUITE(Antipode)
 
     // test using random tensor: antipode(antipode(random_tensor)) == random_tensor
 
-    TEST_FIXTURE(RandomRationalDenseFixture, DenseAntipodeTwice)
+    typedef RandomRationalDenseFixture<4, 4> random_rational_dense_fixture;
+
+    TEST_FIXTURE(random_rational_dense_fixture, DenseAntipodeTwice)
     {
 
         auto random_tensor = rvgt(rngt);
@@ -234,11 +240,11 @@ SUITE(Antipode)
 
     // tests using group-like elements: antipode(group_like_tensor) * group_like_tensor == Identity
 
-    TEST_FIXTURE(RandomRationalDenseFixture, DenseAntipodeGroupLikeOld)
+    TEST_FIXTURE(random_rational_dense_fixture, DenseAntipodeGroupLikeOld)
     {
         auto random_lie = rvgl(rngl);
 
-        alg::maps<rational_field, 4, 4, TENSOR, LIE> maps;
+        alg::maps<rational_field, width, depth, TENSOR, LIE> maps;
 
         auto group_like_tensor = exp(maps.l2t(random_lie));
 

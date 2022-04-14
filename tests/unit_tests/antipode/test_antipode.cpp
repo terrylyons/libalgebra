@@ -111,7 +111,7 @@ SUITE(Antipode)
 
     // test: antipode(zero) == zero
 
-    TEST_FIXTURE(dense_fixture, DenseAntipodeZero)
+    TEST_FIXTURE(dense_fixture, DenseAntipodeZeroTest)
     {
         // check: { } --> { }
 
@@ -122,7 +122,7 @@ SUITE(Antipode)
 
     // test: antipode(identity) == identity
 
-    TEST_FIXTURE(dense_fixture, DenseAntipodeIdentiy)
+    TEST_FIXTURE(dense_fixture, DenseAntipodeIdentiyTest)
     {
         // check: { 1{} } --> { 1{} }
 
@@ -133,7 +133,7 @@ SUITE(Antipode)
 
     // test: antipode(length 1 word) == - length 1 word
 
-    TEST_FIXTURE(dense_fixture, DenseAntipodeOneLetter)
+    TEST_FIXTURE(dense_fixture, DenseAntipodeOneLetterTest)
     {
         // check: { 1{1} } --> { -1{1} }
 
@@ -152,7 +152,7 @@ SUITE(Antipode)
 
     // test: key/index look-ups for single even word tensor
 
-    TEST_FIXTURE(dense_fixture, DenseAntipodeOneEvenWord)
+    TEST_FIXTURE(dense_fixture, DenseAntipodeOneEvenWordTest)
     {
 
         // check {1{12}} --> {1{21}}
@@ -170,7 +170,7 @@ SUITE(Antipode)
 
     // test: key/index look-ups for single odd word tensor
 
-    TEST_FIXTURE(dense_fixture, DenseAntipodeOneOddWord)
+    TEST_FIXTURE(dense_fixture, DenseAntipodeOneOddWordTest)
     {
 
         // check {1{123}} --> {-1{321}}
@@ -190,7 +190,7 @@ SUITE(Antipode)
 
     // test: key/index look-ups for multiple word tensor
 
-    TEST_FIXTURE(dense_fixture, DenseAntipodeMultipleWord)
+    TEST_FIXTURE(dense_fixture, DenseAntipodeMultipleWordTest)
     {
             // check: { 1.0{11} 2.0{12} 3.0{21} 4.0{22} 5.0{123} } --> { 1.0{11} 3.0{12} 2.0{21} 4.0{22} -5.0{321} }
 
@@ -225,11 +225,11 @@ SUITE(Antipode)
         CHECK_EQUAL(expected, result);
     }
 
-    // test using random tensor: antipode(antipode(random_tensor)) == random_tensor
-
     typedef RandomRationalDenseFixture<4, 4> random_rational_dense_fixture;
 
-    TEST_FIXTURE(random_rational_dense_fixture, DenseAntipodeTwice)
+    // test using random tensor: antipode(antipode(random_tensor)) == random_tensor
+
+    TEST_FIXTURE(random_rational_dense_fixture, DenseAntipodeTwiceTest)
     {
 
         auto random_tensor = rvgt(rngt);
@@ -240,7 +240,7 @@ SUITE(Antipode)
 
     // tests using group-like elements: antipode(group_like_tensor) * group_like_tensor == Identity
 
-    TEST_FIXTURE(random_rational_dense_fixture, DenseAntipodeGroupLikeOld)
+    TEST_FIXTURE(random_rational_dense_fixture, DenseAntipodeGroupLikeIdentityTest)
     {
         auto random_lie = rvgl(rngl);
 
@@ -258,7 +258,7 @@ SUITE(Antipode)
 
     // test: key/index look-ups for multiple word tensor
 
-    TEST_FIXTURE(sparse_fixture, SparseAntipodeMultipleWord)
+    TEST_FIXTURE(sparse_fixture, SparseAntipodeMultipleWordTest)
     {
         // check: { 1.0{11} 2.0{12} 3.0{21} 4.0{22} 5.0{123} } --> { 1.0{11} 3.0{12} 2.0{21} 4.0{22} -5.0{321} }
 

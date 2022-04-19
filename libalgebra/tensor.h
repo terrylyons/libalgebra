@@ -821,16 +821,6 @@ private:
                 int sign
         ) const
         {
-            // TODO: add correct types in args instead of int:
-            //  static void process_tile(
-            //            const scalar_type* __restrict input_data,
-            //            scalar_type* __restrict output_data,
-            //            size_type word_index,
-            //            size_type rword_index,
-            //            degree_type degree,
-            //            Op op
-            //            )
-
             SCA tile[block_size];
             auto stride = power(Width, degree+BlockLetters);
 
@@ -866,16 +856,14 @@ private:
                 auto src_p = src_ptr + src_dst_offset;
                 auto dst_p = dst_ptr + src_dst_offset;
 
-                //assert(src_dst_offset + t.block_size*(iend - istart) <= arg.size());
-                //assert(src_dst_offset + t.block_size*(iend - istart) <= result.size());
-
                 // This is not a good solution, but it will work for now
                 auto key_start = VECT::basis.index_to_key(istart);
                 auto key_end = VECT::basis.index_to_key(iend);
 
                 auto word_idx = istart;
 
-                // TODO: #pragma omp parallel for
+// TODO: Fix CMake for OpenMP
+//  #pragma omp parallel for
                 for (auto word = key_start; word != key_end; word = VECT::basis.nextkey(word), ++word_idx) {
 
                     auto rword_index = VECT::basis.key_to_index(word.reverse());

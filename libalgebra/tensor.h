@@ -14,7 +14,7 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 #define DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 
-#include <omp.h>
+//#include <omp.h>
 
 #include <unordered_set>
 
@@ -841,25 +841,6 @@ private:
 
                 auto word_idx = istart;
 
-// TODO: Fix OpenMP for loop
-
-// TODO: Remove OpenMP testing block
-////////// testing ////////
-//
-//                int a[16];
-//
-//#pragma omp parallel for
-//                for (int i = 0; i < 16; i++) {
-//                    a[i] = 2 * i;
-//#pragma omp critical
-//                    std::cout << "ThreadID=" << omp_get_thread_num() << "NumThreads=" << omp_get_num_threads() << "i=" << i << std::endl;
-//                }
-//
-//                std::cout << "a[2]=" << a[2] << std::endl;
-//
-////////// testing ////////
-
-// TODO: Fix this, does not compile:
 //#pragma omp parallel for
                 for (auto word = key_start; word != key_end; word = VECT::basis.nextkey(word), ++word_idx)
                 {

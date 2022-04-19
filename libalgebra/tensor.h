@@ -814,30 +814,6 @@ private:
 
         recursive_untiled_compute<0U, 2*BlockLetters-1> recurse;
 
-        void process_tile(
-                const SCA* input_data,
-                SCA* output_data,
-                size_t word_index,
-                size_t rword_index,
-                int degree,
-                int sign
-        ) const
-        {
-            SCA tile[block_size];
-            auto stride = power(Width, degree+BlockLetters);
-
-            read_tile(input_data + word_index*block_offset, tile, stride);
-
-            reversing_permutation<Width, 2*BlockLetters> permutation;
-
-            permutation(tile);
-
-            sign_tile(tile, sign);
-
-            write_tile(tile, output_data + rword_index*block_offset, stride);
-
-        }
-
         free_tensor operator()(const SCA* src_ptr, SCA* dst_ptr, const unsigned curr_degree) const noexcept
         {
             free_tensor result;
@@ -936,6 +912,30 @@ private:
                     data_ptr[row_offset + col] = *(tile_ptr++);
                 }
             }
+        }
+
+        void process_tile(
+                const SCA* input_data,
+                SCA* output_data,
+                size_t word_index,
+                size_t rword_index,
+                int degree,
+                int sign
+        ) const
+        {
+            SCA tile[block_size];
+            auto stride = power(Width, degree+BlockLetters);
+
+            read_tile(input_data + word_index*block_offset, tile, stride);
+
+            reversing_permutation<Width, 2*BlockLetters> permutation;
+
+            permutation(tile);
+
+            sign_tile(tile, sign);
+
+            write_tile(tile, output_data + rword_index*block_offset, stride);
+
         }
     };
 

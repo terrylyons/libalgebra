@@ -14,7 +14,7 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 #define DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 
-#include <omp.h>
+//#include <omp.h>
 
 #include <unordered_set>
 
@@ -573,11 +573,15 @@ private:
         {
             T tmp;
 
-            for (size_type i=0; i < power(Width, Level); ++i) {
+            for (size_type i=0; i < power(Width, Level); ++i)
+            {
                 auto j = permute_idx(i);
-                tmp = tile[i];
-                tile[i] = tile[j];
-                tile[j] = tmp;
+                if (j > i)
+                {
+                    tmp = tile[i];
+                    tile[i] = tile[j];
+                    tile[j] = tmp;
+                }
             }
         }
 
@@ -814,30 +818,6 @@ private:
 
         recursive_untiled_compute<0U, 2*BlockLetters-1> recurse;
 
-        void process_tile(
-                const SCA* input_data,
-                SCA* output_data,
-                size_t word_index,
-                size_t rword_index,
-                int degree,
-                int sign
-        ) const
-        {
-            SCA tile[block_size];
-            auto stride = power(Width, degree+BlockLetters);
-
-            read_tile(input_data + word_index*block_offset, tile, stride);
-
-            reversing_permutation<Width, 2*BlockLetters> permutation;
-
-            permutation(tile);
-
-            sign_tile(tile, sign);
-
-            write_tile(tile, output_data + rword_index*block_offset, stride);
-
-        }
-
         free_tensor operator()(const SCA* src_ptr, SCA* dst_ptr, const unsigned curr_degree) const noexcept
         {
             free_tensor result;
@@ -865,25 +845,6 @@ private:
 
                 auto word_idx = istart;
 
-// TODO: Fix OpenMP for loop
-
-// TODO: Remove OpenMP testing block
-////////// testing ////////
-//
-//                int a[16];
-//
-//#pragma omp parallel for
-//                for (int i = 0; i < 16; i++) {
-//                    a[i] = 2 * i;
-//#pragma omp critical
-//                    std::cout << "ThreadID=" << omp_get_thread_num() << "NumThreads=" << omp_get_num_threads() << "i=" << i << std::endl;
-//                }
-//
-//                std::cout << "a[2]=" << a[2] << std::endl;
-//
-////////// testing ////////
-
-// TODO: Fix this, does not compile:
 //#pragma omp parallel for
                 for (auto word = key_start; word != key_end; word = VECT::basis.nextkey(word), ++word_idx)
                 {
@@ -936,6 +897,30 @@ private:
                     data_ptr[row_offset + col] = *(tile_ptr++);
                 }
             }
+        }
+
+        void process_tile(
+                const SCA* input_data,
+                SCA* output_data,
+                size_t word_index,
+                size_t rword_index,
+                int degree,
+                int sign
+        ) const
+        {
+            SCA tile[block_size];
+            auto stride = power(Width, degree+BlockLetters);
+
+            read_tile(input_data + word_index*block_offset, tile, stride);
+
+            reversing_permutation<Width, 2*BlockLetters> permutation;
+
+            permutation(tile);
+
+            sign_tile(tile, sign);
+
+            write_tile(tile, output_data + rword_index*block_offset, stride);
+
         }
     };
 

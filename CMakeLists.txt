@@ -35,10 +35,10 @@ find_package(Boost REQUIRED COMPONENTS thread)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/)
 find_package(Bignum)
 
-find_package(OpenMP REQUIRED)
+find_package(OpenMP)
 
-message(STATUS ">>> OpenMP_CXX_INCLUDE_DIRS = ${OpenMP_CXX_INCLUDE_DIRS}")
-message(STATUS ">>> OpenMP_CXX_FLAGS = ${OpenMP_CXX_FLAGS}")
+#message(STATUS ">>> OpenMP_CXX_INCLUDE_DIRS = ${OpenMP_CXX_INCLUDE_DIRS}")
+#message(STATUS ">>> OpenMP_CXX_FLAGS = ${OpenMP_CXX_FLAGS}")
 
 # Interface libraries sometimes complain if you list sources, see below.
 add_library(Libalgebra INTERFACE)

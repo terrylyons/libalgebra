@@ -14,6 +14,8 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 #define DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 
+#include <omp.h>
+
 #include <unordered_set>
 
 #include <libalgebra/vectors/base_vector.h>
@@ -847,7 +849,8 @@ private:
 
             recurse(src_ptr, dst_ptr, curr_degree);
 
-            for (unsigned int length = 0; length <= max_middle_word_length && length + 2*block_letters <= curr_degree ; ++length) {
+            for (unsigned int length = 0; length <= max_middle_word_length && length + 2*block_letters <= curr_degree ; ++length)
+            {
                 auto istart = BASIS::start_of_degree(length);
                 auto iend = BASIS::start_of_degree(length + 1);
 
@@ -862,10 +865,28 @@ private:
 
                 auto word_idx = istart;
 
-// TODO: Fix CMake for OpenMP
-//  #pragma omp parallel for
-                for (auto word = key_start; word != key_end; word = VECT::basis.nextkey(word), ++word_idx) {
+// TODO: Fix OpenMP for loop
 
+// TODO: Remove OpenMP testing block
+////////// testing ////////
+//
+//                int a[16];
+//
+//#pragma omp parallel for
+//                for (int i = 0; i < 16; i++) {
+//                    a[i] = 2 * i;
+//#pragma omp critical
+//                    std::cout << "ThreadID=" << omp_get_thread_num() << "NumThreads=" << omp_get_num_threads() << "i=" << i << std::endl;
+//                }
+//
+//                std::cout << "a[2]=" << a[2] << std::endl;
+//
+////////// testing ////////
+
+// TODO: Fix this, does not compile:
+//#pragma omp parallel for
+                for (auto word = key_start; word != key_end; word = VECT::basis.nextkey(word), ++word_idx)
+                {
                     auto rword_index = VECT::basis.key_to_index(word.reverse());
 
                     if (length % 2 == 0)

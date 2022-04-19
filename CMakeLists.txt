@@ -35,6 +35,11 @@ find_package(Boost REQUIRED COMPONENTS thread)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/)
 find_package(Bignum)
 
+find_package(OpenMP REQUIRED)
+
+message(STATUS ">>> OpenMP_CXX_INCLUDE_DIRS = ${OpenMP_CXX_INCLUDE_DIRS}")
+message(STATUS ">>> OpenMP_CXX_FLAGS = ${OpenMP_CXX_FLAGS}")
+
 # Interface libraries sometimes complain if you list sources, see below.
 add_library(Libalgebra INTERFACE)
 
@@ -100,6 +105,7 @@ target_include_directories(Libalgebra
 target_link_libraries(Libalgebra INTERFACE
         Boost::boost
         Boost::thread
+        OpenMP::OpenMP_CXX
         )
 
 # Set the _DEBUG flag when we are building in Debug configuration.

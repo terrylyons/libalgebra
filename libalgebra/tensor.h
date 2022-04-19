@@ -14,6 +14,8 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 #define DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 
+#include <omp.h>
+
 #include <unordered_set>
 
 #include <libalgebra/vectors/base_vector.h>
@@ -821,16 +823,6 @@ private:
                 int sign
         ) const
         {
-            // TODO: add correct types in args instead of int:
-            //  static void process_tile(
-            //            const scalar_type* __restrict input_data,
-            //            scalar_type* __restrict output_data,
-            //            size_type word_index,
-            //            size_type rword_index,
-            //            degree_type degree,
-            //            Op op
-            //            )
-
             SCA tile[block_size];
             auto stride = power(Width, degree+BlockLetters);
 
@@ -844,6 +836,71 @@ private:
 
             write_tile(tile, output_data + rword_index*block_offset, stride);
 
+        }
+
+        free_tensor operator()(const SCA* src_ptr, SCA* dst_ptr, const unsigned curr_degree) const noexcept
+        {
+            free_tensor result;
+
+            if (src_ptr == nullptr) // if pointer to source is null
+            {
+                return result; // return zero tensor
+            }
+
+            recurse(src_ptr, dst_ptr, curr_degree);
+
+            for (unsigned int length = 0; length <= max_middle_word_length && length + 2*block_letters <= curr_degree ; ++length)
+            {
+                auto istart = BASIS::start_of_degree(length);
+                auto iend = BASIS::start_of_degree(length + 1);
+
+                auto src_dst_offset = BASIS::start_of_degree(length + 2 * BlockLetters);
+
+                auto src_p = src_ptr + src_dst_offset;
+                auto dst_p = dst_ptr + src_dst_offset;
+
+                // This is not a good solution, but it will work for now
+                auto key_start = VECT::basis.index_to_key(istart);
+                auto key_end = VECT::basis.index_to_key(iend);
+
+                auto word_idx = istart;
+
+// TODO: Fix OpenMP for loop
+
+// TODO: Remove OpenMP testing block
+////////// testing ////////
+//
+//                int a[16];
+//
+//#pragma omp parallel for
+//                for (int i = 0; i < 16; i++) {
+//                    a[i] = 2 * i;
+//#pragma omp critical
+//                    std::cout << "ThreadID=" << omp_get_thread_num() << "NumThreads=" << omp_get_num_threads() << "i=" << i << std::endl;
+//                }
+//
+//                std::cout << "a[2]=" << a[2] << std::endl;
+//
+////////// testing ////////
+
+// TODO: Fix this, does not compile:
+//#pragma omp parallel for
+                for (auto word = key_start; word != key_end; word = VECT::basis.nextkey(word), ++word_idx)
+                {
+                    auto rword_index = VECT::basis.key_to_index(word.reverse());
+
+                    if (length % 2 == 0)
+                    {
+                        process_tile(src_p, dst_p, word_idx - istart, rword_index - istart, length, 1);
+                    }
+                    else
+                    {
+                        process_tile(src_p, dst_p, word_idx - istart, rword_index - istart, length, -1);
+                    }
+                }
+            }
+
+            return result;
         }
 
     private:
@@ -887,59 +944,18 @@ private:
     {
         free_tensor result;
 
-        // TODO: implement template args properly: BlockLetters
-        //  Currently set to match tensor inverse repository tests
-
         const unsigned BlockLetters = 1;
         const auto curr_degree = this->degree();
 
-        tiled_inverse_operator<n_letters, max_degree, BlockLetters> t;
         vectors::dtl::vector_base_access::convert(result).resize_to_degree(curr_degree);
 
         // Get the pointers to the start of the data blob in memory.
         const SCA* src_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(*this));
         SCA* dst_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(result));
 
-        if (src_ptr == nullptr) // if pointer to source is null
-        {
-            return result; // return zero tensor
-        }
+        tiled_inverse_operator<n_letters, max_degree, BlockLetters> t;
 
-        t.recurse(src_ptr, dst_ptr, curr_degree);
-
-        for (unsigned int length = 0; length <= t.max_middle_word_length && length + 2*t.block_letters <= curr_degree ; ++length) {
-            auto istart = BASIS::start_of_degree(length);
-            auto iend = BASIS::start_of_degree(length + 1);
-
-            auto src_dst_offset = BASIS::start_of_degree(length + 2 * BlockLetters);
-
-            auto src_p = src_ptr + src_dst_offset;
-            auto dst_p = dst_ptr + src_dst_offset;
-
-            //assert(src_dst_offset + t.block_size*(iend - istart) <= arg.size());
-            //assert(src_dst_offset + t.block_size*(iend - istart) <= result.size());
-
-            // This is not a good solution, but it will work for now
-            auto key_start = VECT::basis.index_to_key(istart);
-            auto key_end = VECT::basis.index_to_key(iend);
-
-            auto word_idx = istart;
-
-            // TODO: #pragma omp parallel for
-            for (auto word = key_start; word != key_end; word = VECT::basis.nextkey(word), ++word_idx) {
-
-                auto rword_index = VECT::basis.key_to_index(word.reverse());
-
-                if (length % 2 == 0)
-                {
-                    t.process_tile(src_p, dst_p, word_idx - istart, rword_index - istart, length, 1);
-                }
-                else
-                {
-                    t.process_tile(src_p, dst_p, word_idx - istart, rword_index - istart, length, -1);
-                }
-            }
-        }
+        t(src_ptr, dst_ptr, curr_degree);
 
         return result;
     }

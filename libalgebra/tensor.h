@@ -573,11 +573,15 @@ private:
         {
             T tmp;
 
-            for (size_type i=0; i < power(Width, Level); ++i) {
+            for (size_type i=0; i < power(Width, Level); ++i)
+            {
                 auto j = permute_idx(i);
-                tmp = tile[i];
-                tile[i] = tile[j];
-                tile[j] = tmp;
+                if (j > i)
+                {
+                    tmp = tile[i];
+                    tile[i] = tile[j];
+                    tile[j] = tmp;
+                }
             }
         }
 

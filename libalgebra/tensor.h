@@ -268,8 +268,10 @@ namespace dtl{
 
     };
 
-    template <DEG Width, DEG MaxDepth, DEG BlockLetters>
+    template <DEG Width, DEG MaxDepth, DEG BlockLetters, typename Scalar>
     class tiled_inverse_operator{
+
+        typedef Scalar SCA;
 
     public:
         static constexpr DEG block_letters = BlockLetters;
@@ -361,13 +363,12 @@ namespace dtl{
 
         recursive_untiled_compute<0U, 2*BlockLetters-1> recurse;
 
-        free_tensor operator()(const SCA* src_ptr, SCA* dst_ptr, const unsigned curr_degree) const noexcept
+        void operator()(const SCA* src_ptr, SCA* dst_ptr, const unsigned curr_degree) const noexcept
         {
-            free_tensor result;
 
             if (src_ptr == nullptr) // if pointer to source is null
             {
-                return result; // return zero tensor
+                return;
             }
 
             recurse(src_ptr, dst_ptr, curr_degree);
@@ -403,8 +404,6 @@ namespace dtl{
                     }
                 }
             }
-
-            return result;
         }
 
     private:
@@ -941,7 +940,7 @@ private:
         const SCA* src_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(*this));
         SCA* dst_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(result));
 
-        dtl::tiled_inverse_operator<n_letters, max_degree, BlockLetters> t;
+        dtl::tiled_inverse_operator<n_letters, max_degree, BlockLetters, SCA> t;
 
         t(src_ptr, dst_ptr, curr_degree);
 

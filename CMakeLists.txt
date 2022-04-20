@@ -27,6 +27,7 @@ include(GNUInstallDirs)
 
 set(LIBALGEBRA_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Libalgebra")
 
+add_definitions(-DLIBALGEBRA_MAX_TILE_LETTERS=4)
 
 ## we have a limited binary boost dependency
 set(Boost_NO_WARN_NEW_VERSIONS ON)

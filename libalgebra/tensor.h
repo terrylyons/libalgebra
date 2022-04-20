@@ -939,11 +939,12 @@ private:
 
 
 #ifdef LIBALGEBRA_MAX_TILE_LETTERS
-        constexpr DEG BlockLetters = std::min<unsigned>(LIBALGEBRA_MAX_TILE_LETTERS, integer_maths::logN(LIBALGEBRA_L1_CACHE_SIZE / sizeof(SCA), n_letters) / 2);
+        constexpr DEG CalcLetters = integer_maths::logN(LIBALGEBRA_L1_CACHE_SIZE,n_letters) / 2;
+        constexpr DEG BlockLetters = (CalcLetters > LIBALGEBRA_MAX_TILE_LETTERS) ? LIBALGEBRA_MAX_TILE_LETTERS : CalcLetters;
 #else
         constexpr DEG BlockLetters = integer_maths::logN(LIBALGEBRA_L1_CACHE_SIZE /sizeof(SCA), n_letters) / 2;
 #endif
-        
+
         const auto curr_degree = this->degree();
 
         vectors::dtl::vector_base_access::convert(result).resize_to_degree(curr_degree);

@@ -51,6 +51,12 @@ constexpr typename std::make_signed<Unsigned>::type mobius(Unsigned N)
                                                                      static_cast<Unsigned>(2)));// mobius(as^2) = 0 for any a, s > 1;  otherwise recurse
 }
 
+template <typename ArgInt, typename BaseInt>
+constexpr BaseInt logN(ArgInt arg, BaseInt base) noexcept
+{
+    return (arg < base) ? 0 : logN(arg / static_cast<ArgInt>(base), base) + 1;
+}
+
 }// namespace integer_maths
 
 template<typename Int>
@@ -93,11 +99,6 @@ constexpr Int power(Int base, PowerInt exponent) noexcept
                               : ((exponent % 2 != 0) ? base : 1) * power(base, exponent / 2) * power(base, exponent / 2);
 }
 
-template <typename ArgInt, typename BaseInt>
-constexpr BaseInt logN(ArgInt arg, BaseInt base) noexcept
-{
-    return (arg < base) ? 0 : logN(arg / static_cast<ArgInt>(base), base) + 1;
-}
 
 }// namespace alg
 

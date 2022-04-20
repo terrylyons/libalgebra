@@ -273,8 +273,7 @@ namespace dtl{
 
         typedef Scalar SCA;
 
-        typedef free_tensor_basis<Width, MaxDepth> BASIS;
-        typedef vectors::dense_vector<BASIS, SCA> VECT;
+        using BASIS = free_tensor_basis<Width, MaxDepth>;
 
     public:
         static constexpr DEG block_letters = BlockLetters;
@@ -386,16 +385,15 @@ namespace dtl{
                 auto src_p = src_ptr + src_dst_offset;
                 auto dst_p = dst_ptr + src_dst_offset;
 
-                // This is not a good solution, but it will work for now
-                auto key_start = VECT::basis.index_to_key(istart);
-                auto key_end = VECT::basis.index_to_key(iend);
+                auto key_start = BASIS::index_to_key(istart);
+                auto key_end = BASIS::index_to_key(iend);
 
                 auto word_idx = istart;
 
 //#pragma omp parallel for
-                for (auto word = key_start; word != key_end; word = VECT::basis.nextkey(word), ++word_idx)
+                for (auto word = key_start; word != key_end; word = BASIS::nextkey(word), ++word_idx)
                 {
-                    auto rword_index = VECT::basis.key_to_index(word.reverse());
+                    auto rword_index = BASIS::key_to_index(word.reverse());
 
                     if (length % 2 == 0)
                     {

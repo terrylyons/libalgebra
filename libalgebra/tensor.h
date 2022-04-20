@@ -21,6 +21,7 @@ Version 3. (See accompanying file License.txt)
 //#include <omp.h>
 
 #include <unordered_set>
+#include <algorithm>
 
 #include <libalgebra/vectors/base_vector.h>
 
@@ -105,7 +106,7 @@ namespace dtl{
             return (idx % factor) / Width;
         }
 
-        static constexpr size_type permute_idx(size_type idx)
+        static size_type permute_idx(size_type idx)
         {
             static_assert(Level-2 > 0, "Level must be at least 3 in this specialisation");
             using next = reversing_permutation<Width, Level-2>;
@@ -936,7 +937,13 @@ private:
     {
         free_tensor result;
 
-        const unsigned BlockLetters = 1;
+
+#ifdef LIBALGEBRA_MAX_TILE_LETTERS
+        constexpr DEG BlockLetters = std::min<unsigned>(LIBALGEBRA_MAX_TILE_LETTERS, integer_maths::logN(LIBALGEBRA_L1_CACHE_SIZE / sizeof(SCA), n_letters) / 2);
+#else
+        constexpr DEG BlockLetters = integer_maths::logN(LIBALGEBRA_L1_CACHE_SIZE /sizeof(SCA), n_letters) / 2;
+#endif
+        
         const auto curr_degree = this->degree();
 
         vectors::dtl::vector_base_access::convert(result).resize_to_degree(curr_degree);

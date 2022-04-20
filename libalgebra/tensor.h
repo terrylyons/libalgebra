@@ -273,6 +273,9 @@ namespace dtl{
 
         typedef Scalar SCA;
 
+        typedef free_tensor_basis<Width, MaxDepth> BASIS;
+        typedef vectors::dense_vector<BASIS, SCA> VECT;
+
     public:
         static constexpr DEG block_letters = BlockLetters;
         static constexpr size_t block_width = power(Width, BlockLetters);

@@ -93,6 +93,12 @@ constexpr Int power(Int base, PowerInt exponent) noexcept
                               : ((exponent % 2 != 0) ? base : 1) * power(base, exponent / 2) * power(base, exponent / 2);
 }
 
+template <typename ArgInt, typename BaseInt>
+constexpr BaseInt logN(ArgInt arg, BaseInt base) noexcept
+{
+    return (arg < base) ? 0 : logN(arg / static_cast<ArgInt>(base), base) + 1;
+}
+
 }// namespace alg
 
 #endif// LIBALGEBRAUNITTESTS_INTEGER_MATHS_H

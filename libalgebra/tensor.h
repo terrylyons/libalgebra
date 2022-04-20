@@ -14,6 +14,10 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 #define DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 
+#ifndef LIBALGEBRA_L1_CACHE_SIZE
+#define LIBALGEBRA_L1_CACHE_SIZE 32768   // 32Kb should be fairly standard
+#endif
+
 //#include <omp.h>
 
 #include <unordered_set>

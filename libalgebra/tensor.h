@@ -735,6 +735,7 @@ public:
     /// Ensures that the return type is a shuffle_tensor.
     inline shuffle_tensor operator-(void) const { return shuffle_tensor(ALG::operator-()); }
 
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;
 
@@ -743,6 +744,7 @@ private:
     {
         ar& boost::serialization::base_object<ALG>(*this);
     }
+#endif
 };
 
 }// namespace alg

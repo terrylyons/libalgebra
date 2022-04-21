@@ -13,6 +13,7 @@ endif ()
 project(Libalgebra VERSION 2.0.0)
 
 option(LIBALGEBRA_TESTING "Enable building test targets" OFF)
+option(LIBALGEBRA_NO_SERIALIZATION "Turn off building serialization dependency" OFF)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -30,7 +31,12 @@ set(LIBALGEBRA_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Libalgebr
 
 ## we have a limited binary boost dependency
 set(Boost_NO_WARN_NEW_VERSIONS ON)
-find_package(Boost REQUIRED COMPONENTS thread serialization)
+find_package(Boost REQUIRED COMPONENTS thread)
+
+if (NOT LIBALGEBRA_NO_SERIALIZATION)
+    find_package(Boost OPTIONAL_COMPONENTS serialization)
+endif()
+
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/)
 find_package(Bignum)
@@ -100,8 +106,12 @@ target_include_directories(Libalgebra
 target_link_libraries(Libalgebra INTERFACE
         Boost::boost
         Boost::thread
-        Boost::serialization
         )
+
+if (TARGET Boost::serialization)
+    target_link_libraries(Libalgebra INTERFACE Boost::serialization)
+    target_compile_definitions(Libalgebra INTERFACE LIBALGEBRA_ENABLE_SERIALIZATION)
+endif()
 
 # Set the _DEBUG flag when we are building in Debug configuration.
 # This macro should probably be renamed to avoid collisions with compiler

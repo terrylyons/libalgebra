@@ -13,9 +13,11 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN
 #define DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN
 
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/unordered_map.hpp>
+#endif
 
 #include <iosfwd>
 #include <unordered_map>
@@ -1327,7 +1329,7 @@ public:
         typename Transform::key_transform kt(transform.get_key_transform());
         kt(result, *this);
     }
-
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;
 
@@ -1336,6 +1338,7 @@ private:
     {
         ar& boost::serialization::base_object<MapType>(*this);
     }
+#endif
 };
 
 namespace dtl {

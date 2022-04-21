@@ -12,8 +12,10 @@
 #include <utility>
 #include <vector>
 
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/vector.hpp>
+#endif
 
 #include "implementation_types.h"
 #include "utils/integer_maths.h"
@@ -602,6 +604,7 @@ public:
     /// Write out a key as a (nested) bracket of its parents
     const key2string_type key2string;
 
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 protected:
     friend class boost::serialization::access;
 
@@ -616,6 +619,7 @@ protected:
         ar& content.degree_ranges;
         ar& content.sizes;
     }
+#endif
 };
 
 }// namespace alg

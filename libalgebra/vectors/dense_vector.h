@@ -1438,6 +1438,7 @@ public:
         it(&result.m_data[0], result.dimension(), &m_data[0], dimension());
     }
 
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;
 
@@ -1448,6 +1449,7 @@ private:
         ar& m_degree;
         ar& m_data;
     }
+#endif
 };
 
 #undef DECLARE_FUSED_OP

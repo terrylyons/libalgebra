@@ -5,8 +5,9 @@
 #ifndef LIBALGEBRA_VECTOR_H
 #define LIBALGEBRA_VECTOR_H
 
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 #include <boost/serialization/serialization.hpp>
-
+#endif
 #include "libalgebra/vectors/sparse_vector.h"
 
 namespace alg {
@@ -562,6 +563,7 @@ public:
     }
 
 public:
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
     // Serialization access and methods
     friend class boost::serialization::access;
 
@@ -570,7 +572,7 @@ public:
     {
         ar& boost::serialization::base_object<UnderlyingVectorType>(*this);
     }
-
+#endif
 public:
     // Information methods
 

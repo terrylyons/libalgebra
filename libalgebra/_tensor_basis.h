@@ -549,7 +549,7 @@ public:
             return static_cast<size_t>(key._word);
         }
     };
-
+#ifdef LIBALGEBEA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;
 
@@ -558,6 +558,7 @@ private:
     {
         ar& _word;
     }
+#endif
 };
 
 } // namespace alg

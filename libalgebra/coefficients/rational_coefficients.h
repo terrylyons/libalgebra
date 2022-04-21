@@ -6,7 +6,9 @@
 #define LIBALGEBRA_RATIONAL_COEFFICIENTS_H
 
 #ifndef LIBALGEBRA_NO_GMP
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 #include "gmp_ser.h"
+#endif
 #include <boost/multiprecision/gmp.hpp>
 #else
 #include <boost/multiprecision/cpp_int.hpp>

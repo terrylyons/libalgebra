@@ -1502,7 +1502,7 @@ public:
         SPARSE::buffered_apply_unary_transform(result, transform);
         result.maybe_resize();
     }
-
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;
 
@@ -1513,6 +1513,7 @@ private:
         ar& boost::serialization::base_object<SPARSE>(*this);
         ar& m_resize_policy;
     }
+#endif
 };
 
 #undef DEFINE_FUSED_OP

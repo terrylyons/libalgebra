@@ -312,7 +312,7 @@ public:
         return result;
     }
 
-
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
 
     friend class boost::serialization::access;
@@ -321,7 +321,7 @@ private:
     void serialize(Archive &ar, unsigned int const /* version */) {
         ar & boost::serialization::base_object<VECT>(*this);
     }
-
+#endif
 };
 
 template<typename B, typename C, typename M, template<typename, typename, typename...> class V, typename... Args>

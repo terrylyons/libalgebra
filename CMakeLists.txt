@@ -27,7 +27,10 @@ include(GNUInstallDirs)
 
 set(LIBALGEBRA_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Libalgebra")
 
-add_definitions(-DLIBALGEBRA_MAX_TILE_LETTERS=4)
+if(SET_LIBALGEBRA_MAX_TILE_LETTERS)
+    message("You have set LIBALGEBRA_MAX_TILE_LETTERS to ${LIBALGEBRA_MAX_TILE_LETTERS}")
+    add_definitions(-DLIBALGEBRA_MAX_TILE_LETTERS=${LIBALGEBRA_MAX_TILE_LETTERS})
+endif()
 
 ## we have a limited binary boost dependency
 set(Boost_NO_WARN_NEW_VERSIONS ON)

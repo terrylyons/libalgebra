@@ -937,9 +937,8 @@ private:
     {
         free_tensor result;
 
-
 #ifdef LIBALGEBRA_MAX_TILE_LETTERS
-        constexpr DEG CalcLetters = integer_maths::logN(LIBALGEBRA_L1_CACHE_SIZE,n_letters) / 2;
+        constexpr DEG CalcLetters = integer_maths::logN(static_cast<unsigned>(LIBALGEBRA_L1_CACHE_SIZE),n_letters) / 2;
         constexpr DEG BlockLetters = (CalcLetters > LIBALGEBRA_MAX_TILE_LETTERS) ? LIBALGEBRA_MAX_TILE_LETTERS : CalcLetters;
 #else
         constexpr DEG BlockLetters = integer_maths::logN(LIBALGEBRA_L1_CACHE_SIZE /sizeof(SCA), n_letters) / 2;

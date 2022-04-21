@@ -444,6 +444,7 @@ public:
         return ans;
     }
 
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;
 
@@ -452,6 +453,7 @@ private:
     {
         ar& boost::serialization::base_object<ALG>(*this);
     }
+#endif
 };
 
 template<typename Coeff>

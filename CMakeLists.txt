@@ -30,7 +30,7 @@ set(LIBALGEBRA_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Libalgebr
 
 ## we have a limited binary boost dependency
 set(Boost_NO_WARN_NEW_VERSIONS ON)
-find_package(Boost REQUIRED COMPONENTS thread)
+find_package(Boost REQUIRED COMPONENTS thread serialization)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/)
 find_package(Bignum)
@@ -100,6 +100,7 @@ target_include_directories(Libalgebra
 target_link_libraries(Libalgebra INTERFACE
         Boost::boost
         Boost::thread
+        Boost::serialization
         )
 
 # Set the _DEBUG flag when we are building in Debug configuration.

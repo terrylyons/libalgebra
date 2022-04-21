@@ -111,13 +111,14 @@ public:
     {
         return get_resize_size_impl(vect, vect.degree_tag);
     }
-
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;
 
     template<typename Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {}
+#endif
 };
 
 }// namespace policy

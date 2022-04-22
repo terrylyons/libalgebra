@@ -146,6 +146,10 @@ public:
     }
 };
 
+template <DEG Width>
+constexpr typename hall_set_content<Width>::degree_type hall_set_content<Width>::n_letters;
+
+
 /**
  * @brief A Hall set
  *

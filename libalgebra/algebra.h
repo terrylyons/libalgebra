@@ -188,6 +188,11 @@ public:
         : VECT(offset, begin, end)
     {}
 
+
+    template <typename InputIt>
+    algebra(InputIt begin, InputIt end) : VECT(begin, end)
+    {}
+
     algebra& operator=(const algebra&) = default;
     algebra& operator=(algebra&&) noexcept = default;
 

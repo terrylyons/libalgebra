@@ -29,17 +29,24 @@ public:
         return arg;
     }
 
+    template<typename B, typename C, template<typename, typename, typename...> class Vector, typename... Args>
+    static const Vector<B, C, Args...>& convert(const Vector<B, C, Args...>& arg)
+    {
+        return arg;
+    }
+
     template<typename Basis, typename Coeffs, template<typename, typename, typename...> class Vector, typename... Args>
     static Vector<Basis, Coeffs, Args...>& convert(vector<Basis, Coeffs, Vector, Args...>& arg)
     {
         return arg;
     }
 
-    template<typename B, typename C, template<typename, typename, typename...> class Vector, typename... Args>
-    static const Vector<B, C, Args...>& convert(const Vector<B, C, Args...>& arg)
-    {
-        return arg;
-    }
+
+//    template<typename B, typename C, template<typename, typename, typename...> class Vector, typename... Args>
+//    static const Vector<B, C, Args...>& convert(const Vector<B, C, Args...>& arg)
+//    {
+//        return arg;
+//    }
 
     template<typename Basis, typename Coeffs, template<typename, typename, typename...> class Vector, typename... Args>
     static const Vector<Basis, Coeffs, Args...>& convert(const vector<Basis, Coeffs, Vector, Args...>& arg)

@@ -305,6 +305,10 @@ public:
     {
     }
 
+    template <typename InputIt>
+    lie(InputIt begin, InputIt end) : ALG(begin, end)
+    {}
+
     lie& operator=(const lie&) = default;
     //lie& operator=(lie&&) noexcept = default;
 

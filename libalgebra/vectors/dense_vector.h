@@ -1462,22 +1462,22 @@ struct data_access_base<dense_vector<Basis, Coeffs>> {
     using vector_type = dense_vector<Basis, Coeffs>;
     using tag = access_type_dense;
 
-    static const typename Coeffs::S* range_begin(const vector_type& vect)
+    static const typename vector_type::SCALAR* range_begin(const vector_type& vect)
     {
         return vect.m_data.begin();
     }
 
-    static const typename Coeffs::S* range_end(const vector_type& vect)
+    static const typename vector_type::SCALAR* range_end(const vector_type& vect)
     {
         return vect.m_data.end();
     }
 
-    static typename Coeffs::S* range_begin(vector_type& vect)
+    static typename vector_type::SCALAR* range_begin(vector_type& vect)
     {
         return vect.m_data.begin();
     }
 
-    static typename Coeffs::S* range_end(vector_type& vect)
+    static typename vector_type::SCALAR* range_end(vector_type& vect)
     {
         return vect.m_data.end();
     }

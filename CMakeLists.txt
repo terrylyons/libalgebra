@@ -28,6 +28,11 @@ include(GNUInstallDirs)
 
 set(LIBALGEBRA_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Libalgebra")
 
+# -DLIBALGEBRA_MAX_TILE_LETTERS=X
+if(DEFINED LIBALGEBRA_MAX_TILE_LETTERS)
+    message("You have set LIBALGEBRA_MAX_TILE_LETTERS to ${LIBALGEBRA_MAX_TILE_LETTERS}")
+    add_definitions(-DLIBALGEBRA_MAX_TILE_LETTERS=${LIBALGEBRA_MAX_TILE_LETTERS})
+endif()
 
 ## we have a limited binary boost dependency
 set(Boost_NO_WARN_NEW_VERSIONS ON)
@@ -40,6 +45,11 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/)
 find_package(Bignum)
+
+find_package(OpenMP)
+
+#message(STATUS ">>> OpenMP_CXX_INCLUDE_DIRS = ${OpenMP_CXX_INCLUDE_DIRS}")
+#message(STATUS ">>> OpenMP_CXX_FLAGS = ${OpenMP_CXX_FLAGS}")
 
 # Interface libraries sometimes complain if you list sources, see below.
 add_library(Libalgebra INTERFACE)
@@ -106,6 +116,7 @@ target_include_directories(Libalgebra
 target_link_libraries(Libalgebra INTERFACE
         Boost::boost
         Boost::thread
+        OpenMP::OpenMP_CXX
         )
 
 if (TARGET Boost::serialization)

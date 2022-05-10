@@ -143,11 +143,12 @@ public:
 /// of pairs of monomials and directions). The product is the Lie bracket
 /// for vector fields.
 
-template<typename Coeff, DEG n_letters, DEG max_degree, typename...>
+template<typename Coeff, DEG n_letters, DEG max_degree, template<typename, typename, typename...> class VectorType, typename... Args>
 class poly_lie : public algebra<
                          poly_lie_basis<n_letters, max_degree>,
                          Coeff,
-                         poly_lie_multiplication<Coeff>>
+                         poly_lie_multiplication<Coeff>,
+                         VectorType, Args...>
 {
     typedef poly_lie_multiplication<Coeff> multiplication_t;
 
@@ -162,7 +163,7 @@ public:
     /// Import of the KEY type.
     typedef typename BASIS::KEY KEY;
     /// The algebra type.
-    typedef algebra<BASIS, Coeff, multiplication_t> ALG;
+    typedef algebra<BASIS, Coeff, multiplication_t, VectorType, Args...> ALG;
     /// The sparse_vector type.
     typedef typename ALG::VECT VECT;
     /// Import of the iterator type.
@@ -216,7 +217,7 @@ public:
 public:
     /// Replaces the occurrences of letters in s by Lie elements in v.
     inline friend poly_lie
-    replace(const poly_lie &src, const std::vector<LET> &s, const std::vector<const poly_lie *> &v)
+    replace(const poly_lie& src, const std::vector<LET>& s, const std::vector<const poly_lie*>& v)
     {
         poly_lie result;
         std::map<KEY, poly_lie> table;
@@ -229,13 +230,13 @@ public:
 
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
+    friend class boost::serialization::access;
 
-friend class boost::serialization::access;
-
-template <typename Archive>
-void serialize(Archive &ar, unsigned int const /* version */) {
-    ar & boost::serialization::base_object<ALG>(*this);
-}
+    template<typename Archive>
+    void serialize(Archive& ar, unsigned int const /* version */)
+    {
+        ar& boost::serialization::base_object<ALG>(*this);
+    }
 #endif
 };
 

@@ -58,11 +58,13 @@ class multipoly_multiplication
    associative algebra corresponding to the SCALAR type. This is permitted by
    the existence of empty keys in monomial_basis.
  */
-template<typename Coeff, DEG n_letters, DEG max_degree, typename... Args>
+template<typename Coeff, DEG n_letters, DEG max_degree,
+         template<typename, typename, typename...> class VectorType,
+         typename... Args>
 class multi_polynomial : public algebra<
                                  free_monomial_basis<n_letters, max_degree>,
-                                 Coeff, multipoly_multiplication<Coeff>
-                                 >
+                                 Coeff, multipoly_multiplication<Coeff>,
+                                 VectorType, Args...>
 {
 
     typedef multipoly_multiplication<Coeff> multiplication_t;
@@ -77,7 +79,7 @@ public:
     typedef typename Coeff::RAT RAT;
 
     /// The algebra type.
-    typedef algebra<BASIS, Coeff, multiplication_t> ALG;
+    typedef algebra<BASIS, Coeff, multiplication_t, VectorType, Args...> ALG;
     /// The sparse_vector type.
     typedef typename ALG::VECT VECT;
     /// Import of the iterator type.
@@ -213,13 +215,13 @@ public:
 
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
+    friend class boost::serialization::access;
 
-friend class boost::serialization::access;
-
-template <typename Archive>
-void serialize(Archive &ar, unsigned int const /* version */) {
-    ar & boost::serialization::base_object<ALG>(*this);
-}
+    template<typename Archive>
+    void serialize(Archive& ar, unsigned int const /* version */)
+    {
+        ar& boost::serialization::base_object<ALG>(*this);
+    }
 #endif
 };
 

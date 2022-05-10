@@ -198,9 +198,9 @@ template<DEG n_letters, DEG max_degree = 0>
 class free_monomial_basis;
 
 /// II. Multivariate Polynomial Algebra   Associative and Commutative.
-template<typename Coeff, DEG n_letters, DEG max_degree = 0,
-         /*template <typename, typename, typename...> VectorType,*/
-         typename...>
+template<typename Coeff, DEG n_letters, DEG max_degree,
+         template<typename, typename, typename...> class VectorType = vectors::template_vector_type_selector<free_monomial_basis<n_letters, max_degree>, Coeff>::template type,
+         typename... Args>
 class multi_polynomial;
 
 /// III. Multivariate Polynomial Lie Algebra Basis. Associative and non
@@ -209,9 +209,9 @@ template<DEG n_letters, DEG max_degree = 0>
 class poly_lie_basis;
 
 /// III. Multivariate Polynomial Lie Algebra. Associative and non commutative
-template<typename Coeff, DEG n_letters, DEG max_degree = 0,
-         /*template <typename, typename, typename...> VectorType,*/
-         typename...>
+template<typename Coeff, DEG n_letters, DEG max_degree,
+         template<typename, typename, typename...> class VectorType = vectors::template_vector_type_selector<poly_lie_basis<n_letters, max_degree>, Coeff>::template type,
+         typename... Args>
 class poly_lie;
 
 }// namespace alg

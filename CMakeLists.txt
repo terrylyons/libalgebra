@@ -54,6 +54,7 @@ find_package(OpenMP)
 # Interface libraries sometimes complain if you list sources, see below.
 add_library(Libalgebra INTERFACE)
 
+
 # For IDEs that use target sources lists to generate project information
 # we add a custom target that attaches these sources.
 add_custom_target(Libalgebra_headers SOURCES
@@ -61,12 +62,16 @@ add_custom_target(Libalgebra_headers SOURCES
         libalgebra/basis/basis.h
         libalgebra/basis/key_iterators.h
         libalgebra/coefficients/coefficients.h
+        libalgebra/coefficients/complex.h
+        libalgebra/coefficients/mpfloat_coefficients.h
+        libalgebra/coefficients/rational_coefficients.h
         libalgebra/utils/caching_tags.h
         libalgebra/utils/function_extension_cache_base.h
         libalgebra/utils/integer_maths.h
         libalgebra/utils/iterators.h
         libalgebra/utils/meta.h
         libalgebra/utils/order_trait.h
+        libalgebra/utils/is_vector_trait.h
         libalgebra/vectors/base_vector.h
         libalgebra/vectors/dense_storage.h
         libalgebra/vectors/dense_vector.h
@@ -107,6 +112,7 @@ add_custom_target(Libalgebra_headers SOURCES
         libalgebra/tensor_basis.h
         libalgebra/utils.h
         )
+
 
 target_include_directories(Libalgebra
         INTERFACE

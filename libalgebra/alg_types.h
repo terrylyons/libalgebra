@@ -93,7 +93,7 @@ struct alg_types {
     const static coefficient_t FIELD = F;
     typedef typename Field<F>::S S;
     typedef typename Field<F>::Q Q;
-    typedef alg::coefficients::coefficient_field<S, Q> COEFF;
+    typedef alg::coefficients::coefficient_field<S> COEFF;
     typedef S SCA;
     typedef Q RAT;
     typedef alg::DEG DEG;

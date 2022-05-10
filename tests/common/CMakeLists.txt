@@ -11,7 +11,7 @@ add_library(libalgebra_tests_utilities STATIC EXCLUDE_FROM_ALL
         memfile.h
         random_vector_generator.h
         SHOW.h
-        random_vector_generator.h
+        random_coeffs.h
         multi_test.h)
 
 

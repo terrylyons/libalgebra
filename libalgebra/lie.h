@@ -305,6 +305,10 @@ public:
     {
     }
 
+    template <typename InputIt>
+    lie(InputIt begin, InputIt end) : ALG(begin, end)
+    {}
+
     lie& operator=(const lie&) = default;
     //lie& operator=(lie&&) noexcept = default;
 
@@ -322,7 +326,7 @@ public:
     }
 
 
-
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
 
     friend class boost::serialization::access;
@@ -331,7 +335,7 @@ private:
     void serialize(Archive &ar, unsigned int const /* version */) {
         ar & boost::serialization::base_object<ALG>(*this);
     }
-
+#endif
 };
 
 }// namespace alg

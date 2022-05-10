@@ -3,7 +3,19 @@ FROM ubuntu AS builder
 ARG DEBIAN_FRONTEND=noninteractive
 
 # essential, cmake, git, boost, GMP for Bignum library
-RUN apt-get update && apt-get -y install build-essential cmake git libboost-all-dev libgmp-dev
+RUN \
+apt-get update -y && \
+apt-get upgrade -y && \
+apt-get -y install build-essential git libboost-all-dev libgmp-dev wget && \
+apt-get autoremove -y && \
+apt-get clean -y
+
+ARG CMAKE_INSTALLER=cmake-3.22.3-linux-x86_64.sh
+RUN \
+wget https://github.com/Kitware/CMake/releases/download/v3.22.3/${CMAKE_INSTALLER} && \
+chmod +x ${CMAKE_INSTALLER}
+
+RUN ./${CMAKE_INSTALLER} --prefix=/usr/local --exclude-subdir
 
 # unittest-cpp
 RUN git clone https://github.com/unittest-cpp/unittest-cpp.git

@@ -5,6 +5,9 @@
 #ifndef LIBALGEBRA_OPERATORS_H
 #define LIBALGEBRA_OPERATORS_H
 
+#include <libalgebra/operators/composition_operator.h>
+#include <libalgebra/operators/scalar_multiply_operator.h>
+#include <libalgebra/operators/sum_operator.h>
 #include <type_traits>
 #include <utility>
 
@@ -28,8 +31,41 @@ protected:
 
 public:
     using implementation_type::implementation_type;
+
     using result_type = ResultType;
     using implementation_type::operator();
+
+protected:
+    explicit linear_operator(Impl&& impl) : Impl(std::forward<Impl>(impl))
+    {}
+
+public:
+    template<typename OtherImpl>
+    linear_operator<
+            sum_operator<Impl, OtherImpl, ArgumentType, ResultType>,
+            ArgumentType,
+            ResultType>
+    operator+(const linear_operator<OtherImpl, ArgumentType, ResultType>& other) const
+    {
+        return {*this, other};
+    }
+
+    template<typename OtherImpl, typename NewArgumentType>
+    linear_operator<
+            composition_operator<Impl, OtherImpl, NewArgumentType, ResultType>,
+            NewArgumentType,
+            ResultType> friend
+    operator*(const linear_operator& outer,
+              const linear_operator<OtherImpl, NewArgumentType, ArgumentType>& inner)
+    {
+        using composition_type = composition_operator<Impl, OtherImpl, NewArgumentType, ResultType>;
+        using return_type = linear_operator<
+                composition_type,
+                NewArgumentType,
+                ResultType>;
+
+        return return_type(composition_type(static_cast<const OtherImpl&>(inner)), static_cast<const Impl&>(outer));
+    }
 };
 
 template<typename Impl, typename ArgumentType>
@@ -101,5 +137,8 @@ using right_multiplication_operator = linear_operator<
 
 }// namespace operators
 }// namespace alg
+
+#include <libalgebra/operators/free_extension.h>
+#include <libalgebra/operators/tensor_operator.h>
 
 #endif//LIBALGEBRA_OPERATORS_H

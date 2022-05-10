@@ -13,9 +13,11 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN
 #define DJC_COROPA_LIBALGEBRA_SPARSEVECTORH_SEEN
 
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/unordered_map.hpp>
+#endif
 
 #include <iosfwd>
 #include <unordered_map>
@@ -72,6 +74,8 @@ class sparse_vector : /*private*/ MapType, protected base_vector<Basis, Coeffs>
 {
     typedef MapType MAP;
     typedef base_vector<Basis, Coeffs> BASE_VEC;
+
+    friend class dtl::data_access_base<sparse_vector>;
 
 public:
     typedef Basis BASIS;
@@ -1325,7 +1329,7 @@ public:
         typename Transform::key_transform kt(transform.get_key_transform());
         kt(result, *this);
     }
-
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;
 
@@ -1334,7 +1338,41 @@ private:
     {
         ar& boost::serialization::base_object<MapType>(*this);
     }
+#endif
 };
+
+namespace dtl {
+
+template<typename Basis, typename Coeffs, typename Map>
+struct data_access_base<sparse_vector<Basis, Coeffs, Map>> {
+
+    using vector_type = sparse_vector<Basis, Coeffs, Map>;
+    using tag = access_type_sparse;
+
+    static typename Map::const_iterator range_begin(const vector_type& vect)
+    {
+        return vect.map_begin();
+    }
+
+    static typename Map::const_iterator range_end(const vector_type& vect)
+    {
+        return vect.map_end();
+    }
+
+    static typename Map::iterator range_begin(vector_type& vect)
+    {
+        return vect.map_begin();
+    }
+
+    static typename Map::iterator range_end(vector_type& vect)
+    {
+        return vect.map_end();
+    }
+
+
+};
+
+}// namespace dtl
 
 }// namespace vectors
 }// namespace alg

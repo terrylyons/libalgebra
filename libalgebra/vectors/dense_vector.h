@@ -44,6 +44,8 @@ class dense_vector : protected base_vector<Basis, Coeffs>, dtl::requires_order<B
     typedef dense_storage<typename Coeffs::S> STORAGE;
     typedef base_vector<Basis, Coeffs> BASE_VEC;
 
+    friend class dtl::data_access_base<dense_vector>;
+
 private:
     // Data members
     STORAGE m_data;
@@ -107,7 +109,12 @@ public:
           m_dimension(m_data.size()),
           m_degree(0)
     {
-        set_degree(degree_tag);
+        if (m_data.size() != adjust_dimension(m_data.size(), degree_tag)) {
+            resize_to_dimension(m_data.size());
+        }
+        else {
+            set_degree(degree_tag);
+        }
     }
 
     /**
@@ -126,7 +133,12 @@ public:
           m_dimension(0),
           m_degree(0)
     {
-        set_degree(degree_tag);
+        if (m_data.size() != adjust_dimension(m_data.size(), degree_tag)) {
+            resize_to_dimension(m_data.size());
+        }
+        else {
+            set_degree(degree_tag);
+        }
     }
 
     /**
@@ -145,7 +157,9 @@ public:
           m_dimension(0),
           m_degree(0)
     {
-        set_degree(degree_tag);
+        if (m_data.size() != adjust_dimension(m_data.size(), degree_tag)) {
+            resize_to_dimension(m_data.size());
+        }
     }
 
     dense_vector& operator=(const dense_vector& other) = default;
@@ -1424,22 +1438,55 @@ public:
         it(&result.m_data[0], result.dimension(), &m_data[0], dimension());
     }
 
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
-
     friend class boost::serialization::access;
 
-    template <typename Archive>
+    template<typename Archive>
     void serialize(Archive& ar, const unsigned /*version*/)
     {
-        ar & m_dimension;
-        ar & m_degree;
-        ar & m_data;
+        ar& m_dimension;
+        ar& m_degree;
+        ar& m_data;
     }
+#endif
+};
+
+#undef DECLARE_FUSED_OP
+
+namespace dtl {
+
+template<typename Basis, typename Coeffs>
+struct data_access_base<dense_vector<Basis, Coeffs>> {
+
+    using vector_type = dense_vector<Basis, Coeffs>;
+    using tag = access_type_dense;
+
+    static const typename vector_type::SCALAR* range_begin(const vector_type& vect)
+    {
+        return vect.m_data.begin();
+    }
+
+    static const typename vector_type::SCALAR* range_end(const vector_type& vect)
+    {
+        return vect.m_data.end();
+    }
+
+    static typename vector_type::SCALAR* range_begin(vector_type& vect)
+    {
+        return vect.m_data.begin();
+    }
+
+    static typename vector_type::SCALAR* range_end(vector_type& vect)
+    {
+        return vect.m_data.end();
+    }
+
 
 
 };
 
-#undef DECLARE_FUSED_OP
+}// namespace dtl
 
 }// namespace vectors
 }// namespace alg

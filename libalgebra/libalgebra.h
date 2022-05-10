@@ -51,7 +51,9 @@ typedef unsigned __int64 uint64_t;
 #include <utility>
 #include <vector>
 
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 #include <boost/serialization/base_object.hpp>
+#endif
 #include <boost/thread/locks.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
@@ -229,6 +231,7 @@ class poly_lie;
 #include <libalgebra/coefficients/mpfloat_coefficients.h>
 #include <libalgebra/coefficients/rational_coefficients.h>
 #include <libalgebra/operators/functionals.h>
+#include <libalgebra/operators/multi_linear_operators.h>
 #include <libalgebra/operators/operators.h>
 
 // End of undeclaration of local macros.

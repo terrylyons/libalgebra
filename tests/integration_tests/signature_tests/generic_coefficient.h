@@ -11,11 +11,10 @@
 #define CONSTEXPR
 #endif
 
-#include "../../common/rng.h"
+#include "tests/common/rng.h"
 
-template <typename Integer>
-struct generic_coefficient
-{
+template<typename Integer>
+struct generic_coefficient {
     Integer numerator;
     Integer denominator;
 
@@ -51,11 +50,6 @@ struct generic_coefficient
     {
         return rational_t(numerator) / rational_t(denominator);
     }
-
-
-
 };
 
-
-
-#endif //LIBALGEBRAUNITTESTS_GENERIC_COEFFICIENT_H
+#endif//LIBALGEBRAUNITTESTS_GENERIC_COEFFICIENT_H

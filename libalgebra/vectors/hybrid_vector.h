@@ -41,10 +41,10 @@ namespace tools {
 
 struct size_control {
 
-    template <typename Basis, typename Coeff, template<typename, typename> class Vector>
+    template<typename Basis, typename Coeff, template<typename, typename> class Vector>
     static DIMN set_dense_dimension(vector<Basis, Coeff, Vector>& vect, DIMN dim)
     {
-        Vector<Basis, Coeff> &v_vect = dtl::vector_base_access::convert(vect);
+        Vector<Basis, Coeff>& v_vect = dtl::vector_base_access::convert(vect);
         v_vect.resize_dense(dim);
         return v_vect.dense_dimension();
     }
@@ -111,15 +111,14 @@ public:
     {
         return get_resize_size_impl(vect, vect.degree_tag);
     }
-
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
-
     friend class boost::serialization::access;
 
-    template <typename Archive>
+    template<typename Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {}
-
+#endif
 };
 
 }// namespace policy
@@ -154,6 +153,7 @@ class hybrid_vector : public dense_vector<Basis, Coeffs>, public sparse_vector<B
     typedef ResizePolicy POLICY;
 
     friend struct tools::size_control;
+    friend class dtl::data_access_base<hybrid_vector>;
 
 private:
     // The resize manager is responsible for dictating when the
@@ -1503,23 +1503,52 @@ public:
         SPARSE::buffered_apply_unary_transform(result, transform);
         result.maybe_resize();
     }
-
-
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
-
     friend class boost::serialization::access;
 
-    template <typename Archive>
+    template<typename Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar & boost::serialization::base_object<DENSE>(*this);
-        ar & boost::serialization::base_object<SPARSE>(*this);
-        ar & m_resize_policy;
+        ar& boost::serialization::base_object<DENSE>(*this);
+        ar& boost::serialization::base_object<SPARSE>(*this);
+        ar& m_resize_policy;
     }
-
+#endif
 };
 
 #undef DEFINE_FUSED_OP
+
+namespace dtl {
+
+template<typename Basis, typename Coeffs, typename Policy, typename Map>
+struct data_access_base<hybrid_vector<Basis, Coeffs, Policy, Map>> {
+
+    using vector_type = hybrid_vector<Basis, Coeffs, Policy, Map>;
+    using tag = access_type_sparse;
+
+    static typename vector_type::const_iterator range_begin(const vector_type& vect)
+    {
+        return vect.begin();
+    }
+
+    static typename vector_type::const_iterator range_end(const vector_type& vect)
+    {
+        return vect.end();
+    }
+
+    static typename vector_type::iterator range_begin(vector_type& vect)
+    {
+        return vect.begin();
+    }
+
+    static typename vector_type::iterator range_end(vector_type& vect)
+    {
+        return vect.end();
+    }
+};
+
+}// namespace dtl
 
 }// namespace vectors
 }// namespace alg

@@ -188,6 +188,11 @@ public:
         : VECT(offset, begin, end)
     {}
 
+
+    template <typename InputIt>
+    algebra(InputIt begin, InputIt end) : VECT(begin, end)
+    {}
+
     algebra& operator=(const algebra&) = default;
     algebra& operator=(algebra&&) noexcept = default;
 
@@ -312,7 +317,7 @@ public:
         return result;
     }
 
-
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
 
     friend class boost::serialization::access;
@@ -321,7 +326,7 @@ private:
     void serialize(Archive &ar, unsigned int const /* version */) {
         ar & boost::serialization::base_object<VECT>(*this);
     }
-
+#endif
 };
 
 template<typename B, typename C, typename M, template<typename, typename, typename...> class V, typename... Args>

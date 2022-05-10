@@ -5,8 +5,9 @@
 #ifndef LIBALGEBRA_VECTOR_H
 #define LIBALGEBRA_VECTOR_H
 
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 #include <boost/serialization/serialization.hpp>
-
+#endif
 #include "libalgebra/vectors/sparse_vector.h"
 
 namespace alg {
@@ -28,12 +29,36 @@ public:
         return arg;
     }
 
+    template<typename B, typename C, template<typename, typename, typename...> class Vector, typename... Args>
+    static const Vector<B, C, Args...>& convert(const Vector<B, C, Args...>& arg)
+    {
+        return arg;
+    }
+
     template<typename Basis, typename Coeffs, template<typename, typename, typename...> class Vector, typename... Args>
     static Vector<Basis, Coeffs, Args...>& convert(vector<Basis, Coeffs, Vector, Args...>& arg)
     {
         return arg;
     }
+
+
+//    template<typename B, typename C, template<typename, typename, typename...> class Vector, typename... Args>
+//    static const Vector<B, C, Args...>& convert(const Vector<B, C, Args...>& arg)
+//    {
+//        return arg;
+//    }
+
+    template<typename Basis, typename Coeffs, template<typename, typename, typename...> class Vector, typename... Args>
+    static const Vector<Basis, Coeffs, Args...>& convert(const vector<Basis, Coeffs, Vector, Args...>& arg)
+    {
+        return arg;
+    }
 };
+
+template<typename Vector>
+struct data_access : public data_access_base<Vector> {
+};
+
 }// namespace dtl
 
 /// Main vector interface
@@ -183,6 +208,9 @@ public:
      */
     vector(SCALAR const* begin, SCALAR const* end)
         : UnderlyingVectorType(begin, end)
+    {}
+
+    vector(SCALAR* begin, SCALAR* end) : UnderlyingVectorType(begin, end)
     {}
 
     vector(DIMN offset, SCALAR const* begin, SCALAR const* end)
@@ -545,6 +573,7 @@ public:
     }
 
 public:
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
     // Serialization access and methods
     friend class boost::serialization::access;
 
@@ -553,7 +582,7 @@ public:
     {
         ar& boost::serialization::base_object<UnderlyingVectorType>(*this);
     }
-
+#endif
 public:
     // Information methods
 

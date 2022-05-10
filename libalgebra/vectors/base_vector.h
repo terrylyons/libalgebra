@@ -13,17 +13,29 @@
 namespace alg {
 namespace vectors {
 
+namespace dtl {
+
+struct access_type_dense {
+};
+struct access_type_sparse {
+};
+
+template<typename vector>
+struct data_access_base;
+
+}// namespace dtl
+
 /**
- * @brief Base class for vectors
+ * @brief base class for vectors
  *
- * Provides static members for useful scalar constants, basis instance,
+ * provides static members for useful scalar constants, basis instance,
  * and the degree tag, which is used to dispatch to the correct function
  * in various places in the vector hierarchy.
  *
- * All vector types should inherit from this class.
+ * all vector types should inherit from this class.
  *
- * @tparam Basis Basis type
- * @tparam Coeff Coefficient field
+ * @tparam basis basis type
+ * @tparam coeff coefficient field
  */
 template<typename Basis, typename Coeff>
 class base_vector
@@ -34,15 +46,18 @@ class base_vector
             );
 
 public:
+
     using coefficients_t = Coeff;
 
     typedef Basis BASIS;
     typedef typename Coeff::S SCALAR;
     typedef typename Coeff::Q RATIONAL;
 
-    typedef typename alg::basis::basis_traits<Basis> BASIS_TRAITS;
 
-    static const typename BASIS_TRAITS::degree_tag degree_tag;
+    typedef typename alg::basis::basis_traits<Basis> basis_traits;
+
+    static const typename basis_traits::degree_tag degree_tag;
+
 
     static BASIS basis;
 
@@ -53,13 +68,14 @@ public:
     static const SCALAR zero;
     static const typename std::enable_if<coefficients_t::is_unital, SCALAR>::type one;
     static const typename std::enable_if<coefficients_t::is_unital, SCALAR>::type mone;
+
 };
 
-// Initialisation of static members of base_vector
+// initialisation of static members of base_vector
 
-/// Static initialisation of the sparse_vector basis.
-template<typename Basis, typename Coeff>
-Basis base_vector<Basis, Coeff>::basis;
+/// static initialisation of the sparse_vector basis.
+template<typename basis, typename coeff>
+basis base_vector<basis, coeff>::basis;
 
 /// Static initialisation of the scalar constant 0.
 template<typename Basis, typename Coeff>
@@ -73,9 +89,10 @@ const typename std::enable_if<Coeff::is_unital, typename Coeff::S>::type base_ve
 template<typename Basis, typename Coeff>
 const typename std::enable_if<Coeff::is_unital, typename Coeff::S>::type base_vector<Basis, Coeff>::mone = Coeff::mone;
 
-template<typename Basis, typename Coeff>
-const typename alg::basis::basis_traits<Basis>::degree_tag
-        base_vector<Basis, Coeff>::degree_tag;
+
+template<typename basis, typename coeff>
+const typename alg::basis::basis_traits<basis>::degree_tag
+        base_vector<basis, coeff>::degree_tag;
 
 }// namespace vectors
 }// namespace alg

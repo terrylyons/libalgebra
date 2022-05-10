@@ -10,8 +10,9 @@
 #include <iostream>
 #include <memory>
 
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 #include <boost/serialization/array.hpp>
-
+#endif
 #include "libalgebra/implementation_types.h"
 
 namespace alg {
@@ -820,6 +821,7 @@ public:
         return os;
     }
 
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;
 
@@ -843,6 +845,7 @@ private:
         ar << boost::serialization::make_nvp("size", m_base.m_size);
         ar << boost::serialization::make_array(m_base.m_data, m_base.m_size);
     }
+#endif
 };
 
 }// namespace vectors

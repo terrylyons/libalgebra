@@ -440,7 +440,7 @@ public:
      */
     explicit sparse_vector(const KEY& k, const SCALAR& s = one)
     {
-        if (zero != s) {
+        if (SCALAR(0) != s) {
             (*this)[k] = s;
         }
     }

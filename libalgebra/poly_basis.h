@@ -45,7 +45,7 @@ public:
 public:
     // Property tags
     typedef alg::basis::without_degree degree_tag;
-    typedef alg::basis::unordered ordering_tag;
+    typedef alg::basis::ordered<KEY_LESS> ordering_tag;
 
 public:
     /// Default constructor. Empty basis.

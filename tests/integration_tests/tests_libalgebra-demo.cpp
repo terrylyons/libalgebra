@@ -126,8 +126,8 @@ namespace {
 		using std::endl;
 		using std::vector;
 
-		LIE l1(1, 1);
-		LIE l2(2, 3);
+		LIE l1(1, S(1));
+		LIE l2(2, S(3));
 
 		cout << l1 << " and " << l2 << endl;
 		l2 *= (S)4;
@@ -138,7 +138,7 @@ namespace {
 		cout << l1 << " and " << l2 << endl;
 		cout << maps.l2t(l2) << endl;
 
-		l2 = LIE(2, 3);
+		l2 = LIE(2, S(3));
 		TENSOR t1(maps.l2t(l1)), t2(maps.l2t(l2)), t(t1 + t2 + t1 * t2 - t2 * t1);
 		cout << "t: " << t << endl;
 		cout << maps.t2l(t) << " L1 norm is " << (maps.t2l(t)).NormL1() << endl;

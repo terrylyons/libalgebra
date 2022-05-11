@@ -31,7 +31,17 @@ Version 3. (See accompanying file License.txt)
 namespace alg {
 namespace vectors {
 
+namespace dtl {
+template<typename B>
+struct sparse_vector_default_map {
+    template<typename S>
+    using type = std::unordered_map<typename B::KEY, S>;
+};
+} // namespace dtl
+
+
 /// A class to store and manipulate sparse vectors.
+
 
 // Unordered and Ordered forms
 //  sparse_vector is by default ordered (unless the UNORDERED macro is defined)
@@ -69,7 +79,8 @@ namespace vectors {
  * @tparam Coeffs Coefficient field
  * @tparam MapType The underlying map type in which the data is stored.
  */
-template<typename Basis, typename Coeffs, typename MapType = std::unordered_map<typename Basis::KEY, typename Coeffs::S>>
+template<typename Basis, typename Coeffs, typename MapType = typename dtl::sparse_vector_default_map<Basis>::template
+        type<typename Coeffs::S>>
 class sparse_vector : /*private*/ MapType, protected base_vector<Basis, Coeffs>
 {
     typedef MapType MAP;

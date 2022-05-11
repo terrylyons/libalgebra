@@ -189,7 +189,7 @@ public:
     {}
 
 
-    template <typename InputIt>
+    template <typename InputIt, typename=typename std::iterator_traits<InputIt>::iterator_category>
     algebra(InputIt begin, InputIt end) : VECT(begin, end)
     {}
 

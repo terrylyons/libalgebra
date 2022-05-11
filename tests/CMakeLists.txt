@@ -33,7 +33,7 @@ if (LA_TESTIN_INCLUDE_INTEGRATION)
 endif ()
 
 add_subdirectory(unit_tests)
-add_executable(all_tests EXCLUDE_FROM_ALL)
+add_executable(all_tests EXCLUDE_FROM_ALL unit_tests/multipoly/test_multipoly_prod.cpp)
 target_link_libraries(all_tests PRIVATE
         la_unittests::main
         la_unittests::algebra_tests

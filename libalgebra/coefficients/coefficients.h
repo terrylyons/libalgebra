@@ -158,7 +158,7 @@ public:
     static constexpr bool value = decltype(check(std::declval<T&>()))::value;
 };
 
-};// namespace coefficients
+}// namespace coefficients
 }// namespace alg
 
 #endif// LIBALGEBRA_COEFFICIENTS_H

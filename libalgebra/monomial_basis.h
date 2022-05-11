@@ -213,6 +213,20 @@ public:
     }
 };
 
+namespace vectors {
+namespace dtl {
+
+template <DEG Width, DEG Depth>
+struct sparse_vector_default_map<free_monomial_basis<Width, Depth>>
+{
+    template <typename S>
+    using type = std::map<typename free_monomial_basis<Width, Depth>::KEY, S>;
+};
+
+}
+}
+
+
 }// namespace alg
 // Include once wrapper
 #endif

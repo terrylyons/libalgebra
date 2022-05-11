@@ -95,7 +95,7 @@ public:
     typedef Coeffs coefficient_field;
     typedef Basis BASIS;
     typedef typename coefficient_field::S SCALAR;
-    typedef typename coefficient_field::S RATIONAL;
+    typedef typename coefficient_field::Q RATIONAL;
     typedef typename BASIS::KEY KEY;
 
     // Iterator definitions

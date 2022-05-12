@@ -281,7 +281,7 @@ public:
     /// Multiplies the instance by (algebra instance)*s up to maximum depth
     algebra& mul_scal_prod(const algebra& rhs, const RATIONAL& s, const DEG depth)
     {
-        return s_multiplication.multiply_inplace(*this, rhs, rational_post_div(s), depth);
+        return s_multiplication.multiply_inplace(*this, rhs, scalar_post_mult(s), depth);
     }
 
     /// Multiplies the instance by (algebra instance)/s.

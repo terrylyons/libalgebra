@@ -169,7 +169,7 @@ public:
     {}
 
     /// Unidimensional constructor.
-    explicit algebra(const KEY& k, const SCALAR& s = VECT::one)
+    explicit algebra(const KEY& k, const SCALAR& s = SCALAR(1))
         : VECT(k, s)
     {}
 

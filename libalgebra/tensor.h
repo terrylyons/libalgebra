@@ -695,51 +695,6 @@ public:
     //free_tensor& operator=(free_tensor&&) noexcept = default;
 
 public:
-    /// Ensures that the return type is a free_tensor.
-    inline free_tensor operator*(const SCA& rhs) const
-    {
-        free_tensor result(*this);
-        result *= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a free_tensor.
-    inline free_tensor operator/(const RAT& rhs) const
-    {
-        free_tensor result(*this);
-        result /= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a free_tensor.
-    inline free_tensor operator*(const free_tensor& rhs) const
-    {
-        free_tensor result(*this);
-        result *= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a free_tensor.
-    inline free_tensor operator+(const free_tensor& rhs) const
-    {
-        free_tensor result(*this);
-        result += rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a free_tensor.
-    inline free_tensor operator-(const free_tensor& rhs) const
-    {
-        free_tensor result(*this);
-        result -= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a free_tensor.
-    inline free_tensor operator-() const
-    {
-        return free_tensor(ALG::operator-());
-    }
 
     /// Computes the truncated exponential of a free_tensor instance.
     inline friend free_tensor exp(const free_tensor& arg)
@@ -1222,49 +1177,6 @@ public:
     shuffle_tensor& operator=(const shuffle_tensor&) = default;
     shuffle_tensor& operator=(shuffle_tensor&&) noexcept = default;
 
-public:
-    /// Ensures that the return type is a shuffle_tensor.
-    inline shuffle_tensor operator*(const SCA& rhs) const
-    {
-        shuffle_tensor result(*this);
-        result *= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a shuffle_tensor.
-    inline shuffle_tensor operator/(const RAT& rhs) const
-    {
-        shuffle_tensor result(*this);
-        result /= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a shuffle_tensor.
-    inline shuffle_tensor operator*(const shuffle_tensor& rhs) const
-    {
-        shuffle_tensor result(*this);
-        result *= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a shuffle_tensor.
-    inline shuffle_tensor operator+(const shuffle_tensor& rhs) const
-    {
-        shuffle_tensor result(*this);
-        result += rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a shuffle_tensor.
-    inline shuffle_tensor operator-(const shuffle_tensor& rhs) const
-    {
-        shuffle_tensor result(*this);
-        result -= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a shuffle_tensor.
-    inline shuffle_tensor operator-(void) const { return shuffle_tensor(ALG::operator-()); }
 
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:

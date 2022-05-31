@@ -227,8 +227,12 @@ public:
     void reserve_to_dimension(const DIMN dim)
     {
         if (dim > size()) {
-            m_data.reserve(adjust_dimension(dim, degree_tag));
+            auto adjusted = adjust_dimension(dim, degree_tag);
+            m_data.reserve(adjusted);
+            m_dimension = adjusted;
+            set_degree(degree_tag);
         }
+
     }
 
     /// Reserve to degree
@@ -734,7 +738,6 @@ public:
             F&& func)
     {
         result.reserve_to_dimension(arg.m_dimension);
-        result.m_dimension = arg.m_dimension;
         for (DIMN i=0; i<arg.m_dimension; ++i) {
             result.m_data.emplace(i, func(arg.m_data[i]));
         }
@@ -765,7 +768,6 @@ public:
         auto minmax = std::minmax(lhs.m_dimension, rhs.m_dimension);
 
         result.reserve_to_dimension(minmax.second);
-        result.m_dimension = minmax.second;
         for (DIMN i=0; i<minmax.first; ++i) {
             auto val = func(lhs.m_data[i], rhs.m_data[i]);
             result.m_data.emplace(i, val);
@@ -793,7 +795,6 @@ public:
         auto min = lhs.m_dimension;
         if (lhs.m_dimension < rhs.m_dimension) {
             lhs.reserve_to_dimension(rhs.m_dimension);
-            lhs.m_dimension = rhs.m_dimension;
         } else {
             min = rhs.m_dimension;
         }
@@ -802,7 +803,7 @@ public:
             lhs.m_data[i] = func(lhs.m_data[i], rhs.m_data[i]);
         }
 
-        for (DIMN i=old_dim; i<lhs.m_dimension; ++i) {
+        for (DIMN i=old_dim; i<rhs.m_dimension; ++i) {
             // If there is something to do here it is because the
             // rhs has more elements than lhs. Thus lhs.m_data[i] is not
             // yet initialised, and rhs.m_data[i] is valid.

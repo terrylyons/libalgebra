@@ -478,7 +478,7 @@ public:
             const sparse_vector& arg,
             F&& func)
     {
-        for (const auto& item : arg) {
+        for (const auto& item : static_cast<const MapType&>(arg)) {
             result[item.first] = func(item.second);
         }
     }
@@ -488,7 +488,7 @@ public:
             sparse_vector& arg,
             F&& func)
     {
-        for (auto& item : arg) {
+        for (auto& item : static_cast<MapType&>(arg)) {
             item.second = func(item.second);
         }
     }

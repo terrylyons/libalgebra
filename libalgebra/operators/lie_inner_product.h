@@ -70,7 +70,7 @@ class lie_inner_product_impl
 
     const typename cache_coeff_t::S& key_level(const key_type& key1, const key_type& key2) const
     {
-        basis_type& basis = cache_vec_type::basis;
+//        basis_type& basis = cache_vec_type::basis;
 
         key_pair p(key1, key2);
 

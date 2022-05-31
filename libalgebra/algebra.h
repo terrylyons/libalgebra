@@ -327,6 +327,45 @@ private:
         ar & boost::serialization::base_object<VECT>(*this);
     }
 #endif
+
+
+public:
+
+    template <typename Algebra1, typename Algebra2>
+    friend
+    typename std::enable_if<
+            std::is_base_of<algebra, Algebra1>::value &&
+            std::is_base_of<algebra, Algebra2>::value,
+            Algebra1>::type
+    operator*(const Algebra1& lhs, const Algebra2& rhs)
+    {
+        Algebra1 result;
+        s_multiplication.multiply_and_add(
+                static_cast<algebra&>(result),
+                static_cast<const algebra&>(lhs),
+                static_cast<const algebra&>(rhs),
+                scalar_passthrough());
+        return result;
+    }
+
+    template <typename Algebra1, typename Algebra2>
+    friend
+    typename std::enable_if<
+            std::is_base_of<algebra, Algebra1>::value &&
+            std::is_base_of<algebra, Algebra2>::value,
+            Algebra1>::type&
+    operator*=(Algebra1& lhs, const Algebra2& rhs)
+    {
+        s_multiplication.multiply_inplace(
+                static_cast<algebra&>(lhs),
+                static_cast<const algebra&>(rhs),
+                scalar_passthrough());
+        return lhs;
+    }
+
+
+
+
 };
 
 template<typename B, typename C, typename M, template<typename, typename, typename...> class V, typename... Args>

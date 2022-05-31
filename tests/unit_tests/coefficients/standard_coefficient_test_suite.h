@@ -14,7 +14,7 @@ NEW_AUTO_SUITE(standard_coefficient_tests, typename Coeffs)
 
     ADD_TEST(test_zero)
     {
-        typename Coeffs::S expected;
+        typename Coeffs::S expected(0);
 
         CHECK_EQUAL(expected, Coeffs::zero);
     };

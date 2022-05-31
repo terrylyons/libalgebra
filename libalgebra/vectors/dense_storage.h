@@ -793,6 +793,14 @@ public:
         m_base = std::move(new_base);
     }
 
+    template <typename... Args>
+    reference emplace(size_type i, Args&&... args) noexcept(noexcept(value_type(args...)))
+    {
+        return m_base.emplace(i, std::forward<Args>(args)...);
+    }
+
+
+
 public:
     /// Equality operator
     bool operator==(dense_storage const& other) const

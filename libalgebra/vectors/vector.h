@@ -805,6 +805,74 @@ private:
     {
         UnderlyingVectorType::buffered_apply_unary_transform(result, transform);
     }
+
+
+public:
+
+    template <typename Vector1, typename Vector2>
+    friend
+    typename std::enable_if<
+            std::is_base_of<vector, Vector1>::value &&
+            std::is_base_of<vector, Vector2>::value,
+            Vector1>::type
+    operator+(const Vector1& lhs, const Vector2& rhs)
+    {
+        Vector1 result;
+        UnderlyingVectorType::apply_flat_binary_operation(
+                result, lhs, rhs,
+               [](const SCALAR& l, const SCALAR& r) { return l + r; });
+        return result;
+    }
+
+    template <typename Vector1, typename Vector2>
+    friend
+    typename std::enable_if<
+            std::is_base_of<vector, Vector1>::value &&
+            std::is_base_of<vector, Vector2>::value,
+            Vector1>::type
+    operator-(const Vector1& lhs, const Vector2& rhs)
+    {
+        Vector1 result;
+        UnderlyingVectorType::apply_flat_binary_operation(
+                result, lhs, rhs,
+               [](const SCALAR& l, const SCALAR& r) { return l - r; });
+        return result;
+    }
+
+    template <typename Vector, typename Scalar>
+    friend
+    typename std::enable_if<
+            std::is_base_of<vector, Vector>::value &&
+            std::is_constructible<SCALAR, const Scalar&>::value,
+            Vector>::type
+    operator*(const Vector& arg, const Scalar& scal)
+    {
+        Vector result;
+        SCALAR s(scal);
+        UnderlyingVectorType::apply_unary_operation(result, arg,
+                    [=](const SCALAR& a) { return a*s; }
+                );
+        return result;
+    }
+
+    template <typename Vector, typename Scalar>
+    friend
+    typename std::enable_if<
+            std::is_base_of<vector, Vector>::value &&
+            std::is_constructible<SCALAR, const Scalar&>::value,
+            Vector>::type
+    operator*(const Scalar& scal, const Vector& arg)
+    {
+        Vector result;
+        SCALAR s(scal);
+        UnderlyingVectorType::apply_unary_operation(result, arg,
+                    [=](const SCALAR& a) { return s*a; }
+                );
+        return result;
+    }
+
+
+
 };
 
 }// namespace vectors

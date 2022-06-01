@@ -1034,7 +1034,54 @@ public:
         return !operator==(other);
     }
 
+
+
 public:
+
+    template <typename F>
+    static void apply_unary_operation(
+            hybrid_vector& result,
+            const hybrid_vector& arg,
+            F&& func
+            )
+    {
+        DENSE::apply_unary_operation(result, arg, func);
+        SPARSE::apply_unary_operation(result, arg, func);
+    }
+
+    template <typename F>
+    static void apply_inplace_unary_op(hybrid_vector& arg, F&& func)
+    {
+        DENSE::apply_inplace_unary_op(arg, func);
+        SPARSE::apply_inplace_unary_op(arg, func);
+    }
+
+
+    template <typename F>
+    static void apply_flat_binary_operation(
+            hybrid_vector& result,
+            const hybrid_vector& lhs,
+            const hybrid_vector& rhs,
+            F&& func
+            )
+    {
+        DENSE::apply_flat_binary_operation(result, lhs, rhs, func);
+        SPARSE::apply_flat_binary_operation(result, lhs, rhs, func);
+        result.incorporate_sparse();
+    }
+
+    template <typename F>
+    static void apply_inplace_flat_binary_op(
+            hybrid_vector& lhs,
+            const hybrid_vector& rhs,
+            F&& func
+            )
+    {
+        DENSE::apply_inplace_flat_binary_op(lhs, rhs, func);
+        SPARSE::apply_inplace_flat_binary_op(lhs, rhs, func);
+        lhs.incorporate_sparse();
+    }
+
     // Arithmetic operators
     // The first few are operators that are simply applied to each
     // part individually.

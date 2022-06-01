@@ -13,13 +13,15 @@
 namespace alg {
 namespace coefficients {
 
-#define LIBALGEBRA_FIELD_GENERATE_BINARY(NAME, OP, RET_T, LHS_T, RHS_T)                                     \
-    static constexpr RET_T NAME(LHS_T const& lhs, RHS_T const& rhs) noexcept(noexcept(lhs OP rhs))          \
+#define LIBALGEBRA_FIELD_GENERATE_BINARY(NAME, OP, RET_T, LHS_T, RHS_T) \
+    template <typename Lhs=LHS_T, typename Rhs=RHS_T>\
+    static constexpr RET_T NAME(const Lhs& lhs, const Rhs& rhs) noexcept(noexcept(lhs OP rhs))          \
     {                                                                                                       \
         return lhs OP rhs;                                                                                  \
     }                                                                                                       \
-                                                                                                            \
-    static constexpr LHS_T& NAME##_inplace(LHS_T& lhs, RHS_T const& rhs) noexcept(noexcept(lhs OP## = rhs)) \
+                                                          \
+    template <typename Rhs=RHS_T>                                                                                                        \
+    static constexpr RET_T& NAME##_inplace(RET_T& lhs, const Rhs& rhs) noexcept(noexcept(lhs OP## = rhs)) \
     {                                                                                                       \
         return (lhs OP## = rhs);                                                                            \
     }
@@ -62,20 +64,29 @@ struct coefficient_ring {
         return -arg;
     }
 
-    LIBALGEBRA_FIELD_GENERATE_BINARY(add, +, SCA, SCA, SCA);
 
-    LIBALGEBRA_FIELD_GENERATE_BINARY(sub, -, SCA, SCA, SCA);
+    template <typename Order=std::less<SCA>>
+    static constexpr bool less(const SCA& a, const SCA& b) noexcept
+    {
+        return Order{}(a, b);
+    }
 
-    LIBALGEBRA_FIELD_GENERATE_BINARY(mul, *, SCA, SCA, SCA);
 
-    LIBALGEBRA_FIELD_GENERATE_BINARY(div, /, SCA, SCA, RAT);
+
+    LIBALGEBRA_FIELD_GENERATE_BINARY(add, +, SCA, SCA, SCA)
+
+    LIBALGEBRA_FIELD_GENERATE_BINARY(sub, -, SCA, SCA, SCA)
+
+    LIBALGEBRA_FIELD_GENERATE_BINARY(mul, *, SCA, SCA, SCA)
+
+    LIBALGEBRA_FIELD_GENERATE_BINARY(div, /, SCA, SCA, RAT)
 };
 
 /*
  * The zero element should always exist and should be the result of default initialisation.
  */
 template<typename Scalar, typename Rational>
-const Scalar coefficient_ring<Scalar, Rational>::zero{};
+const Scalar coefficient_ring<Scalar, Rational>::zero(0);
 
 /*
  * One and minus one only exist when the ring is unital.
@@ -89,6 +100,9 @@ template<typename Scalar, typename Rational>
 const typename std::enable_if<
         coefficient_ring<Scalar, Rational>::is_unital,
         Scalar>::type coefficient_ring<Scalar, Rational>::mone(-1);
+
+
+
 
 /**
  * @brief A field that can be used as coefficients in a vector

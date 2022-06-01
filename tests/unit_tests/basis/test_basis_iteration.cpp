@@ -6,6 +6,15 @@
 #include <libalgebra/basis/key_iterators.h>
 #include <libalgebra/libalgebra.h>
 
+
+#ifdef __GNUC__
+#define UNUSED __attribute__((unused))
+#elif defined(_MSC_VER)
+#define UNUSED __pragma(warning(suppress:4100))
+#else
+#define UNUSED
+#endif
+
 SUITE(test_basis_iterator_helpers)
 {
 
@@ -91,7 +100,7 @@ SUITE(test_basis_iterator_helpers)
     TEST_FIXTURE(fixture, test_iteration_exhaustive)
     {
         alg::DIMN count = 0;
-        for (auto _ : iterate_basis()) {
+        for (auto _ UNUSED : iterate_basis()) {
             ++count;
         }
         CHECK_EQUAL(tensor_basis::start_of_degree(3), count);

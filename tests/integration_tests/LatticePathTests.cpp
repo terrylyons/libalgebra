@@ -150,7 +150,6 @@ SUITE(lattice_paths)
 		CHECK_EQUAL(1965, sig.size());
 		CHECK_EQUAL(2447592, categorical_path::LIE::basis.size());
 		CHECK_EQUAL(19173961, categorical_path::TENSOR::basis.size());
-	};
+	}
 
 }
-

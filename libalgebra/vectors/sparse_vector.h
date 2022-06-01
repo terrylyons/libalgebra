@@ -27,6 +27,7 @@ Version 3. (See accompanying file License.txt)
 #include "libalgebra/utils/order_trait.h"
 #include "libalgebra/vectors/base_vector.h"
 #include "libalgebra/vectors/iterators.h"
+#include <libalgebra/utils/iterators.h>
 
 namespace alg {
 namespace vectors {
@@ -470,6 +471,175 @@ public:
     }
 
 public:
+
+    template <typename F>
+    static void apply_unary_operation(
+            sparse_vector& result,
+            const sparse_vector& arg,
+            F&& func)
+    {
+        for (const auto& item : static_cast<const MapType&>(arg)) {
+            result[item.first] = func(item.second);
+        }
+    }
+
+    template <typename F>
+    static void apply_inplace_unary_op(
+            sparse_vector& arg,
+            F&& func)
+    {
+        for (auto& item : static_cast<MapType&>(arg)) {
+            item.second = func(item.second);
+        }
+    }
+
+private:
+
+    template <typename LIT, typename RIT, typename F>
+    static void sorted_bin_op(sparse_vector& result,
+                              LIT lbegin, LIT lend,
+                              RIT rbegin, RIT rend,
+                              F&& func)
+    {
+        LIT lit(lbegin);
+        RIT rit(rbegin);
+
+        typename basis::basis_traits<Basis>::ordering_tag::order ordering;
+
+        auto insert_f = [&result, &func](const KEY& k, const SCALAR& s1, const SCALAR& s2) {
+            auto s = func(s1, s2);
+            if (s != Coeffs::zero) {
+                static_cast<MapType&>(result)[k] = s;
+            }
+        };
+
+        while (lit != lend && rit != rend) {
+            auto& lhs_key = lit->first;
+            auto& rhs_key = rit->first;
+
+            if (lhs_key == rhs_key) {
+                insert_f(lhs_key, lit->second, rit->second);
+                ++lit;
+                ++rit;
+            } else if (ordering(lhs_key, rhs_key)) {
+                insert_f(lhs_key, lit->second, Coeffs::zero);
+                ++lit;
+            } else {
+                insert_f(rhs_key, Coeffs::zero, rit->second);
+                ++rit;
+            }
+        }
+
+        for (; lit != lend; ++lit) {
+            auto& key = lit->first;
+            insert_f(key, lit->second, Coeffs::zero);
+        }
+
+        for (; rit != rend; ++rit) {
+            auto& key = rit->first;
+            insert_f(key, Coeffs::zero, rit->second);
+        }
+
+    }
+
+    template <typename F, typename O>
+    static void apply_flat_binary_op_impl(sparse_vector& result,
+                                          const sparse_vector& lhs,
+                                          const sparse_vector& rhs,
+                                          F&& func,
+                                          alg::basis::ordered<O>)
+    {
+        typename alg::basis::ordered<O>::pair_order p_order;
+        std::vector<std::pair<KEY, SCALAR>> lbuffer, rbuffer;
+        lbuffer.reserve(lhs.size());
+        rbuffer.reserve(rhs.size());
+
+        for (auto item : lhs) {
+            lbuffer.emplace_back(item.key(), item.value());
+        }
+        for (auto item : rhs) {
+            rbuffer.emplace_back(item.key(), item.value());
+        }
+
+        std::sort(lbuffer.begin(), lbuffer.end(), p_order);
+        std::sort(rbuffer.begin(), rbuffer.end(), p_order);
+
+        sorted_bin_op(result, lbuffer.begin(), lbuffer.end(),
+                      rbuffer.begin(), rbuffer.end(),
+                      std::forward<F>(func));
+    }
+
+    template <typename F>
+    static void apply_flat_binary_op_impl(
+            sparse_vector& result,
+            sparse_vector& lhs,
+            sparse_vector& rhs,
+            F&& func,
+            alg::basis::unordered
+            )
+    {
+        std::vector<KEY> unseen;
+        unseen.reserve(rhs.size());
+        for (auto item : rhs) {
+            unseen.push_back(item.key());
+        }
+
+        auto insert_f = [&result, &func](const KEY& k, const SCALAR& s1, const SCALAR& s2) {
+            auto s = func(s1, s2);
+            if (s != Coeffs::zero) {
+                static_cast<MapType&>(result)[k] = s;
+            }
+        };
+
+        const_iterator it, end(rhs.end());
+        for (auto item : lhs) {
+            it = rhs.find(item.key());
+            if (it != end) {
+                unseen.erase(unseen.find(item.key()));
+                insert_f(item.key(), item.value(), it->value());
+            } else {
+                insert_f(item.key(), item.value(), Coeffs::zero);
+            }
+        }
+
+        for (auto key : unseen) {
+            insert_f(key, Coeffs::zero, rhs[key]);
+        }
+    }
+
+public:
+
+    template <typename F>
+    static void apply_flat_binary_operation(
+            sparse_vector& result,
+            const sparse_vector& lhs,
+            const sparse_vector& rhs,
+            F&& func
+            )
+    {
+        if (utils::is_ordered<MapType>::value) {
+            sorted_bin_op(result, lhs.map_begin(), lhs.map_end(), rhs.map_begin(), rhs.map_end(), std::forward<F>(func));
+        } else {
+            typename basis::basis_traits<Basis>::ordering_tag otag;
+            apply_flat_binary_op_impl(result, lhs, rhs, std::forward<F>(func), otag);
+        }
+    }
+
+
+public:
+    template <typename F>
+    static void apply_inplace_flat_binary_op(
+            sparse_vector& lhs,
+            const sparse_vector& rhs,
+            F&& func
+            )
+    {
+        sparse_vector tmp;
+        apply_flat_binary_operation(tmp, lhs, rhs, std::forward<F>(func));
+        lhs.swap(tmp);
+    }
+
+
     /// Returns an instance of the additive inverse of the instance.
     inline sparse_vector operator-() const
     {

@@ -191,53 +191,6 @@ public:
     poly& operator=(const poly&) = default;
     poly& operator=(poly&&) noexcept = default;
 
-public:
-    /// Ensures that the return type is an instance of polynomial.
-    inline poly operator*(const SCA& rhs) const
-    {
-        poly result(*this);
-        result *= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is an instance of polynomial.
-    inline poly operator/(const RAT& rhs) const
-    {
-        poly result(*this);
-        result /= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is an instance of polynomial.
-    inline poly
-    operator*(const poly& rhs) const
-    {
-        poly result(*this);
-        result *= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is an instance of polynomial.
-    inline poly
-    operator+(const poly& rhs) const
-    {
-        poly result(*this);
-        result += rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is an instance of polynomial.
-    inline poly
-    operator-(const poly& rhs) const
-    {
-        poly result(*this);
-        result -= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is an instance of polynomial.
-    inline poly operator-() const { return poly(ALG::operator-()); }
-
     /// Evaluates the polynomial for some scalar values for letters
     /// (variables).
     inline SCA eval(const std::map<LET, SCA>& values) const

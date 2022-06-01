@@ -60,7 +60,7 @@ SUITE(hall_extended_function) {
         CHECK_EQUAL(expected, multiindex(k));
     }
 
-    TEST_FIXTURE(Fixture, test_extened_function_deg_3)
+    TEST_FIXTURE(Fixture, test_extended_function_deg_3)
     {
         auto k = static_cast<key_type>(hall_basis_t::start_of_degree(3) + 1); // [1, [1, 2]]
         LIE expected;

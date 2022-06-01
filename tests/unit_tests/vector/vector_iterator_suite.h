@@ -60,8 +60,8 @@
     }
 
 
-    GENERATE_ITERATOR_TESTS(iterator, begin, end);
-    GENERATE_ITERATOR_TESTS(const_iterator, cbegin, cend);
+    GENERATE_ITERATOR_TESTS(iterator, begin, end)
+    GENERATE_ITERATOR_TESTS(const_iterator, cbegin, cend)
 
 
 #undef GENERATOR_ITERATOR_TESTS

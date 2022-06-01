@@ -32,7 +32,7 @@ class multipoly_multiplication
     static MultiPoly prod(typename MultiPoly::KEY const& k1, typename MultiPoly::KEY const& k2)
     {
 
-        typedef typename MultiPoly::BASIS basis_t;
+//        typedef typename MultiPoly::BASIS basis_t;
         typedef typename MultiPoly::KEY key_t;
         using trait = basis::basis_traits<typename MultiPoly::BASIS>;
         static constexpr DEG max_degree = trait::degree_tag::max_degree;
@@ -203,54 +203,6 @@ public:
     explicit multi_polynomial(const SCA& s)
         : ALG(VECT::basis.empty_key, s)
     {}
-
-public:
-    /// Ensures that the return type is a multi_polynomial.
-    inline multi_polynomial operator*(const SCA& rhs) const
-    {
-        multi_polynomial result(*this);
-        result *= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a multi_polynomial.
-    inline multi_polynomial
-    operator/(const RAT& rhs) const
-    {
-        multi_polynomial result(*this);
-        result /= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a multi_polynomial.
-    inline multi_polynomial
-    operator*(const multi_polynomial& rhs) const
-    {
-        multi_polynomial result(*this);
-        result *= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a multi_polynomial.
-    inline multi_polynomial
-    operator+(const multi_polynomial& rhs) const
-    {
-        multi_polynomial result(*this);
-        result += rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a multi_polynomial.
-    inline multi_polynomial
-    operator-(const multi_polynomial& rhs) const
-    {
-        multi_polynomial result(*this);
-        result -= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a multi_polynomial.
-    inline multi_polynomial operator-() const { return multi_polynomial(ALG::operator-()); }
 
     /// Computes the truncated exponential of a multi_polynomial instance.
     inline friend multi_polynomial exp(const multi_polynomial& arg)

@@ -82,4 +82,4 @@ typename FRAMEWORK::TENSOR o_signature(ITERATOR_T begin, ITERATOR_T end, const F
 	}
 	return *(sigs.rbegin());
 #endif // _OPENMP
-};
+}

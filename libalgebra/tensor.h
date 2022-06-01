@@ -483,9 +483,8 @@ template<typename Coeff, DEG n_letters, DEG max_degree, typename...>
 class shuffle_tensor;
 
 template<typename Coeff>
-class free_tensor_multiplication
+struct free_tensor_multiplication
 {
-
     typedef typename Coeff::SCA scalar_t;
 
     template<typename Transform>
@@ -540,7 +539,6 @@ class free_tensor_multiplication
         }
     };
 
-public:
     template<typename Algebra, typename Operator>
     Algebra& multiply_and_add(Algebra& result, Algebra const& lhs, Algebra const& rhs, Operator op) const
     {
@@ -856,7 +854,7 @@ public:
         return ans;
     }
 
-#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
+
 private:
 
     // Implementation of the antipode for sparse vector types.
@@ -929,6 +927,7 @@ public:
         return arg.antipode_impl(typename trait::tag());
     }
 
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;
 

@@ -238,141 +238,6 @@ public:
     }
 
 public:
-    // Arithmetic
-    /*
-     * Inplace operations are defined first, then the remainder are derived
-     * using the __DECLARE_BINARY_OPERATOR macro.
-     */
-
-//    /// Additive inverse
-//    vector operator-() const
-//    {
-//        return vector(UnderlyingVectorType::operator-());
-//    }
-//
-//    /// Inplace scalar multiply
-//    vector& operator*=(const SCALAR& s)
-//    {
-//        UnderlyingVectorType::operator*=(s);
-//        return *this;
-//    }
-//
-//    /// Inplace rational divide
-//    vector& operator/=(const RATIONAL& s)
-//    {
-//        UnderlyingVectorType::operator/=(s);
-//        return *this;
-//    }
-//
-//    /// Inplace addition
-//    vector& operator+=(const vector& rhs)
-//    {
-//        UnderlyingVectorType::operator+=(rhs);
-//        return *this;
-//    }
-//
-//    /// Inplace subtraction
-//    vector& operator-=(const vector& rhs)
-//    {
-//        UnderlyingVectorType::operator-=(rhs);
-//        return *this;
-//    }
-
-    /// Inplace coordinatewise minimum
-    vector& operator&=(const vector& rhs)
-    {
-        UnderlyingVectorType::operator&=(rhs);
-        return *this;
-    }
-
-    /// Inplace coordinatewise maximum
-    vector& operator|=(const vector& rhs)
-    {
-        UnderlyingVectorType::operator|=(rhs);
-        return *this;
-    }
-
-//    /// Scalar multiply
-//    vector operator*(const SCALAR& rhs) const
-//    {
-//        vector result(*this);
-//        return result *= rhs;
-//    };
-//    /// Rational divide
-//    vector operator/(const RATIONAL& rhs) const
-//    {
-//        vector result(*this);
-//        return result /= rhs;
-//    };
-//    /// Addition
-//    vector operator+(const vector& rhs) const
-//    {
-//        vector result(*this);
-//        return result += rhs;
-//    };
-//    /// Subtraction
-//    vector operator-(const vector& rhs) const
-//    {
-//        vector result(*this);
-//        return result -= rhs;
-//    };
-    /// Coordinatewise minimum
-    vector operator&(const vector& rhs) const
-    {
-        vector result(*this);
-        return result &= rhs;
-    };
-    /// Coordinatewise maximum
-    vector operator|(const vector& rhs) const
-    {
-        vector result(*this);
-        return result |= rhs;
-    };
-
-public:
-    // Arithmetic for compatible vectors
-
-    /// Inplace addition for similar vectors
-    template<template<typename, typename, typename...> class V>
-    vector& operator+=(const vector<BASIS, Coeffs, V>& rhs)
-    {
-        typename vector<BASIS, Coeffs, V>::const_iterator cit;
-        for (cit(rhs.begin()); cit != rhs.end(); ++cit) {
-            add_scal_prod(cit->key(), cit->value());
-        }
-        return *this;
-    }
-
-    /// Inplace subraction for similar vectors
-    template<template<typename, typename, typename...> class V>
-    vector& operator-=(const vector<BASIS, Coeffs, V>& rhs)
-    {
-        typename vector<BASIS, Coeffs, V>::const_iterator cit;
-        for (cit(rhs.begin()); cit != rhs.end(); ++cit) {
-            sub_scal_prod(cit->key(), cit->value());
-        }
-        return *this;
-    }
-
-    /// Addition for similar vectors
-    template<template<typename, typename, typename...> class V>
-    vector operator+(const vector<BASIS, Coeffs, V>& rhs) const
-    {
-        vector result(*this);
-        result += rhs;
-        return result;
-    }
-
-    /// Addition for similar vectors
-    template<template<typename, typename, typename...> class V>
-    vector operator-(const vector<BASIS, Coeffs, V>& rhs) const
-    {
-        vector result(*this);
-        result -= rhs;
-        return result;
-    }
-
-public:
     // Fused add-scalar-multiply and friends
 
     /// A version of += fused with scalar multiplication
@@ -715,6 +580,7 @@ public:
         UnderlyingVectorType::triangular_buffered_apply_binary_transform(result, rhs, key_transform, max_depth);
     }
 
+
 private:
     template<typename KeyTransform>
     void
@@ -815,22 +681,7 @@ public:
     operator-(const Vector& arg)
     {
         Vector result;
-        UnderlyingVectorType::apply_unary_operation(result, arg,
-                        [](const SCALAR& s) { return -s; });
-        return result;
-    }
-
-    template <typename Vector1, typename Vector2>
-    friend
-    typename std::enable_if<
-            std::is_base_of<vector, Vector1>::value &&
-            std::is_base_of<vector, Vector2>::value,
-            Vector1>::type
-    operator+(const Vector1& lhs, const Vector2& rhs)
-    {
-        Vector1 result;
-        UnderlyingVectorType::apply_flat_binary_operation(
-                result, lhs, rhs, Coeffs::add);
+        UnderlyingVectorType::apply_unary_operation(result, arg, Coeffs::uminus);
         return result;
     }
 
@@ -864,20 +715,6 @@ public:
         return result;
     }
 
-    template <typename Vector1, typename Vector2>
-    friend
-    typename std::enable_if<
-            std::is_base_of<vector, Vector1>::value &&
-            std::is_base_of<vector, Vector2>::value,
-            Vector1>::type
-    operator-(const Vector1& lhs, const Vector2& rhs)
-    {
-        Vector1 result;
-        UnderlyingVectorType::apply_flat_binary_operation(
-                result, lhs, rhs, Coeffs::sub);
-        return result;
-    }
-
     template <typename Vector, typename Scalar>
     friend
     typename std::enable_if<
@@ -894,20 +731,6 @@ public:
         return result;
     }
 
-    template <typename Vector, typename Rational>
-    friend typename std::enable_if<
-            std::is_base_of<vector, Vector>::value &&
-            std::is_constructible<RATIONAL, const Rational&>::value,
-            Vector>::type
-    operator/(const Vector& arg, const Rational& scal)
-    {
-        Vector result;
-        RATIONAL r(scal);
-        UnderlyingVectorType::apply_unary_operation(result, arg,
-                       [=](const SCALAR& a) { return Coeffs::div(a, r); });
-        return result;
-    }
-
     template <typename Vector>
     friend
     typename std::enable_if<
@@ -919,6 +742,32 @@ public:
         UnderlyingVectorType::apply_unary_operation(result, arg,
                     [=](const SCALAR& a) { return Coeffs::mul(scal, a); }
                 );
+        return result;
+    }
+
+    template<typename Vector, typename Rational>
+    friend typename std::enable_if<
+            std::is_base_of<vector, Vector>::value && std::is_constructible<RATIONAL, const Rational&>::value,
+            Vector>::type
+    operator/(const Vector& arg, const Rational& scal)
+    {
+        Vector result;
+        RATIONAL r(scal);
+        UnderlyingVectorType::apply_unary_operation(result, arg,
+                                                    [=](const SCALAR& a) { return Coeffs::div(a, r); });
+        return result;
+    }
+
+    template<typename Vector1, typename Vector2>
+    friend
+    typename std::enable_if<
+            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
+            Vector1>::type
+    operator+(const Vector1& lhs, const Vector2& rhs)
+    {
+        Vector1 result;
+        UnderlyingVectorType::apply_flat_binary_operation(
+                result, lhs, rhs, Coeffs::template add<>);
         return result;
     }
 
@@ -937,6 +786,19 @@ public:
         return result;
     }
 
+    template<typename Vector1, typename Vector2>
+    friend
+    typename std::enable_if<
+            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
+            Vector1>::type
+    operator-(const Vector1& lhs, const Vector2& rhs)
+    {
+        Vector1 result;
+        UnderlyingVectorType::apply_flat_binary_operation(
+                result, lhs, rhs, Coeffs::template sub<>);
+        return result;
+    }
+
     template <typename Vector,
              template <typename, typename, typename...> class OtherVType,
              typename... OtherArgs>
@@ -952,6 +814,29 @@ public:
         return result;
     }
 
+    template<typename Vector, typename Scalar>
+    friend typename std::enable_if<
+            std::is_base_of<vector, Vector>::value && std::is_constructible<SCALAR, const Scalar&>::value,
+            Vector>::type&
+    operator*=(Vector& arg, const Scalar& scal)
+    {
+        SCALAR s(scal);
+        UnderlyingVectorType::apply_inplace_unary_op(arg,
+                                                     [=](const SCALAR& a) { return Coeffs::mul(a, s); });
+        return arg;
+    }
+
+    template<typename Vector, typename Rational>
+    friend typename std::enable_if<
+            std::is_base_of<vector, Vector>::value && std::is_constructible<RATIONAL, const Rational&>::value,
+            Vector>::type&
+    operator/=(Vector& arg, const Rational& rat)
+    {
+        RATIONAL r(rat);
+        UnderlyingVectorType::apply_inplace_unary_op(arg,
+                                                     [=](const SCALAR& a) { return Coeffs::div(a, r); });
+        return arg;
+    }
 
     template <typename Vector1, typename Vector2>
     friend typename std::enable_if<
@@ -960,7 +845,17 @@ public:
             Vector1>::type&
     operator+=(Vector1& lhs, const Vector2& rhs)
     {
-        UnderlyingVectorType::apply_inplace_flat_binary_op(lhs, rhs, Coeffs::add);
+        UnderlyingVectorType::apply_inplace_flat_binary_op(lhs, rhs, Coeffs::template add<>);
+        return lhs;
+    }
+
+    template <typename Vector, template <typename, typename, typename...> class OtherVType, typename... OtherArgs>
+    friend typename std::enable_if<std::is_base_of<vector, Vector>::value, Vector>::type&
+    operator+=(Vector& lhs, const vector<Basis, Coeffs, OtherVType, OtherArgs...>& rhs)
+    {
+        for (auto item : rhs) {
+            lhs.add_scal_prod(item.key(), item.value());
+        }
         return lhs;
     }
 
@@ -971,37 +866,81 @@ public:
             Vector1>::type&
     operator-=(Vector1& lhs, const Vector2& rhs)
     {
-        UnderlyingVectorType::apply_inplace_flat_binary_op(lhs, rhs, Coeffs::sub);
+        UnderlyingVectorType::apply_inplace_flat_binary_op(lhs, rhs, Coeffs::template sub<>);
         return lhs;
     }
 
-    template <typename Vector, typename Scalar>
-    friend typename std::enable_if<
-            std::is_base_of<vector, Vector>::value &&
-            std::is_constructible<SCALAR, const Scalar&>::value,
-            Vector>::type&
-    operator*=(Vector& arg, const Scalar& scal)
+    template <typename Vector, template<typename, typename, typename...> class OtherVType, typename... OtherArgs>
+    friend typename std::enable_if<std::is_base_of<vector, Vector>::value, Vector>::type&
+    operator-=(Vector& lhs, const vector<Basis, Coeffs, OtherVType, OtherArgs...>& rhs)
     {
-        SCALAR s(scal);
-        UnderlyingVectorType::apply_inplace_unary_op(arg,
-                     [=](const SCALAR& a) { return Coeffs::mul(a, s); });
-        return arg;
-    }
-
-    template <typename Vector, typename Rational>
-    friend typename std::enable_if<
-            std::is_base_of<vector, Vector>::value &&
-            std::is_constructible<RATIONAL, const Rational&>::value,
-            Vector>::type&
-    operator/=(Vector& arg, const Rational& rat)
-    {
-        RATIONAL r(rat);
-        UnderlyingVectorType::apply_inplace_unary_op(arg,
-                 [=](const SCALAR& a) { return Coeffs::div(a, r); });
-        return arg;
+        for (auto item : rhs) {
+            lhs.sub_scal_prod(item.key(), item.value());
+        }
+        return lhs;
     }
 
 
+    /*
+     * Ordering operators are interesting because not all coefficient rings
+     * are necessarily ordered. To make sure things are only defined when
+     * appropriate, we can include the order as a SFINAE template parameter
+     * to the order operations. For the time being, default to std::less,
+     * until proper support is added to the coefficient trait.
+     */
+
+    template <typename Vector1, typename Vector2, typename Order=std::less<SCALAR>>
+    friend typename std::enable_if<
+            std::is_base_of<vector, Vector1>::value &&
+            std::is_base_of<vector, Vector2>::value,
+            Vector1>::type
+    operator|(const Vector1& lhs, const Vector2& rhs)
+    {
+        Vector1 result;
+        Order cmp;
+        UnderlyingVectorType::apply_flat_binary_operation(
+                result, lhs, rhs, [=](const SCALAR& l, const SCALAR& r)
+                { return std::max(l, r, cmp); });
+        return result;
+    }
+
+    template <typename Vector1, typename Vector2, typename Order=std::less<SCALAR>>
+    friend typename std::enable_if<
+            std::is_base_of<vector, Vector1>::value &&
+            std::is_base_of<vector, Vector2>::value,
+            Vector1>::type
+    operator&(const Vector1& lhs, const Vector2& rhs)
+    {
+        Vector1 result;
+        Order cmp;
+        UnderlyingVectorType::apply_flat_binary_operation(result, lhs, rhs,
+                  [=](const SCALAR& l, const SCALAR& r) { return std::min(l, r, cmp); });
+        return result;
+    }
+
+    template <typename Vector1, typename Vector2, typename Order=std::less<SCALAR>>
+    friend typename std::enable_if<
+            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
+            Vector1>::type
+    operator|=(Vector1& lhs, const Vector2& rhs)
+    {
+        Order cmp;
+        UnderlyingVectorType::apply_inplace_flat_binary_op(lhs, rhs,
+                           [=](const SCALAR& l, const SCALAR& r) { return std::max(l ,r, cmp); });
+        return lhs;
+    }
+
+    template <typename Vector1, typename Vector2, typename Order=std::less<SCALAR>>
+    friend typename std::enable_if<
+            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
+            Vector1>::type
+    operator&=(Vector1& lhs, const Vector2& rhs)
+    {
+        Order cmp;
+        UnderlyingVectorType::apply_inplace_flat_binary_op(lhs, rhs,
+                           [=](const SCALAR& l, const SCALAR& r) { return std::min(l ,r, cmp); });
+        return lhs;
+    }
 };
 
 }// namespace vectors

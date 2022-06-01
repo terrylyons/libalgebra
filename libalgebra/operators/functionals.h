@@ -18,6 +18,15 @@ namespace operators {
 template<typename ShuffleTensor, typename FreeTensor>
 using shuffle_tensor_functional = linear_functional<dot_product_implementation<ShuffleTensor, FreeTensor>, FreeTensor>;
 
+
+template <typename ShuffleTensor, typename FreeTensor>
+typename FreeTensor::SCALAR apply_functional(const ShuffleTensor& functional, const FreeTensor& tensor)
+{
+    shuffle_tensor_functional<ShuffleTensor, FreeTensor> shfunctional(functional);
+    return shfunctional(tensor);
+}
+
+
 }// namespace operators
 }// namespace alg
 

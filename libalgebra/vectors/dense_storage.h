@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by sam on 04/08/2021.
 //
 
@@ -792,6 +792,14 @@ public:
                 new_base.m_data + m_base.m_size);
         m_base = std::move(new_base);
     }
+
+    template <typename... Args>
+    reference emplace(size_type i, Args&&... args) noexcept(noexcept(value_type(args...)))
+    {
+        return m_base.emplace(i, std::forward<Args>(args)...);
+    }
+
+
 
 public:
     /// Equality operator

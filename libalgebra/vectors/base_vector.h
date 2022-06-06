@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by sam on 05/02/2021.
 //
 
@@ -79,7 +79,7 @@ basis base_vector<basis, coeff>::basis;
 
 /// Static initialisation of the scalar constant 0.
 template<typename Basis, typename Coeff>
-const typename Coeff::S base_vector<Basis, Coeff>::zero;
+const typename Coeff::S base_vector<Basis, Coeff>::zero {};
 
 /// Static initialisation of the scalar constant +1.
 template<typename Basis, typename Coeff>

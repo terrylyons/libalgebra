@@ -1,4 +1,4 @@
-/* *************************************************************
+﻿/* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
 Greg Gyurkó and Arend Janssen.
@@ -197,67 +197,67 @@ public:
     algebra& operator=(algebra&&) noexcept = default;
 
 public:
-    /// Multiplies the instance with scalar s.
-    inline algebra& operator*=(const SCALAR& s)
-    {
-        VECT::operator*=(s);
-        return *this;
-    }
+//    /// Multiplies the instance with scalar s.
+//    inline algebra& operator*=(const SCALAR& s)
+//    {
+//        VECT::operator*=(s);
+//        return *this;
+//    }
+//
+//    /// Divides the instance by scalar s.
+//    inline algebra& operator/=(const RATIONAL& s)
+//    {
+//        VECT::operator/=(s);
+//        return *this;
+//    }
+//
+//    /// Ensures that the return type is an instance of algebra.
+//    inline algebra operator*(const SCALAR& rhs) const
+//    {
+//        algebra result(*this);
+//        result *= rhs;
+//        return result;
+//    }
+//
+//    /// Ensures that the return type is an instance of algebra.
+//    inline algebra operator/(const SCALAR& rhs) const
+//    {
+//        algebra result(*this);
+//        result /= rhs;
+//        return result;
+//    }
+//
+//    /// Ensures that the return type is an instance of algebra.
+//    inline algebra operator+(const algebra& rhs) const
+//    {
+//        algebra result(*this);
+//        result += rhs;
+//        return result;
+//    }
+//
+//    /// Ensures that the return type is an instance of algebra.
+//    inline algebra operator-(const algebra& rhs) const
+//    {
+//        algebra result(*this);
+//        result -= rhs;
+//        return result;
+//    }
 
-    /// Divides the instance by scalar s.
-    inline algebra& operator/=(const RATIONAL& s)
-    {
-        VECT::operator/=(s);
-        return *this;
-    }
+//    /// Ensures that the return type is an instance of algebra.
+//    inline algebra operator-() const { return algebra(VECT::operator-()); };
 
-    /// Ensures that the return type is an instance of algebra.
-    inline algebra operator*(const SCALAR& rhs) const
-    {
-        algebra result(*this);
-        result *= rhs;
-        return result;
-    }
+//    /// Multiplies the instance by an instance of algebra.
+//    inline algebra& operator*=(const algebra& rhs)
+//    {
+//        return s_multiplication.multiply_inplace(*this, rhs, scalar_passthrough());
+//    }
 
-    /// Ensures that the return type is an instance of algebra.
-    inline algebra operator/(const SCALAR& rhs) const
-    {
-        algebra result(*this);
-        result /= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is an instance of algebra.
-    inline algebra operator+(const algebra& rhs) const
-    {
-        algebra result(*this);
-        result += rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is an instance of algebra.
-    inline algebra operator-(const algebra& rhs) const
-    {
-        algebra result(*this);
-        result -= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is an instance of algebra.
-    inline algebra operator-() const { return algebra(VECT::operator-()); };
-
-    /// Multiplies the instance by an instance of algebra.
-    inline algebra& operator*=(const algebra& rhs)
-    {
-        return s_multiplication.multiply_inplace(*this, rhs, scalar_passthrough());
-    }
-
-    /// Binary version of the product of algebra instances.
-    // inline __DECLARE_BINARY_OPERATOR(algebra, *, *=, algebra);
-    algebra operator*(algebra const& rhs) const
-    {
-        return s_multiplication.multiply(*this, rhs, scalar_passthrough());
-    }
+//    /// Binary version of the product of algebra instances.
+//    // inline __DECLARE_BINARY_OPERATOR(algebra, *, *=, algebra);
+//    algebra operator*(algebra const& rhs) const
+//    {
+//        return s_multiplication.multiply(*this, rhs, scalar_passthrough());
+//    }
 
     /// Adds to the instance a product of algebra instances.
     inline algebra& add_mul(const algebra& a, const algebra& b)
@@ -327,6 +327,43 @@ private:
         ar & boost::serialization::base_object<VECT>(*this);
     }
 #endif
+
+
+public:
+
+    template <typename Algebra1, typename Algebra2>
+    friend
+    typename std::enable_if<
+            std::is_base_of<algebra, Algebra1>::value &&
+            std::is_base_of<algebra, Algebra2>::value,
+            Algebra1>::type
+    operator*(const Algebra1& lhs, const Algebra2& rhs)
+    {
+        Algebra1 result;
+        s_multiplication.multiply_and_add(
+                static_cast<algebra&>(result),
+                static_cast<const algebra&>(lhs),
+                static_cast<const algebra&>(rhs),
+                scalar_passthrough());
+        return result;
+    }
+
+    template <typename Algebra1, typename Algebra2>
+    friend
+    typename std::enable_if<
+            std::is_base_of<algebra, Algebra1>::value &&
+            std::is_base_of<algebra, Algebra2>::value,
+            Algebra1>::type&
+    operator*=(Algebra1& lhs, const Algebra2& rhs)
+    {
+        s_multiplication.multiply_inplace(
+                static_cast<algebra&>(lhs),
+                static_cast<const algebra&>(rhs),
+                scalar_passthrough());
+        return lhs;
+    }
+
+
 };
 
 template<typename B, typename C, typename M, template<typename, typename, typename...> class V, typename... Args>

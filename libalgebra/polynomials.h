@@ -175,7 +175,7 @@ public:
 
     /// Constructs an instance from a scalar. Embedding of scalars.
     explicit poly(const SCA& s)
-        : ALG(poly::basis.empty_key, s)
+        : ALG(BASIS::KEY(), s)
     {}
 
     /// Constructs a unidimensional instance from a key (a monomial).

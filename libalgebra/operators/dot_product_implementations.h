@@ -60,7 +60,7 @@ private:
         eval(const f_type& functional, const avector_t<AVType, AVArgs...>& argument) noexcept
         {
             result_type result(coefficient_type::zero);
-            for (const auto& it : functional) {
+            for (auto& it : functional) {
                 coefficient_type::add_inplace(result, coefficient_type::mul(it.value(), argument[it.key()]));
             }
             return result;

@@ -1,7 +1,7 @@
 /* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
-Greg Gyurkö and Arend Janssen.
+Greg Gyurkó and Arend Janssen.
 
 Distributed under the terms of the GNU General Public License,
 Version 3. (See accompanying file License.txt)

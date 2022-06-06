@@ -439,7 +439,7 @@ public:
      * Constructs a sparse_vector corresponding the unique basis
      * element k with coefficient s (+1 by default).
      */
-    explicit sparse_vector(const KEY& k, const SCALAR& s = one)
+    explicit sparse_vector(const KEY& k, const SCALAR& s = SCALAR(1))
     {
         if (SCALAR(0) != s) {
             (*this)[k] = s;

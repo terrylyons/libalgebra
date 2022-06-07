@@ -233,6 +233,11 @@ class poly_lie;
 #include <libalgebra/operators/functionals.h>
 #include <libalgebra/operators/multi_linear_operators.h>
 #include <libalgebra/operators/operators.h>
+#include <libalgebra/alternative_multiplications.h>
+#include <libalgebra/half_shuffle_tensor_basis.h>
+#include <libalgebra/half_shuffle_tensor_multiplication.h>
+#include <libalgebra/area_tensor_basis.h>
+#include <libalgebra/area_tensor_multiplication.h>
 
 // End of undeclaration of local macros.
 

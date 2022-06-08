@@ -111,6 +111,11 @@ add_custom_target(Libalgebra_headers SOURCES
         libalgebra/tensor.h
         libalgebra/tensor_basis.h
         libalgebra/utils.h
+        libalgebra/alternative_multiplications.h
+        libalgebra/area_tensor_basis.h
+        libalgebra/area_tensor_multiplication.h
+        libalgebra/half_shuffle_tensor_basis.h
+        libalgebra/half_shuffle_tensor_multiplication.h
         )
 
 

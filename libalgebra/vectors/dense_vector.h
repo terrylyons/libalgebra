@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by sam on 08/02/2021.
 //
 
@@ -226,7 +226,13 @@ public:
     /// Reserve to dimension
     void reserve_to_dimension(const DIMN dim)
     {
-        m_data.reserve(adjust_dimension(dim, degree_tag));
+        if (dim > size()) {
+            auto adjusted = adjust_dimension(dim, degree_tag);
+            m_data.reserve(adjusted);
+            m_dimension = adjusted;
+            set_degree(degree_tag);
+        }
+
     }
 
     /// Reserve to degree
@@ -710,44 +716,134 @@ public:
     }
 
 public:
+
+    /*
+     * SM - 30-5-22
+     * Rewrite all of the vector backends to use a small number of
+     * templated functional methods instead of defining all of the
+     * arithmetic functions. The wrapper can take care of
+     * implementing the arithmetic.
+     */
+
+    /**
+     * @brief Apply a unary operation to generate a new vector
+     * @tparam F Function type S (*)([const] S[&] arg)
+     * @param func function to apply, type F
+     * @return New dense vector instance the same size as *this;
+     */
+    template <typename F>
+    static void apply_unary_operation(
+            dense_vector& result,
+            const dense_vector& arg,
+            F&& func)
+    {
+        result.reserve_to_dimension(arg.m_dimension);
+        for (DIMN i=0; i<arg.m_dimension; ++i) {
+            result.m_data.emplace(i, func(arg.m_data[i]));
+        }
+    }
+
+    template <typename F>
+    static void apply_inplace_unary_op(dense_vector& arg, F&& func)
+    {
+        for (DIMN i=0; i<arg.m_dimension; ++i) {
+            arg.m_data[i] = func(arg.m_data[i]);
+        }
+    }
+
+    /**
+     * @brief
+     * @tparam F
+     * @param other
+     * @param func
+     * @return
+     */
+    template <typename F>
+    static void apply_flat_binary_operation(
+            dense_vector& result,
+            const dense_vector& lhs,
+            const dense_vector& rhs,
+            F&& func)
+    {
+        auto minmax = std::minmax(lhs.m_dimension, rhs.m_dimension);
+
+        result.reserve_to_dimension(minmax.second);
+        for (DIMN i=0; i<minmax.first; ++i) {
+            auto val = func(lhs.m_data[i], rhs.m_data[i]);
+            result.m_data.emplace(i, val);
+        }
+
+        // Only one of the following fires.
+        for (DIMN i=minmax.first; i<lhs.m_dimension; ++i) {
+            result.m_data.emplace(i, func(lhs.m_data[i], COEFFS::zero));
+        }
+
+        for (DIMN i=minmax.first; i<rhs.m_dimension; ++i) {
+            result.m_data.emplace(i, func(COEFFS::zero, rhs.m_data[i]));
+        }
+
+
+    }
+
+    template <typename F>
+    static void apply_inplace_flat_binary_op(
+            dense_vector& lhs,
+            const dense_vector& rhs,
+            F&& func)
+    {
+        const auto old_dim = lhs.m_dimension;
+        auto min = lhs.m_dimension;
+        if (lhs.m_dimension < rhs.m_dimension) {
+            lhs.reserve_to_dimension(rhs.m_dimension);
+        } else {
+            min = rhs.m_dimension;
+        }
+
+        for (DIMN i=0; i<min; ++i) {
+            lhs.m_data[i] = func(lhs.m_data[i], rhs.m_data[i]);
+        }
+
+        for (DIMN i=old_dim; i<rhs.m_dimension; ++i) {
+            // If there is something to do here it is because the
+            // rhs has more elements than lhs. Thus lhs.m_data[i] is not
+            // yet initialised, and rhs.m_data[i] is valid.
+            lhs.m_data.emplace(i, func(COEFFS::zero, rhs.m_data[i]));
+        }
+
+        if (min < old_dim) {
+            // If we are here then rhs contains fewer elements than
+            // lhs. Thus there are elements of lhs that need to be
+            // updated.
+            for (DIMN i=min; i<lhs.m_dimension; ++i) {
+                lhs.m_data[i] = func(lhs.m_data[i], COEFFS::zero);
+            }
+        }
+    }
+
+public:
     // Arithmetic operation
 
     /// Unary negation
-    dense_vector operator-(void) const
+    dense_vector operator-() const
     {
         dense_vector result;
-        result.resize_to_dimension(dimension());
-        assert(m_dimension == m_data.size());
-        assert(result.m_dimension == result.m_data.size());
-        for (DIMN i = 0; i < dimension(); ++i) {
-            result.m_data[i] = -m_data[i];
-        }
-
+        apply_unary_operation(result, *this, [](const SCALAR& arg) { return -arg; });
         return result;
     }
 
     /// Inplace scalar multiplication
     dense_vector& operator*=(const SCALAR& s)
     {
-
-        assert(m_dimension == m_data.size());
-        for (DIMN i = 0; i < dimension(); ++i) {
-            m_data[i] *= s;
-        }
-
+        apply_inplace_unary_op(*this, [=](const SCALAR& arg) { return arg*s; });
         return *this;
     }
 
     /// Inplace rational division
     dense_vector& operator/=(const RATIONAL& s)
     {
-        // Instead of using the /= operator, us the *=
-        // The compiler probably applies this optimisation
-        // automatically, but let's be safe.
-        SCALAR val = one / s;
-        for (DIMN i = 0; i < dimension(); ++i) {
-            m_data[i] *= val;
-        }
+        apply_inplace_unary_op(*this, [=](const SCALAR& arg) {
+            return Coeffs::div(arg, s);
+        });
         return *this;
     }
 
@@ -1438,6 +1534,7 @@ public:
         it(&result.m_data[0], result.dimension(), &m_data[0], dimension());
     }
 
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;
 
@@ -1448,6 +1545,7 @@ private:
         ar& m_degree;
         ar& m_data;
     }
+#endif
 };
 
 #undef DECLARE_FUSED_OP
@@ -1460,22 +1558,22 @@ struct data_access_base<dense_vector<Basis, Coeffs>> {
     using vector_type = dense_vector<Basis, Coeffs>;
     using tag = access_type_dense;
 
-    static const typename Coeffs::S* range_begin(const vector_type& vect)
+    static const typename vector_type::SCALAR* range_begin(const vector_type& vect)
     {
         return vect.m_data.begin();
     }
 
-    static const typename Coeffs::S* range_end(const vector_type& vect)
+    static const typename vector_type::SCALAR* range_end(const vector_type& vect)
     {
         return vect.m_data.end();
     }
 
-    static typename Coeffs::S* range_begin(vector_type& vect)
+    static typename vector_type::SCALAR* range_begin(vector_type& vect)
     {
         return vect.m_data.begin();
     }
 
-    static typename Coeffs::S* range_end(vector_type& vect)
+    static typename vector_type::SCALAR* range_end(vector_type& vect)
     {
         return vect.m_data.end();
     }

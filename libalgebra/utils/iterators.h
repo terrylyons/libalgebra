@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by sam on 17/02/2021.
 //
 
@@ -7,9 +7,7 @@
 
 #include <iterator>
 #include <utility>
-
-#include <boost/mpl/logical.hpp>
-#include <boost/type_traits.hpp>
+#include <type_traits>
 
 #include "libalgebra/utils/meta.h"
 
@@ -18,24 +16,28 @@ namespace utils {
 namespace iterators {
 
 template<typename Vector, typename Iterator>
-inline typename boost::enable_if<typename boost::mpl::and_<
-                                         boost::is_same<typename boost::remove_cv<typename std::iterator_traits<Iterator>::value_type::first_type>::type,
-                                                        typename Vector::KEY>,
-                                         boost::is_same<
-                                                 typename boost::remove_cv<typename std::iterator_traits<Iterator>::value_type::second_type>::type,
-                                                 typename Vector::SCALAR>>::type,
-                                 typename std::iterator_traits<Iterator>::value_type::first_type>::type
+inline typename std::enable_if<std::is_same<typename std::remove_cv<
+            typename std::iterator_traits<Iterator>::value_type::first_type>::type,
+            typename Vector::KEY>::value &&
+       std::is_same<typename std::remove_cv<
+            typename std::iterator_traits<Iterator>::value_type::second_type>::type,
+            typename Vector::SCALAR>::value,
+        typename std::iterator_traits<Iterator>::value_type::first_type
+>::type
 key(Iterator& it)
 {
     return it->first;
 }
 
-template<typename Vector, typename Iterator, typename ValueType = typename std::iterator_traits<Iterator>::value_type,
-         typename Reference = typename std::iterator_traits<Iterator>::reference>
-inline typename boost::enable_if<
-        typename boost::mpl::and_<boost::is_same<typename ValueType::first_type, const typename Vector::KEY>,
-                                  boost::is_same<typename ValueType::second_type, typename Vector::SCALAR>>::type,
-        typename copy_constness<Reference, typename ValueType::second_type>::type&>::type
+template<typename Vector, typename Iterator>
+inline typename std::enable_if<std::is_same<typename std::remove_cv<
+        typename std::iterator_traits<Iterator>::value_type::first_type>::type,
+                                            typename Vector::KEY>::value
+                                       && std::is_same<typename std::remove_cv<
+                                               typename std::iterator_traits<Iterator>::value_type::second_type>::type,
+                                                       typename Vector::SCALAR>::value,
+                               typename copy_constness<typename std::iterator_traits<Iterator>::value_type, typename Vector::SCALAR>::type&
+           >::type
 value(Iterator& it)
 {
     return it->second;
@@ -48,7 +50,7 @@ inline typename ValueType::key_type key(alg::vectors::iterators::vector_iterator
 }
 
 template<typename Vector, typename ValueType>
-inline typename ValueType::value_type& value(alg::vectors::iterators::vector_iterator<ValueType>& it)
+inline typename ValueType::value_type value(alg::vectors::iterators::vector_iterator<ValueType>& it)
 {
     return it->value();
 }

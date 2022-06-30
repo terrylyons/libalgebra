@@ -13,6 +13,7 @@ endif ()
 project(Libalgebra VERSION 2.0.0)
 
 option(LIBALGEBRA_TESTING "Enable building test targets" OFF)
+option(LIBALGEBRA_NO_SERIALIZATION "Turn off building serialization dependency" OFF)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -27,16 +28,32 @@ include(GNUInstallDirs)
 
 set(LIBALGEBRA_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Libalgebra")
 
+# -DLIBALGEBRA_MAX_TILE_LETTERS=X
+if(DEFINED LIBALGEBRA_MAX_TILE_LETTERS)
+    message("You have set LIBALGEBRA_MAX_TILE_LETTERS to ${LIBALGEBRA_MAX_TILE_LETTERS}")
+    add_definitions(-DLIBALGEBRA_MAX_TILE_LETTERS=${LIBALGEBRA_MAX_TILE_LETTERS})
+endif()
 
 ## we have a limited binary boost dependency
 set(Boost_NO_WARN_NEW_VERSIONS ON)
 find_package(Boost REQUIRED COMPONENTS thread)
 
+if (NOT LIBALGEBRA_NO_SERIALIZATION)
+    find_package(Boost OPTIONAL_COMPONENTS serialization)
+endif()
+
+
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/)
 find_package(Bignum)
 
+find_package(OpenMP)
+
+#message(STATUS ">>> OpenMP_CXX_INCLUDE_DIRS = ${OpenMP_CXX_INCLUDE_DIRS}")
+#message(STATUS ">>> OpenMP_CXX_FLAGS = ${OpenMP_CXX_FLAGS}")
+
 # Interface libraries sometimes complain if you list sources, see below.
 add_library(Libalgebra INTERFACE)
+
 
 # For IDEs that use target sources lists to generate project information
 # we add a custom target that attaches these sources.
@@ -45,12 +62,16 @@ add_custom_target(Libalgebra_headers SOURCES
         libalgebra/basis/basis.h
         libalgebra/basis/key_iterators.h
         libalgebra/coefficients/coefficients.h
+        libalgebra/coefficients/complex.h
+        libalgebra/coefficients/mpfloat_coefficients.h
+        libalgebra/coefficients/rational_coefficients.h
         libalgebra/utils/caching_tags.h
         libalgebra/utils/function_extension_cache_base.h
         libalgebra/utils/integer_maths.h
         libalgebra/utils/iterators.h
         libalgebra/utils/meta.h
         libalgebra/utils/order_trait.h
+        libalgebra/utils/is_vector_trait.h
         libalgebra/vectors/base_vector.h
         libalgebra/vectors/dense_storage.h
         libalgebra/vectors/dense_vector.h
@@ -90,7 +111,13 @@ add_custom_target(Libalgebra_headers SOURCES
         libalgebra/tensor.h
         libalgebra/tensor_basis.h
         libalgebra/utils.h
+        libalgebra/alternative_multiplications.h
+        libalgebra/area_tensor_basis.h
+        libalgebra/area_tensor_multiplication.h
+        libalgebra/half_shuffle_tensor_basis.h
+        libalgebra/half_shuffle_tensor_multiplication.h
         )
+
 
 target_include_directories(Libalgebra
         INTERFACE
@@ -100,7 +127,13 @@ target_include_directories(Libalgebra
 target_link_libraries(Libalgebra INTERFACE
         Boost::boost
         Boost::thread
+        OpenMP::OpenMP_CXX
         )
+
+if (TARGET Boost::serialization)
+    target_link_libraries(Libalgebra INTERFACE Boost::serialization)
+    target_compile_definitions(Libalgebra INTERFACE LIBALGEBRA_ENABLE_SERIALIZATION)
+endif()
 
 # Set the _DEBUG flag when we are building in Debug configuration.
 # This macro should probably be renamed to avoid collisions with compiler

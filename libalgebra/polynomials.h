@@ -1,7 +1,7 @@
-/* *************************************************************
+﻿/* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
-Greg Gyurk� and Arend Janssen.
+Greg Gyurkó and Arend Janssen.
 
 Distributed under the terms of the GNU General Public License,
 Version 3. (See accompanying file License.txt)
@@ -175,7 +175,7 @@ public:
 
     /// Constructs an instance from a scalar. Embedding of scalars.
     explicit poly(const SCA& s)
-        : ALG(poly::basis.empty_key, s)
+        : ALG(BASIS::KEY(), s)
     {}
 
     /// Constructs a unidimensional instance from a key (a monomial).
@@ -190,53 +190,6 @@ public:
 
     poly& operator=(const poly&) = default;
     poly& operator=(poly&&) noexcept = default;
-
-public:
-    /// Ensures that the return type is an instance of polynomial.
-    inline poly operator*(const SCA& rhs) const
-    {
-        poly result(*this);
-        result *= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is an instance of polynomial.
-    inline poly operator/(const RAT& rhs) const
-    {
-        poly result(*this);
-        result /= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is an instance of polynomial.
-    inline poly
-    operator*(const poly& rhs) const
-    {
-        poly result(*this);
-        result *= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is an instance of polynomial.
-    inline poly
-    operator+(const poly& rhs) const
-    {
-        poly result(*this);
-        result += rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is an instance of polynomial.
-    inline poly
-    operator-(const poly& rhs) const
-    {
-        poly result(*this);
-        result -= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is an instance of polynomial.
-    inline poly operator-() const { return poly(ALG::operator-()); }
 
     /// Evaluates the polynomial for some scalar values for letters
     /// (variables).
@@ -327,7 +280,7 @@ public:
         return result;
     }
 
-
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
 
     friend class boost::serialization::access;
@@ -337,7 +290,7 @@ private:
         ar & boost::serialization::base_object<ALG>(*this);
     }
 
-
+#endif
 };
 
 }// namespace alg

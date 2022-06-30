@@ -1,7 +1,7 @@
-/* *************************************************************
+﻿/* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
-Greg Gyurk� and Arend Janssen.
+Greg Gyurkó and Arend Janssen.
 
 Distributed under the terms of the GNU General Public License,
 Version 3. (See accompanying file License.txt)
@@ -212,6 +212,20 @@ public:
         return os << (t.first)->key2string(t.second);
     }
 };
+
+namespace vectors {
+namespace dtl {
+
+template <DEG Width, DEG Depth>
+struct sparse_vector_default_map<free_monomial_basis<Width, Depth>>
+{
+    template <typename S>
+    using type = std::map<typename free_monomial_basis<Width, Depth>::KEY, S>;
+};
+
+}
+}
+
 
 }// namespace alg
 // Include once wrapper

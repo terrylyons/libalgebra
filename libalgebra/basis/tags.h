@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by sam on 09/02/2021.
 //
 
@@ -22,11 +22,11 @@ namespace basis {
  */
 template<DEG D>
 struct with_degree {
-    static const typename alg::utils::enable_if<(D > 0), DEG>::type max_degree;
+    static const typename std::enable_if<(D > 0), DEG>::type max_degree;
 };
 
 template<DEG D>
-const typename alg::utils::enable_if<(D > 0), DEG>::type
+const typename std::enable_if<(D > 0), DEG>::type
         with_degree<D>::max_degree = D;
 
 /**

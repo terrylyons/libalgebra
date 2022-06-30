@@ -1,7 +1,7 @@
-/* *************************************************************
+﻿/* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
-Greg Gyurk� and Arend Janssen.
+Greg Gyurkó and Arend Janssen.
 
 Distributed under the terms of the GNU General Public License,
 Version 3. (See accompanying file License.txt)
@@ -32,11 +32,13 @@ class multipoly_multiplication
     static MultiPoly prod(typename MultiPoly::KEY const& k1, typename MultiPoly::KEY const& k2)
     {
 
-        typedef typename MultiPoly::BASIS basis_t;
+//        typedef typename MultiPoly::BASIS basis_t;
         typedef typename MultiPoly::KEY key_t;
+        using trait = basis::basis_traits<typename MultiPoly::BASIS>;
+        static constexpr DEG max_degree = trait::degree_tag::max_degree;
 
         MultiPoly result;
-        if ((basis_t::max_degree == 0) || (k1.size() + k2.size() <= basis_t::max_degree)) {
+        if ((max_degree == 0) || (k1.size() + k2.size() <= max_degree)) {
             key_t concat(k1);
             for (typename key_t::size_type i = 0; i < k2.size(); ++i) {
                 concat.push_back(k2[i]);
@@ -44,6 +46,86 @@ class multipoly_multiplication
             result[concat] = Coeff::one;
         }
         return result;
+    }
+
+
+    template<typename MultiPoly, typename Transform>
+    class key_operator
+    {
+        Transform m_transform;
+
+    public:
+#if __cplusplus >= 201103UL
+
+        template<typename... Args>
+        explicit key_operator(Args&&... args)
+            : m_transform(std::forward<Args>(args)...)
+        {}
+
+#else
+        template<typename Arg>
+        explicit key_operator(Arg arg) : m_transform(arg)
+        {}
+#endif
+
+        template<typename Vector>
+        void
+        operator()(Vector& result, typename Vector::KEY const& lhs_key, scalar_t const& lhs_val,
+                   typename Vector::KEY const& rhs_key, scalar_t const& rhs_val)
+        {
+            result.add_scal_prod(prod<MultiPoly>(lhs_key, rhs_key), m_transform(Coeff::mul(lhs_val, rhs_val)));
+        }
+    };
+
+
+public:
+    template<typename Algebra, typename Operator>
+    Algebra& multiply_and_add(Algebra& result, Algebra const& lhs, Algebra const& rhs, Operator op) const
+    {
+        key_operator<Algebra, Operator> kt(op);
+        lhs.buffered_apply_binary_transform(result, rhs, kt);
+        return result;
+    }
+
+    template<typename Algebra, typename Operator>
+    Algebra&
+    multiply_and_add(Algebra& result, Algebra const& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
+    {
+        key_operator<Algebra, Operator> kt(op);
+        lhs.buffered_apply_binary_transform(result, rhs, kt, max_depth);
+        return result;
+    }
+
+    template<typename Algebra, typename Operator>
+    Algebra multiply(Algebra const& lhs, Algebra const& rhs, Operator op) const
+    {
+        Algebra result;
+        multiply_and_add(result, lhs, rhs, op);
+        return result;
+    }
+
+    template<typename Algebra, typename Operator>
+    Algebra multiply(Algebra const& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
+    {
+        Algebra result;
+        multiply_and_add(result, lhs, rhs, op, max_depth);
+        return result;
+    }
+
+    template<typename Algebra, typename Operator>
+    Algebra& multiply_inplace(Algebra& lhs, Algebra const& rhs, Operator op) const
+    {
+        key_operator<Algebra, Operator> kt(op);
+        lhs.unbuffered_apply_binary_transform(rhs, kt);
+        return lhs;
+    }
+
+    template<typename Algebra, typename Operator>
+    Algebra& multiply_inplace(Algebra& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
+    {
+        key_operator<Algebra, Operator> kt(op);
+        lhs.unbuffered_apply_binary_transform(rhs, kt, max_depth);
+        return lhs;
     }
 };
 
@@ -58,11 +140,13 @@ class multipoly_multiplication
    associative algebra corresponding to the SCALAR type. This is permitted by
    the existence of empty keys in monomial_basis.
  */
-template<typename Coeff, DEG n_letters, DEG max_degree, typename... Args>
+template<typename Coeff, DEG n_letters, DEG max_degree,
+         template<typename, typename, typename...> class VectorType,
+         typename... Args>
 class multi_polynomial : public algebra<
                                  free_monomial_basis<n_letters, max_degree>,
-                                 Coeff, multipoly_multiplication<Coeff>
-                                 >
+                                 Coeff, multipoly_multiplication<Coeff>,
+                                 VectorType, Args...>
 {
 
     typedef multipoly_multiplication<Coeff> multiplication_t;
@@ -77,7 +161,7 @@ public:
     typedef typename Coeff::RAT RAT;
 
     /// The algebra type.
-    typedef algebra<BASIS, Coeff, multiplication_t> ALG;
+    typedef algebra<BASIS, Coeff, multiplication_t, VectorType, Args...> ALG;
     /// The sparse_vector type.
     typedef typename ALG::VECT VECT;
     /// Import of the iterator type.
@@ -119,54 +203,6 @@ public:
     explicit multi_polynomial(const SCA& s)
         : ALG(VECT::basis.empty_key, s)
     {}
-
-public:
-    /// Ensures that the return type is a multi_polynomial.
-    inline multi_polynomial operator*(const SCA& rhs) const
-    {
-        multi_polynomial result(*this);
-        result *= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a multi_polynomial.
-    inline multi_polynomial
-    operator/(const RAT& rhs) const
-    {
-        multi_polynomial result(*this);
-        result /= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a multi_polynomial.
-    inline multi_polynomial
-    operator*(const multi_polynomial& rhs) const
-    {
-        multi_polynomial result(*this);
-        result *= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a multi_polynomial.
-    inline multi_polynomial
-    operator+(const multi_polynomial& rhs) const
-    {
-        multi_polynomial result(*this);
-        result += rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a multi_polynomial.
-    inline multi_polynomial
-    operator-(const multi_polynomial& rhs) const
-    {
-        multi_polynomial result(*this);
-        result -= rhs;
-        return result;
-    }
-
-    /// Ensures that the return type is a multi_polynomial.
-    inline multi_polynomial operator-() const { return multi_polynomial(ALG::operator-()); }
 
     /// Computes the truncated exponential of a multi_polynomial instance.
     inline friend multi_polynomial exp(const multi_polynomial& arg)
@@ -211,14 +247,16 @@ public:
         return result;
     }
 
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
+    friend class boost::serialization::access;
 
-friend class boost::serialization::access;
-
-template <typename Archive>
-void serialize(Archive &ar, unsigned int const /* version */) {
-    ar & boost::serialization::base_object<ALG>(*this);
-}
+    template<typename Archive>
+    void serialize(Archive& ar, unsigned int const /* version */)
+    {
+        ar& boost::serialization::base_object<ALG>(*this);
+    }
+#endif
 };
 
 }// namespace alg

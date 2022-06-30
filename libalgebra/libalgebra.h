@@ -1,7 +1,7 @@
-/* *************************************************************
+﻿/* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
-Greg Gyurk� and Arend Janssen.
+Greg Gyurkó and Arend Janssen.
 
 Distributed under the terms of the GNU General Public License,
 Version 3. (See accompanying file License.txt)
@@ -51,7 +51,9 @@ typedef unsigned __int64 uint64_t;
 #include <utility>
 #include <vector>
 
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 #include <boost/serialization/base_object.hpp>
+#endif
 #include <boost/thread/locks.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
@@ -196,9 +198,9 @@ template<DEG n_letters, DEG max_degree = 0>
 class free_monomial_basis;
 
 /// II. Multivariate Polynomial Algebra   Associative and Commutative.
-template<typename Coeff, DEG n_letters, DEG max_degree = 0,
-         /*template <typename, typename, typename...> VectorType,*/
-         typename...>
+template<typename Coeff, DEG n_letters, DEG max_degree,
+         template<typename, typename, typename...> class VectorType = vectors::template_vector_type_selector<free_monomial_basis<n_letters, max_degree>, Coeff>::template type,
+         typename... Args>
 class multi_polynomial;
 
 /// III. Multivariate Polynomial Lie Algebra Basis. Associative and non
@@ -207,9 +209,9 @@ template<DEG n_letters, DEG max_degree = 0>
 class poly_lie_basis;
 
 /// III. Multivariate Polynomial Lie Algebra. Associative and non commutative
-template<typename Coeff, DEG n_letters, DEG max_degree = 0,
-         /*template <typename, typename, typename...> VectorType,*/
-         typename...>
+template<typename Coeff, DEG n_letters, DEG max_degree,
+         template<typename, typename, typename...> class VectorType = vectors::template_vector_type_selector<poly_lie_basis<n_letters, max_degree>, Coeff>::template type,
+         typename... Args>
 class poly_lie;
 
 }// namespace alg
@@ -226,9 +228,16 @@ class poly_lie;
 #include "tensor_basis.h"
 #include "utils.h"
 
+#include <libalgebra/coefficients/mpfloat_coefficients.h>
+#include <libalgebra/coefficients/rational_coefficients.h>
 #include <libalgebra/operators/functionals.h>
 #include <libalgebra/operators/multi_linear_operators.h>
 #include <libalgebra/operators/operators.h>
+#include <libalgebra/alternative_multiplications.h>
+#include <libalgebra/half_shuffle_tensor_basis.h>
+#include <libalgebra/half_shuffle_tensor_multiplication.h>
+#include <libalgebra/area_tensor_basis.h>
+#include <libalgebra/area_tensor_multiplication.h>
 
 // End of undeclaration of local macros.
 

@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by sam on 04/08/2021.
 //
 
@@ -10,8 +10,9 @@
 #include <iostream>
 #include <memory>
 
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 #include <boost/serialization/array.hpp>
-
+#endif
 #include "libalgebra/implementation_types.h"
 
 namespace alg {
@@ -792,6 +793,14 @@ public:
         m_base = std::move(new_base);
     }
 
+    template <typename... Args>
+    reference emplace(size_type i, Args&&... args) noexcept(noexcept(value_type(args...)))
+    {
+        return m_base.emplace(i, std::forward<Args>(args)...);
+    }
+
+
+
 public:
     /// Equality operator
     bool operator==(dense_storage const& other) const
@@ -820,6 +829,7 @@ public:
         return os;
     }
 
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;
 
@@ -843,6 +853,7 @@ private:
         ar << boost::serialization::make_nvp("size", m_base.m_size);
         ar << boost::serialization::make_array(m_base.m_data, m_base.m_size);
     }
+#endif
 };
 
 }// namespace vectors

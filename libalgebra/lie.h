@@ -1,7 +1,7 @@
-/* *************************************************************
+﻿/* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
-Greg Gyurk� and Arend Janssen.
+Greg Gyurkó and Arend Janssen.
 
 Distributed under the terms of the GNU General Public License,
 Version 3. (See accompanying file License.txt)
@@ -305,6 +305,10 @@ public:
     {
     }
 
+    template <typename InputIt>
+    lie(InputIt begin, InputIt end) : ALG(begin, end)
+    {}
+
     lie& operator=(const lie&) = default;
     //lie& operator=(lie&&) noexcept = default;
 
@@ -322,7 +326,7 @@ public:
     }
 
 
-
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
 
     friend class boost::serialization::access;
@@ -331,7 +335,7 @@ private:
     void serialize(Archive &ar, unsigned int const /* version */) {
         ar & boost::serialization::base_object<ALG>(*this);
     }
-
+#endif
 };
 
 }// namespace alg

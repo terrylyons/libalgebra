@@ -41,15 +41,21 @@ std::unique_ptr<UnitTest::Test> make_multi_test(std::string&& testName, std::str
 
 using multi_suite = std::vector<std::unique_ptr<UnitTest::Test>>;
 
+struct metadata {
+    int lineno;
+    const char* currentName;
+    const char* currentSuite;
+    const char* currentFile;
+};
+
+using test_pair = std::pair<metadata, std::unique_ptr<UnitTest::Test>>;
+
 class generative_suite
 {
-    std::vector<std::unique_ptr<UnitTest::Test>>& tests;
-    struct metadata {
-        int lineno;
-        const char* currentName;
-        const char* currentSuite;
-        const char* currentFile;
-    } current;
+
+    std::vector<test_pair>& tests;
+
+    metadata current;
 
     template<typename Fn>
     struct test_type : public UnitTest::Test {
@@ -68,12 +74,12 @@ class generative_suite
     };
 
 public:
-    explicit generative_suite(std::vector<std::unique_ptr<UnitTest::Test>>& t, const char* suite) : tests(t), current{0, nullptr, suite, nullptr}
+    explicit generative_suite(std::vector<test_pair>& t, const char* suite) : tests(t), current{0, nullptr, suite, nullptr}
     {}
 
     void set_metadata(const char* name, const char* filename, int lineno)
     {
-        current.currentFile = name;
+        current.currentName = name;
         current.currentFile = filename;
         current.lineno = lineno;
     }
@@ -81,32 +87,39 @@ public:
     template<typename Fn>
     void operator+(Fn&& fn)
     {
-        tests.push_back(std::unique_ptr<UnitTest::Test>(new test_type<Fn>(current, std::forward<Fn>(fn))));
+        tests.push_back(
+                std::make_pair(
+                        current,
+                        std::unique_ptr<UnitTest::Test>(new test_type<Fn>(current, std::forward<Fn>(fn)))));
     }
 
     ~generative_suite()
     {
         auto& list = UnitTest::Test::GetTestList();
         for (auto& t : tests) {
-            list.Add(t.get());
+
+            list.Add(t.second.get());
         }
     }
 };
 
-#define NEW_AUTO_SUITE(NAME, ...)                                                    \
-    template<__VA_ARGS__>                                                            \
-    void create_tests_##NAME(la_testing::generative_suite s);                        \
-                                                                                     \
-    template<typename... Args>                                                       \
-    std::vector<std::unique_ptr<UnitTest::Test>> make_suite_##NAME(const char* name) \
-    {                                                                                \
-        std::vector<std::unique_ptr<UnitTest::Test>> tests;                          \
-        create_tests_##NAME<Args...>(la_testing::generative_suite(tests, name));     \
-        return tests;                                                                \
-    }                                                                                \
-                                                                                     \
-    template<__VA_ARGS__>                                                            \
-    void create_tests_##NAME(la_testing::generative_suite s)
+#define NEW_AUTO_SUITE(NAME, ...)                                          \
+    template<__VA_ARGS__>                                                  \
+    void create_tests_##NAME(la_testing::generative_suite& s);             \
+                                                                           \
+    template<typename... Args>                                             \
+    std::vector<la_testing::test_pair> make_suite_##NAME(const char* name) \
+    {                                                                      \
+        std::vector<la_testing::test_pair> tests;                          \
+                                                                           \
+        la_testing::generative_suite suite(tests, name);                   \
+        create_tests_##NAME<Args...>(suite);                               \
+                                                                           \
+        return tests;                                                      \
+    }                                                                      \
+                                                                           \
+    template<__VA_ARGS__>                                                  \
+    void create_tests_##NAME(la_testing::generative_suite& s)
 
 #define ADD_TEST(NAME)                         \
     s.set_metadata(#NAME, __FILE__, __LINE__); \

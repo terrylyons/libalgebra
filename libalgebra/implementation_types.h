@@ -1,7 +1,7 @@
-/* *************************************************************
+﻿/* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
-Greg Gyurk� and Arend Janssen.
+Greg Gyurkó and Arend Janssen.
 
 Distributed under the terms of the GNU General Public License,
 Version 3. (See accompanying file License.txt)
@@ -9,6 +9,7 @@ Version 3. (See accompanying file License.txt)
 ************************************************************* */
 
 #include <stddef.h>
+#include <type_traits>
 
 //  implimentation_types.h : provides definitions for basic types
 

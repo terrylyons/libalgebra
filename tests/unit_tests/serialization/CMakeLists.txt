@@ -13,6 +13,7 @@ target_link_libraries(Libalgebra_tests_serialization_tests PRIVATE
         Boost::boost
         Boost::serialization
         Libalgebra::Libalgebra)
+target_compile_definitions(Libalgebra_tests_serialization_tests PRIVATE LIBALGEBRA_ENABLE_SERIALIZATION)
 
 add_library(la_unittests::serialization_tests ALIAS Libalgebra_tests_serialization_tests)
 

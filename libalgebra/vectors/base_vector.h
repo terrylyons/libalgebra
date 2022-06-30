@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by sam on 05/02/2021.
 //
 
@@ -6,6 +6,9 @@
 #define LIBALGEBRA_BASE_VECTOR_H
 
 #include "libalgebra/basis/basis.h"
+#include <libalgebra/coefficients/coefficients.h>
+
+#include <type_traits>
 
 namespace alg {
 namespace vectors {
@@ -37,18 +40,35 @@ struct data_access_base;
 template<typename Basis, typename Coeff>
 class base_vector
 {
+    static_assert(
+            coefficients::is_coefficient_ring<Coeff>::value,
+            "Coeff should be a coefficient_ring subclass"
+            );
+
 public:
-    typedef typename Coeff::S scalar;
-    typedef typename Coeff::Q rational;
+
+    using coefficients_t = Coeff;
+
+    typedef Basis BASIS;
+    typedef typename Coeff::S SCALAR;
+    typedef typename Coeff::Q RATIONAL;
+
 
     typedef typename alg::basis::basis_traits<Basis> basis_traits;
 
     static const typename basis_traits::degree_tag degree_tag;
 
-    static Basis basis;
-    static const scalar one;
-    static const scalar mone;
-    static const scalar zero;
+
+    static BASIS basis;
+
+    /*
+     * In the future, these will be removed from base_vector,
+     * and we will use the constants from the coefficient ring instead.
+     */
+    static const SCALAR zero;
+    static const typename std::enable_if<coefficients_t::is_unital, SCALAR>::type one;
+    static const typename std::enable_if<coefficients_t::is_unital, SCALAR>::type mone;
+
 };
 
 // initialisation of static members of base_vector
@@ -57,17 +77,18 @@ public:
 template<typename basis, typename coeff>
 basis base_vector<basis, coeff>::basis;
 
-/// static initialisation of the scalar constant +1.
-template<typename basis, typename coeff>
-const typename coeff::S base_vector<basis, coeff>::one(+1);
+/// Static initialisation of the scalar constant 0.
+template<typename Basis, typename Coeff>
+const typename Coeff::S base_vector<Basis, Coeff>::zero {};
 
-/// static initialisation of the scalar constant 0.
-template<typename basis, typename coeff>
-const typename coeff::S base_vector<basis, coeff>::zero(0);
+/// Static initialisation of the scalar constant +1.
+template<typename Basis, typename Coeff>
+const typename std::enable_if<Coeff::is_unital, typename Coeff::S>::type base_vector<Basis, Coeff>::one(1);
 
-/// static initialisation of the scalar constant -1.
-template<typename basis, typename coeff>
-const typename coeff::S base_vector<basis, coeff>::mone(-1);
+/// Static initialisation of the scalar constant -1.
+template<typename Basis, typename Coeff>
+const typename std::enable_if<Coeff::is_unital, typename Coeff::S>::type base_vector<Basis, Coeff>::mone(-1);
+
 
 template<typename basis, typename coeff>
 const typename alg::basis::basis_traits<basis>::degree_tag

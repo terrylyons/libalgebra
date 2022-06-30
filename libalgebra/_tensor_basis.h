@@ -1,7 +1,7 @@
-/* *************************************************************
+﻿/* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
-Greg Gyurk� and Arend Janssen.
+Greg Gyurkó and Arend Janssen.
 
 Distributed under the terms of the GNU General Public License,
 Version 3. (See accompanying file License.txt)
@@ -18,12 +18,14 @@ Version 3. (See accompanying file License.txt)
 namespace alg {
 
 // VS2008 valid StaticAssert
-template <bool> struct StaticAssert;
-template <> struct StaticAssert<true> {};
-#define STATIC_ASSERT(condition)                                               \
-  do {                                                                         \
-    StaticAssert<(condition)>();                                               \
-  } while (0)
+template<bool>
+struct StaticAssert;
+template<>
+struct StaticAssert<true> {};
+#define STATIC_ASSERT(condition)     \
+    do {                             \
+        StaticAssert<(condition)>(); \
+    } while (0)
 
 template<size_t>
 struct intN;
@@ -164,10 +166,10 @@ public:
         // tensor basis exceeds size available ");
     }
 
-    template <unsigned No_Letters2, unsigned DEPTH2, class translator>
+    template<unsigned No_Letters2, unsigned DEPTH2, class translator>
     /// Checks that the DEPTH does not exceed the Maximum word length.
     _tensor_basis(_tensor_basis<No_Letters2, DEPTH2> arg, translator h)
-            : _word((word_t) 1.)
+        : _word((word_t)1.)
     {
         STATIC_ASSERT(DEPTH <= uMaxWordLength);
         // static_assert(DEPTH <= uMaxWordLength, "specified length of words in
@@ -183,7 +185,7 @@ public:
     _tensor_basis(std::initializer_list<LET> letters) : _word{1.0}
     {
         for (auto let : letters) {
-            assert(1<= let && let <= No_Letters);
+            assert(1 <= let && let <= No_Letters);
             push_back(let);
         }
     }
@@ -211,7 +213,7 @@ public:
     }
 
     /// Concatenates two words
-    inline _tensor_basis operator*(const _tensor_basis &rhs) const
+    inline _tensor_basis operator*(const _tensor_basis& rhs) const
     {
         _tensor_basis result(*this);
         result.push_back(rhs);
@@ -305,7 +307,8 @@ public:
         }
         if (this->_word == _tensor_basis()._word) {
             return true;
-        } else {
+        }
+        else {
             return size() <= DEPTH && (FirstLetter() - 1 < No_Letters) && rparent().valid();
         }
     }
@@ -313,9 +316,8 @@ public:
     // TJL 21/08/2012
     friend class _LET;
 
-    struct _LET
-    {
-        _tensor_basis &m_parent;
+    struct _LET {
+        _tensor_basis& m_parent;
         size_t m_index;
 
         _LET(const size_t index, _tensor_basis& parent)
@@ -366,7 +368,7 @@ public:
             return *this;
         }
 
-        _LET &operator=(LET i)
+        _LET& operator=(LET i)
         {
             word_t dBottom, dMiddle, dTop;
 
@@ -463,8 +465,8 @@ public:
         int iExponent;
         word_t dMantissa = frexp(_word, &iExponent);
         word_t ans;
-        word_t dPowerOfTwo = ldexp((word_t) .5, int(iExponent - uBitsInLetter));
-        return (modf(dMantissa * dShiftPlus1, &ans) + (word_t) 1.) * dPowerOfTwo;
+        word_t dPowerOfTwo = ldexp((word_t).5, int(iExponent - uBitsInLetter));
+        return (modf(dMantissa * dShiftPlus1, &ans) + (word_t)1.) * dPowerOfTwo;
     }
 
     /// Split the first n letters and return length n subword. Current word is
@@ -477,7 +479,7 @@ public:
             _word = word_t(1.0);
             return rv;
         }
-        word_t dShiftPlus1 = ldexp(word_t(1.), int(n*uBitsInLetter + 1));
+        word_t dShiftPlus1 = ldexp(word_t(1.), int(n * uBitsInLetter + 1));
 
         //const word_t dShiftPlus1(uMaxSizeAlphabet*(2 << n));
         // static const word_t dShift(uMaxSizeAlphabet);
@@ -486,8 +488,8 @@ public:
         int iExponent;
         word_t dMantissa = frexp(_word, &iExponent);
         word_t ans;
-        word_t dPowerOfTwo = ldexp((word_t) .5, int(iExponent - n*uBitsInLetter));
-        _word = (modf(dMantissa * dShiftPlus1, &ans) + (word_t) 1.) * dPowerOfTwo;
+        word_t dPowerOfTwo = ldexp((word_t).5, int(iExponent - n * uBitsInLetter));
+        _word = (modf(dMantissa * dShiftPlus1, &ans) + (word_t)1.) * dPowerOfTwo;
 
         assert(size() == (sz - n));
         assert(_tensor_basis(ans).size() == n);
@@ -499,7 +501,7 @@ public:
     {
         // written for correctness - review for performance if used a lot
         _tensor_basis outword;
-        const _tensor_basis &me(*this);
+        const _tensor_basis& me(*this);
         for (int i(size()); i != 0;) {
             outword.push_back(me[--i]);
         }
@@ -549,7 +551,7 @@ public:
             return static_cast<size_t>(key._word);
         }
     };
-
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;
 
@@ -558,11 +560,10 @@ private:
     {
         ar& _word;
     }
+#endif
 };
 
-} // namespace alg
-
-
+}// namespace alg
 
 namespace std {
 
@@ -574,8 +575,6 @@ struct hash<alg::_tensor_basis<Width, Depth>> {
         typename alg::_tensor_basis<Width, Depth>::hash h;
         return h(arg);
     }
-
 };
 
-
-}
+}// namespace std

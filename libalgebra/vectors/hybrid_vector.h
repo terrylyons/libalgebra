@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by sam on 12/02/2021.
 //
 
@@ -111,13 +111,14 @@ public:
     {
         return get_resize_size_impl(vect, vect.degree_tag);
     }
-
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;
 
     template<typename Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {}
+#endif
 };
 
 }// namespace policy
@@ -1033,7 +1034,54 @@ public:
         return !operator==(other);
     }
 
+
+
 public:
+
+    template <typename F>
+    static void apply_unary_operation(
+            hybrid_vector& result,
+            const hybrid_vector& arg,
+            F&& func
+            )
+    {
+        DENSE::apply_unary_operation(result, arg, func);
+        SPARSE::apply_unary_operation(result, arg, func);
+    }
+
+    template <typename F>
+    static void apply_inplace_unary_op(hybrid_vector& arg, F&& func)
+    {
+        DENSE::apply_inplace_unary_op(arg, func);
+        SPARSE::apply_inplace_unary_op(arg, func);
+    }
+
+
+    template <typename F>
+    static void apply_flat_binary_operation(
+            hybrid_vector& result,
+            const hybrid_vector& lhs,
+            const hybrid_vector& rhs,
+            F&& func
+            )
+    {
+        DENSE::apply_flat_binary_operation(result, lhs, rhs, func);
+        SPARSE::apply_flat_binary_operation(result, lhs, rhs, func);
+        result.incorporate_sparse();
+    }
+
+    template <typename F>
+    static void apply_inplace_flat_binary_op(
+            hybrid_vector& lhs,
+            const hybrid_vector& rhs,
+            F&& func
+            )
+    {
+        DENSE::apply_inplace_flat_binary_op(lhs, rhs, func);
+        SPARSE::apply_inplace_flat_binary_op(lhs, rhs, func);
+        lhs.incorporate_sparse();
+    }
+
     // Arithmetic operators
     // The first few are operators that are simply applied to each
     // part individually.
@@ -1502,7 +1550,7 @@ public:
         SPARSE::buffered_apply_unary_transform(result, transform);
         result.maybe_resize();
     }
-
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;
 
@@ -1513,6 +1561,7 @@ private:
         ar& boost::serialization::base_object<SPARSE>(*this);
         ar& m_resize_policy;
     }
+#endif
 };
 
 #undef DEFINE_FUSED_OP

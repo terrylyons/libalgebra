@@ -224,3 +224,7 @@ if (LIBALGEBRA_TESTING)
     enable_testing()
     add_subdirectory(tests)
 endif ()
+
+if (LIBALGEBRA_BENCHMARKING)
+    add_subdirectory(benchmarks)
+endif ()

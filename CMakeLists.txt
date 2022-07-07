@@ -54,7 +54,7 @@ find_package(OpenMP)
 #message(STATUS ">>> OpenMP_CXX_FLAGS = ${OpenMP_CXX_FLAGS}")
 
 # Interface libraries sometimes complain if you list sources, see below.
-add_library(Libalgebra INTERFACE libalgebra/detail/reversing_permutation.h)
+add_library(Libalgebra INTERFACE)
 
 
 # For IDEs that use target sources lists to generate project information
@@ -116,7 +116,7 @@ add_custom_target(Libalgebra_headers SOURCES
         libalgebra/area_tensor_multiplication.h
         libalgebra/half_shuffle_tensor_basis.h
         libalgebra/half_shuffle_tensor_multiplication.h
-        #        libalgebra/multiplication.h
+        libalgebra/tangents.h
         )
 
 

@@ -29,44 +29,39 @@ public:
     using vector_type = Vector;
     using tangent_vector_type = TangentVector;
 
-    using basis_type    = typename Vector::BASIS;
-    using coeff_type    = typename Vector::coefficient_field;
-    using key_type      = typename Vector::KEY;
-    using scalar_type   = typename Vector::SCALAR;
+    using basis_type = typename Vector::BASIS;
+    using coeff_type = typename Vector::coefficient_field;
+    using key_type = typename Vector::KEY;
+    using scalar_type = typename Vector::SCALAR;
     using rational_type = typename Vector::RATIONAL;
 
-    using tangent_basis_type    = typename TangentVector::BASIS;
-    using tangent_coeff_type    = typename TangentVector::coefficient_field;
-    using tangent_key_type      = typename TangentVector::KEY;
-    using tangent_scalar_type   = typename TangentVector::SCALAR;
+    using tangent_basis_type = typename TangentVector::BASIS;
+    using tangent_coeff_type = typename TangentVector::coefficient_field;
+    using tangent_key_type = typename TangentVector::KEY;
+    using tangent_scalar_type = typename TangentVector::SCALAR;
     using tangent_rational_type = typename TangentVector::RATIONAL;
 
     // Legacy declarations
-    using BASIS    = basis_type;
-    using SCALAR   = scalar_type;
+    using BASIS = basis_type;
+    using SCALAR = scalar_type;
     using RATIONAL = rational_type;
-    using KEY      = key_type;
+    using KEY = key_type;
     using coefficient_field = coeff_type;
 
     static_assert(
-            std::is_base_of <vectors::vector<basis_type, coeff_type>, Vector>::value,
-            "Vector must be a vector type"
-            );
+            std::is_base_of<vectors::vector<basis_type, coeff_type>, Vector>::value,
+            "Vector must be a vector type");
     static_assert(
             std::is_base_of<vectors::vector<tangent_basis_type, tangent_coeff_type>, TangentVector>::value,
-            "TangentVector must be a vector type"
-            );
+            "TangentVector must be a vector type");
     static_assert(
             std::is_same<
                     tangent_scalar_type,
-                    decltype(std::declval<scalar_type>()*std::declval<tangent_scalar_type>())
-            >::value_type &&
-            std::is_same<
-                    tangent_scalar_type,
-                    decltype(std::declval<tangent_scalar_type>()*std::declval<scalar_type>())
-            >::value_type,
-            "tangent scalar type must be multiplicative with vector scalar type"
-            );
+                    decltype(std::declval<scalar_type>() * std::declval<tangent_scalar_type>())>::value_type
+                    && std::is_same<
+                            tangent_scalar_type,
+                            decltype(std::declval<tangent_scalar_type>() * std::declval<scalar_type>())>::value_type,
+            "tangent scalar type must be multiplicative with vector scalar type");
 
     explicit tangent_vector(const Vector& point) : Vector(point), m_tangent()
     {}
@@ -79,15 +74,15 @@ public:
     {}
 
     tangent_vector(const Vector& point, const TangentVector& tangent)
-            : Vector(point), m_tangent(tangent)
+        : Vector(point), m_tangent(tangent)
     {}
 
-    template <typename... Args>
+    template<typename... Args>
     explicit tangent_vector(Vector&& point, Args&&... args)
         : Vector(std::move(point)), m_tangent(std::forward<Args>(args)...)
     {}
 
-    template <typename... Args>
+    template<typename... Args>
     explicit tangent_vector(const Vector& point, Args&&... args)
         : Vector(point), m_tangent(std::forward<Args>(args)...)
     {}
@@ -102,31 +97,30 @@ public:
         return m_tangent;
     }
 
-
 private:
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
     friend class boost::serialization::access;
 
-    template <typename Archive>
+    template<typename Archive>
     void serialize(Archive& ar, unsigned int const /*version*/)
     {
-        ar & boost::serialization::base_object<Vector>(*this);
-        ar & m_tangent;
+        ar& boost::serialization::base_object<Vector>(*this);
+        ar& m_tangent;
     }
 #endif
 
 public:
+    tangent_vector& mul_scal_prod(const tangent_vector& rhs, const scalar_type& s, DEG depth);
+    tangent_vector& mul_scal_prod(const vector_type& rhs, const scalar_type& s, DEG depth);
+    tangent_vector& mul_scal_prod(const tangent_vector& rhs, const scalar_type& s);
+    tangent_vector& mul_scal_prod(const vector_type& rhs, const scalar_type& s);
 
-    template <typename SFINAE=Vector>
-    typename std::enable_if<is_algebra<SFINAE>(), vector_type&>::type
-    mul_scal_prod(const tangent_vector& rhs, const scalar_type& s)
-    {
-
-    }
-
+    tangent_vector& mul_scal_div(const tangent_vector& rhs, const rational_type& s, DEG depth);
+    tangent_vector& mul_scal_div(const vector_type& rhs, const rational_type& s, DEG depth);
+    tangent_vector& mul_scal_div(const tangent_vector& rhs, const rational_type& s);
+    tangent_vector& mul_scal_div(const vector_type& rhs, const rational_type& s);
 
 };
-
 
 template <typename Vector, typename TangentVector>
 tangent_vector<Vector, TangentVector> operator*(
@@ -167,6 +161,52 @@ tangent_vector<Vector, TangentVector> operator*(
             lhs_vec*right.tangent()
             );
 }
+
+template <typename Vector, typename TangentVector>
+tangent_vector<Vector, TangentVector>& operator*=(
+        tangent_vector<Vector, TangentVector>& lhs,
+        const tangent_vector<Vector, TangentVector>& rhs
+        )
+{
+    const auto& lhs_vec = static_cast<const Vector&>(lhs);
+    const auto& rhs_vec = static_cast<const Vector&>(rhs);
+
+    lhs_vec *= rhs_vec;
+    (lhs.tangent() *= rhs_vec) += (lhs_vec*rhs.tangent());
+    return lhs;
+}
+
+template <typename Vector, typename TangentVector>
+tangent_vector<Vector, TangentVector>& operator*=(
+        tangent_vector<Vector, TangentVector>& lhs,
+        const Vector& rhs_vec
+        )
+{
+    const auto& lhs_vec = static_cast<const Vector&>(lhs);
+
+    lhs_vec *= rhs_vec;
+    lhs.tangent() *= rhs_vec;
+    return lhs;
+}
+
+
+
+
+
+
+
+
+template <typename Vector, typename TangentVector>
+typename std::enable_if<is_algebra<Vector>(), tangent_vector<Vector, TangentVector>>::type
+commutator(const tangent_vector<Vector, TangentVector>& x, const tangent_vector<Vector, TangentVector>& y)
+{
+    tangent_vector<Vector, TangentVector> result(x*y);
+    result.add_mul(y, x);
+    return result;
+}
+
+
+
 
 
 
@@ -316,10 +356,102 @@ public:
         return *this;
     }
 
+    tangent_vector& mul_scal_prod(const tangent_vector& rhs, const scalar_type& s, DEG depth);
+    tangent_vector& mul_scal_prod(const vector_type& rhs, const scalar_type& s, DEG depth);
+    tangent_vector& mul_scal_prod(const tangent_vector& rhs, const scalar_type& s);
+    tangent_vector& mul_scal_prod(const vector_type& rhs, const scalar_type& s);
 
+    tangent_vector& mul_scal_div(const tangent_vector& rhs, const rational_type& s, DEG depth);
+    tangent_vector& mul_scal_div(const vector_type& rhs, const rational_type& s, DEG depth);
+    tangent_vector& mul_scal_div(const tangent_vector& rhs, const rational_type& s);
+    tangent_vector& mul_scal_div(const vector_type& rhs, const rational_type& s);
 };
 
 
+template <typename Coeffs, DEG Width, DEG Depth, template <typename, typename, typename...> class VectorType, typename... Args>
+using tangent_tensor = tangent_vector<free_tensor<Coeffs, Width, Depth, VectorType, Args...>;
+
+
+
+template<typename Vector, typename TangentVector>
+tangent_vector<Vector, TangentVector>&
+tangent_vector<Vector, TangentVector>::mul_scal_prod(const tangent_vector& rhs, const scalar_type& s, DEG depth)
+{
+    const auto& rhs_vec = static_cast<const vector_type&>(rhs);
+    auto& this_vec = static_cast<vector_type&>(*this);
+    vector_type::mul_scal_prod(rhs_vec, s, depth);
+    m_tangent = this_vec.mul_scal_prod(rhs.tangent(), s, depth) + tangent().mul_scal_prod(rhs_vec, s, depth);
+    return *this;
+}
+
+template<typename Vector, typename TangentVector>
+tangent_vector<Vector, TangentVector>&
+tangent_vector<Vector, TangentVector>::mul_scal_prod(const tangent_vector& rhs, const scalar_type& s)
+{
+    const auto& rhs_vec = static_cast<const vector_type&>(rhs);
+    auto& this_vec = static_cast<vector_type&>(*this);
+    vector_type::mul_scal_prod(rhs_vec, s);
+    m_tangent = this_vec.mul_scal_prod(rhs.tangent(), s) + tangent().mul_scal_prod(rhs_vec, s);
+    return *this;
+}
+
+template<typename Vector, typename TangentVector>
+tangent_vector<Vector, TangentVector>&
+tangent_vector<Vector, TangentVector>::mul_scal_div(const tangent_vector& rhs, const rational_type& s)
+{
+    const auto& rhs_vec = static_cast<const vector_type&>(rhs);
+    auto& this_vec = static_cast<vector_type&>(*this);
+    vector_type::mul_scal_div(rhs_vec, s);
+    m_tangent = this_vec.mul_scal_div(rhs.tangent(), s) + tangent().mul_scal_div(rhs_vec, s);
+    return *this;
+}
+
+template<typename Vector, typename TangentVector>
+tangent_vector<Vector, TangentVector>&
+tangent_vector<Vector, TangentVector>::mul_scal_div(const tangent_vector& rhs, const rational_type& s, DEG depth)
+{
+    const auto& rhs_vec = static_cast<const vector_type&>(rhs);
+    auto& this_vec = static_cast<vector_type&>(*this);
+    vector_type::mul_scal_div(rhs_vec, s, depth);
+    m_tangent = this_vec.mul_scal_div(rhs.tangent(), s, depth) + tangent().mul_scal_div(rhs_vec, s, depth);
+    return *this;
+}
+
+template<typename Vector, typename TangentVector>
+tangent_vector<Vector, TangentVector>&
+tangent_vector<Vector, TangentVector>::mul_scal_prod(const vector_type& rhs_vec, const scalar_type& s, DEG depth)
+{
+    auto& this_vec = static_cast<vector_type&>(*this);
+    vector_type::mul_scal_prod(rhs_vec, s, depth);
+    m_tangent.mul_scal_prod(rhs_vec, s, depth);
+    return *this;
+}
+template<typename Vector, typename TangentVector>
+tangent_vector<Vector, TangentVector>&
+tangent_vector<Vector, TangentVector>::mul_scal_prod(const vector_type& rhs_vec, const scalar_type& s)
+{
+    auto& this_vec = static_cast<vector_type&>(*this);
+    vector_type::mul_scal_prod(rhs_vec, s);
+    m_tangent.mul_scal_prod(rhs_vec, s);
+    return *this;
+}
+template<typename Vector, typename TangentVector>
+tangent_vector<Vector, TangentVector>&
+tangent_vector<Vector, TangentVector>::mul_scal_div(const vector_type& rhs_vec, const rational_type& s, DEG depth)
+{
+    auto& this_vec = static_cast<vector_type&>(*this);
+    vector_type::mul_scal_div(rhs_vec, s, depth);
+    m_tangent.mul_scal_div(rhs_vec, s, depth);
+}
+template<typename Vector, typename TangentVector>
+tangent_vector<Vector, TangentVector>&
+tangent_vector<Vector, TangentVector>::mul_scal_div(const vector_type& rhs_vec, const rational_type& s)
+{
+    auto& this_vec = static_cast<vector_type&>(*this);
+    vector_type::mul_scal_div(rhs_vec, s);
+    m_tangent.mul_scal_div(rhs_vec, s);
+    return *this;
+}
 
 } // namespace alg
 

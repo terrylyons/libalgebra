@@ -63,6 +63,8 @@ public:
                             decltype(std::declval<tangent_scalar_type>() * std::declval<scalar_type>())>::value_type,
             "tangent scalar type must be multiplicative with vector scalar type");
 
+    tangent_vector() = default;
+
     explicit tangent_vector(const Vector& point) : Vector(point), m_tangent()
     {}
 
@@ -132,7 +134,7 @@ tangent_vector<Vector, TangentVector> operator*(
     const auto& rhs_vec = static_cast<const Vector&>(right);
     return tangent_vector<Vector, TangentVector>(
             lhs_vec*rhs_vec,
-            lhs_vec*right.tangent() + left.tanget()*rhs_vec
+            lhs_vec*right.tangent() + left.tangent()*rhs_vec
             );
 }
 
@@ -168,11 +170,15 @@ tangent_vector<Vector, TangentVector>& operator*=(
         const tangent_vector<Vector, TangentVector>& rhs
         )
 {
-    const auto& lhs_vec = static_cast<const Vector&>(lhs);
+    auto& lhs_vec = static_cast<Vector&>(lhs);
     const auto& rhs_vec = static_cast<const Vector&>(rhs);
 
+    lhs.tangent() *= rhs_vec;
+    lhs.tangent() += lhs_vec * rhs.tangent();
+
+    // Do this operation last because otherwise it messes with the
+    // calculation of the tangent.
     lhs_vec *= rhs_vec;
-    (lhs.tangent() *= rhs_vec) += (lhs_vec*rhs.tangent());
     return lhs;
 }
 
@@ -182,7 +188,7 @@ tangent_vector<Vector, TangentVector>& operator*=(
         const Vector& rhs_vec
         )
 {
-    const auto& lhs_vec = static_cast<const Vector&>(lhs);
+    auto& lhs_vec = static_cast<Vector&>(lhs);
 
     lhs_vec *= rhs_vec;
     lhs.tangent() *= rhs_vec;
@@ -248,6 +254,8 @@ private:
     tangent_vector_type m_tangent;
 
 public:
+    tangent_vector() = default;
+
     explicit tangent_vector(const vector_type& point) : vector_type(point), m_tangent()
     {}
 
@@ -305,13 +313,14 @@ public:
         tangent_vector_type tmp(arg.tangent());
 
         auto ad_X = [&](const tangent_vector_type& t) {
-            return arg*t + t*arg;
+            return arg*t - t*arg;
         };
 
         scalar_type sign(Depth&1 ? -1 : 1);
         for (DEG i=Depth; i >= 1; --i) {
             tmp *= sign / rational_type(i+1);
             tmp = arg.tangent() + ad_X(tmp);
+            sign *= scalar_type(-1);
         }
 
         return tangent_vector(exponential, exponential*tmp);
@@ -369,7 +378,7 @@ public:
 
 
 template <typename Coeffs, DEG Width, DEG Depth, template <typename, typename, typename...> class VectorType, typename... Args>
-using tangent_tensor = tangent_vector<free_tensor<Coeffs, Width, Depth, VectorType, Args...>;
+using tangent_tensor = tangent_vector<free_tensor<Coeffs, Width, Depth, VectorType, Args...>>;
 
 
 

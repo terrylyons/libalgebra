@@ -46,6 +46,74 @@ struct TangentsFixture
 
 };
 
+    TEST_FIXTURE(TangentsFixture, test_equality_equals) {
+        const auto tt = random_tangent_tensor();
+
+        CHECK_EQUAL(tt, tt);
+    }
+
+    TEST_FIXTURE(TangentsFixture, test_equality_fails) {
+        const auto tt1 = random_tangent_tensor();
+        const auto tt2 = random_tangent_tensor();
+
+        CHECK(!(tt1 == tt2));
+    }
+
+    TEST_FIXTURE(TangentsFixture, test_equality_fails_different_fibres) {
+        const auto t = random_tensor();
+        const auto fibre1 = random_tensor();
+        const auto fibre2 = random_tensor();
+
+        const tangent_tensor_t tt1(t, fibre1);
+        const tangent_tensor_t tt2(t, fibre2);
+
+        CHECK(!(tt1 == tt2));
+    }
+
+    TEST_FIXTURE(TangentsFixture, test_equality_fails_different_vectors) {
+        const auto t1 = random_tensor();
+        const auto t2 = random_tensor();
+        const auto fibre = random_tensor();
+
+        const tangent_tensor_t tt1(t1, fibre), tt2(t2, fibre);
+
+        CHECK(!(tt1 == tt2));
+    }
+
+    TEST_FIXTURE(TangentsFixture, test_notequality_fails) {
+        const auto tt = random_tangent_tensor();
+
+        CHECK(!(tt != tt));
+    }
+
+    TEST_FIXTURE(TangentsFixture, test_notequality_true) {
+        const auto tt1 = random_tangent_tensor();
+        const auto tt2 = random_tangent_tensor();
+
+        CHECK(tt1 != tt2);
+    }
+
+    TEST_FIXTURE(TangentsFixture, test_notequality_different_fibres) {
+        const auto t = random_tensor();
+        const auto fibre1 = random_tensor();
+        const auto fibre2 = random_tensor();
+
+        const tangent_tensor_t tt1(t, fibre1);
+        const tangent_tensor_t tt2(t, fibre2);
+
+        CHECK((tt1 != tt2));
+    }
+
+    TEST_FIXTURE(TangentsFixture, test_notequality_different_vectors) {
+        const auto t1 = random_tensor();
+        const auto t2 = random_tensor();
+        const auto fibre = random_tensor();
+
+        const tangent_tensor_t tt1(t1, fibre), tt2(t2, fibre);
+
+        CHECK((tt1 != tt2));
+    }
+
 
     TEST_FIXTURE(TangentsFixture, test_tangent_unary_minus)
     {

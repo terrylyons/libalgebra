@@ -1741,19 +1741,22 @@ public:
     {}
 
     /// Computes the truncated exponential of a free_tensor instance.
-    friend free_tensor exp(const free_tensor& arg)
+
+    template <typename Tensor>
+    inline friend typename std::enable_if<std::is_base_of<free_tensor, Tensor>::value, Tensor>::type
+     exp(const Tensor& arg)
     {
         // Computes the truncated exponential of arg
         // 1 + arg + arg^2/2! + ... + arg^n/n! where n = max_degree
         KEY kunit;
-        free_tensor result(kunit);
+        free_tensor tunit(kunit);
+        Tensor result(tunit);
 
         resize_for_degree(result, max_degree);
 
-        free_tensor unit(kunit);
         for (DEG i = max_degree; i >= 1; --i) {
             result.mul_scal_div(arg, typename Coeff::Q(i));
-            result += unit;
+            result += tunit;
         }
         return result;
     }

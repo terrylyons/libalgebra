@@ -530,7 +530,7 @@ public:
     template<typename Vector>
     friend
             typename std::enable_if<
-                    std::is_base_of<vector, Vector>::value,
+            std::is_base_of<vector, Vector>::value,
                     Vector>::type
             operator*(const Vector& arg, const SCALAR& scal)
     {
@@ -557,7 +557,7 @@ public:
     template<typename Vector>
     friend
             typename std::enable_if<
-                    std::is_base_of<vector, Vector>::value,
+            std::is_base_of<vector, Vector>::value,
                     Vector>::type
             operator*(const SCALAR& scal, const Vector& arg)
     {
@@ -583,7 +583,7 @@ public:
     template<typename Vector1, typename Vector2>
     friend
             typename std::enable_if<
-                    std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
+            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
                     Vector1>::type
             operator+(const Vector1& lhs, const Vector2& rhs)
     {
@@ -611,7 +611,7 @@ public:
     template<typename Vector1, typename Vector2>
     friend
             typename std::enable_if<
-                    std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
+            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
                     Vector1>::type
             operator-(const Vector1& lhs, const Vector2& rhs)
     {

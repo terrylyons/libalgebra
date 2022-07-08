@@ -10,8 +10,10 @@
 #include <libalgebra/algebra.h>
 #include <libalgebra/tensor.h>
 
+#include <iosfwd>
 #include <type_traits>
 #include <utility>
+
 
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 #include <boost/serialization/serialization.hpp>
@@ -61,7 +63,7 @@ public:
                     && std::is_same<
                             fibre_scalar_type,
                             decltype(std::declval<fibre_scalar_type>() * std::declval<scalar_type>())>::value,
-            "tangent scalar type must be multiplicative with vector scalar type");
+            "fibre scalar type must be multiplicative with vector scalar type");
 
     vector_bundle() = default;
 
@@ -93,12 +95,12 @@ public:
         : Vector(point), m_fibre(std::forward<Args>(args)...)
     {}
 
-    Fibre& tangent() noexcept
+    Fibre& fibre() noexcept
     {
         return m_fibre;
     }
 
-    const Fibre& tangent() const noexcept
+    const Fibre& fibre() const noexcept
     {
         return m_fibre;
     }
@@ -173,7 +175,7 @@ public:
 template <typename Vector, typename Fibre>
 vector_bundle<Vector, Fibre> operator-(const vector_bundle<Vector, Fibre>& arg)
 {
-    return {-static_cast<const Vector&>(arg), -arg.tangent()};
+    return {-static_cast<const Vector&>(arg), -arg.fibre()};
 }
 
 template <typename Vector, typename Fibre>
@@ -181,20 +183,20 @@ vector_bundle<Vector, Fibre> operator+(const vector_bundle<Vector, Fibre>& lhs, 
 {
     return {
         static_cast<const Vector&>(lhs) + static_cast<const Vector&>(rhs),
-        lhs.tangent() + rhs.tangent()
+            lhs.fibre() + rhs.fibre()
     };
 }
 
 template <typename Vector, typename Fibre>
 vector_bundle<Vector, Fibre> operator+(const vector_bundle<Vector, Fibre>& lhs, const Vector& rhs)
 {
-    return {static_cast<const Vector&>(lhs) + rhs, lhs.tangent()};
+    return {static_cast<const Vector&>(lhs) + rhs, lhs.fibre()};
 }
 
 template <typename Vector, typename Fibre>
 vector_bundle<Vector, Fibre> operator+(const Vector& lhs, const vector_bundle<Vector, Fibre>& rhs)
 {
-    return {lhs + static_cast<const Vector&>(rhs), rhs.tangent()};
+    return {lhs + static_cast<const Vector&>(rhs), rhs.fibre()};
 }
 
 template <typename Vector, typename Fibre>
@@ -202,20 +204,20 @@ vector_bundle<Vector, Fibre> operator-(const vector_bundle<Vector, Fibre>& lhs, 
 {
     return {
         static_cast<const Vector&>(lhs) - static_cast<const Vector&>(rhs),
-        lhs.tangent() - rhs.tangent()
+            lhs.fibre() - rhs.fibre()
     };
 }
 
 template <typename Vector, typename Fibre>
 vector_bundle<Vector, Fibre> operator-(const vector_bundle<Vector, Fibre>& lhs, const Vector& rhs)
 {
-    return {static_cast<const Vector&>(lhs) - rhs, lhs.tangent()};
+    return {static_cast<const Vector&>(lhs) - rhs, lhs.fibre()};
 }
 
 template <typename Vector, typename Fibre>
 vector_bundle<Vector, Fibre> operator-(const Vector& lhs, const vector_bundle<Vector, Fibre>& rhs)
 {
-    return {lhs - static_cast<const Vector&>(rhs), -rhs.tangent()};
+    return {lhs - static_cast<const Vector&>(rhs), -rhs.fibre()};
 }
 
 /*
@@ -227,13 +229,13 @@ vector_bundle<Vector, Fibre> operator-(const Vector& lhs, const vector_bundle<Ve
 template <typename Vector, typename Fibre>
 vector_bundle<Vector, Fibre> operator*(const vector_bundle<Vector, Fibre>& lhs, const typename Vector::SCALAR& rhs)
 {
-    return {static_cast<const Vector&>(lhs)*rhs, lhs.tangent()*rhs};
+    return {static_cast<const Vector&>(lhs)*rhs, lhs.fibre()*rhs};
 }
 
 template <typename Vector, typename Fibre>
 vector_bundle<Vector, Fibre> operator*(const typename Vector::SCALAR& lhs, const vector_bundle<Vector, Fibre>& rhs)
 {
-    return {lhs*static_cast<const Vector&>(rhs), lhs*rhs.tangent()};
+    return {lhs*static_cast<const Vector&>(rhs), lhs* rhs.fibre()};
 }
 
 //template <typename Vector, typename Fibre>
@@ -246,7 +248,7 @@ vector_bundle<Vector, Fibre> operator*(const typename Vector::SCALAR& lhs, const
 //>::type
 //operator*(const vector_bundle<Vector, Fibre>& lhs, const typename Fibre::SCALAR& rhs)
 //{
-//    return {static_cast<const Vector&>(lhs)*rhs, lhs.tangent()*rhs};
+//    return {static_cast<const Vector&>(lhs)*rhs, lhs.fibre()*rhs};
 //}
 
 //template <typename Vector, typename Fibre>
@@ -259,13 +261,13 @@ vector_bundle<Vector, Fibre> operator*(const typename Vector::SCALAR& lhs, const
 //>::type
 //operator*(const typename Fibre::SCALAR& lhs, const vector_bundle<Vector, Fibre>& rhs)
 //{
-//    return {lhs*static_cast<const Vector&>(rhs), lhs*rhs.tangent()};
+//    return {lhs*static_cast<const Vector&>(rhs), lhs*rhs.fibre()};
 //}
 
 template <typename Vector, typename Fibre>
 vector_bundle<Vector, Fibre> operator/(const vector_bundle<Vector, Fibre>& lhs, const typename Vector::RATIONAL& rhs)
 {
-    return {static_cast<const Vector&>(lhs)/rhs, lhs.tangent()/rhs};
+    return {static_cast<const Vector&>(lhs)/rhs, lhs.fibre()/rhs};
 }
 
 //template <typename Vector, typename Fibre>
@@ -278,7 +280,7 @@ vector_bundle<Vector, Fibre> operator/(const vector_bundle<Vector, Fibre>& lhs, 
 //>::type
 //operator/(const vector_bundle<Vector, Fibre>& lhs, const typename Fibre::RATIONAL& rhs)
 //{
-//    return {static_cast<const Vector&>(lhs)/rhs, lhs.tangent()/rhs};
+//    return {static_cast<const Vector&>(lhs)/rhs, lhs.fibre()/rhs};
 //}
 
 
@@ -294,7 +296,7 @@ vector_bundle<Vector, Fibre> operator*(
     const auto& rhs_vec = static_cast<const Vector&>(right);
     return vector_bundle<Vector, Fibre>(
             lhs_vec*rhs_vec,
-            lhs_vec*right.tangent() + left.tangent()*rhs_vec
+            lhs_vec* right.fibre() + left.fibre()*rhs_vec
             );
 }
 
@@ -307,7 +309,7 @@ vector_bundle<Vector, Fibre> operator*(
     const auto& lhs_vec = static_cast<const Vector&>(left);
     return vector_bundle<Vector, Fibre>(
             lhs_vec*rhs_vec,
-            left.tangent()*rhs_vec
+            left.fibre()*rhs_vec
             );
 }
 
@@ -320,7 +322,7 @@ vector_bundle<Vector, Fibre> operator*(
     const auto& rhs_vec = static_cast<const Vector&>(right);
     return vector_bundle<Vector, Fibre>(
             lhs_vec * rhs_vec,
-            lhs_vec*right.tangent()
+            lhs_vec* right.fibre()
             );
 }
 
@@ -333,7 +335,7 @@ template <typename Vector, typename Fibre>
 vector_bundle<Vector, Fibre>& operator+=(vector_bundle<Vector, Fibre>& lhs, const vector_bundle<Vector, Fibre>& rhs)
 {
     static_cast<Vector&>(lhs) += static_cast<const Vector&>(rhs);
-    lhs.tangent() += rhs.tangent();
+    lhs.fibre() += rhs.fibre();
     return lhs;
 }
 
@@ -348,7 +350,7 @@ template <typename Vector, typename Fibre>
 vector_bundle<Vector, Fibre>& operator-=(vector_bundle<Vector, Fibre>& lhs, const vector_bundle<Vector, Fibre>& rhs)
 {
     static_cast<Vector&>(lhs) -= static_cast<const Vector&>(rhs);
-    lhs.tangent() -= rhs.tangent();
+    lhs.fibre() -= rhs.fibre();
     return lhs;
 }
 
@@ -363,7 +365,7 @@ template <typename Vector, typename Fibre>
 vector_bundle<Vector, Fibre>& operator*=(vector_bundle<Vector, Fibre>& lhs, const typename Vector::SCALAR& rhs)
 {
     static_cast<Vector&>(lhs) *= rhs;
-    lhs.tangent() *= rhs;
+    lhs.fibre() *= rhs;
     return lhs;
 }
 
@@ -378,7 +380,7 @@ vector_bundle<Vector, Fibre>& operator*=(vector_bundle<Vector, Fibre>& lhs, cons
 //operator*=(vector_bundle<Vector, Fibre>& lhs, const typename Fibre::SCALAR& rhs)
 //{
 //    static_cast<Vector&>(lhs) *= rhs;
-//    lhs.tangent() *= rhs;
+//    lhs.fibre() *= rhs;
 //    return lhs;
 //}
 
@@ -386,7 +388,7 @@ template <typename Vector, typename Fibre>
 vector_bundle<Vector, Fibre>& operator/=(vector_bundle<Vector, Fibre>& lhs, const typename Vector::RATIONAL& rhs)
 {
     static_cast<Vector&>(lhs) /= rhs;
-    lhs.tangent() /= rhs;
+    lhs.fibre() /= rhs;
     return lhs;
 }
 
@@ -401,7 +403,7 @@ vector_bundle<Vector, Fibre>& operator/=(vector_bundle<Vector, Fibre>& lhs, cons
 //operator/=(vector_bundle<Vector, Fibre>& lhs, const typename Fibre::RATIONAL& rhs)
 //{
 //    static_cast<Vector&>(lhs) /= rhs;
-//    lhs.tangent() /= rhs;
+//    lhs.fibre() /= rhs;
 //    return lhs;
 //}
 
@@ -415,11 +417,11 @@ vector_bundle<Vector, Fibre>& operator*=(
     auto& lhs_vec = static_cast<Vector&>(lhs);
     const auto& rhs_vec = static_cast<const Vector&>(rhs);
 
-    lhs.tangent() *= rhs_vec;
-    lhs.tangent() += lhs_vec * rhs.tangent();
+    lhs.fibre() *= rhs_vec;
+    lhs.fibre() += lhs_vec * rhs.fibre();
 
     // Do this operation last because otherwise it messes with the
-    // calculation of the tangent.
+    // calculation of the fibre.
     lhs_vec *= rhs_vec;
     return lhs;
 }
@@ -433,7 +435,7 @@ vector_bundle<Vector, Fibre>& operator*=(
     auto& lhs_vec = static_cast<Vector&>(lhs);
 
     lhs_vec *= rhs_vec;
-    lhs.tangent() *= rhs_vec;
+    lhs.fibre() *= rhs_vec;
     return lhs;
 }
 
@@ -445,7 +447,7 @@ bool operator==(const vector_bundle<Vector, Fibre>& lhs,
                 const vector_bundle<Vector, Fibre>& rhs)
 {
     return (static_cast<const Vector&>(lhs) == static_cast<const Vector&>(rhs))
-            && (lhs.tangent() == rhs.tangent());
+            && (lhs.fibre() == rhs.fibre());
 }
 
 template <typename Vector, typename Fibre>
@@ -453,6 +455,16 @@ bool operator!=(const vector_bundle<Vector, Fibre>& lhs,
                 const vector_bundle<Vector, Fibre>& rhs)
 {
     return !operator==(lhs, rhs);
+}
+
+template <typename Vector, typename Fibre>
+std::ostream& operator<<(std::ostream& os, const vector_bundle<Vector, Fibre>& arg)
+{
+    return os << '('
+              << static_cast<const Vector&>(arg)
+              << ", "
+              << arg.fibre()
+              << ')';
 }
 
 
@@ -516,12 +528,12 @@ commutator(const vector_bundle<Vector, Fibre>& x, const vector_bundle<Vector, Fi
 //    explicit vector_bundle(vector_type&& point) : vector_type(std::move(point)), m_fibre()
 //    {}
 //
-//    vector_bundle(vector_type&& point, fibre_vector_type&& tangent)
-//            : vector_type(std::move(point)), m_fibre(std::move(tangent))
+//    vector_bundle(vector_type&& point, fibre_vector_type&& fibre)
+//            : vector_type(std::move(point)), m_fibre(std::move(fibre))
 //    {}
 //
-//    vector_bundle(const vector_type& point, const fibre_vector_type& tangent)
-//            : vector_type(point), m_fibre(tangent)
+//    vector_bundle(const vector_type& point, const fibre_vector_type& fibre)
+//            : vector_type(point), m_fibre(fibre)
 //    {}
 //
 //    template<typename... CtorArgs>
@@ -534,12 +546,12 @@ commutator(const vector_bundle<Vector, Fibre>& x, const vector_bundle<Vector, Fi
 //            : vector_type(point), m_fibre(std::forward<CtorArgs>(args)...)
 //    {}
 //
-//    fibre_vector_type& tangent() noexcept
+//    fibre_vector_type& fibre() noexcept
 //    {
 //        return m_fibre;
 //    }
 //
-//    const fibre_vector_type& tangent() const noexcept
+//    const fibre_vector_type& fibre() const noexcept
 //    {
 //        return m_fibre;
 //    }
@@ -564,7 +576,7 @@ commutator(const vector_bundle<Vector, Fibre>& x, const vector_bundle<Vector, Fi
 ////    {
 ////        vector_type exponential = exp(static_cast<const vector_type&>(arg));
 ////        key_type kunit;
-////        fibre_vector_type tmp(arg.tangent());
+////        fibre_vector_type tmp(arg.fibre());
 ////
 ////        auto ad_X = [&](const fibre_vector_type& t) {
 ////            return arg*t - t*arg;
@@ -573,7 +585,7 @@ commutator(const vector_bundle<Vector, Fibre>& x, const vector_bundle<Vector, Fi
 ////        scalar_type sign(Depth&1 ? -1 : 1);
 ////        for (DEG i=Depth; i >= 1; --i) {
 ////            tmp *= sign / rational_type(i+1);
-////            tmp = arg.tangent() + ad_X(tmp);
+////            tmp = arg.fibre() + ad_X(tmp);
 ////            sign *= scalar_type(-1);
 ////        }
 ////
@@ -652,14 +664,14 @@ template<typename Vector, typename Fibre>
 vector_bundle<Vector, Fibre>& vector_bundle<Vector, Fibre>::add_scal_prod(const vector_bundle& rhs, const scalar_type& s)
 {
     vector_type::add_scal_prod(rhs, s);
-    m_fibre.add_scal_prod(rhs.tangent(), s);
+    m_fibre.add_scal_prod(rhs.fibre(), s);
     return *this;
 }
 template<typename Vector, typename Fibre>
 vector_bundle<Vector, Fibre>& vector_bundle<Vector, Fibre>::sub_scal_prod(const vector_bundle& rhs, const scalar_type& s)
 {
     vector_type::sub_scal_prod(rhs, s);
-    m_fibre.sub_scal_prod(rhs.tangent(), s);
+    m_fibre.sub_scal_prod(rhs.fibre(), s);
     return *this;
 }
 
@@ -667,14 +679,14 @@ template<typename Vector, typename Fibre>
 vector_bundle<Vector, Fibre>& vector_bundle<Vector, Fibre>::add_scal_div(const vector_bundle& rhs, const rational_type& s)
 {
     vector_type::add_scal_div(rhs, s);
-    m_fibre.add_scal_div(rhs.tangent(), s);
+    m_fibre.add_scal_div(rhs.fibre(), s);
     return *this;
 }
 template<typename Vector, typename Fibre>
 vector_bundle<Vector, Fibre>& vector_bundle<Vector, Fibre>::sub_scal_div(const vector_bundle& rhs, const rational_type& s)
 {
     vector_type::sub_scal_div(rhs, s);
-    m_fibre.sub_scal_div(rhs.tangent(), s);
+    m_fibre.sub_scal_div(rhs.fibre(), s);
     return *this;
 }
 
@@ -712,7 +724,7 @@ vector_bundle<Vector, Fibre>& vector_bundle<Vector, Fibre>::sub_scal_div(const V
 //vector_bundle<Vector, Fibre>::add_scal_prod(const vector_bundle& rhs, const fibre_scalar_type& s)
 //{
 //    vector_type::add_scal_prod(rhs, s);
-//    m_fibre.add_scal_prod(rhs.tangent(), s);
+//    m_fibre.add_scal_prod(rhs.fibre(), s);
 //    return *this;
 //}
 //template<typename Vector, typename Fibre>
@@ -724,7 +736,7 @@ vector_bundle<Vector, Fibre>& vector_bundle<Vector, Fibre>::sub_scal_div(const V
 //vector_bundle<Vector, Fibre>::sub_scal_prod(const vector_bundle& rhs, const fibre_scalar_type& s)
 //{
 //    vector_type::sub_scal_prod(rhs, s);
-//    m_fibre.sub_scal_prod(rhs.tangent(), s);
+//    m_fibre.sub_scal_prod(rhs.fibre(), s);
 //    return *this;
 //}
 //template<typename Vector, typename Fibre>
@@ -736,7 +748,7 @@ vector_bundle<Vector, Fibre>& vector_bundle<Vector, Fibre>::sub_scal_div(const V
 //vector_bundle<Vector, Fibre>::add_scal_div(const vector_bundle& rhs, const fibre_rational_type& s)
 //{
 //    vector_type::add_scal_div(rhs, s);
-//    m_fibre.add_scal_dv(rhs.tangent(), s);
+//    m_fibre.add_scal_dv(rhs.fibre(), s);
 //    return *this;
 //}
 //template<typename Vector, typename Fibre>
@@ -748,7 +760,7 @@ vector_bundle<Vector, Fibre>& vector_bundle<Vector, Fibre>::sub_scal_div(const V
 //vector_bundle<Vector, Fibre>::sub_scal_div(const vector_bundle& rhs, const fibre_rational_type& s)
 //{
 //    vector_type::sub_scal_div(rhs, s);
-//    m_fibre.sub_scal_div(rhs.tangent(), s);
+//    m_fibre.sub_scal_div(rhs.fibre(), s);
 //    return *this;
 //}
 template<typename Vector, typename Fibre>
@@ -787,7 +799,7 @@ vector_bundle<Vector, Fibre>::mul_scal_prod(const vector_bundle& rhs, const scal
     const auto& rhs_vec = static_cast<const vector_type&>(rhs);
     auto& this_vec = static_cast<vector_type&>(*this);
     vector_type::mul_scal_prod(rhs_vec, s, depth);
-    m_fibre = this_vec.mul_scal_prod(rhs.tangent(), s, depth) + tangent().mul_scal_prod(rhs_vec, s, depth);
+    m_fibre = this_vec.mul_scal_prod(rhs.fibre(), s, depth) + fibre().mul_scal_prod(rhs_vec, s, depth);
     return *this;
 }
 template<typename Vector, typename Fibre>
@@ -797,7 +809,7 @@ vector_bundle<Vector, Fibre>::mul_scal_prod(const vector_bundle& rhs, const scal
     const auto& rhs_vec = static_cast<const vector_type&>(rhs);
     auto& this_vec = static_cast<vector_type&>(*this);
     vector_type::mul_scal_prod(rhs_vec, s);
-    m_fibre = this_vec.mul_scal_prod(rhs.tangent(), s) + tangent().mul_scal_prod(rhs_vec, s);
+    m_fibre = this_vec.mul_scal_prod(rhs.fibre(), s) + fibre().mul_scal_prod(rhs_vec, s);
     return *this;
 }
 
@@ -808,7 +820,7 @@ vector_bundle<Vector, Fibre>::mul_scal_div(const vector_bundle& rhs, const ratio
     const auto& rhs_vec = static_cast<const vector_type&>(rhs);
     auto& this_vec = static_cast<vector_type&>(*this);
     vector_type::mul_scal_div(rhs_vec, s);
-    m_fibre = this_vec.mul_scal_div(rhs.tangent(), s) + tangent().mul_scal_div(rhs_vec, s);
+    m_fibre = this_vec.mul_scal_div(rhs.fibre(), s) + fibre().mul_scal_div(rhs_vec, s);
     return *this;
 }
 
@@ -819,7 +831,7 @@ vector_bundle<Vector, Fibre>::mul_scal_div(const vector_bundle& rhs, const ratio
     const auto& rhs_vec = static_cast<const vector_type&>(rhs);
     auto& this_vec = static_cast<vector_type&>(*this);
     vector_type::mul_scal_div(rhs_vec, s, depth);
-    m_fibre = this_vec.mul_scal_div(rhs.tangent(), s, depth) + tangent().mul_scal_div(rhs_vec, s, depth);
+    m_fibre = this_vec.mul_scal_div(rhs.fibre(), s, depth) + fibre().mul_scal_div(rhs_vec, s, depth);
     return *this;
 }
 

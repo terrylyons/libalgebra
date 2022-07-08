@@ -59,6 +59,13 @@ template<typename Vector>
 struct data_access : public data_access_base<Vector> {
 };
 
+
+template <typename Vector>
+struct disable_vector_operations_definition : std::false_type
+{
+};
+
+
 }// namespace dtl
 
 /// Main vector interface
@@ -677,7 +684,10 @@ public:
 
     template <typename Vector>
     friend typename
-    std::enable_if<std::is_base_of<vector, Vector>::value, Vector>::type
+    std::enable_if<
+            std::is_base_of<vector, Vector>::value &&
+            !dtl::disable_vector_operations_definition<Vector>::value,
+            Vector>::type
     operator-(const Vector& arg)
     {
         Vector result;
@@ -689,7 +699,8 @@ public:
     friend
     typename std::enable_if<
             std::is_base_of<vector, Vector>::value &&
-                    std::is_constructible<SCALAR, const Scalar&>::value,
+            std::is_constructible<SCALAR, const Scalar&>::value &&
+            !dtl::disable_vector_operations_definition<Vector>::value,
             Vector>::type
     operator*(const Vector& arg, const Scalar& scal)
     {
@@ -704,7 +715,8 @@ public:
     template <typename Vector>
     friend
     typename std::enable_if<
-            std::is_base_of<vector, Vector>::value,
+            std::is_base_of<vector, Vector>::value &&
+            !dtl::disable_vector_operations_definition<Vector>::value,
             Vector>::type
     operator*(const Vector& arg, const SCALAR& scal)
     {
@@ -719,6 +731,7 @@ public:
     friend
     typename std::enable_if<
             std::is_base_of<vector, Vector>::value &&
+            !dtl::disable_vector_operations_definition<Vector>::value &&
             std::is_constructible<SCALAR, const Scalar&>::value,
             Vector>::type
     operator*(const Scalar& scal, const Vector& arg)
@@ -734,7 +747,8 @@ public:
     template <typename Vector>
     friend
     typename std::enable_if<
-            std::is_base_of<vector, Vector>::value,
+            std::is_base_of<vector, Vector>::value &&
+            !dtl::disable_vector_operations_definition<Vector>::value,
             Vector>::type
     operator*(const SCALAR& scal, const Vector& arg)
     {
@@ -747,7 +761,9 @@ public:
 
     template<typename Vector, typename Rational>
     friend typename std::enable_if<
-            std::is_base_of<vector, Vector>::value && std::is_constructible<RATIONAL, const Rational&>::value,
+            std::is_base_of<vector, Vector>::value &&
+            !dtl::disable_vector_operations_definition<Vector>::value &&
+            std::is_constructible<RATIONAL, const Rational&>::value,
             Vector>::type
     operator/(const Vector& arg, const Rational& scal)
     {
@@ -761,7 +777,10 @@ public:
     template<typename Vector1, typename Vector2>
     friend
     typename std::enable_if<
-            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
+            std::is_base_of<vector, Vector1>::value &&
+            !dtl::disable_vector_operations_definition<Vector1>::value &&
+            !dtl::disable_vector_operations_definition<Vector2>::value &&
+            std::is_base_of<vector, Vector2>::value,
             Vector1>::type
     operator+(const Vector1& lhs, const Vector2& rhs)
     {
@@ -775,7 +794,8 @@ public:
              template <typename, typename, typename...> class OtherVType,
              typename... OtherArgs>
     friend typename std::enable_if<
-            std::is_base_of<vector, Vector>::value,
+            std::is_base_of<vector, Vector>::value &&
+            !dtl::disable_vector_operations_definition<Vector>::value,
             Vector>::type
     operator+(const Vector& lhs, const vector<Basis, Coeffs, OtherVType, OtherArgs...>& rhs)
     {
@@ -789,7 +809,9 @@ public:
     template<typename Vector1, typename Vector2>
     friend
     typename std::enable_if<
-            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
+            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value &&
+            !dtl::disable_vector_operations_definition<Vector1>::value &&
+            !dtl::disable_vector_operations_definition<Vector2>::value,
             Vector1>::type
     operator-(const Vector1& lhs, const Vector2& rhs)
     {
@@ -803,7 +825,8 @@ public:
              template <typename, typename, typename...> class OtherVType,
              typename... OtherArgs>
     friend typename std::enable_if<
-            std::is_base_of<vector, Vector>::value,
+            std::is_base_of<vector, Vector>::value &&
+            !dtl::disable_vector_operations_definition<Vector>::value,
             Vector>::type
     operator-(const Vector& lhs, const vector<Basis, Coeffs, OtherVType, OtherArgs...>& rhs)
     {
@@ -816,7 +839,9 @@ public:
 
     template<typename Vector, typename Scalar>
     friend typename std::enable_if<
-            std::is_base_of<vector, Vector>::value && std::is_constructible<SCALAR, const Scalar&>::value,
+            std::is_base_of<vector, Vector>::value &&
+            std::is_constructible<SCALAR, const Scalar&>::value &&
+            !dtl::disable_vector_operations_definition<Vector>::value,
             Vector>::type&
     operator*=(Vector& arg, const Scalar& scal)
     {
@@ -828,7 +853,9 @@ public:
 
     template<typename Vector, typename Rational>
     friend typename std::enable_if<
-            std::is_base_of<vector, Vector>::value && std::is_constructible<RATIONAL, const Rational&>::value,
+            std::is_base_of<vector, Vector>::value &&
+            std::is_constructible<RATIONAL, const Rational&>::value &&
+            !dtl::disable_vector_operations_definition<Vector>::value,
             Vector>::type&
     operator/=(Vector& arg, const Rational& rat)
     {
@@ -841,7 +868,9 @@ public:
     template <typename Vector1, typename Vector2>
     friend typename std::enable_if<
             std::is_base_of<vector, Vector1>::value &&
-            std::is_base_of<vector, Vector2>::value,
+            std::is_base_of<vector, Vector2>::value &&
+            !dtl::disable_vector_operations_definition<Vector1>::value &&
+            !dtl::disable_vector_operations_definition<Vector2>::value,
             Vector1>::type&
     operator+=(Vector1& lhs, const Vector2& rhs)
     {
@@ -850,7 +879,10 @@ public:
     }
 
     template <typename Vector, template <typename, typename, typename...> class OtherVType, typename... OtherArgs>
-    friend typename std::enable_if<std::is_base_of<vector, Vector>::value, Vector>::type&
+    friend typename std::enable_if<
+            std::is_base_of<vector, Vector>::value &&
+            !dtl::disable_vector_operations_definition<Vector>::value,
+            Vector>::type&
     operator+=(Vector& lhs, const vector<Basis, Coeffs, OtherVType, OtherArgs...>& rhs)
     {
         for (auto item : rhs) {
@@ -862,7 +894,9 @@ public:
     template <typename Vector1, typename Vector2>
     friend typename std::enable_if<
             std::is_base_of<vector, Vector1>::value &&
-            std::is_base_of<vector, Vector2>::value,
+            std::is_base_of<vector, Vector2>::value &&
+            !dtl::disable_vector_operations_definition<Vector1>::value &&
+            !dtl::disable_vector_operations_definition<Vector2>::value,
             Vector1>::type&
     operator-=(Vector1& lhs, const Vector2& rhs)
     {
@@ -871,7 +905,10 @@ public:
     }
 
     template <typename Vector, template<typename, typename, typename...> class OtherVType, typename... OtherArgs>
-    friend typename std::enable_if<std::is_base_of<vector, Vector>::value, Vector>::type&
+    friend typename std::enable_if<
+            std::is_base_of<vector, Vector>::value &&
+            !dtl::disable_vector_operations_definition<Vector>::value,
+            Vector>::type&
     operator-=(Vector& lhs, const vector<Basis, Coeffs, OtherVType, OtherArgs...>& rhs)
     {
         for (auto item : rhs) {

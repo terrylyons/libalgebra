@@ -12,13 +12,13 @@ SUITE(tangents) {
 struct TangentsFixture
 {
     static constexpr DEG WIDTH = 5;
-    static constexpr DEG DEPTH = 5;
+    static constexpr DEG DEPTH = 2;
     using coeff_type = coefficients::rational_field;
     using scalar_type = typename coeff_type::S;
 
     using tensor_basis_type = free_tensor_basis<WIDTH, DEPTH>;
     using tensor_t = free_tensor<coeff_type, WIDTH, DEPTH>;
-    using tangent_tensor_t = tangent_vector<tensor_t>;
+    using tangent_tensor_t = vector_bundle<tensor_t>;
 
     using coeff_dist_t = la_testing::uniform_rational_distribution<typename coeff_type::S>;
 
@@ -47,8 +47,84 @@ struct TangentsFixture
 };
 
 
+    TEST_FIXTURE(TangentsFixture, test_tangent_unary_minus)
+    {
+        const auto tt = random_tangent_tensor();
 
-    TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
+        auto result = -tt;
+        auto expected_tensor = -static_cast<const tensor_t&>(tt);
+        auto expected_tangent = -tt.tangent();
+
+        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected_tangent, result.tangent());
+    }
+
+    TEST_FIXTURE(TangentsFixture, test_addition_both_tangents)
+    {
+        const auto tt1 = random_tangent_tensor();
+        const auto tt2 = random_tangent_tensor();
+
+        auto result = tt1 + tt2;
+        auto expected_tensor = static_cast<const tensor_t&>(tt1) + static_cast<const tensor_t&>(tt2);
+        auto expected_tangent = tt1.tangent() + tt2.tangent();
+
+        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected_tangent, result.tangent());
+    }
+
+    TEST_FIXTURE(TangentsFixture, test_tangent_add_tensor_right)
+    {
+        const auto tt = random_tangent_tensor();
+        const auto t = random_tensor();
+
+        auto result = tt + t;
+        auto expected_tensor = static_cast<const tensor_t&>(tt) + t;
+        auto expected_tangent = tt.tangent();
+
+        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected_tangent, result.tangent());
+    }
+
+    TEST_FIXTURE(TangentsFixture, test_tangent_add_tensor_left)
+    {
+        const auto t = random_tensor();
+        const auto tt = random_tangent_tensor();
+
+        auto result = t + tt;
+        auto expected_tensor = t + static_cast<const tensor_t&>(tt);
+        auto expected_tangent = tt.tangent();
+
+        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected_tangent, result.tangent());
+    }
+
+    TEST_FIXTURE(TangentsFixture, test_tangent_subtraction)
+    {
+        const auto tt1 = random_tangent_tensor();
+        const auto tt2 = random_tangent_tensor();
+
+        auto result = tt1 - tt2;
+        auto expected_tensor = static_cast<const tensor_t&>(tt1) - static_cast<const tensor_t&>(tt2);
+        auto expected_tangent = tt1.tangent() - tt2.tangent();
+
+        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected_tangent, result.tangent());
+    }
+
+    TEST_FIXTURE(TangentsFixture, test_tangent_subtraction_right_tensor)
+    {
+        const auto tt = random_tangent_tensor();
+        const auto t = random_tensor();
+
+        auto result = tt + t;
+        auto expected_tensor = static_cast<const tensor_t&>(tt) + t;
+        auto expected_tangent = tt.tangent();
+
+        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected_tangent, result.tangent());
+    }
+
+TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
     {
         const auto tt1 = random_tangent_tensor();
         const auto tt2 = random_tangent_tensor();
@@ -111,7 +187,7 @@ struct TangentsFixture
         tt1 *= tt2;
 
         CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(tt1));
-//        CHECK_EQUAL(expected_tangent, tt1.tangent());
+        CHECK_EQUAL(expected_tangent, tt1.tangent());
     }
 
     TEST_FIXTURE(TangentsFixture, test_inplace_multiplication_tensor)
@@ -130,44 +206,196 @@ struct TangentsFixture
         CHECK_EQUAL(expected_tangent, tt.tangent());
     }
 
-
-    TEST_FIXTURE(TangentsFixture, test_exp_tangent)
+    TEST_FIXTURE(TangentsFixture, test_add_scal_prod_tangent)
     {
-        const auto tt = random_tangent_tensor();
+        auto tt1 = random_tangent_tensor();
+        const auto tt2 = random_tangent_tensor();
+        const auto rs = rational_dist(rng);
 
-        const auto& rt = static_cast<const tensor_t&>(tt);
-        const auto& rtan = tt.tangent();
+        auto expected = tt1 + (tt2 * rs);
+        auto result = tt1.add_scal_prod(tt2, rs);
 
-        DEG k;
-        auto ad_X_k = [&](const tensor_t & a) {
-            tensor_t result(a);
-            for (DEG i=0; i<k; ++i) {
-                result = rt*result - result*rt;
-            }
-            return result;
-        };
-
-        auto expected_tensor = exp(rt);
-        tensor_t expected_tangent(expected_tensor);
-        {
-            tensor_t tmp(rtan);
-            scalar_type factorial(1);
-            for (k=1; k<=DEPTH; ++k) {
-                factorial /= scalar_type(k+1);
-                if (k % 2 == 0) {
-                    tmp.add_scal_div(ad_X_k(rtan), factorial);
-                } else {
-                    tmp.sub_scal_div(ad_X_k(rtan), factorial);
-                }
-            }
-            expected_tangent *= tmp;
-        }
-
-        auto result = exp(tt);
-
-        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
-        CHECK_EQUAL(expected_tangent, result.tangent());
+        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.tangent(), result.tangent());
     }
+
+
+    TEST_FIXTURE(TangentsFixture, test_add_scal_prod_tensor)
+    {
+        auto tt1 = random_tangent_tensor();
+        const auto t2 = random_tensor();
+        const auto rs = rational_dist(rng);
+
+        auto expected = tt1 + (t2 * rs);
+        auto result = tt1.add_scal_prod(t2, rs);
+
+        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.tangent(), result.tangent());
+    }
+
+
+    TEST_FIXTURE(TangentsFixture, test_sub_scal_prod_tangent)
+    {
+        auto tt1 = random_tangent_tensor();
+        const auto tt2 = random_tangent_tensor();
+        const auto rs = rational_dist(rng);
+
+        auto expected = tt1 - (tt2 * rs);
+        auto result = tt1.sub_scal_prod(tt2, rs);
+
+        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.tangent(), result.tangent());
+    }
+
+
+    TEST_FIXTURE(TangentsFixture, test_sub_scal_prod_tensor)
+    {
+        auto tt1 = random_tangent_tensor();
+        const auto t2 = random_tensor();
+        const auto rs = rational_dist(rng);
+
+        auto expected = tt1 - (t2 * rs);
+        auto result = tt1.sub_scal_prod(t2, rs);
+
+        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.tangent(), result.tangent());
+    }
+
+    TEST_FIXTURE(TangentsFixture, test_add_scal_div_tangent)
+    {
+        auto tt1 = random_tangent_tensor();
+        const auto tt2 = random_tangent_tensor();
+        const auto rs = rational_dist(rng);
+
+        auto expected = tt1 + (tt2 / rs);
+        auto result = tt1.add_scal_div(tt2, rs);
+
+        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.tangent(), result.tangent());
+    }
+
+
+    TEST_FIXTURE(TangentsFixture, test_add_scal_div_tensor)
+    {
+        auto tt1 = random_tangent_tensor();
+        const auto t2 = random_tensor();
+        const auto rs = rational_dist(rng);
+
+        auto expected = tt1 + (t2 / rs);
+        auto result = tt1.add_scal_div(t2, rs);
+
+        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.tangent(), result.tangent());
+    }
+
+    TEST_FIXTURE(TangentsFixture, test_sub_scal_div_tangent)
+    {
+        auto tt1 = random_tangent_tensor();
+        const auto tt2 = random_tangent_tensor();
+        const auto rs = rational_dist(rng);
+
+        auto expected = tt1 - (tt2 / rs);
+        auto result = tt1.sub_scal_div(tt2, rs);
+
+        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.tangent(), result.tangent());
+    }
+
+
+    TEST_FIXTURE(TangentsFixture, test_sub_scal_div_tensor)
+    {
+        auto tt1 = random_tangent_tensor();
+        const auto t2 = random_tensor();
+        const auto rs = rational_dist(rng);
+
+        auto expected = tt1 - (t2 / rs);
+        auto result = tt1.sub_scal_div(t2, rs);
+
+        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.tangent(), result.tangent());
+    }
+
+
+    TEST_FIXTURE(TangentsFixture, test_mul_scal_prod_tangent) {
+        auto tt1 = random_tangent_tensor();
+        const auto tt2 = random_tangent_tensor();
+        const auto rs = rational_dist(rng);
+
+        auto expected = tt1 * (tt2 * rs);
+        auto result = tt1.mul_scal_prod(tt2, rs);
+
+        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.tangent(), result.tangent());
+    }
+
+    TEST_FIXTURE(TangentsFixture, test_mul_scal_prod_tensor) {
+        auto tt1 = random_tangent_tensor();
+        const auto t2 = random_tensor();
+        const auto rs = rational_dist(rng);
+
+        auto expected = tt1 * (t2 * rs);
+        auto result = tt1.mul_scal_prod(t2, rs);
+
+        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.tangent(), result.tangent());
+    }
+
+    TEST_FIXTURE(TangentsFixture, test_mul_scal_div_tangent) {
+        auto tt1 = random_tangent_tensor();
+        const auto tt2 = random_tangent_tensor();
+        const auto rs = rational_dist(rng);
+
+        auto expected = tt1 * (tt2 / rs);
+        auto result = tt1.mul_scal_div(tt2, rs);
+
+        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.tangent(), result.tangent());
+    }
+
+    TEST_FIXTURE(TangentsFixture, test_mul_scal_div_tensor) {
+        auto tt1 = random_tangent_tensor();
+        const auto t2 = random_tensor();
+        const auto rs = rational_dist(rng);
+
+        auto expected = tt1 * (t2 / rs);
+        auto result = tt1.mul_scal_div(t2, rs);
+
+        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.tangent(), result.tangent());
+    }
+
+
+//    TEST_FIXTURE(TangentsFixture, test_exp_tangent)
+//    {
+//        const auto tt = random_tangent_tensor();
+//
+//        const auto& rt = static_cast<const tensor_t&>(tt);
+//        const auto& rtan = tt.tangent();
+//
+//        DEG k;
+//        auto ad_X_k = [&](const tensor_t & a) {
+//            tensor_t result(a);
+//            for (DEG i=0; i<k; ++i) {
+//                result = rt*result - result*rt;
+//            }
+//            return result;
+//        };
+//
+//        auto expected_tensor = exp(rt);
+//        tensor_t expected_tangent(tt.tangent());
+//        for (DEG i=DEPTH; i >= 1; --i) {
+//            tensor_t tan(expected_tangent);
+//            expected_tangent.mul_scal_div(rt, typename tensor_t::RATIONAL(i));
+//            expected_tangent.add_scal_div(rt*tan, typename tensor_t::RATIONAL(i));
+//        }
+//
+//        auto result = exp(tt);
+//
+//        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+//        CHECK_EQUAL(expected_tangent, result.tangent());
+//        std::cout << expected_tangent - result.tangent() << '\n';
+//     }
+
 
 
 

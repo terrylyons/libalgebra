@@ -29,8 +29,6 @@ class area_tensor_multiplication
     template<typename Tensor>
     static Tensor _prod(typename Tensor::KEY const& k1, typename Tensor::KEY const& k2)
     {
-        typedef typename Tensor::KEY key_t;
-
         typedef typename Tensor::BASIS basis_t;
         typedef half_shuffle_tensor<Coeff, basis_t::s_no_letters, basis_t::s_max_degree> half_shuffle_tensor_t;
 

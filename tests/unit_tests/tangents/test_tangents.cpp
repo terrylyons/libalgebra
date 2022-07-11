@@ -13,14 +13,20 @@ struct TangentsFixture
 {
     static constexpr DEG WIDTH = 5;
     static constexpr DEG DEPTH = 2;
+
+    using rational_field = coefficients::rational_field;
+    using rational = typename rational_field::S;
+
     using coeff_type = coefficients::rational_field;
+//    using coeff_type = coefficients::coefficient_ring<poly<rational_field>, typename rational_field::Q>;
+
     using scalar_type = typename coeff_type::S;
 
     using tensor_basis_type = free_tensor_basis<WIDTH, DEPTH>;
     using tensor_t = free_tensor<coeff_type, WIDTH, DEPTH>;
     using tangent_tensor_t = vector_bundle<tensor_t>;
 
-    using coeff_dist_t = la_testing::uniform_rational_distribution<typename coeff_type::S>;
+    using coeff_dist_t = la_testing::uniform_rational_distribution<typename rational_field::S>;
 
     std::mt19937 rng;
     coeff_dist_t rational_dist;
@@ -32,14 +38,32 @@ struct TangentsFixture
         rng = std::mt19937(dev());
     }
 
-    tensor_t random_tensor()
+    tensor_t random_tensor(LET i=0)
     {
         return rvg(rng);
     }
 
+//    tensor_t random_tensor(LET i=0)
+//    {
+//
+//        tensor_t result;
+//        LET ki=0;
+//        tensor_basis_type basis;
+//        for (auto k : basis.iterate_keys()) {
+//            result.add_scal_prod(k, scalar_type(i + (ki++), rational(1)));
+//        }
+//        return result;
+//    }
+
     tangent_tensor_t random_tangent_tensor()
     {
-        return {random_tensor(), random_tensor()};
+        return {random_tensor(100), random_tensor(200)};
+    }
+
+    scalar_type random_scalar(LET offset=1000)
+    {
+//        return scalar_type(offset, rational(1));
+        return rational_dist(rng);
     }
 
 
@@ -278,7 +302,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
     {
         auto tt1 = random_tangent_tensor();
         const auto tt2 = random_tangent_tensor();
-        const auto rs = rational_dist(rng);
+        const auto rs = random_scalar();
 
         auto expected = tt1 + (tt2 * rs);
         auto result = tt1.add_scal_prod(tt2, rs);
@@ -292,7 +316,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
     {
         auto tt1 = random_tangent_tensor();
         const auto t2 = random_tensor();
-        const auto rs = rational_dist(rng);
+        const auto rs = random_scalar();
 
         auto expected = tt1 + (t2 * rs);
         auto result = tt1.add_scal_prod(t2, rs);
@@ -306,7 +330,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
     {
         auto tt1 = random_tangent_tensor();
         const auto tt2 = random_tangent_tensor();
-        const auto rs = rational_dist(rng);
+        const auto rs = random_scalar();
 
         auto expected = tt1 - (tt2 * rs);
         auto result = tt1.sub_scal_prod(tt2, rs);
@@ -320,7 +344,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
     {
         auto tt1 = random_tangent_tensor();
         const auto t2 = random_tensor();
-        const auto rs = rational_dist(rng);
+        const auto rs = random_scalar();
 
         auto expected = tt1 - (t2 * rs);
         auto result = tt1.sub_scal_prod(t2, rs);
@@ -387,7 +411,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
     TEST_FIXTURE(TangentsFixture, test_mul_scal_prod_tangent) {
         auto tt1 = random_tangent_tensor();
         const auto tt2 = random_tangent_tensor();
-        const auto rs = rational_dist(rng);
+        const auto rs = random_scalar();
 
         auto expected = tt1 * (tt2 * rs);
         auto result = tt1.mul_scal_prod(tt2, rs);
@@ -399,7 +423,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
     TEST_FIXTURE(TangentsFixture, test_mul_scal_prod_tensor) {
         auto tt1 = random_tangent_tensor();
         const auto t2 = random_tensor();
-        const auto rs = rational_dist(rng);
+        const auto rs = random_scalar();
 
         auto expected = tt1 * (t2 * rs);
         auto result = tt1.mul_scal_prod(t2, rs);
@@ -433,38 +457,93 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
     }
 
 
-//    TEST_FIXTURE(TangentsFixture, test_exp_tangent)
-//    {
+    TEST_FIXTURE(TangentsFixture, test_exp_tangent)
+    {
+        const auto tt = random_tangent_tensor();
+
+        const auto& rt = static_cast<const tensor_t&>(tt);
+        const auto& rtan = tt.fibre();
+
+        typename tensor_t::KEY kunit;
+        tensor_t tunit(kunit), expected_tensor(kunit), expected_tangent(kunit);
+        for (DEG i = DEPTH; i >= 1; --i) {
+            typename tensor_t::RATIONAL divisor(i);
+
+            tensor_t& lhs = expected_tensor;
+            tensor_t& lhs_tan = expected_tangent;
+
+
+            expected_tangent = expected_tensor * (rtan / divisor) + expected_tangent * (rt / divisor);
+
+            expected_tensor.mul_scal_div(rt, divisor);
+
+            expected_tensor += tunit;
+            expected_tangent += tunit;
+        }
+
+        auto result = exp(tt);
+
+        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected_tangent, result.fibre());
+    }
+//
+//    TEST_FIXTURE(TangentsFixture, test_exp_via_formula) {
+//
 //        const auto tt = random_tangent_tensor();
 //
 //        const auto& rt = static_cast<const tensor_t&>(tt);
 //        const auto& rtan = tt.fibre();
 //
-//        DEG k;
-//        auto ad_X_k = [&](const tensor_t & a) {
-//            tensor_t result(a);
-//            for (DEG i=0; i<k; ++i) {
-//                result = rt*result - result*rt;
+//        auto ad_X_k = [&](DEG k) {
+//            tensor_t result(rtan);
+//            for (DEG i = 0; i < k; ++i) {
+//                result = rt * result - result * rt;
 //            }
 //            return result;
 //        };
 //
 //        auto expected_tensor = exp(rt);
-//        tensor_t expected_tangent(tt.fibre());
-//        for (DEG i=DEPTH; i >= 1; --i) {
-//            tensor_t tan(expected_tangent);
-//            expected_tangent.mul_scal_div(rt, typename tensor_t::RATIONAL(i));
-//            expected_tangent.add_scal_div(rt*tan, typename tensor_t::RATIONAL(i));
+//        auto expected_tangent = expected_tensor;
+//        {
+//            tensor_t tmp(tt.fibre());
+//            typename tensor_t::RATIONAL divisor(1);
+//            for (DEG k=1; k<=DEPTH; ++k) {
+//                divisor *= k+1;
+//                if (k % 2 == 0) {
+//                    tmp.add_scal_div(ad_X_k(k), divisor);
+//                } else {
+//                    tmp.sub_scal_div(ad_X_k(k), divisor);
+//                }
+//            }
+//            expected_tangent *= tmp;
 //        }
 //
-//        auto result = exp(tt);
+//    auto result = exp(tt);
 //
-//        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
-//        CHECK_EQUAL(expected_tangent, result.fibre());
-//        std::cout << expected_tangent - result.fibre() << '\n';
-//     }
+//    CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+//    CHECK_EQUAL(expected_tangent, result.fibre());
+//}
 
 
+TEST_FIXTURE(TangentsFixture, tensor_exp_sanity_test) {
 
+    const auto tt = random_tangent_tensor();
+
+    const auto& rt = static_cast<const tensor_t&>(tt);
+    const auto& rtan = tt.fibre();
+
+    typename tensor_t::KEY kunit;
+    tangent_tensor_t tunit(kunit);
+    auto expected = tunit;
+    for (DEG i=DEPTH; i>=1; --i) {
+        expected.mul_scal_div(tt, typename tensor_t::RATIONAL(i));
+        expected += tunit;
+    }
+
+    auto result = exp(tt);
+
+    CHECK_EQUAL(expected, result);
+
+}
 
 }

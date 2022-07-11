@@ -11,6 +11,7 @@
 #include "composition_operator.h"
 #include "scalar_multiply_operator.h"
 #include "sum_operator.h"
+#include "tangents.h"
 
 namespace alg {
 namespace operators {
@@ -35,6 +36,12 @@ public:
 
     using result_type = ResultType;
     using implementation_type::operator();
+
+    vector_bundle<result_type> operator()(const vector_bundle<argument_type>& arg)
+    {
+        return {implementation_type::operator()(static_cast<const argument_type&>(arg)),
+        implementation_type::operator()(arg.fibre())};
+    }
 
 protected:
     explicit linear_operator(Impl&& impl) : Impl(std::forward<Impl>(impl))

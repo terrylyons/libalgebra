@@ -14,6 +14,9 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_UTILSH_SEEN
 #define DJC_COROPA_LIBALGEBRA_UTILSH_SEEN
 
+#include <libalgebra/tangents.h>
+
+
 namespace alg {
 
 /// Provides maps between lie and free_tensor instances.
@@ -143,6 +146,16 @@ public:
         return result;
     }
 
+    template <typename InputLie>
+    vector_bundle<Tensor> l2t(const vector_bundle<InputLie>& arg)
+    {
+        vector_bundle<Tensor> result;
+        for (auto i=arg.begin(); i!=arg.end(); ++i) {
+            result.add_scal_prod(expand(i->key()), i->value());
+        }
+        return result;
+    }
+
     /// Convert lie to tensor
     Tensor l2t(dense_lie1_t&& arg)
     {
@@ -176,6 +189,18 @@ public:
         typename Lie::iterator j;
         for (j = result.begin(); j != result.end(); ++j) {
             j->value() /= (RAT)(LIE::basis.degree(j->key()));
+        }
+        return result;
+    }
+
+    template <typename InputTensor>
+    vector_bundle<Lie> t2l(const vector_bundle<InputTensor>& arg)
+    {
+        vector_bundle<Lie> result;
+        for (auto i=arg.begin(); i != arg.end(); ++i) {
+            if (i->value() != Tensor::zero) {
+                result.add_scal_prod(rbracketing(i->key()), i->value() / RAT(LIE::basis.degree(i->key())));
+            }
         }
         return result;
     }

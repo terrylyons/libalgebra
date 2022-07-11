@@ -1749,7 +1749,7 @@ public:
         // Computes the truncated exponential of arg
         // 1 + arg + arg^2/2! + ... + arg^n/n! where n = max_degree
         KEY kunit;
-        free_tensor tunit(kunit);
+        Tensor tunit(kunit);
         Tensor result(tunit);
 
         resize_for_degree(result, max_degree);

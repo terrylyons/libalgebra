@@ -67,6 +67,10 @@ public:
 
     vector_bundle() = default;
 
+    vector_bundle(const vector_bundle&) = default;
+    vector_bundle(vector_bundle&&) noexcept = default;
+
+
     explicit vector_bundle(const Vector& point) : Vector(point), m_fibre()
     {}
 
@@ -84,6 +88,12 @@ public:
     vector_bundle(const Vector& point, const Fibre& tangent)
         : Vector(point), m_fibre(tangent)
     {}
+
+    template <typename Key, typename=typename std::enable_if<std::is_same<Key, key_type>::value && std::is_same<Key, fibre_key_type>::value>>
+    explicit vector_bundle(Key k)
+            : Vector(k), m_fibre(k)
+    {}
+
 
     template<typename... Args>
     explicit vector_bundle(Vector&& point, Args&&... args)
@@ -798,8 +808,9 @@ vector_bundle<Vector, Fibre>::mul_scal_prod(const vector_bundle& rhs, const scal
 {
     const auto& rhs_vec = static_cast<const vector_type&>(rhs);
     auto& this_vec = static_cast<vector_type&>(*this);
+    m_fibre.mul_scal_prod(rhs_vec, s, depth);
+    m_fibre += this_vec * (rhs.fibre() * s);
     vector_type::mul_scal_prod(rhs_vec, s, depth);
-    m_fibre = this_vec.mul_scal_prod(rhs.fibre(), s, depth) + fibre().mul_scal_prod(rhs_vec, s, depth);
     return *this;
 }
 template<typename Vector, typename Fibre>
@@ -808,8 +819,9 @@ vector_bundle<Vector, Fibre>::mul_scal_prod(const vector_bundle& rhs, const scal
 {
     const auto& rhs_vec = static_cast<const vector_type&>(rhs);
     auto& this_vec = static_cast<vector_type&>(*this);
+    m_fibre.mul_scal_prod(rhs_vec, s);
+    m_fibre += this_vec * (rhs.fibre() * s);
     vector_type::mul_scal_prod(rhs_vec, s);
-    m_fibre = this_vec.mul_scal_prod(rhs.fibre(), s) + fibre().mul_scal_prod(rhs_vec, s);
     return *this;
 }
 
@@ -819,8 +831,9 @@ vector_bundle<Vector, Fibre>::mul_scal_div(const vector_bundle& rhs, const ratio
 {
     const auto& rhs_vec = static_cast<const vector_type&>(rhs);
     auto& this_vec = static_cast<vector_type&>(*this);
+    m_fibre.mul_scal_div(rhs_vec, s);
+    m_fibre += this_vec * (rhs.fibre() / s);
     vector_type::mul_scal_div(rhs_vec, s);
-    m_fibre = this_vec.mul_scal_div(rhs.fibre(), s) + fibre().mul_scal_div(rhs_vec, s);
     return *this;
 }
 
@@ -830,8 +843,9 @@ vector_bundle<Vector, Fibre>::mul_scal_div(const vector_bundle& rhs, const ratio
 {
     const auto& rhs_vec = static_cast<const vector_type&>(rhs);
     auto& this_vec = static_cast<vector_type&>(*this);
+    m_fibre.mul_scal_div(rhs_vec, s, depth);
+    m_fibre += this_vec * (rhs.fibre() / s);
     vector_type::mul_scal_div(rhs_vec, s, depth);
-    m_fibre = this_vec.mul_scal_div(rhs.fibre(), s, depth) + fibre().mul_scal_div(rhs_vec, s, depth);
     return *this;
 }
 

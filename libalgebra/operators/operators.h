@@ -8,6 +8,7 @@
 #include <libalgebra/operators/composition_operator.h>
 #include <libalgebra/operators/scalar_multiply_operator.h>
 #include <libalgebra/operators/sum_operator.h>
+#include <libalgebra/tangents.h>
 #include <type_traits>
 #include <utility>
 
@@ -34,6 +35,12 @@ public:
 
     using result_type = ResultType;
     using implementation_type::operator();
+
+    vector_bundle<result_type> operator()(const vector_bundle<argument_type>& arg)
+    {
+        return {implementation_type::operator()(static_cast<const argument_type&>(arg)),
+        implementation_type::operator()(arg.fibre())};
+    }
 
 protected:
     explicit linear_operator(Impl&& impl) : Impl(std::forward<Impl>(impl))

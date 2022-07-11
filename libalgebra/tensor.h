@@ -703,7 +703,7 @@ public:
         // Computes the truncated exponential of arg
         // 1 + arg + arg^2/2! + ... + arg^n/n! where n = max_degree
         KEY kunit;
-        free_tensor tunit(kunit);
+        Tensor tunit(kunit);
         Tensor result(tunit);
         for (DEG i = max_degree; i >= 1; --i) {
             result.mul_scal_div(arg, (RAT)i);

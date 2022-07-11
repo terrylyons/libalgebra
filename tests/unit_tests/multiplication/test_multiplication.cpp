@@ -115,41 +115,43 @@ struct Environment {
     using scalar_field = coefficients::rational_field;
     using S = typename scalar_field::S;
 
-    static constexpr DEG WIDTH1 = WIDTH; // note added 1 to name, error: declaration of 'constexpr const DEG WIDTH' shadows template parameter
-    static constexpr DEG DEPTH1 = DEPTH; // note added 1 to name, error: declaration of 'constexpr const DEG DEPTH' shadows template parameter
-    static constexpr DEG poly_width = hall_basis<WIDTH, DEPTH>::start_of_degree(DEPTH + 1);
+    // note name changes - error: declaration of 'constexpr const DEG DEPTH' shadows template parameter
+
+    static constexpr DEG WIDTH_HALL_BASIS = WIDTH; // name change
+    static constexpr DEG DEPTH_HALL_BASIS = DEPTH; // name change
+    static constexpr DEG poly_width = hall_basis<WIDTH_HALL_BASIS, DEPTH_HALL_BASIS>::start_of_degree(DEPTH + 1);
 
     using poly_t = alg::poly<scalar_field>;
     using poly_coeffs = coefficients::coefficient_ring<poly_t, typename scalar_field::Q>;
     static_assert(std::is_same<poly_coeffs::S, poly_t>::value, "the trait class of a coefficient ring must report the type of the coefficients");
 
-    template<DEG DEPTH1> // note added 1 to name, error: declaration of 'constexpr const DEG DEPTH' shadows template parameter
-    using LIE_ = alg::lie<poly_coeffs, WIDTH, DEPTH, vectors::dense_vector>;
+    template<DEG DEPTH_LIE> // name change
+    using LIE_ = alg::lie<poly_coeffs, WIDTH, DEPTH_LIE, vectors::dense_vector>; // name change
     using LIE = LIE_<DEPTH>;
 
-    template<DEG DEPTH1> // note added 1 to name, error: declaration of 'constexpr const DEG DEPTH' shadows template parameter
-    using lie_basis_t_ = lie_basis<WIDTH, DEPTH>;
+    template<DEG DEPTH_LIE_BASIS> // name change
+    using lie_basis_t_ = lie_basis<WIDTH, DEPTH_LIE_BASIS>; // name change
 
     using lie_basis_t = lie_basis_t_<WIDTH>;
     lie_basis_t lbasis;
 
-    template<DEG DEPTH1> // note added 1 to name, error: declaration of 'constexpr const DEG DEPTH' shadows template parameter
-    using TENSOR_ = alg::free_tensor<poly_coeffs, WIDTH, DEPTH, vectors::dense_vector>;
+    template<DEG DEPTH_TENSOR> // name change
+    using TENSOR_ = alg::free_tensor<poly_coeffs, WIDTH, DEPTH_TENSOR, vectors::dense_vector>; // name change
     using TENSOR = TENSOR_<DEPTH>;
 
-    template<DEG DEPTH1> // note added 1 to name, error: declaration of 'constexpr const DEG DEPTH' shadows template parameter
-    using tensor_basis_t_ = alg::tensor_basis<WIDTH, DEPTH>;
+    template<DEG DEPTH_TENSOR_BASIS> // name change
+    using tensor_basis_t_ = alg::tensor_basis<WIDTH, DEPTH_TENSOR_BASIS>; // name change
 
     using tensor_basis_t = tensor_basis_t_< DEPTH>;
     tensor_basis_t tbasis;
 
     //using SHUFFLE_TENSOR = alg::shuffle_tensor<scalar_field, WIDTH, DEPTH>;
-    template<DEG DEPTH1> // note added 1 to name, error: declaration of 'constexpr const DEG DEPTH' shadows template parameter
-    using SHUFFLE_TENSOR_ = alg::shuffle_tensor<poly_coeffs, WIDTH, DEPTH>;
+    template<DEG DEPTH_SHUFFLE_TENSOR> // name change
+    using SHUFFLE_TENSOR_ = alg::shuffle_tensor<poly_coeffs, WIDTH, DEPTH_SHUFFLE_TENSOR>; // name change
     using SHUFFLE_TENSOR = SHUFFLE_TENSOR_<DEPTH>;
 
-    template<DEG DEPTH1> // note added 1 to name, error: declaration of 'constexpr const DEG DEPTH' shadows template parameter
-    using shuffle_tensor_basis_t_ = alg::tensor_basis<WIDTH, DEPTH>;
+    template<DEG DEPTH_SHUFFLE_TENSOR_BASIS> // name change
+    using shuffle_tensor_basis_t_ = alg::tensor_basis<WIDTH, DEPTH_SHUFFLE_TENSOR_BASIS>; // name change
     using shuffle_tensor_basis_t = shuffle_tensor_basis_t_<DEPTH>;
     shuffle_tensor_basis_t sbasis;
 

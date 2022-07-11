@@ -50,6 +50,7 @@ target_link_libraries(all_tests PRIVATE
         la_unittests::operators_tests
         la_unittests::antipode_tests
         la_unittests::half_shuffle_tests
+        la_unittests::multiplication_tests
         )
 
 if (LA_TESTING_INCLUDE_INTEGRATION)

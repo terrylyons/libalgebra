@@ -287,10 +287,19 @@ SUITE(Multiplication)
     TEST_FIXTURE(IN, environment_check)
     {
         IN in;
+        const auto& sbasis = in.sbasis;
 
-        in.generic_vector<SHORT_LIE>(1000);
+        std::cout << "Creating the two generic input log signatures \"before\" and \"during\" truncated to level " << DEPTHIN << "\n\n";
+        IN::LIE logsig_before;
+        add_equals_short(logsig_before, in.generic_vector<SHORT_LIE>(1000));
+        SHOW(logsig_before);
+        IN::TENSOR tensor_logsig_before = in.maps_.l2t(logsig_before);
+        IN::TENSOR sig_before = exp(tensor_logsig_before);
+        SHOW(sig_before);
 
-        SHOW(in.generic_vector<SHORT_LIE>(1000));
+//        in.generic_vector<SHORT_LIE>(1000);
+//
+//        SHOW(in.generic_vector<SHORT_LIE>(1000));
 
 
 

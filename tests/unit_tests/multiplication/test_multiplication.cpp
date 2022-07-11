@@ -191,13 +191,13 @@ struct Environment {
         // LIE basis starts at 1 which is confusing
 
         int count;
-//        if constexpr (std::is_integral<decltype(basis.begin())>::value) {
-//            // invalid code if the premise is false - constexpr essential to avoid compilation
-//            count = basis.begin();
-//        }
-//        else {
-//            count = 0;
-//        } // TODO: Fix
+        if constexpr (std::is_integral<decltype(basis.begin())>::value) {
+            // invalid code if the premise is false - constexpr essential to avoid compilation
+            count = basis.begin();
+        }
+        else {
+            count = 0;
+        }
 
         std::map<int, std::pair<typename VECTOR::KEY, std::string>> legend;
 
@@ -210,7 +210,8 @@ struct Environment {
             auto basis_key_pair = std::pair<typename VECTOR::BASIS*, typename VECTOR::KEY>(&VECTOR::basis, key);
             std::stringstream buffer;
             buffer << basis_key_pair;
-//            legend[count + offset] = std::pair(key, buffer.str());  // TODO: Fix
+//            legend[count + offset] = std::pair(key, buffer.str());  // TODO: error: missing template arguments before '(' token
+            legend[count + offset] = std::pair<typename VECTOR::KEY, std::string>(key, buffer.str());
             std::cout << " monomial index:" << count + offset << " basis index:" << key << " basis value:" << buffer.str() << "\n";
 
             ++count;

@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <vector>
-
+#include "SHOW.h"
 #include <functional>
 #include <sstream>
 #include <string>
@@ -221,6 +221,32 @@ struct Environment {
 
 };
 
+template<class FULL_TENSOR, class SHORT_TENSOR>
+FULL_TENSOR& add_equals_short(FULL_TENSOR& out, const SHORT_TENSOR& in)
+{
+    const static typename FULL_TENSOR::BASIS fbasis;
+    const static typename SHORT_TENSOR::BASIS sbasis;
+    auto key = sbasis.begin(), end = sbasis.end();
+    auto fkey = fbasis.begin(), fend = fbasis.end();
+    for (; key != end && fkey != fend; key = sbasis.nextkey(key), fkey = fbasis.nextkey(fkey))
+        out[fkey] += in[key];
+    return out;
+}
+
+template<class EnvironmentOUT, class EnvironmentIN>
+typename EnvironmentOUT::TENSOR apply1(const std::map<typename EnvironmentOUT::TENSOR::BASIS::KEY, typename EnvironmentIN::SHUFFLE_TENSOR>& result, const typename EnvironmentIN::TENSOR& in)
+{
+    typename EnvironmentOUT::TENSOR out;
+    for (const auto& x : result) {
+        auto& key = x.first;
+        auto& tvalue = x.second;
+        // both environments must have compatible scalar types
+        out[key] = typename EnvironmentIN::K(tvalue, in);
+    };
+
+    return out;
+}
+
 SUITE(Multiplication)
 {
     typedef DenseFixture<float_field, 4, 4> dense_fixture;
@@ -230,10 +256,44 @@ SUITE(Multiplication)
         CHECK_EQUAL(0, 1);
     }
 
-    typedef Environment<4, 4> environment_fixture;
-    
-    TEST_FIXTURE(environment_fixture, environment_check)
+    // the receiving environment
+    constexpr DEG WIDTHOUT = 3;
+    constexpr DEG DEPTHOUT = 2;
+
+// the depth of the shuffles producing the channels
+    constexpr DEG INOUTDEPTH = 2;
+
+// the incoming stream with enough accuracy to determine the
+// required integrals of the projections
+    constexpr DEG WIDTHIN = 2;
+    constexpr DEG DEPTHIN = (DEPTHOUT * INOUTDEPTH);
+
+// the input and output environments
+    using IN = Environment<WIDTHIN, DEPTHIN>;
+    using OUT = Environment<WIDTHOUT, DEPTHOUT>;
+
+    // the input and output environments
+    using IN = Environment<WIDTHIN, DEPTHIN>;
+    using OUT = Environment<WIDTHOUT, DEPTHOUT>;
+
+    // steady state requires inputs limited to the same depth as the output
+    using SHORT_LIE = IN::LIE_<DEPTHOUT>;
+
+// limiting the degree of nonlinearity in the functions on paths
+    using SHORT_SHUFFLE = IN::SHUFFLE_TENSOR_<INOUTDEPTH>;
+
+//    using SHORT_LIE = environment_fixture::LIE_<4>;
+
+    TEST_FIXTURE(IN, environment_check)
     {
+        IN in;
+
+        in.generic_vector<SHORT_LIE>(1000);
+
+        SHOW(in.generic_vector<SHORT_LIE>(1000));
+
+
+
         CHECK_EQUAL(0, 1);
     }
 

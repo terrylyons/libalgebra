@@ -1840,7 +1840,9 @@ public:
     }
 
     /// Computes the truncated logarithm of a free_tensor instance.
-    friend free_tensor log(const free_tensor& arg)
+    template <typename Tensor>
+    inline friend typename std::enable_if<std::is_base_of<free_tensor, Tensor>::value, Tensor>::type
+    log(const Tensor& arg)
     {
         // Computes the truncated log of arg up to degree max_degree
         // The coef. of the constant term (empty word in the monoid) of arg
@@ -1849,13 +1851,13 @@ public:
         // max_degree must be > 0
 
         KEY kunit;
-        free_tensor tunit(kunit);
-        free_tensor x(arg);
-        auto it = x.find(kunit);
+        Tensor tunit(kunit);
+        Tensor x(arg);
+        iterator it = x.find(kunit);
         if (it != x.end()) {
             x.erase(it);
         }
-        free_tensor result;
+        Tensor result;
 
         for (DEG i = max_degree; i >= 1; --i) {
             if (i % 2 == 0) {

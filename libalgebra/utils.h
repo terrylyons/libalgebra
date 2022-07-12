@@ -149,11 +149,7 @@ public:
     template <typename InputLie>
     vector_bundle<Tensor> l2t(const vector_bundle<InputLie>& arg)
     {
-        vector_bundle<Tensor> result;
-        for (auto i=arg.begin(); i!=arg.end(); ++i) {
-            result.add_scal_prod(expand(i->key()), i->value());
-        }
-        return result;
+        return {l2t(static_cast<const InputLie&>(arg)), l2t(arg.fibre())};
     }
 
     /// Convert lie to tensor
@@ -196,13 +192,7 @@ public:
     template <typename InputTensor>
     vector_bundle<Lie> t2l(const vector_bundle<InputTensor>& arg)
     {
-        vector_bundle<Lie> result;
-        for (auto i=arg.begin(); i != arg.end(); ++i) {
-            if (i->value() != Tensor::zero) {
-                result.add_scal_prod(rbracketing(i->key()), i->value() / RAT(LIE::basis.degree(i->key())));
-            }
-        }
-        return result;
+        return {t2l(static_cast<const InputTensor&>(arg)), t2l(arg.fibre())};
     }
 
     /**

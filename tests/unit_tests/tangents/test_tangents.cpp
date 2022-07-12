@@ -26,11 +26,17 @@ struct TangentsFixture
     using tensor_t = free_tensor<coeff_type, WIDTH, DEPTH>;
     using tangent_tensor_t = vector_bundle<tensor_t>;
 
+    using lie_t = lie<coeff_type, WIDTH, DEPTH>;
+    using lie_tangent_t = vector_bundle<lie_t>;
+
     using coeff_dist_t = la_testing::uniform_rational_distribution<typename rational_field::S>;
 
     std::mt19937 rng;
     coeff_dist_t rational_dist;
     la_testing::random_vector_generator<tensor_t, coeff_dist_t> rvg;
+
+    using maps_t = maps<coeff_type, WIDTH, DEPTH, tensor_t, lie_t>;
+    using cbh_t = cbh<coeff_type, WIDTH, DEPTH, tensor_t, lie_t>;
 
     TangentsFixture() : rational_dist(-1, 1), rvg(rational_dist)
     {
@@ -41,6 +47,17 @@ struct TangentsFixture
     tensor_t random_tensor(LET i=0)
     {
         return rvg(rng);
+    }
+
+    lie_t random_lie()
+    {
+        la_testing::random_vector_generator<lie_t, coeff_dist_t> rlg(-1, 1);
+        return rlg(rng);
+    }
+
+    lie_tangent_t random_tangent_lie()
+    {
+        return {random_lie(), random_lie()};
     }
 
 //    tensor_t random_tensor(LET i=0)
@@ -545,5 +562,171 @@ TEST_FIXTURE(TangentsFixture, tensor_exp_sanity_test) {
     CHECK_EQUAL(expected, result);
 
 }
+
+
+TEST_FIXTURE(TangentsFixture, test_lie_to_tensor) {
+    const auto lt = random_tangent_lie();
+
+    maps_t maps;
+
+    auto result = maps.l2t(lt);
+
+    auto expected_tensor = maps.l2t(static_cast<const lie_t&>(lt));
+    auto expected_tangent = maps.l2t(lt.fibre());
+
+    CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+    CHECK_EQUAL(expected_tangent, result.fibre());
+}
+
+
+TEST_FIXTURE(TangentsFixture, test_tensor_to_lie_roundtrip) {
+    maps_t maps;
+    const auto lt = random_tangent_lie();
+    const auto tt = maps.l2t(lt);
+
+    auto result = maps.t2l(tt);
+
+    auto expected_lie = maps.t2l(static_cast<const tensor_t&>(tt));
+    auto expected_tangent = maps.t2l(tt.fibre());
+
+    CHECK_EQUAL(expected_lie, static_cast<const lie_t&>(result));
+    CHECK_EQUAL(expected_tangent, result.fibre());
+}
+
+
+TEST_FIXTURE(TangentsFixture, test_tensor_fmexp) {
+    const auto tt1 = random_tangent_tensor();
+    const auto tt2 = random_tangent_tensor();
+
+    auto result = tt1.fmexp(tt2);
+
+    tensor_t x(tt2), x_tan(tt2.fibre());
+    typename tensor_t::KEY kunit;
+
+    auto unit_elt = x.find(kunit);
+    if (unit_elt != x.end() && unit_elt->value() != scalar_type(0)) {
+        x.erase(unit_elt);
+    }
+
+    const auto& self = static_cast<const tensor_t&>(tt1);
+    const auto& self_tan = tt1.fibre();
+    tensor_t expected_tensor(self), expected_tangent(self_tan);
+    for (DEG k=DEPTH; k>=1; --k) {
+        rational divisor(k);
+        expected_tangent = expected_tensor*(x_tan / divisor) + expected_tangent * (x / divisor);
+        expected_tensor.mul_scal_div(x, divisor, DEPTH-k+1);
+
+        expected_tangent += self_tan;
+        expected_tensor += self;
+    }
+
+
+    CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+    CHECK_EQUAL(expected_tangent, result.fibre());
+}
+
+
+TEST_FIXTURE(TangentsFixture, test_fmexp_tensor) {
+
+    const auto tt1 = random_tangent_tensor();
+    const auto t2 = random_tensor();
+
+    auto result = tt1.fmexp(t2);
+
+    tensor_t x(t2);
+    typename tensor_t::KEY kunit;
+
+    auto unit_elt = x.find(kunit);
+    if (unit_elt != x.end() && unit_elt->value() != scalar_type(0)) {
+        x.erase(unit_elt);
+    }
+
+    const auto& self = static_cast<const tensor_t&>(tt1);
+    const auto& self_tan = tt1.fibre();
+    tensor_t expected_tensor(self), expected_tangent(self_tan);
+    for (DEG k = DEPTH; k >= 1; --k) {
+        rational divisor(k);
+        expected_tangent.mul_scal_div(x, divisor, DEPTH - k + 1);
+        expected_tensor.mul_scal_div(x, divisor, DEPTH - k + 1);
+
+        expected_tangent += self_tan;
+        expected_tensor += self;
+    }
+
+    CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+    CHECK_EQUAL(expected_tangent, result.fibre());
+}
+
+TEST_FIXTURE(TangentsFixture, test_tensor_fmexp_inplace)
+{
+    const auto tt1 = random_tangent_tensor();
+    const auto tt2 = random_tangent_tensor();
+
+    auto result = tt1;
+    result.fmexp_inplace(tt2);
+
+    auto expected = tt1.fmexp(tt2);
+    const auto& expected_tensor = static_cast<const tensor_t&>(expected);
+    const auto& expected_tangent = expected.fibre();
+
+    CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+    CHECK_EQUAL(expected_tangent, result.fibre());
+}
+
+TEST_FIXTURE(TangentsFixture, test_fmexp_inplace_tensor)
+{
+
+    const auto tt1 = random_tangent_tensor();
+    const auto t2 = random_tensor();
+
+
+    auto result = tt1;
+    result.fmexp_inplace(t2);
+
+    auto expected = tt1.fmexp(t2);
+    const auto& expected_tensor = static_cast<const tensor_t &>(expected);
+    const auto& expected_tangent = expected.fibre();
+
+    CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+    CHECK_EQUAL(expected_tangent, result.fibre());
+}
+
+
+TEST_FIXTURE(TangentsFixture, test_log) {
+
+    const auto tt = random_tangent_tensor();
+
+    auto result = log(tt);
+
+    auto x = tt;
+    typename tensor_t::KEY kunit;
+    auto unit_elt = x.find(kunit);
+    if (unit_elt != x.end() && unit_elt->value() != scalar_type(0)) {
+        x.erase(unit_elt);
+    }
+
+    tensor_t tunit(kunit);
+    tensor_t expected_tensor;
+    tensor_t expected_tangent;
+
+    for (DEG i=DEPTH; i>= 1; --i) {
+        rational divisor(i);
+        if (i % 2 == 0) {
+            expected_tensor.sub_scal_div(tunit, divisor);
+            expected_tangent.sub_scal_div(tunit, divisor);
+        } else {
+            expected_tensor.add_scal_div(tunit, divisor);
+            expected_tangent.add_scal_div(tunit, divisor);
+        }
+        expected_tangent = expected_tensor * (x.fibre()) + expected_tangent * (static_cast<const tensor_t&>(x));
+        expected_tensor *= x;
+    }
+
+    CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+    CHECK_EQUAL(expected_tangent, result.fibre());
+
+
+}
+
 
 }

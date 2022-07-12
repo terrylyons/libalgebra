@@ -8,7 +8,7 @@
 #include <libalgebra/operators/composition_operator.h>
 #include <libalgebra/operators/scalar_multiply_operator.h>
 #include <libalgebra/operators/sum_operator.h>
-#include <libalgebra/tangents.h>
+#include <libalgebra/vector_bundle.h>
 #include <type_traits>
 #include <utility>
 

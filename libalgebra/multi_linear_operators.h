@@ -5,7 +5,7 @@
 #ifndef LIBALGEBRA_MULTI_LINEAR_OPERATORS_H
 #define LIBALGEBRA_MULTI_LINEAR_OPERATORS_H
 
-#include <libalgebra/tangents.h>
+#include <libalgebra/vector_bundle.h>
 
 #include <type_traits>
 #include <utility>

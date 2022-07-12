@@ -5,9 +5,9 @@
 #ifndef LIBALGEBRA_TESTS_UNIT_TESTS_TANGENTS_TEST_TANGENTS_H_
 #define LIBALGEBRA_TESTS_UNIT_TESTS_TANGENTS_TEST_TANGENTS_H_
 
-#include <libalgebra/libalgebra.h>
-#include <libalgebra/tangents.h>
 #include <libalgebra/coefficients/rational_coefficients.h>
+#include <libalgebra/libalgebra.h>
+#include <libalgebra/vector_bundle.h>
 
 #include <UnitTest++/UnitTest++.h>
 

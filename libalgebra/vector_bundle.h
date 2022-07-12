@@ -2,8 +2,8 @@
 // Created by user on 07/07/22.
 //
 
-#ifndef LIBALGEBRA_LIBALGEBRA_TANGENTS_H_
-#define LIBALGEBRA_LIBALGEBRA_TANGENTS_H_
+#ifndef LIBALGEBRA_LIBALGEBRA_VECTOR_BUNDLE_H_
+#define LIBALGEBRA_LIBALGEBRA_VECTOR_BUNDLE_H_
 
 #include <libalgebra/implementation_types.h>
 #include <libalgebra/vectors/vectors.h>
@@ -1124,4 +1124,4 @@ struct disable_vector_operations_definition<vector_bundle<Vector, Fibre>>
 
 } // namespace alg
 
-#endif//LIBALGEBRA_LIBALGEBRA_TANGENTS_H_
+#endif//LIBALGEBRA_LIBALGEBRA_VECTOR_BUNDLE_H_

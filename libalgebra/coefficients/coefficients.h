@@ -13,17 +13,17 @@
 namespace alg {
 namespace coefficients {
 
-#define LIBALGEBRA_FIELD_GENERATE_BINARY(NAME, OP, RET_T, LHS_T, RHS_T) \
-    template <typename Lhs=LHS_T, typename Rhs=RHS_T>\
-    static constexpr RET_T NAME(const Lhs& lhs, const Rhs& rhs) noexcept(noexcept(lhs OP rhs))          \
-    {                                                                                                       \
-        return lhs OP rhs;                                                                                  \
-    }                                                                                                       \
-                                                          \
-    template <typename Rhs=RHS_T>                                                                                                        \
+#define LIBALGEBRA_FIELD_GENERATE_BINARY(NAME, OP, RET_T, LHS_T, RHS_T)                                   \
+    template<typename Lhs = LHS_T, typename Rhs = RHS_T>                                                  \
+    static constexpr RET_T NAME(const Lhs& lhs, const Rhs& rhs) noexcept(noexcept(lhs OP rhs))            \
+    {                                                                                                     \
+        return lhs OP rhs;                                                                                \
+    }                                                                                                     \
+                                                                                                          \
+    template<typename Rhs = RHS_T>                                                                        \
     static constexpr RET_T& NAME##_inplace(RET_T& lhs, const Rhs& rhs) noexcept(noexcept(lhs OP## = rhs)) \
-    {                                                                                                       \
-        return (lhs OP## = rhs);                                                                            \
+    {                                                                                                     \
+        return (lhs OP## = rhs);                                                                          \
     }
 
 /**
@@ -34,7 +34,7 @@ namespace coefficients {
 template<typename Scalar, typename Rational>
 struct coefficient_ring {
 
-    static constexpr bool is_unital = std::is_constructible<Scalar, typename alg::utils::scalar_base<Scalar>::type>::value;
+    static constexpr bool is_unital = std::is_constructible<Scalar, typename alg::utils::scalar_base<Scalar>::type>::value || std::is_constructible<Scalar, typename alg::utils::scalar_base<Scalar>::type&>::value || std::is_constructible<Scalar, const typename alg::utils::scalar_base<Scalar>::type&>::value;
 
     typedef Scalar SCA;
     typedef Rational RAT;
@@ -64,14 +64,11 @@ struct coefficient_ring {
         return -arg;
     }
 
-
-    template <typename Order=std::less<SCA>>
+    template<typename Order = std::less<SCA>>
     static constexpr bool less(const SCA& a, const SCA& b) noexcept
     {
         return Order{}(a, b);
     }
-
-
 
     LIBALGEBRA_FIELD_GENERATE_BINARY(add, +, SCA, SCA, SCA)
 
@@ -100,9 +97,6 @@ template<typename Scalar, typename Rational>
 const typename std::enable_if<
         coefficient_ring<Scalar, Rational>::is_unital,
         Scalar>::type coefficient_ring<Scalar, Rational>::mone(-1);
-
-
-
 
 /**
  * @brief A field that can be used as coefficients in a vector

@@ -14,6 +14,9 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_ALGEBRAH_SEEN
 #define DJC_COROPA_LIBALGEBRA_ALGEBRAH_SEEN
 
+#include <libalgebra/multiplication_helpers.h>
+#include <libalgebra/vectors/vectors.h>
+
 namespace alg {
 
 /* The algebra is a vector with an additional multiplication operation which is
@@ -188,8 +191,7 @@ public:
         : VECT(offset, begin, end)
     {}
 
-
-    template <typename InputIt, typename=typename std::iterator_traits<InputIt>::iterator_category>
+    template<typename InputIt, typename = typename std::iterator_traits<InputIt>::iterator_category>
     algebra(InputIt begin, InputIt end) : VECT(begin, end)
     {}
 
@@ -197,67 +199,67 @@ public:
     algebra& operator=(algebra&&) noexcept = default;
 
 public:
-//    /// Multiplies the instance with scalar s.
-//    inline algebra& operator*=(const SCALAR& s)
-//    {
-//        VECT::operator*=(s);
-//        return *this;
-//    }
-//
-//    /// Divides the instance by scalar s.
-//    inline algebra& operator/=(const RATIONAL& s)
-//    {
-//        VECT::operator/=(s);
-//        return *this;
-//    }
-//
-//    /// Ensures that the return type is an instance of algebra.
-//    inline algebra operator*(const SCALAR& rhs) const
-//    {
-//        algebra result(*this);
-//        result *= rhs;
-//        return result;
-//    }
-//
-//    /// Ensures that the return type is an instance of algebra.
-//    inline algebra operator/(const SCALAR& rhs) const
-//    {
-//        algebra result(*this);
-//        result /= rhs;
-//        return result;
-//    }
-//
-//    /// Ensures that the return type is an instance of algebra.
-//    inline algebra operator+(const algebra& rhs) const
-//    {
-//        algebra result(*this);
-//        result += rhs;
-//        return result;
-//    }
-//
-//    /// Ensures that the return type is an instance of algebra.
-//    inline algebra operator-(const algebra& rhs) const
-//    {
-//        algebra result(*this);
-//        result -= rhs;
-//        return result;
-//    }
+    //    /// Multiplies the instance with scalar s.
+    //    inline algebra& operator*=(const SCALAR& s)
+    //    {
+    //        VECT::operator*=(s);
+    //        return *this;
+    //    }
+    //
+    //    /// Divides the instance by scalar s.
+    //    inline algebra& operator/=(const RATIONAL& s)
+    //    {
+    //        VECT::operator/=(s);
+    //        return *this;
+    //    }
+    //
+    //    /// Ensures that the return type is an instance of algebra.
+    //    inline algebra operator*(const SCALAR& rhs) const
+    //    {
+    //        algebra result(*this);
+    //        result *= rhs;
+    //        return result;
+    //    }
+    //
+    //    /// Ensures that the return type is an instance of algebra.
+    //    inline algebra operator/(const SCALAR& rhs) const
+    //    {
+    //        algebra result(*this);
+    //        result /= rhs;
+    //        return result;
+    //    }
+    //
+    //    /// Ensures that the return type is an instance of algebra.
+    //    inline algebra operator+(const algebra& rhs) const
+    //    {
+    //        algebra result(*this);
+    //        result += rhs;
+    //        return result;
+    //    }
+    //
+    //    /// Ensures that the return type is an instance of algebra.
+    //    inline algebra operator-(const algebra& rhs) const
+    //    {
+    //        algebra result(*this);
+    //        result -= rhs;
+    //        return result;
+    //    }
 
-//    /// Ensures that the return type is an instance of algebra.
-//    inline algebra operator-() const { return algebra(VECT::operator-()); };
+    //    /// Ensures that the return type is an instance of algebra.
+    //    inline algebra operator-() const { return algebra(VECT::operator-()); };
 
-//    /// Multiplies the instance by an instance of algebra.
-//    inline algebra& operator*=(const algebra& rhs)
-//    {
-//        return s_multiplication.multiply_inplace(*this, rhs, scalar_passthrough());
-//    }
+    //    /// Multiplies the instance by an instance of algebra.
+    //    inline algebra& operator*=(const algebra& rhs)
+    //    {
+    //        return s_multiplication.multiply_inplace(*this, rhs, scalar_passthrough());
+    //    }
 
-//    /// Binary version of the product of algebra instances.
-//    // inline __DECLARE_BINARY_OPERATOR(algebra, *, *=, algebra);
-//    algebra operator*(algebra const& rhs) const
-//    {
-//        return s_multiplication.multiply(*this, rhs, scalar_passthrough());
-//    }
+    //    /// Binary version of the product of algebra instances.
+    //    // inline __DECLARE_BINARY_OPERATOR(algebra, *, *=, algebra);
+    //    algebra operator*(algebra const& rhs) const
+    //    {
+    //        return s_multiplication.multiply(*this, rhs, scalar_passthrough());
+    //    }
 
     /// Adds to the instance a product of algebra instances.
     inline algebra& add_mul(const algebra& a, const algebra& b)
@@ -319,25 +321,22 @@ public:
 
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
-
     friend class boost::serialization::access;
 
-    template <typename Archive>
-    void serialize(Archive &ar, unsigned int const /* version */) {
-        ar & boost::serialization::base_object<VECT>(*this);
+    template<typename Archive>
+    void serialize(Archive& ar, unsigned int const /* version */)
+    {
+        ar& boost::serialization::base_object<VECT>(*this);
     }
 #endif
 
-
 public:
-
-    template <typename Algebra1, typename Algebra2>
+    template<typename Algebra1, typename Algebra2>
     friend
-    typename std::enable_if<
-            std::is_base_of<algebra, Algebra1>::value &&
-            std::is_base_of<algebra, Algebra2>::value,
-            Algebra1>::type
-    operator*(const Algebra1& lhs, const Algebra2& rhs)
+            typename std::enable_if<
+                    std::is_base_of<algebra, Algebra1>::value && std::is_base_of<algebra, Algebra2>::value,
+                    Algebra1>::type
+            operator*(const Algebra1& lhs, const Algebra2& rhs)
     {
         Algebra1 result;
         s_multiplication.multiply_and_add(
@@ -348,13 +347,12 @@ public:
         return result;
     }
 
-    template <typename Algebra1, typename Algebra2>
+    template<typename Algebra1, typename Algebra2>
     friend
-    typename std::enable_if<
-            std::is_base_of<algebra, Algebra1>::value &&
-            std::is_base_of<algebra, Algebra2>::value,
-            Algebra1>::type&
-    operator*=(Algebra1& lhs, const Algebra2& rhs)
+            typename std::enable_if<
+                    std::is_base_of<algebra, Algebra1>::value && std::is_base_of<algebra, Algebra2>::value,
+                    Algebra1>::type&
+            operator*=(Algebra1& lhs, const Algebra2& rhs)
     {
         s_multiplication.multiply_inplace(
                 static_cast<algebra&>(lhs),
@@ -362,8 +360,6 @@ public:
                 scalar_passthrough());
         return lhs;
     }
-
-
 };
 
 template<typename B, typename C, typename M, template<typename, typename, typename...> class V, typename... Args>

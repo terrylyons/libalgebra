@@ -29,10 +29,10 @@ include(GNUInstallDirs)
 set(LIBALGEBRA_CMAKE_CONFIG_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/Libalgebra")
 
 # -DLIBALGEBRA_MAX_TILE_LETTERS=X
-if(DEFINED LIBALGEBRA_MAX_TILE_LETTERS)
+if (DEFINED LIBALGEBRA_MAX_TILE_LETTERS)
     message("You have set LIBALGEBRA_MAX_TILE_LETTERS to ${LIBALGEBRA_MAX_TILE_LETTERS}")
     add_definitions(-DLIBALGEBRA_MAX_TILE_LETTERS=${LIBALGEBRA_MAX_TILE_LETTERS})
-endif()
+endif ()
 
 ## we have a limited binary boost dependency
 set(Boost_NO_WARN_NEW_VERSIONS ON)
@@ -40,7 +40,7 @@ find_package(Boost REQUIRED COMPONENTS thread)
 
 if (NOT LIBALGEBRA_NO_SERIALIZATION)
     find_package(Boost OPTIONAL_COMPONENTS serialization)
-endif()
+endif ()
 
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/)
@@ -65,6 +65,7 @@ add_custom_target(Libalgebra_headers SOURCES
         libalgebra/coefficients/complex.h
         libalgebra/coefficients/mpfloat_coefficients.h
         libalgebra/coefficients/rational_coefficients.h
+        libalgebra/coefficients/polynomial_coefficients.h
         libalgebra/utils/caching_tags.h
         libalgebra/utils/function_extension_cache_base.h
         libalgebra/utils/integer_maths.h
@@ -133,7 +134,7 @@ target_link_libraries(Libalgebra INTERFACE
 if (TARGET Boost::serialization)
     target_link_libraries(Libalgebra INTERFACE Boost::serialization)
     target_compile_definitions(Libalgebra INTERFACE LIBALGEBRA_ENABLE_SERIALIZATION)
-endif()
+endif ()
 
 # Set the _DEBUG flag when we are building in Debug configuration.
 # This macro should probably be renamed to avoid collisions with compiler

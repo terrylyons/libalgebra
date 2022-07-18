@@ -4,21 +4,21 @@
 
 #ifndef LIBALGEBRA_TESTS_UNIT_TESTS_HALF_SHUFFLE_TESTS_HALF_SHUFFLE_FIXTURE_H_
 #define LIBALGEBRA_TESTS_UNIT_TESTS_HALF_SHUFFLE_TESTS_HALF_SHUFFLE_FIXTURE_H_
-#include <libalgebra/libalgebra.h>
 #include <libalgebra/alg_types.h>
-#include <libalgebra/implementation_types.h>
-#include <libalgebra/half_shuffle_tensor_basis.h>
-#include <libalgebra/half_shuffle_tensor_multiplication.h>
+#include <libalgebra/alternative_multiplications.h>
 #include <libalgebra/area_tensor_basis.h>
 #include <libalgebra/area_tensor_multiplication.h>
-#include <libalgebra/alternative_multiplications.h>
+#include <libalgebra/half_shuffle_tensor_basis.h>
+#include <libalgebra/half_shuffle_tensor_multiplication.h>
+#include <libalgebra/implementation_types.h>
+#include <libalgebra/libalgebra.h>
 
-
-#include <boost/range/iterator_range.hpp>
 #include <boost/range/algorithm.hpp>
 #include <boost/range/iterator.hpp>
-#include <set>
+#include <boost/range/iterator_range.hpp>
+#include <list>
 #include <random>
+#include <set>
 
 template<size_t D, size_t W, coefficient_t F = Rational, vector_t VectorType = Hybrid>
 struct HalfShuffleFixture : public alg_types<D, W, F, VectorType> {
@@ -513,7 +513,7 @@ struct HalfShuffleFixture : public alg_types<D, W, F, VectorType> {
         return expansion;
     }
 
-    template <typename Tensor>
+    template<typename Tensor>
     Tensor diff_shuffle_half_shuffle(const Tensor& lhs, const Tensor& rhs)
     {
         return ((alg::shuffle_multiply(lhs, rhs)
@@ -522,15 +522,12 @@ struct HalfShuffleFixture : public alg_types<D, W, F, VectorType> {
                    + (alg::half_shuffle_multiply(rhs, lhs))));
     }
 
-    template <typename Tensor>
+    template<typename Tensor>
     Tensor diff_area_shuffle(const Tensor& lhs, const Tensor& rhs)
     {
         return ((alg::shuffle_multiply(lhs, rhs) + alg::area_multiply(lhs, rhs))
                 - alg::half_shuffle_multiply(rhs, lhs) * S(2));
     }
-
-
-
 
 private:
 public:

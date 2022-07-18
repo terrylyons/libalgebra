@@ -13,6 +13,10 @@ Version 3. (See accompanying file License.txt)
 // Include once wrapper
 #ifndef DJC_COROPA_LIBALGEBRA_POLYNOMIALSH_SEEN
 #define DJC_COROPA_LIBALGEBRA_POLYNOMIALSH_SEEN
+
+#include <libalgebra/algebra.h>
+#include <libalgebra/poly_basis.h>
+
 namespace alg {
 
 template<typename Coeff>
@@ -138,6 +142,7 @@ template<typename Coeff, typename...>
 class poly : public algebra<poly_basis, Coeff, poly_multiplication<Coeff>>
 {
     typedef poly_multiplication<Coeff> multiplication_t;
+
 public:
     typedef typename Coeff::S SCA;
     typedef typename Coeff::Q RAT;
@@ -282,12 +287,12 @@ public:
 
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
-
     friend class boost::serialization::access;
 
-    template <typename Archive>
-    void serialize(Archive &ar, unsigned int const /* version */) {
-        ar & boost::serialization::base_object<ALG>(*this);
+    template<typename Archive>
+    void serialize(Archive& ar, unsigned int const /* version */)
+    {
+        ar& boost::serialization::base_object<ALG>(*this);
     }
 
 #endif

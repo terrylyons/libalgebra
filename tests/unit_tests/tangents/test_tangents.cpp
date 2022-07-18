@@ -729,4 +729,17 @@ TEST_FIXTURE(TangentsFixture, test_log) {
 }
 
 
+TEST_FIXTURE(TangentsFixture, test_antipode) {
+
+    const auto tt = random_tangent_tensor();
+
+    const auto tt2 = antipode(tt);
+    const auto tt3 = antipode(tt2);
+
+
+    CHECK_EQUAL(tt, tt3);
+}
+
+
+
 }

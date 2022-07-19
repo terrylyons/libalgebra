@@ -74,11 +74,11 @@ struct HalfShuffleFixture : public alg_types<D, W, F, VectorType> {
     // it is important that these are static
     // so they can be used in classes defined
     // within classes. However this syntax only works from 2017
-    inline static LBASIS& lbasis = LIE::basis;
-    inline static LBASIS& hall_set = lbasis;
-    inline static BASIS& basis = TENSOR::basis;
-    inline static SBASIS& sbasis = SHUFFLE_TENSOR::basis;
-    inline static HSBASIS& hsbasis = HALF_SHUFFLE_TENSOR::basis;
+    LBASIS& lbasis = LIE::basis;
+    LBASIS& hall_set = lbasis;
+    BASIS& basis = TENSOR::basis;
+    SBASIS& sbasis = SHUFFLE_TENSOR::basis;
+    HSBASIS& hsbasis = HALF_SHUFFLE_TENSOR::basis;
 
     //static bool letter(LKEY arg) noexcept
     //{

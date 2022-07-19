@@ -28,7 +28,7 @@ message(STATUS ">>> OpenMP_CXX_FLAGS = ${OpenMP_CXX_FLAGS}")
 message(STATUS ">>> Boost libraries: ${Boost_LIBRARIES}")
 
 add_subdirectory(common)
-if (LA_TESTIN_INCLUDE_INTEGRATION)
+if (LA_TESTING_INCLUDE_INTEGRATION)
     add_subdirectory(integration_tests)
 endif ()
 

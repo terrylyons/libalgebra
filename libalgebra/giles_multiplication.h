@@ -1,5 +1,7 @@
 #include <vector>
 
+#include <libalgebra/vectors/vectors.h>
+
 namespace alg {
 
     namespace dtl {
@@ -12,7 +14,7 @@ namespace alg {
             std::vector<S> output_tile;
             std::vector<S> lhs_reverse_data;
 
-            using tensor_basis_type = tensor_basis<Width, MaxDepth>;
+            using tensor_basis_type = free_tensor_basis<Width, MaxDepth>;
 
             using tensor_type = free_tensor <Coeff, Width, MaxDepth, vectors::dense_vector>;
 
@@ -33,6 +35,7 @@ namespace alg {
                       right_read_tile(tile_width),
                       output_tile(tile_size),
                       lhs_reverse_data(tensor_basis_type::start_of_degree(MaxDepth)) {
+                vectors::dtl::vector_base_access::convert(out_tensor).resize_to_dimension(341); // TODO: implement properly
                 using traits = vectors::dtl::data_access<vectors::dense_vector<tensor_basis_type, Coeff>>;
                 output_ptr = traits::range_begin(vectors::dtl::vector_base_access::convert(out_tensor));
                 left_forward_read_ptr = traits::range_begin(vectors::dtl::vector_base_access::convert(lhs_tensor));
@@ -124,7 +127,7 @@ namespace alg {
 
             static constexpr DIMN reverse(DIMN index) noexcept
             {
-                return dtl::reversing_permutation<Width, TileLetters>::permute(index);
+                return dtl::reversing_permutation<Width, TileLetters>::permute_idx(index);
             }
 
             const S& left_unit() const noexcept { return left_forward_read_ptr[0]; }

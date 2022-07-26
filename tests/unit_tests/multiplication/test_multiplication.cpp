@@ -12,6 +12,8 @@
 #include "../../common/random_vector_generator.h"
 #include "../../common/rng.h"
 
+#include <libalgebra/giles_multiplication.h>
+
 using alg::LET;
 
 typedef alg::coefficients::coefficient_field<float> float_field;
@@ -307,6 +309,118 @@ SUITE(Multiplication)
 
 
         CHECK_EQUAL(0, 1);
+    }
+
+    TEST_FIXTURE(dense_fixture, giles_multiplication_check)
+    {
+        LET k1[] = {1};
+
+        TENSOR lhs(make_key(k1, 1));
+        TENSOR rhs(make_key(k1, 1));
+
+        TENSOR expected;
+
+        TENSOR result;
+
+        const DEG TileLetters = 2;        // TODO: implement properly
+        DEG tensor_width = width;        // TODO: implement properly
+        DEG max_depth = depth;         // TODO: implement properly
+
+        dtl::GilesMultiplier<float_field , width, depth, TileLetters> helper(result, lhs, rhs);
+
+        // objects that come from GilesMultiplier: helper.powers, helper.reverse_key, helper.tile_width,
+        // helper.left_forward_read_ptr, helper.reverse, helper.split, tile, left_rtile, right_rtile
+
+        // ############## from multiplication.cpp ################## //
+        
+//
+//        for (DEG out_deg = max_depth; out_deg > 2 * TileLetters; --out_deg) {
+//            const DIMN stride = integer_maths::power(tensor_width, out_deg - TileLetters);
+//
+//            for (DIMN k = 0; k < helper.powers[out_deg - 2 * TileLetters]; ++k) {
+//                auto k_reverse = helper.reverse_key(out_deg, k);
+//
+//                // Handle 0*out_depth and out_depth*0
+//                const auto& lhs_unit = helper.left_unit();
+//                const auto* rhs_ptr = helper.right_fwd_read(out_deg, k);
+//                for (DIMN i = 0; i < helper.tile_width; ++i) {
+//                    for (DIMN j = 0; j < helper.tile_width; ++j) {
+//                        tile[i * helper.tile_width + j] = lhs_unit * rhs_ptr[i * stride + j];
+//                    }
+//                }
+//
+//                const auto& rhs_unit = helper.right_unit();
+//                const auto* lhs_ptr = helper.left_forward_read_ptr(out_deg, k);
+//                for (DIMN i = 0; i < helper.tile_width; ++i) {
+//                    for (DIMN j = 0; j < helper.tile_width; ++j) {
+//                        tile[i * helper.tile_width + j] += lhs_ptr[i * stride + j] * rhs_unit;
+//                    }
+//                }
+//
+//                // Handle left hand too small cases
+//                // We iterate through lh_deg < TileLetters, which are the number of
+//                // letters that we read from the left.
+//                // (llk,lrk,k,t)
+//                // llk = left part of left key of degree lh_deg
+//                // lrk = right part of left key of degree TileLetters - lh_deg
+//                // k = indexing key of degree out_deg - 2*TileLetters
+//                // t=  tile key of degree TileLetters
+//                // lh_deg + (TileLetters-lh_deg) + (out_deg - 2*TileLetters) + TileLetters
+//                //      = out_deg (good).
+//                for (DEG lh_deg = 1; lh_deg < TileLetters; ++lh_deg) {
+//                    auto rh_deg = out_deg - (2 * TileLetters + lh_deg);
+//                    for (DIMN i = 0; i < helper.powers[lh_deg]; ++i) {
+//                        const auto split = helper.split_key(lh_deg, i);
+//                        const auto& left_val = *helper.left_fwd_read(lh_deg, split.first);
+//                        helper.read_right_tile(out_deg - rh_deg, helper.combine_keys(out_deg - 2 * TileLetters, split.second, k));
+//
+//                        for (DIMN j = 0; j < helper.tile_width; ++j) {
+//                            tile[i * helper.tile_width + j] += left_val * right_rtile[j];
+//                        }
+//                    }
+//                }
+//
+//                // Handle middle cases
+//                for (DEG lhs_deg = 0; lhs_deg <= out_deg - 2 * TileLetters; ++lhs_deg) {
+//                    const auto rhs_deg = out_deg - 2 * TileLetters - lhs_deg;
+//                    auto split = helper.split_key(lhs_deg, k);
+//                    helper.read_left_tile(lhs_deg + TileLetters, helper.reverse_key(lhs_deg, split.first));
+//                    helper.read_right_tile(rhs_deg + TileLetters, split.second);
+//
+//                    for (DIMN i = 0; i < helper.tile_width; ++i) {
+//                        for (DIMN j = 0; j < helper.tile_width; ++j) {
+//                            tile[helper.reverse(i) * helper.tile_width + j] += left_rtile[i] * right_rtile[j];
+//                        }
+//                    }
+//                }
+//
+//                // Handle right hand too small cases
+//                // (t,k,rlk,rrk)
+//                // t = tile key of degree TileLetters
+//                // k = indexing key of degree out_deg - 2*TileLetters
+//                // rlk = left part of right key of degree TileLetters - rh_deg
+//                // rrk = right part of right key of degree rh_deg
+//                for (DEG rh_deg = 1; rh_deg < TileLetters; ++rh_deg) {
+//                    auto lh_deg = out_deg - (2 * TileLetters + rh_deg);
+//                    for (DIMN j = 0; j < helper.powers[rh_deg]; ++j) {
+//                        const auto split = helper.split(rh_deg, j);
+//                        const auto& right_val = *helper.right_fwd_read(rh_deg, split.second);
+//                        helper.read_left_tile(out_deg - rh_deg, helper.combine_keys(TileLetters - rh_deg, k_reverse, helper.reverse_key(split.first)));
+//
+//                        for (DIMN i = 0; i < helper.tile_width; ++i) {
+//                            tile[helper.reverse(i) * helper.tile_width + j] += left_rtile[i] * right_val;
+//                        }
+//                    }
+//                }
+//
+//                // Finally, write out the answer to the output buffers
+//                helper.write_tile(out_deg, k, k_reverse);
+//            }
+//        }
+
+        // ############## end multiplication.cpp ################## //
+
+        CHECK_EQUAL(expected, result);
     }
 
 }// SUITE Multiplication

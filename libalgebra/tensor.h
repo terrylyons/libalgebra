@@ -296,6 +296,8 @@ struct non_signing_signer
     S operator()(const S& arg) {
         return arg;
     }
+
+    non_signing_signer(DEG deg){}
 };
 
 

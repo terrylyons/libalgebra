@@ -40,6 +40,7 @@ namespace alg {
                 output_ptr = traits::range_begin(vectors::dtl::vector_base_access::convert(out_tensor));
                 left_forward_read_ptr = traits::range_begin(vectors::dtl::vector_base_access::convert(lhs_tensor));
                 right_forward_read_ptr = traits::range_begin(vectors::dtl::vector_base_access::convert(rhs_tensor));
+                left_reverse_read_ptr = lhs_reverse_data.data();
 
 
                 /*

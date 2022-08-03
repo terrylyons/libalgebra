@@ -35,7 +35,7 @@ namespace alg {
                       right_read_tile(tile_width),
                       output_tile(tile_size),
                       lhs_reverse_data(tensor_basis_type::start_of_degree(MaxDepth)) {
-                vectors::dtl::vector_base_access::convert(out_tensor).resize_to_dimension(341); // TODO: implement properly
+                vectors::dtl::vector_base_access::convert(out_tensor).resize_to_dimension(tensor_basis_type::start_of_degree(MaxDepth+1));
                 using traits = vectors::dtl::data_access<vectors::dense_vector<tensor_basis_type, Coeff>>;
                 output_ptr = traits::range_begin(vectors::dtl::vector_base_access::convert(out_tensor));
                 left_forward_read_ptr = traits::range_begin(vectors::dtl::vector_base_access::convert(lhs_tensor));
@@ -87,11 +87,14 @@ namespace alg {
             void write_tile(DEG degree, DIMN index, DIMN reverse_index) noexcept
             {
                 const auto start_of_degree = tensor_basis_type::start_of_degree(degree);
-                auto* optr = output_ptr + index * tile_size + start_of_degree;
+                auto* optr = output_ptr + index * tile_width + start_of_degree;
                 const auto* tptr = output_tile.data();
+                auto stride = powers[degree+TileLetters];
 
-                for (DIMN i = 0; i < tile_size; ++i) {
-                    optr[i] += tptr[i];
+                for (DIMN i = 0; i < tile_width; ++i) {
+                    for (DIMN j = 0; j < tile_width; ++j) {
+                        optr[i*stride+j] += tptr[i*tile_width+j];
+                    }
                 }
 
                 if (degree < MaxDepth) {

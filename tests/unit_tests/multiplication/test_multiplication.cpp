@@ -389,14 +389,14 @@ SUITE(Multiplication)
         const auto& sbasis = in.sbasis;
 
         IN::LIE logsig_lhs;
-        add_equals_short(logsig_lhs, in.generic_vector<SHORT_LIE>(1000));
+        add_equals_short(logsig_lhs, in.generic_vector<IN::LIE>(1000));
 //        SHOW(logsig_lhs);
         IN::TENSOR tensor_logsig_lhs = in.maps_.l2t(logsig_lhs);
         IN::TENSOR lhs = exp(tensor_logsig_lhs);
 //        SHOW(lhs);
 
         IN::LIE logsig_rhs;
-        add_equals_short(logsig_rhs, in.generic_vector<SHORT_LIE>(1000));
+        add_equals_short(logsig_rhs, in.generic_vector<IN::LIE>(1000));
 //        SHOW(logsig_rhs);
         IN::TENSOR tensor_logsig_rhs = in.maps_.l2t(logsig_rhs);
         IN::TENSOR rhs = exp(tensor_logsig_rhs);

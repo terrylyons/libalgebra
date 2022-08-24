@@ -323,15 +323,9 @@ public:
         {
             // Copy from src to test and adjust sign.
             //                signer_t signer;
+            Signer signer(Level);
             for (size_t i = 0; i < level_size; ++i) {
-                if (Level % 2 == 0) {
-                    dst_ptr[i] = src_ptr[i];
-                    // dst_ptr[i] = signer(src_ptr[i]);
-                }
-                else {
-                    dst_ptr[i] = -src_ptr[i];
-                    // dst_ptr[i] = signer(src_ptr[i]);
-                }
+                dst_ptr[i] = signer(src_ptr[i]);
             }
 
             // Operate on the pointer as if it were a tile of size Width^Level
@@ -362,15 +356,9 @@ public:
         {
             // Copy from src to test and adjust sign.
             //                signer_t signer;
+            Signer signer(Level);
             for (size_t i = 0; i < level_size; ++i) {
-                if (Level % 2 == 0) {
-                    dst_ptr[i] = src_ptr[i];
-                    // dst_ptr[i] = signer(src_ptr[i]);
-                }
-                else {
-                    dst_ptr[i] = -src_ptr[i];
-                    // dst_ptr[i] = signer(src_ptr[i]);
-                }
+                dst_ptr[i] = signer(src_ptr[i]);
             }
 
             // Operate on the pointer as if it were a tile of size Width^Level
@@ -388,6 +376,9 @@ public:
 
         if (src_ptr == nullptr)// if pointer to source is null
         {
+            return;
+        }
+        if (dst_ptr == nullptr) {
             return;
         }
 
@@ -461,6 +452,7 @@ private:
     {
         SCA tile[block_size];
         auto stride = power(Width, degree + BlockLetters);
+        assert((block_width-1)*stride + word_index*block_offset + (block_width-1) < power(Width, degree + 2*BlockLetters));
         read_tile(input_data + word_index * block_offset, tile, stride);
         reversing_permutation<Width, 2 * BlockLetters> permutation;
         permutation(tile);

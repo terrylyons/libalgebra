@@ -55,7 +55,7 @@ namespace alg {
 #endif
 
                 dtl::tiled_inverse_operator<Width, MaxDepth - 1, BlockLetters, S, dtl::non_signing_signer> reverser;
-                reverser(left_forward_read_ptr, lhs_reverse_data.data(), lhs_tensor.degree());
+                reverser(left_forward_read_ptr, lhs_reverse_data.data(), lhs_tensor.degree()-1);
 
             }
 
@@ -138,7 +138,7 @@ namespace alg {
             const S& right_unit() const noexcept { return right_forward_read_ptr[0]; }
             const S* left_fwd_read(DEG degree, DIMN index) const noexcept
             {
-                const DEG offset = integer_maths::power(Width, degree);
+                const DEG offset = tensor_basis_type::start_of_degree(degree+1);
                 return left_forward_read_ptr + index + offset;
             }
             const S* right_fwd_read(DEG degree, DIMN index) const noexcept

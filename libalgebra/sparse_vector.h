@@ -1408,15 +1408,17 @@ public:
     void
     square_buffered_apply_binary_transform(Vector& result, const sparse_vector& rhs, KeyTransform key_transform) const
     {
+        if (empty() || rhs.empty()) {
+            return;
+        }
+
         // create buffer to avoid unnecessary calls to MAP inside loop
         std::vector<std::pair<KEY, SCALAR>> buffer(rhs.map_begin(), rhs.map_end());
-        const_iterator i;
 
         // DEPTH1 == 0
-        typename std::vector<std::pair<KEY, SCALAR>>::const_iterator j;
-        for (i = begin(); i != end(); ++i) {
-            for (j = buffer.begin(); j != buffer.end(); ++j) {
-                key_transform(result, i->key(), i->value(), j->first, j->second);
+        for (auto i = map_begin(); i != map_end(); ++i) {
+            for (auto j = buffer.begin(); j != buffer.end(); ++j) {
+                key_transform(result, i->first, i->second, j->first, j->second);
             }
         }
     }

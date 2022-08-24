@@ -89,8 +89,9 @@ namespace alg {
                 const auto start_of_degree = tensor_basis_type::start_of_degree(degree);
                 auto* optr = output_ptr + index * tile_width + start_of_degree;
                 const auto* tptr = output_tile.data();
-                auto stride = powers[degree+TileLetters];
+                auto stride = powers[degree-TileLetters];
 
+                assert((tile_width-1)*stride + index*tile_width  + tile_width-1 < powers[degree]);
                 for (DIMN i = 0; i < tile_width; ++i) {
                     for (DIMN j = 0; j < tile_width; ++j) {
                         optr[i*stride+j] += tptr[i*tile_width+j];
@@ -122,6 +123,7 @@ namespace alg {
                     return (index % Width) * Width + (index / Width);
                 }
                 else {
+                    assert(degree < powers.size());
                     auto left_letter = index / powers[degree - 1];
                     auto right_letter = index % Width;
                     auto middle_letters = (index / Width);
@@ -138,13 +140,13 @@ namespace alg {
             const S& right_unit() const noexcept { return right_forward_read_ptr[0]; }
             const S* left_fwd_read(DEG degree, DIMN index) const noexcept
             {
-                const DEG offset = tensor_basis_type::start_of_degree(degree+1);
-                return left_forward_read_ptr + index + offset;
+                auto offset = tensor_basis_type::start_of_degree(degree);
+                return left_forward_read_ptr + index*tile_width + offset;
             }
             const S* right_fwd_read(DEG degree, DIMN index) const noexcept
             {
                 const DIMN offset = tensor_basis_type::start_of_degree(degree);
-                return right_forward_read_ptr + index + offset;
+                return right_forward_read_ptr + index*tile_width + offset;
             }
             const S* left_reverse_read(DEG degree, DIMN index) const noexcept
             {

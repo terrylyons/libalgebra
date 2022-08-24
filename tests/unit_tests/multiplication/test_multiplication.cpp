@@ -157,8 +157,6 @@ struct Environment {
     using shuffle_tensor_basis_t = shuffle_tensor_basis_t_<DEPTH>;
     shuffle_tensor_basis_t sbasis;
 
-    using SHUFFLE_TENSOR_OVER_POLYS = alg::shuffle_tensor<poly_coeffs, WIDTH, DEPTH>;
-    using inner_product = alg::operators::shuffle_tensor_functional<TENSOR, SHUFFLE_TENSOR_OVER_POLYS>;
 
     using MAPS = maps<poly_coeffs, WIDTH, DEPTH, TENSOR, LIE>;
     using CBH = cbh<poly_coeffs, WIDTH, DEPTH, TENSOR, LIE>;
@@ -166,26 +164,6 @@ struct Environment {
     MAPS maps_;
     CBH cbh_;
 
-    // make a LIE element whose hall coefficients are monomials
-    LIE generic_lie(const int offset = 0) const
-    {
-        LIE result;
-        for (auto lie_key : lbasis.iterate_keys()) {
-            result.add_scal_prod(lie_key, poly_t(lie_key + offset, S(1)));
-        }
-        return result;
-    }
-
-    // The bilinear function K takes a shuffle and contracts it with a tensor to produce a scalar.
-    // In this case the scalar is itself a polynomial
-    static typename poly_coeffs::S K(const SHUFFLE_TENSOR& functional, const TENSOR& sig_data)
-    {
-        SHUFFLE_TENSOR_OVER_POLYS functional_p;
-        for (auto& key_value : functional)
-            functional_p.add_scal_prod(key_value.key(), typename poly_coeffs::S(key_value.value()));
-        inner_product f(sig_data);//todo: left and right switched here?
-        return f(functional_p);
-    }
 
     // creates a generic vector with monomial coefficients
     template<class VECTOR, const int offset0 = 0>
@@ -194,31 +172,20 @@ struct Environment {
         const typename VECTOR::BASIS& basis = VECTOR::basis;
         // LIE basis starts at 1 which is confusing
 
-        int count;
-        if constexpr (std::is_integral<decltype(basis.begin())>::value) {
-            // invalid code if the premise is false - constexpr essential to avoid compilation
-            count = basis.begin();
-        }
-        else {
-            count = 0;
-        }
+        auto toffset = offset*integer_maths::power(10, DEPTH+2);
 
-        std::map<int, std::pair<typename VECTOR::KEY, std::string>> legend;
 
         VECTOR result;
         //for range type for loop approach use ": basis.iterate_keys()"
         for (auto key = basis.begin(), end = basis.end(); key != end; key = basis.nextkey(key)) {
-            result[key] = poly_t(count + offset, 1);
-
-            // record the mapping from keys to monomials
-            auto basis_key_pair = std::pair<typename VECTOR::BASIS*, typename VECTOR::KEY>(&VECTOR::basis, key);
-            std::stringstream buffer;
-            buffer << basis_key_pair;
-//            legend[count + offset] = std::pair(key, buffer.str());  // TODO: error: missing template arguments before '(' token
-            legend[count + offset] = std::pair<typename VECTOR::KEY, std::string>(key, buffer.str());
-            std::cout << " monomial index:" << count + offset << " basis index:" << key << " basis value:" << buffer.str() << "\n";
-
-            ++count;
+            auto tmp = key;
+            auto count = 0;
+            while (tmp.size() > 0) {
+                count *= 10;
+                count += tmp.FirstLetter();
+                tmp = tmp.rparent();
+            }
+            result[key] = poly_t(count + toffset, 1);
         }
         return result;
     }
@@ -226,31 +193,6 @@ struct Environment {
 
 };
 
-template<class FULL_TENSOR, class SHORT_TENSOR>
-FULL_TENSOR& add_equals_short(FULL_TENSOR& out, const SHORT_TENSOR& in)
-{
-    const static typename FULL_TENSOR::BASIS fbasis;
-    const static typename SHORT_TENSOR::BASIS sbasis;
-    auto key = sbasis.begin(), end = sbasis.end();
-    auto fkey = fbasis.begin(), fend = fbasis.end();
-    for (; key != end && fkey != fend; key = sbasis.nextkey(key), fkey = fbasis.nextkey(fkey))
-        out[fkey] += in[key];
-    return out;
-}
-
-template<class EnvironmentOUT, class EnvironmentIN>
-typename EnvironmentOUT::TENSOR apply1(const std::map<typename EnvironmentOUT::TENSOR::BASIS::KEY, typename EnvironmentIN::SHUFFLE_TENSOR>& result, const typename EnvironmentIN::TENSOR& in)
-{
-    typename EnvironmentOUT::TENSOR out;
-    for (const auto& x : result) {
-        auto& key = x.first;
-        auto& tvalue = x.second;
-        // both environments must have compatible scalar types
-        out[key] = typename EnvironmentIN::K(tvalue, in);
-    };
-
-    return out;
-}
 
 SUITE(Multiplication)
 {
@@ -266,12 +208,7 @@ SUITE(Multiplication)
         vectors::dtl::vector_base_access::convert(lhs).resize_to_dimension(341); // TODO: implement properly
         vectors::dtl::vector_base_access::convert(rhs).resize_to_dimension(341); // TODO: implement properly
 
-        std::cout << "lhs=" << lhs << std::endl;
-        std::cout << "rhs=" << rhs << std::endl;
-
         TENSOR expected = lhs*rhs;
-
-        std::cout << "expected=" << expected << std::endl;
 
         TENSOR result;
 
@@ -283,6 +220,8 @@ SUITE(Multiplication)
 
         // objects that come from GilesMultiplier: helper.powers, helper.reverse_key, helper.tile_width,
         // helper.left_forward_read_ptr, helper.reverse, helper.split, tile, left_rtile, right_rtile
+
+        SHOW(result);
 
         auto* tile = helper.out_tile_ptr();
         const auto* left_rtile = helper.left_read_tile_ptr();
@@ -375,7 +314,8 @@ SUITE(Multiplication)
                 helper.write_tile(out_deg, k, k_reverse);
             }
         }
-
+        std::cout << "lhs=" << lhs << std::endl;
+        std::cout << "rhs=" << rhs << std::endl;
         std::cout << "result=" << result << std::endl;
 
         // ############## end multiplication.cpp ################## //
@@ -384,46 +324,26 @@ SUITE(Multiplication)
 
     }
 
-    using IN = Environment<4, 4>;
-    using SHORT_LIE = IN::LIE_<4>;
+    using IN = Environment<4, 3>;
 
     TEST_FIXTURE(IN, giles_multiplication_check_with_polynomials)
     {
 
-        IN in;
-        const auto& sbasis = in.sbasis;
+        auto lhs = generic_vector<TENSOR>(1);
+        auto rhs = generic_vector<TENSOR>(2);
 
-        IN::LIE logsig_lhs;
-        add_equals_short(logsig_lhs, in.generic_vector<IN::LIE>(1000));
-//        SHOW(logsig_lhs);
-        IN::TENSOR tensor_logsig_lhs = in.maps_.l2t(logsig_lhs);
-        IN::TENSOR lhs = exp(tensor_logsig_lhs);
 //        SHOW(lhs);
-
-        IN::LIE logsig_rhs;
-        add_equals_short(logsig_rhs, in.generic_vector<IN::LIE>(1000));
-//        SHOW(logsig_rhs);
-        IN::TENSOR tensor_logsig_rhs = in.maps_.l2t(logsig_rhs);
-        IN::TENSOR rhs = exp(tensor_logsig_rhs);
 //        SHOW(rhs);
-
-        std::cout << "lhs=" << lhs << std::endl;
-        std::cout << "rhs=" << rhs << std::endl;
 
         TENSOR expected = lhs*rhs;
 
-        std::cout << "expected=" << expected << std::endl;
-
         TENSOR result;
 
-        vectors::dtl::vector_base_access::convert(lhs).resize_to_dimension(341); // TODO: implement properly
-        vectors::dtl::vector_base_access::convert(rhs).resize_to_dimension(341); // TODO: implement properly
-
         const DEG TileLetters = 1;        // TODO: implement properly
-        DEG tensor_width = 4;        // TODO: implement properly
-        DEG max_depth = 4;         // TODO: implement properly
+        DEG tensor_width = WIDTH_HALL_BASIS;        // TODO: implement properly
+        DEG max_depth = DEPTH_HALL_BASIS;         // TODO: implement properly
 
-        dtl::GilesMultiplier<poly_coeffs , 4, 4, TileLetters> helper(result, lhs, rhs);
+        dtl::GilesMultiplier<poly_coeffs, WIDTH_HALL_BASIS, DEPTH_HALL_BASIS, TileLetters> helper(result, lhs, rhs);
 
         // objects that come from GilesMultiplier: helper.powers, helper.reverse_key, helper.tile_width,
         // helper.left_forward_read_ptr, helper.reverse, helper.split, tile, left_rtile, right_rtile
@@ -440,10 +360,14 @@ SUITE(Multiplication)
 
             for (DIMN k = 0; k < helper.powers[out_deg - 2 * TileLetters]; ++k) {
                 auto k_reverse = helper.reverse_key(out_deg, k);
+                auto true_index = k + tbasis.start_of_degree(out_deg - 2*TileLetters);
+
 
                 // Handle 0*out_depth and out_depth*0
                 const auto& lhs_unit = helper.left_unit();
                 const auto* rhs_ptr = helper.right_fwd_read(out_deg, k);
+//                SHOW(true_index);
+//                SHOW(*rhs_ptr);
                 for (DIMN i = 0; i < helper.tile_width; ++i) {
                     for (DIMN j = 0; j < helper.tile_width; ++j) {
                         tile[i * helper.tile_width + j] = lhs_unit * rhs_ptr[i * stride + j];
@@ -452,6 +376,7 @@ SUITE(Multiplication)
 
                 const auto& rhs_unit = helper.right_unit();
                 const auto* lhs_ptr = helper.left_fwd_read(out_deg, k);
+//                SHOW(*lhs_ptr);
                 for (DIMN i = 0; i < helper.tile_width; ++i) {
                     for (DIMN j = 0; j < helper.tile_width; ++j) {
                         tile[i * helper.tile_width + j] += lhs_ptr[i * stride + j] * rhs_unit;
@@ -485,12 +410,16 @@ SUITE(Multiplication)
                 for (DEG lhs_deg = 0; lhs_deg <= out_deg - 2 * TileLetters; ++lhs_deg) {
                     const auto rhs_deg = out_deg - 2 * TileLetters - lhs_deg;
                     auto split = helper.split_key(rhs_deg, k);
+//                    SHOW(split.first);
+//                    SHOW(split.second);
                     assert(split.first*integer_maths::power(WIDTH_HALL_BASIS, rhs_deg) + split.second == k);
                     helper.read_left_tile(lhs_deg + TileLetters, helper.reverse_key(lhs_deg, split.first));
                     helper.read_right_tile(rhs_deg + TileLetters, split.second);
 
                     for (DIMN i = 0; i < helper.tile_width; ++i) {
                         for (DIMN j = 0; j < helper.tile_width; ++j) {
+//                            SHOW(left_rtile[i]);
+//                            SHOW(right_rtile[j]);
                             tile[i * helper.tile_width + j] += left_rtile[i] * right_rtile[j];
                         }
                     }
@@ -519,11 +448,12 @@ SUITE(Multiplication)
                 helper.write_tile(out_deg, k, k_reverse);
             }
         }
+        std::cout << "result=" << result << '\n' << std::endl;
+        std::cout << "expected" << expected << '\n' << std::endl;
 
-        std::cout << "result=" << result << std::endl;
 
         // ############## end multiplication.cpp ################## //
-
+        CHECK_EQUAL(TENSOR {}, expected - result);
         CHECK_EQUAL(expected, result);
     }
 

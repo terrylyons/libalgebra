@@ -326,7 +326,7 @@ SUITE(Multiplication)
                 //      = out_deg (good).
                 for (DEG lh_deg = 1; lh_deg < TileLetters; ++lh_deg) {
                     auto rh_deg = out_deg - (2 * TileLetters + lh_deg);
-                    for (DIMN i = 0; i < helper.powers[lh_deg]; ++i) {
+                    for (DIMN i = 0; i < helper.tile_width; ++i) {
                         const auto split = helper.split_key(lh_deg, i);
                         const auto& left_val = *helper.left_fwd_read(lh_deg, split.first);
                         helper.read_right_tile(out_deg - rh_deg, helper.combine_keys(out_deg - 2 * TileLetters, split.second, k));
@@ -360,7 +360,7 @@ SUITE(Multiplication)
                 // rrk = right part of right key of degree rh_deg
                 for (DEG rh_deg = 1; rh_deg < TileLetters; ++rh_deg) {
                     auto lh_deg = out_deg - (2 * TileLetters + rh_deg);
-                    for (DIMN j = 0; j < helper.powers[rh_deg]; ++j) {
+                    for (DIMN j = 0; j < helper.tile_width; ++j) {
                         const auto split = helper.split_key(rh_deg, j);
                         const auto& right_val = *helper.right_fwd_read(rh_deg, split.second);
                         helper.read_left_tile(out_deg - rh_deg, helper.combine_keys(TileLetters - rh_deg, k_reverse, helper.reverse_key(TileLetters - rh_deg, split.first)));
@@ -470,7 +470,7 @@ SUITE(Multiplication)
                 //      = out_deg (good).
                 for (DEG lh_deg = 1; lh_deg < TileLetters; ++lh_deg) {
                     auto rh_deg = out_deg - (2 * TileLetters + lh_deg);
-                    for (DIMN i = 0; i < helper.powers[lh_deg]; ++i) {
+                    for (DIMN i = 0; i < helper.tile_width; ++i) {
                         const auto split = helper.split_key(lh_deg, i);
                         const auto& left_val = *helper.left_fwd_read(lh_deg, split.first);
                         helper.read_right_tile(out_deg - rh_deg, helper.combine_keys(out_deg - 2 * TileLetters, split.second, k));
@@ -504,7 +504,7 @@ SUITE(Multiplication)
                 // rrk = right part of right key of degree rh_deg
                 for (DEG rh_deg = 1; rh_deg < TileLetters; ++rh_deg) {
                     auto lh_deg = out_deg - (2 * TileLetters + rh_deg);
-                    for (DIMN j = 0; j < helper.powers[rh_deg]; ++j) {
+                    for (DIMN j = 0; j < helper.tile_width; ++j) {
                         const auto split = helper.split_key(rh_deg, j);
                         const auto& right_val = *helper.right_fwd_read(rh_deg, split.second);
                         helper.read_left_tile(out_deg - rh_deg, helper.combine_keys(TileLetters - rh_deg, k_reverse, helper.reverse_key(TileLetters - rh_deg, split.first)));

@@ -266,7 +266,12 @@ SUITE(Multiplication)
         vectors::dtl::vector_base_access::convert(lhs).resize_to_dimension(341); // TODO: implement properly
         vectors::dtl::vector_base_access::convert(rhs).resize_to_dimension(341); // TODO: implement properly
 
+        std::cout << "lhs=" << lhs << std::endl;
+        std::cout << "rhs=" << rhs << std::endl;
+
         TENSOR expected = lhs*rhs;
+
+        std::cout << "expected=" << expected << std::endl;
 
         TENSOR result;
 
@@ -287,7 +292,7 @@ SUITE(Multiplication)
 
 
         for (DEG out_deg = max_depth; out_deg > 2 * TileLetters; --out_deg) {
-            const DIMN stride = integer_maths::power(tensor_width, out_deg - TileLetters);
+            const DIMN stride = helper.powers[out_deg-TileLetters];
 
             for (DIMN k = 0; k < helper.powers[out_deg - 2 * TileLetters]; ++k) {
                 auto k_reverse = helper.reverse_key(out_deg, k);
@@ -335,13 +340,14 @@ SUITE(Multiplication)
                 // Handle middle cases
                 for (DEG lhs_deg = 0; lhs_deg <= out_deg - 2 * TileLetters; ++lhs_deg) {
                     const auto rhs_deg = out_deg - 2 * TileLetters - lhs_deg;
-                    auto split = helper.split_key(lhs_deg, k);
+                    auto split = helper.split_key(rhs_deg, k);
+//                    assert(split.first*integer_maths::power(WIDTH_HALL_BASIS, rhs_deg) + split.second == k);
                     helper.read_left_tile(lhs_deg + TileLetters, helper.reverse_key(lhs_deg, split.first));
                     helper.read_right_tile(rhs_deg + TileLetters, split.second);
 
                     for (DIMN i = 0; i < helper.tile_width; ++i) {
                         for (DIMN j = 0; j < helper.tile_width; ++j) {
-                            tile[helper.reverse(i) * helper.tile_width + j] += left_rtile[i] * right_rtile[j];
+                            tile[i * helper.tile_width + j] += left_rtile[i] * right_rtile[j];
                         }
                     }
                 }
@@ -369,8 +375,7 @@ SUITE(Multiplication)
                 helper.write_tile(out_deg, k, k_reverse);
             }
         }
-        std::cout << "lhs=" << lhs << std::endl;
-        std::cout << "rhs=" << rhs << std::endl;
+
         std::cout << "result=" << result << std::endl;
 
         // ############## end multiplication.cpp ################## //
@@ -402,7 +407,12 @@ SUITE(Multiplication)
         IN::TENSOR rhs = exp(tensor_logsig_rhs);
 //        SHOW(rhs);
 
+        std::cout << "lhs=" << lhs << std::endl;
+        std::cout << "rhs=" << rhs << std::endl;
+
         TENSOR expected = lhs*rhs;
+
+        std::cout << "expected=" << expected << std::endl;
 
         TENSOR result;
 
@@ -426,7 +436,7 @@ SUITE(Multiplication)
 
 
         for (DEG out_deg = max_depth; out_deg > 2 * TileLetters; --out_deg) {
-            const DIMN stride = integer_maths::power(tensor_width, out_deg - TileLetters);
+            const DIMN stride = helper.powers[out_deg-TileLetters];
 
             for (DIMN k = 0; k < helper.powers[out_deg - 2 * TileLetters]; ++k) {
                 auto k_reverse = helper.reverse_key(out_deg, k);
@@ -474,13 +484,14 @@ SUITE(Multiplication)
                 // Handle middle cases
                 for (DEG lhs_deg = 0; lhs_deg <= out_deg - 2 * TileLetters; ++lhs_deg) {
                     const auto rhs_deg = out_deg - 2 * TileLetters - lhs_deg;
-                    auto split = helper.split_key(lhs_deg, k);
+                    auto split = helper.split_key(rhs_deg, k);
+                    assert(split.first*integer_maths::power(WIDTH_HALL_BASIS, rhs_deg) + split.second == k);
                     helper.read_left_tile(lhs_deg + TileLetters, helper.reverse_key(lhs_deg, split.first));
                     helper.read_right_tile(rhs_deg + TileLetters, split.second);
 
                     for (DIMN i = 0; i < helper.tile_width; ++i) {
                         for (DIMN j = 0; j < helper.tile_width; ++j) {
-                            tile[helper.reverse(i) * helper.tile_width + j] += left_rtile[i] * right_rtile[j];
+                            tile[i * helper.tile_width + j] += left_rtile[i] * right_rtile[j];
                         }
                     }
                 }
@@ -508,8 +519,7 @@ SUITE(Multiplication)
                 helper.write_tile(out_deg, k, k_reverse);
             }
         }
-        std::cout << "lhs=" << lhs << std::endl;
-        std::cout << "rhs=" << rhs << std::endl;
+
         std::cout << "result=" << result << std::endl;
 
         // ############## end multiplication.cpp ################## //

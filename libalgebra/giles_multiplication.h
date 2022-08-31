@@ -13,6 +13,7 @@ namespace alg {
             std::vector<S> left_read_tile, right_read_tile;
             std::vector<S> output_tile;
             std::vector<S> lhs_reverse_data;
+            DEG m_lhs_deg, m_rhs_deg;
 
             using tensor_basis_type = free_tensor_basis<Width, MaxDepth>;
 
@@ -32,9 +33,12 @@ namespace alg {
 
             GilesMultiplier(tensor_type &out_tensor, const tensor_type &lhs_tensor, const tensor_type &rhs_tensor)
                     : left_read_tile(tile_width),
+                      m_lhs_deg(lhs_tensor.degree()),
+                      m_rhs_deg(rhs_tensor.degree()),
                       right_read_tile(tile_width),
                       output_tile(tile_size),
-                      lhs_reverse_data(tensor_basis_type::start_of_degree(MaxDepth)) {
+                      lhs_reverse_data(tensor_basis_type::start_of_degree(MaxDepth))
+            {
                 vectors::dtl::vector_base_access::convert(out_tensor).resize_to_dimension(tensor_basis_type::start_of_degree(MaxDepth+1));
                 using traits = vectors::dtl::data_access<vectors::dense_vector<tensor_basis_type, Coeff>>;
                 output_ptr = traits::range_begin(vectors::dtl::vector_base_access::convert(out_tensor));
@@ -58,6 +62,9 @@ namespace alg {
                 reverser(left_forward_read_ptr, lhs_reverse_data.data(), lhs_tensor.degree()-1);
 
             }
+
+            DEG lhs_degree() const noexcept { return m_lhs_deg; }
+            DEG rhs_degree() const noexcept { return m_rhs_deg; }
 
             S* out_tile_ptr() noexcept
             {
@@ -152,6 +159,10 @@ namespace alg {
             {
                 const DIMN offset = tensor_basis_type::start_of_degree(degree);
                 return left_reverse_read_ptr + index + offset;
+            }
+            S* fwd_write(int degree) const noexcept
+            {
+                return output_ptr + tensor_basis_type::start_of_degree(static_cast<DEG>(degree));
             }
 
         }; // GilesMultiplier class

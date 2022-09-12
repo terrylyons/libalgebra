@@ -4,7 +4,7 @@
 
 #include <UnitTest++/UnitTest++.h>
 #include <libalgebra/alg_types.h>
-#include <libalgebra/vectors/vector.h>
+#include <libalgebra/vector.h>
 
 #include <vector>
 

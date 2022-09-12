@@ -4,7 +4,7 @@
 
 #include <UnitTest++/UnitTest++.h>
 
-#include <libalgebra/coefficients/coefficients.h>
+#include <libalgebra/coefficients.h>
 #include <libalgebra/libalgebra.h>
 
 #include "../../common/time_and_details.h"

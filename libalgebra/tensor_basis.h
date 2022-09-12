@@ -14,11 +14,14 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_TENSORBASISH_SEEN
 #define DJC_COROPA_LIBALGEBRA_TENSORBASISH_SEEN
 
+#include "implementation_types.h"
+
+#include <cmath>
+#include <limits>
+
 #include "_tensor_basis.h"
 #include "basis_traits.h"
-#include <cmath>
-#include <libalgebra/basis/key_iterators.h>
-#include <limits>
+#include "key_iterators.h"
 
 namespace alg {
 

@@ -23,7 +23,7 @@ Version 3. (See accompanying file License.txt)
 #include <unordered_set>
 #include <algorithm>
 
-#include <libalgebra/vectors/base_vector.h>
+#include "base_vector.h"
 
 namespace alg {
 

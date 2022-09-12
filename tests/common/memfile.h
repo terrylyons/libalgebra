@@ -15,9 +15,9 @@
 #include "compat.h"
 #include "helpers.h"
 
-#include <libalgebra/basis/basis.h>
+#include <libalgebra/basis.h>
 
-struct	memfile
+struct memfile
 {
 public:
 	char* begin() const;

@@ -5,9 +5,9 @@
 #ifndef LIBALGEBRA_BASIS_H
 #define LIBALGEBRA_BASIS_H
 
-#include "libalgebra/implementation_types.h"
+#include "implementation_types.h"
 
-#include "libalgebra/basis/tags.h"
+#include "tags.h"
 #include <type_traits>
 
 namespace alg {

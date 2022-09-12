@@ -5,10 +5,14 @@
 #ifndef LIBALGEBRA_HYBRID_VECTOR_H
 #define LIBALGEBRA_HYBRID_VECTOR_H
 
-#include "libalgebra/utils/order_trait.h"
-#include "libalgebra/vectors/base_vector.h"
-#include "libalgebra/vectors/dense_vector.h"
-#include "libalgebra/vectors/sparse_vector.h"
+
+#include <algorithm>
+#include <numeric>
+
+#include "utils/order_trait.h"
+#include "base_vector.h"
+#include "dense_vector.h"
+#include "sparse_vector.h"
 
 #define DEFINE_FUSED_OP(NAME, ST, OP1, OP2)                            \
     hybrid_vector& NAME(const KEY& rhs, const ST s)                    \

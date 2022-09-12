@@ -5,7 +5,7 @@
 #include <UnitTest++/UnitTest++.h>
 
 
-#include <libalgebra/vectors/dense_storage.h>
+#include <libalgebra/dense_storage.h>
 
 #include "../../common/rng.h"
 

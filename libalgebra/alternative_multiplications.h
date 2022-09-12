@@ -5,9 +5,9 @@
 #ifndef LIBALGEBRA_ALTERNATIVE_MULTIPLICATIONS_H
 #define LIBALGEBRA_ALTERNATIVE_MULTIPLICATIONS_H
 
-#include <libalgebra/vectors/vectors.h>
-#include <libalgebra/tensor.h>
-#include <libalgebra/multiplication_helpers.h>
+#include "vectors.h"
+#include "tensor.h"
+#include "multiplication_helpers.h"
 #include "half_shuffle_tensor_multiplication.h"
 #include "area_tensor_multiplication.h"
 

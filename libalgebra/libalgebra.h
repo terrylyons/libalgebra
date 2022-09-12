@@ -110,7 +110,7 @@ typedef unsigned __int64 uint64_t;
 
 #include "hall_set.h"
 #include "libalgebra/utils/integer_maths.h"
-#include "libalgebra/vectors/vectors.h"
+#include "libalgebra/vectors.h"
 #include "multiplication_helpers.h"
 
 #include "algebra.h"
@@ -228,16 +228,16 @@ class poly_lie;
 #include "tensor_basis.h"
 #include "utils.h"
 
-#include <libalgebra/coefficients/mpfloat_coefficients.h>
-#include <libalgebra/coefficients/rational_coefficients.h>
-#include <libalgebra/operators/functionals.h>
-#include <libalgebra/operators/multi_linear_operators.h>
-#include <libalgebra/operators/operators.h>
-#include <libalgebra/alternative_multiplications.h>
-#include <libalgebra/half_shuffle_tensor_basis.h>
-#include <libalgebra/half_shuffle_tensor_multiplication.h>
-#include <libalgebra/area_tensor_basis.h>
-#include <libalgebra/area_tensor_multiplication.h>
+#include "mpfloat_coefficients.h"
+#include "rational_coefficients.h"
+#include "functionals.h"
+#include "multi_linear_operators.h"
+#include "operators.h"
+#include "alternative_multiplications.h"
+#include "half_shuffle_tensor_basis.h"
+#include "half_shuffle_tensor_multiplication.h"
+#include "area_tensor_basis.h"
+#include "area_tensor_multiplication.h"
 
 // End of undeclaration of local macros.
 

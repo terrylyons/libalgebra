@@ -25,9 +25,8 @@ Version 3. (See accompanying file License.txt)
 #include <vector>
 
 #include "libalgebra/utils/order_trait.h"
-#include "libalgebra/vectors/base_vector.h"
-#include "libalgebra/vectors/iterators.h"
-#include <libalgebra/utils/iterators.h>
+#include "base_vector.h"
+#include "iterators.h"
 
 namespace alg {
 namespace vectors {

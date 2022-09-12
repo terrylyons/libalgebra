@@ -7,7 +7,7 @@
 #include <UnitTest++/UnitTest++.h>
 
 #include <libalgebra/libalgebra.h>
-#include <libalgebra/coefficients/coefficients.h>
+#include <libalgebra/coefficients.h>
 
 #include "../../common/helpers.h"
 
@@ -108,4 +108,3 @@ SUITE(tensor_signature_calc_check) {
 
 
 }
-

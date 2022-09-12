@@ -8,12 +8,12 @@
 #include <utility>
 #include <vector>
 
-#include "libalgebra/basis/basis.h"
+#include "basis.h"
 #include "libalgebra/utils/meta.h"
-#include "libalgebra/vectors/base_vector.h"
-#include "libalgebra/vectors/dense_storage.h"
-#include "libalgebra/vectors/iterators.h"
-#include "libalgebra/vectors/vector.h"
+#include "base_vector.h"
+#include "dense_storage.h"
+#include "iterators.h"
+#include "vector.h"
 
 namespace alg {
 namespace vectors {

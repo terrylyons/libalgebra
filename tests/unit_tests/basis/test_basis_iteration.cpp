@@ -3,7 +3,7 @@
 //
 
 #include <UnitTest++/UnitTest++.h>
-#include <libalgebra/basis/key_iterators.h>
+#include <libalgebra/key_iterators.h>
 #include <libalgebra/libalgebra.h>
 
 

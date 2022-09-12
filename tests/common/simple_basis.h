@@ -5,7 +5,7 @@
 #ifndef LIBALGEBRAUNITTESTS_SIMPLE_BASIS_H
 #define LIBALGEBRAUNITTESTS_SIMPLE_BASIS_H
 #include <libalgebra/libalgebra.h>
-#include <libalgebra/basis/basis.h>
+#include <libalgebra/basis.h>
 
 #include <iostream>
 #include <utility>

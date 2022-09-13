@@ -1,6 +1,9 @@
 #include <benchmark/benchmark.h>
 #include <iostream>
 
+//#include <libalgebra/libalgebra.h>
+//#include <libalgebra/giles_multiplication.h>
+
 template<int W, int D>
 static void BM_multiplication(benchmark::State& state)
 {

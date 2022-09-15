@@ -127,7 +127,6 @@ public:
     // Utility
     using UnderlyingVectorType::comp;
 
-protected:
     using UnderlyingVectorType::degree_tag;
 
 protected:
@@ -223,6 +222,9 @@ public:
 
     vector& operator=(const vector& other) = default;
     vector& operator=(vector&& other) noexcept = default;
+
+    UnderlyingVectorType& base_vector() noexcept { return *this; }
+    const UnderlyingVectorType& base_vector() const noexcept { return *this; }
 
 protected:
     bool ensure_sized_for_degree(const DEG deg)

@@ -17,7 +17,7 @@ struct fixture
     typedef alg::free_tensor_basis<2, 2> tensor_basis;
     typedef typename tensor_basis::KEY tkey;
     typedef alg::coefficients::double_field coeff_t;
-    typedef alg::free_tensor_multiplication<coeff_t> tensor_multiplication_t;
+    typedef alg::free_tensor_multiplication<2, 2> tensor_multiplication_t;
 
     typedef alg::vectors::dense_vector<tensor_basis, coeff_t> dense_vec_t;
 

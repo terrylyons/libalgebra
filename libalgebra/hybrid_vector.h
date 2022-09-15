@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <numeric>
 
-#include "utils/order_trait.h"
+#include "detail/order_trait.h"
 #include "base_vector.h"
 #include "dense_vector.h"
 #include "sparse_vector.h"
@@ -185,6 +185,7 @@ public:
     using DENSE::mone;
     using DENSE::one;
     using DENSE::zero;
+    using typename SPARSE::coefficient_ring;
 
 public:
     // Constructors

@@ -11,7 +11,7 @@
 #include <boost/type_traits.hpp>
 #include <boost/mpl/logical.hpp>
 
-#include <libalgebra/utils/meta.h>
+#include <libalgebra/detail/meta.h>
 #include <libalgebra/iterators.h>
 
 

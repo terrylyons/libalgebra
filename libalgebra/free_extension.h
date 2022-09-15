@@ -10,7 +10,7 @@
 #include <type_traits>
 #include <utility>
 
-#include <libalgebra/utils/caching_tags.h>
+#include "detail/caching_tags.h"
 
 namespace alg {
 namespace operators {

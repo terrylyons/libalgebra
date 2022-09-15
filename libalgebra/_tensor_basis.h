@@ -551,6 +551,11 @@ public:
             return static_cast<size_t>(key._word);
         }
     };
+
+    friend std::size_t hash_value(const _tensor_basis& key) {
+        return static_cast<size_t>(key._word);
+    }
+
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;

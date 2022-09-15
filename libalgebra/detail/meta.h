@@ -106,6 +106,14 @@ struct template_selector<true, T1, T2> {
     using type = T2<A...>;
 };
 
+template <typename T, template <typename> class MetaFunc, typename>
+struct void_or : MetaFunc<T>::type
+{};
+
+template <template <typename> class UNUSED, typename Void>
+struct void_or<void, UNUSED, Void> : Void {};
+
+
 }// namespace utils
 }// namespace alg
 

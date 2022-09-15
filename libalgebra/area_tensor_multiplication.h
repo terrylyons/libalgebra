@@ -14,6 +14,10 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_area_TENSOR_MULTIPLICATIONH_SEEN
 #define DJC_COROPA_LIBALGEBRA_area_TENSOR_MULTIPLICATIONH_SEEN
 
+
+#include "tensor.h"
+
+#if 0
 #include "half_shuffle_tensor_basis.h"
 #include "area_tensor_basis.h"
 
@@ -269,7 +273,7 @@ public:
 };
 
 } // namespace alg
-
+#endif
 // Include once wrapper
 #endif // DJC_COROPA_LIBALGEBRA_area_TENSOR_MULTIPLICATIONH_SEEN
 

@@ -14,89 +14,508 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_ALGEBRAH_SEEN
 #define DJC_COROPA_LIBALGEBRA_ALGEBRAH_SEEN
 
+#include <map>
+#include <mutex>
+#include <type_traits>
+#include <unordered_map>
+#include <utility>
+
+
+#include <boost/container/small_vector.hpp>
+#include <boost/functional/hash.hpp>
+
+#include "detail/meta.h"
+#include "implementation_types.h"
+#include "tags.h"
+
 namespace alg {
 
-/* The algebra is a vector with an additional multiplication operation which is
- * "compatible" with the addition and scalar multiplication. We attempt to mimic
- * this with the algebra template class below. For this, we need to define
- * "multiplication" types for each of the algebras that we wish to implement.
- * Here is a simple example of what a multiplication class should look like.
- *
- * template <typename Coeff>
- * class multiplication {
- *
- *      typedef typename Coeff::SCA scalar_t;
- *
- *      template <typename Transform>
- *      class index_operator {
- *          Transform m_transform;
- *
- *      public:
- *
- *          index_operator(Transform t) : m_transform(t) {}
- *
- *
- *          void operator()(
- *              scalar_t *result_ptr,
- *              scalar_t const* lhs_ptr,
- *              scalar_t const* rhs_ptr,
- *              DIMN const lhs_target,
- *              DIMN const rhs_target,
- *              bool assign = false
- *          );
- *      };
- *
- *      template <typename Transform>
- *      class key_operator {
- *          Transform m_transform;
- *
- *          typedef ...    key_t;
- *
- *      public:
- *          key_transform(Transform t) : m_transform(t) {}
- *
- *          template <typename Vector>
- *          void operator()(
- *              Vector& result,
- *              key_t const& lhs_key,
- *              scalar_t const& lhs_val,
- *              key_t const& rhs_key,
- *              scalar_t const& rhs_val
- *          );
- *      };
- *
- *
- * public:
- *
- *      template <typename Algebra, typename Operator>
- *      Algebra& multiply_and_add(Algebra& result, Algebra const& lhs, Algebra
- * const& rhs, Operator op) const { key_transform<scalar_t, Operator> kt(op);
- *          index_transform<scalar_t, Operator> it(op);
- *          lhs.buffered_apply_binary_transform(result, rhs, kt, it);
- *          return result;
- *      }
- *
- *      template <typename Algebra, typename Operator>
- *      Algebra multiply(Algebra const& lhs, Algebra const& rhs, Operator op)
- * const { typedef typename Algebra::SCALAR scalar_t; Algebra result;
- *          multiply_and_add(result, lhs, rhs, op);
- *          return result;
- *      }
- *
- *      template <typename Algebra, typename Operator>
- *      Algebra& multiply_inplace(Algebra& lhs, Algebra const& rhs, Operator op)
- * const { typedef typename Algebra::SCALAR scalar_t; key_transform<scalar_t,
- * Operator> kt(op); index_transform<scalar_t, Operator> it(op);
- *          lhs.unbuffered_apply_binary_transform(rhs, kt, it);
- *          return lhs;
- *      }
- * };
- *
- *
- *
- *
- *
+namespace dtl {
+
+template <typename Tag>
+struct has_degree_impl : public std::false_type {};
+
+template <DEG D>
+struct has_degree_impl<basis::with_degree<D>>
+    : public std::enable_if_t<(D>0), std::true_type>
+{};
+
+template <typename Vector>
+using vector_deg_tag = typename basis::basis_traits<
+        typename Vector::BASIS::degree_tag>::degree_tag;
+
+template <typename Vector>
+using has_degree_t = has_degree_impl<vector_deg_tag<Vector>>;
+
+
+template <typename Multiplication>
+class multiplication_traits
+{
+    using mul_reference = const Multiplication&;
+
+    template <typename Result, typename LeftVector, typename RightVector, typename Fn>
+    static void fma(mul_reference mul, Result& out, const LeftVector& lhs, const RightVector& rhs, Fn op)
+    {
+        mul.fma(out.base_vector(), lhs.base_vector(), rhs.base_vector(), op);
+    }
+
+    template <typename Result, typename LeftVector, typename RightVector, typename Fn>
+    static void fma(mul_reference mul, Result& out, const LeftVector& lhs, const RightVector& rhs, Fn op, DEG max_degree)
+    {
+        mul.fma(out.base_vector(), lhs.base_vector(), rhs.base_vector(), op, max_degree);
+    }
+
+    template <typename LeftVector, typename RightVector, typename Fn>
+    static void fma_inplace(mul_reference mul, LeftVector& lhs, const RightVector& rhs, Fn op)
+    {
+        mul.fma_inplace(lhs.base_vector(), rhs.base_vector(), op);
+    }
+
+    template <typename LeftVector, typename RightVector, typename Fn>
+    static void fma_inplace(mul_reference mul, LeftVector& lhs, const RightVector& rhs, Fn op, DEG max_degree)
+    {
+        mul.fma_inplace(lhs.base_vector(), rhs.base_vector(), op, max_degree);
+    }
+
+    template <typename Result, typename LeftVector, typename RightVector, typename Fn>
+    static void dispatch(mul_reference mul, Result& out, const LeftVector& lhs, const RightVector& rhs,
+                                  Fn op, basis::without_degree)
+    {
+        fma(mul, out, lhs, rhs, op);
+    }
+
+    template <typename Result, typename LeftVector, typename RightVector, typename Fn, DEG D>
+    static void dispatch(mul_reference mul, Result& out, const LeftVector& lhs, const RightVector& rhs,
+                                  Fn op, basis::with_degree<D>)
+    {
+        fma(mul, out, lhs, rhs, op, D);
+    }
+
+    template <typename LeftVector, typename RightVector, typename Fn>
+    static void dispatch(mul_reference mul, LeftVector& lhs, const RightVector& rhs,
+                                  Fn op, basis::without_degree)
+    {
+        fma_inplace(mul, lhs, rhs, op);
+    }
+
+    template <typename LeftVector, typename RightVector, typename Fn, DEG D>
+    static void dispatch(mul_reference mul, LeftVector& lhs, const RightVector& rhs,
+                                  Fn op, basis::with_degree<D>)
+    {
+        fma_inplace(mul, lhs, rhs, op, D);
+    }
+
+    template <typename Result, typename LeftVector, typename RightVector, typename Fn>
+    static void dispatch(mul_reference mul, Result& out, const LeftVector& lhs,
+                         const RightVector& rhs, Fn op)
+    {
+        dispatch(mul, out, lhs, rhs, op, Result::degree_tag);
+    }
+
+    template <typename LeftVector, typename RightVector, typename Fn>
+    static void dispatch(mul_reference mul, LeftVector& lhs, const RightVector& rhs,
+                         Fn op)
+    {
+        dispatch(mul, lhs, rhs, op, LeftVector::degree_tag);
+    }
+
+
+
+public:
+
+    template <typename Result,
+             typename LeftVector,
+             typename RightVector,
+             typename Fn>
+    static void multiply_and_add(mul_reference mul,
+                                 Result& result,
+                                 const LeftVector& lhs,
+                                 const RightVector& rhs,
+                                 Fn op)
+    {
+        dispatch(mul, result, lhs, rhs, op);
+    }
+
+    template <typename Result,
+             typename LeftVector,
+             typename RightVector>
+    static void multiply_and_add(mul_reference mul,
+                                 Result& result,
+                                 const LeftVector& lhs,
+                                 const RightVector& rhs)
+    {
+        dispatch(mul, result, lhs, rhs, mult::scalar_passthrough());
+    }
+
+    template <typename LeftVector, typename RightVector, typename Fn>
+    static void multiply_and_add_inplace(mul_reference mul, LeftVector& lhs, const RightVector& rhs, Fn op)
+    {
+        dispatch(mul, lhs, rhs, op);
+    }
+
+    template <typename LeftVector, typename RightVector>
+    static void multiply_and_add_inplace(mul_reference mul, LeftVector& lhs, const RightVector& rhs)
+    {
+        dispatch(mul, lhs, rhs, mult::scalar_passthrough());
+    }
+
+    template <typename Result,
+            typename LeftVector,
+            typename RightVector,
+            typename Fn>
+    static void multiply_and_add(mul_reference mul,
+                                 Result& result,
+                                 const LeftVector& lhs,
+                                 const RightVector& rhs,
+                                 Fn op,
+                                 DEG max_degree
+                                 )
+    {
+        fma(mul, result, lhs, rhs, op, max_degree);
+    }
+
+    template <typename LeftVector, typename RightVector, typename Fn>
+    static void multiply_and_add_inplace(mul_reference mul, LeftVector& lhs,
+                                         const RightVector& rhs, Fn op,
+                                         DEG max_degree)
+    {
+        fma_inplace(mul, lhs, rhs, op, max_degree);
+    }
+
+
+};
+
+
+template <typename Vector>
+class multiplication_helper
+{
+protected:
+    using basis_type = typename Vector::BASIS;
+    using key_type = typename basis_type::KEY;
+    using coeff_ring = typename Vector::coefficient_ring;
+    using scalar_type = typename coeff_ring::S;
+    using key_value = std::pair<key_type, scalar_type>;
+
+    std::vector<key_value> buffer;
+
+
+public:
+
+    using const_iterator = typename std::vector<key_value>::const_iterator;
+
+    explicit multiplication_helper(const Vector& rhs)
+    {
+        buffer.reserve(rhs.size());
+        for (auto item : rhs) {
+            buffer.push_back({item.key(), item.value()});
+        }
+    }
+
+    const_iterator begin() const noexcept { return buffer.begin(); }
+    const_iterator end() const noexcept { return buffer.end(); }
+};
+
+template <typename It>
+class degree_range_iterator
+{
+    It m_begin, m_end;
+public:
+    using iterator = It;
+
+    degree_range_iterator(It begin, It end)
+        : m_begin(begin), m_end(end)
+    {}
+
+    iterator begin() noexcept { return m_begin; }
+    iterator end() noexcept { return m_end; }
+};
+
+template <typename Vector>
+class graded_multiplication_helper : public multiplication_helper<Vector>
+{
+    using Self = graded_multiplication_helper;
+    using base_iter = typename std::vector<typename Self::key_value>::const_iterator;
+    using base = multiplication_helper<Vector>;
+protected:
+    std::vector<base_iter> degree_ranges;
+    DEG m_depth;
+
+public:
+
+    using range_iterator = degree_range_iterator<base_iter>;
+
+    graded_multiplication_helper(const Vector& rhs, DEG max_degree)
+        : multiplication_helper<Vector>(rhs)
+    {
+        using traits = basis::basis_traits<typename Self::basis_type>;
+        typename traits::ordering_tag::pair_order ordering;
+
+
+        std::sort(Self::buffer.begin(), Self::buffer.end(), ordering);
+        const auto& basis = rhs.basis;
+
+        m_depth = std::min(max_degree, traits::degree_tag::max_degree);
+        auto it = base::begin();
+        auto end = base::end();
+
+        degree_ranges.resize(m_depth+1, base::end());
+        DEG degree = 0;
+        for (; it!=end; ++it) {
+             auto current = basis.degree(it->first);
+             while (degree < current) {
+                 degree_ranges[degree++] = it;
+             }
+        }
+
+        assert(degree_ranges.back() == base::buffer.end());
+    }
+
+    DEG depth() const noexcept { return m_depth; }
+
+    range_iterator degree_range(DEG degree) const noexcept
+    {
+        if (degree > m_depth) {
+            return {base::end(), base::end()};
+        }
+        return {base::begin(), degree_ranges[degree]};
+    }
+
+
+};
+
+
+} // namespace dtl
+
+/**
+ * @brief Base class for multilpiers
+ * @tparam Multiplier
+ * @tparam Basis
+ * @tparam Scalar
+ * @tparam SSO
  */
+template <typename Multiplier, typename Basis, DEG SSO=1, typename Scalar=int>
+class multiplier_base
+{
+protected:
+    using basis_type = Basis;
+    using key_type = typename Basis::KEY;
+    using pair_type = std::pair<key_type, Scalar>;
+    using inner_result_type = boost::container::small_vector<pair_type, SSO>;
+    using result_type = const boost::container::small_vector_base<pair_type>&;
+    using argument_type = const key_type&;
+
+    struct cache_entry {
+        inner_result_type data;
+        bool set = false;
+    };
+    using cache_type = std::unordered_map<std::pair<key_type, key_type>,
+                                          cache_entry,
+                                          boost::hash<std::pair<key_type, key_type>>>;
+
+    static inner_result_type fill(const std::map<key_type, Scalar>& arg)
+    {
+        inner_result_type result;
+        result.reserve(arg.size());
+        for (const auto& item : arg) {
+            result.emplace_back(item.first, item.second);
+        }
+        return result;
+    }
+
+
+
+    static inner_result_type uminus(result_type arg)
+    {
+        inner_result_type result;
+        result.reserve(arg.size());
+        for (const auto& item : arg) {
+            result.emplace_back(item.first, -item.second);
+        }
+        return result;
+    }
+    static inner_result_type add(result_type lhs, result_type rhs)
+    {
+        std::map<key_type, Scalar> tmp(lhs.begin(), lhs.end());
+        
+        for (const auto& item : rhs) {
+            tmp[item.first] += item.second;
+        }
+        return fill(tmp);
+//        return {tmp.begin(), tmp.end()};
+    }
+    static inner_result_type sub(result_type lhs, result_type rhs)
+    {
+        std::map<key_type, Scalar> tmp(lhs.begin(), lhs.end());
+        for (const auto& item : rhs) {
+            tmp[item.first] -= item.second;
+        }
+        return fill(tmp);
+//        return {tmp.begin(), tmp.end()};
+    }
+    inner_result_type mul(key_type lhs, result_type rhs) const
+    {
+        std::map<key_type, Scalar> tmp;
+
+        const auto& mul = static_cast<const Multiplier&>(*this);
+
+        for (const auto& outer : rhs) {
+            for (const auto& inner : mul(lhs, outer.first)) {
+                tmp[inner.first] += inner.second*outer.second;
+            }
+        }
+        return fill(tmp);
+//        return {tmp.begin(), tmp.end()};
+    }
+    inner_result_type mul(result_type lhs, key_type rhs) const
+    {
+        std::map<key_type, Scalar> tmp;
+        const auto& mul = static_cast<const Multiplier&>(*this);
+        for (const auto& outer : lhs) {
+            for (const auto& inner : mul(outer.first, rhs)) {
+                tmp[inner.first] += outer.second*inner.second;
+            }
+        }
+        return fill(tmp);
+    }
+
+    result_type cached_compute(argument_type lhs, argument_type rhs) const
+    {
+        static std::recursive_mutex lock;
+        static cache_type cache;
+
+        std::lock_guard<std::recursive_mutex> access(lock);
+
+        auto& result = cache[std::make_pair(lhs, rhs)];
+        if (result.set) {
+            return result.data;
+        }
+        result.set = true;
+        return result.data = static_cast<const Multiplier&>(*this).prod_impl(lhs, rhs);
+    }
+
+};
+
+
+
+/*
+ * The new multiplication structure is as follows: Every multiplication is given
+ * a unique class that provides methods for both inplace and external fused multiply
+ * add operations. These operations should be templated over all vector arguments,
+ * and specialised where optimisations exist (e.g. free tensor multiplication).
+ *
+ * The general case is handled by a multiplier, which is a function object
+ * (with operator()) taking two key_type arguments and returning something akin to
+ * a vector of key-value pairs that can be incorporated into the result vector.
+ *
+ *
+ * The multiplier object is then used to declare a multiplication object described
+ * above, with the basic implementations coming from base_multiplication below.
+ */
+
+template <typename Multiplier>
+class base_multiplication
+{
+protected:
+    Multiplier m_multiplier;
+
+public:
+    using multiplier_type = Multiplier;
+    using basis_type = typename Multiplier::basis_type;
+
+private:
+    template <typename T>
+    using is_compatible = std::is_base_of<basis_type, typename T::BASIS>;
+
+    template<typename V1, typename V2, typename V3=void>
+    using checked_out_t = std::enable_if_t <
+            is_compatible<V1>::value &&
+            is_compatible<V2>::value &&
+            utils::void_or<V3, is_compatible, std::true_type>::value>;
+
+    template <typename OutVector, typename Add, typename Scalar>
+    void asp_helper(OutVector& out, Add&& add, Scalar scal) const
+    {
+        using scalar_type = typename OutVector::SCALAR;
+        for (const auto& item : add) {
+//            std::cout << std::make_pair(&out.basis, item.first) << ' ' << item.second << '\n';
+            out.add_scal_prod(item.first, scalar_type(item.second)*scalar_type(scal));
+        }
+    }
+
+
+public:
+
+    template <typename OutVector, typename LeftVector, typename RightVector, typename Fn>
+    checked_out_t<OutVector, LeftVector, RightVector>
+    fma(OutVector& out, const LeftVector& left, const RightVector& right, Fn op) const
+    {
+        dtl::multiplication_helper<RightVector> helper(right);
+
+        for (auto litem : left) {
+            for (const auto& ritem : helper) {
+                asp_helper(out, m_multiplier(litem.key(), ritem.first),
+                           op(litem.value()*ritem.second));
+            }
+        }
+    }
+
+    template <typename OutVector, typename LeftVector, typename RightVector, typename Fn>
+    checked_out_t<OutVector, LeftVector, RightVector>
+    fma(OutVector& out, const LeftVector& left, const RightVector& right, Fn op, DEG max_degree) const
+    {
+        using out_traits = basis::basis_traits<typename OutVector::BASIS>;
+        const auto max_d = std::min(max_degree, out_traits::degree_tag::max_degree);
+
+        dtl::graded_multiplication_helper<RightVector> helper(right, max_d);
+
+        const auto out_deg = std::min(max_d, left.degree() + right.degree());
+
+        const auto& basis = out.basis;
+
+        for (auto litem : left) {
+            auto lkey = litem.key();
+            auto lhs_deg = basis.degree(lkey);
+            auto rhs_deg = out_deg - lhs_deg;
+            auto dr = helper.degree_range(rhs_deg);
+            auto end = dr.end();
+            for (auto it=dr.begin(); it != end; ++it) {
+                asp_helper(out, m_multiplier(lkey, it->first),
+                            op(litem.value()*it->second));
+            }
+        }
+
+
+    }
+
+
+    template <typename LeftVector, typename RightVector, typename Fn>
+    checked_out_t<LeftVector, RightVector> fma_inplace(LeftVector& left, const RightVector& right, Fn op) const
+    {
+        if (!right.empty() && !left.empty()) {
+            LeftVector tmp;
+            fma(tmp, left, right, op);
+            left.swap(tmp);
+        } else {
+            left.clear();
+        }
+    }
+
+    template <typename LeftVector, typename RightVector, typename Fn>
+    checked_out_t<LeftVector, RightVector> fma_inplace(LeftVector& left, const RightVector& right, Fn op, DEG max_degree) const
+    {
+        if (!right.empty() && !left.empty()) {
+            LeftVector tmp;
+            fma(tmp, left, right, op, max_degree);
+            left.swap(tmp);
+        } else {
+            left.clear();
+        }
+    }
+
+};
+
+
+
 
 /**
  * @brief Class to store and manipulate associative algebra elements
@@ -142,7 +561,8 @@ public:
     typedef Multiplication multiplication_t;
 
 private:
-    static multiplication_t s_multiplication;
+    static const multiplication_t s_multiplication;
+    using mtraits = dtl::multiplication_traits<Multiplication>;
 
 public:
     /// Default constructor.
@@ -262,46 +682,52 @@ public:
     /// Adds to the instance a product of algebra instances.
     inline algebra& add_mul(const algebra& a, const algebra& b)
     {
-        s_multiplication.multiply_and_add(*this, a, b, scalar_passthrough());
+        mtraits::multiply_and_add(s_multiplication, *this, a, b, scalar_passthrough());
         return *this;
     }
 
     /// Subtracts to the instance a product of algebra instances.
     inline algebra& sub_mul(const algebra& a, const algebra& b)
     {
-        return s_multiplication.multiply_and_add(*this, a, b, scalar_minus());
+        mtraits::multiply_and_add(s_multiplication, *this, a, b, scalar_minus());
+        return *this;
     }
 
     /// Multiplies the instance by (algebra instance)*s.
     inline algebra& mul_scal_prod(const algebra& rhs, const SCALAR& s)
     {
-        return s_multiplication.multiply_inplace(*this, rhs, scalar_post_mult(s));
+        mtraits::multiply_and_add_inplace(s_multiplication, *this, rhs, scalar_post_mult(s));
+        return *this;
     }
 
     /// Multiplies the instance by (algebra instance)*s up to maximum depth
     algebra& mul_scal_prod(const algebra& rhs, const RATIONAL& s, const DEG depth)
     {
-        return s_multiplication.multiply_inplace(*this, rhs, scalar_post_mult(s), depth);
+        mtraits::mutiply_and_add_inplace(s_multiplication, *this, rhs, scalar_post_mult(s), depth);
+        return *this;
     }
 
     /// Multiplies the instance by (algebra instance)/s.
     inline algebra& mul_scal_div(const algebra& rhs, const RATIONAL& s)
     {
-        return s_multiplication.multiply_inplace(*this, rhs, rational_post_div(s));
+        mtraits::multiply_and_add_inplace(s_multiplication, *this, rhs, rational_post_div(s));
+        return *this;
     }
 
     /// Multiplies the instance by (algebra instance)/s up to maximum depth
     algebra& mul_scal_div(const algebra& rhs, const RATIONAL& s, const DEG depth)
     {
-        return s_multiplication.multiply_inplace(*this, rhs, rational_post_div(s), depth);
+        mtraits::multiply_and_add_inplace(s_multiplication, *this, rhs, rational_post_div(s), depth);
+        return *this;
     }
 
     /// Returns an instance of the commutator of two algebra instances.
     inline friend algebra commutator(const algebra& a, const algebra& b)
     {// Returns a * b - b * a
         algebra result;
-        s_multiplication.multiply_and_add(result, a, b, scalar_passthrough());
-        return s_multiplication.multiply_and_add(result, b, a, scalar_minus());
+        mtraits::multiply_and_add(s_multiplication, result, a, b, scalar_passthrough());
+        mtraits::multiply_and_add(s_multiplication, result, b, a, scalar_minus());
+        return result;
     }
 
     /// Returns a truncated version of the instance, by using basis::degree().
@@ -340,11 +766,7 @@ public:
     operator*(const Algebra1& lhs, const Algebra2& rhs)
     {
         Algebra1 result;
-        s_multiplication.multiply_and_add(
-                static_cast<algebra&>(result),
-                static_cast<const algebra&>(lhs),
-                static_cast<const algebra&>(rhs),
-                scalar_passthrough());
+        mtraits::multiply_and_add(s_multiplication, result, lhs, rhs, scalar_passthrough());
         return result;
     }
 
@@ -356,10 +778,7 @@ public:
             Algebra1>::type&
     operator*=(Algebra1& lhs, const Algebra2& rhs)
     {
-        s_multiplication.multiply_inplace(
-                static_cast<algebra&>(lhs),
-                static_cast<const algebra&>(rhs),
-                scalar_passthrough());
+        mtraits::multiply_and_add_inplace(s_multiplication, lhs, rhs, scalar_passthrough());
         return lhs;
     }
 
@@ -367,7 +786,7 @@ public:
 };
 
 template<typename B, typename C, typename M, template<typename, typename, typename...> class V, typename... Args>
-M algebra<B, C, M, V, Args...>::s_multiplication;
+const M algebra<B, C, M, V, Args...>::s_multiplication;
 
 }// namespace alg
 // Include once wrapper

@@ -109,8 +109,8 @@ typedef unsigned __int64 uint64_t;
 #include "implementation_types.h"
 
 #include "hall_set.h"
-#include "libalgebra/utils/integer_maths.h"
-#include "libalgebra/vectors.h"
+#include "detail/integer_maths.h"
+#include "vectors.h"
 #include "multiplication_helpers.h"
 
 #include "algebra.h"

@@ -27,7 +27,8 @@ void multiply_into_impl(
         const alg::vectors::vector<Basis, Coeffs, Vector, Args...>& lhs,
         const alg::vectors::vector<Basis, Coeffs, Vector, Args...>& rhs)
 {
-    mpl.multiply_and_add(result, lhs, rhs, op);
+    using mtraits = dtl::multiplication_traits<Multiplication>;
+    mtraits::multiply_and_add(mpl, result, lhs, rhs, op);
 }
 
 template<
@@ -45,8 +46,9 @@ void multiply_into_impl(
         const alg::vectors::vector<Basis, Coeffs, ArgVector, ArgArgs...>& lhs,
         const alg::vectors::vector<Basis, Coeffs, ArgVector, ArgArgs...>& rhs)
 {
+    using mtraits = dtl::multiplication_traits<Multiplication>;
     alg::vectors::vector<Basis, Coeffs, ArgVector, ArgArgs...> tmp;
-    mpl.multiply_and_add(tmp, lhs, rhs, op);
+    mtraits::multiply_and_add(mpl, tmp, lhs, rhs, op);
 
     //// This is slow, but at the moment it is the only way add different vector
     //// types.
@@ -66,8 +68,9 @@ void multiply_into(Result& result, const Arg& lhs, const Arg& rhs, const Multipl
 template<typename Tensor>
 Tensor free_multiply(const Tensor& lhs, const Tensor& rhs)
 {
+    using mul_type = alg::free_tensor_multiplier<Tensor::BASIS::NO_LETTERS, Tensor::BASIS::MAX_DEGREE>;
     Tensor result;
-    alg::free_tensor_multiplication<typename Tensor::coefficient_field> mpl;
+    mul_type mpl;
     dtl::multiply_into(result, lhs, rhs, mpl, alg::mult::scalar_passthrough());
     return result;
 }
@@ -75,8 +78,9 @@ Tensor free_multiply(const Tensor& lhs, const Tensor& rhs)
 template<typename Tensor>
 Tensor shuffle_multiply(const Tensor& lhs, const Tensor& rhs)
 {
+    using mul_type = alg::shuffle_tensor_multiplication<Tensor::BASIS::NO_LETTERS, Tensor::BASIS::MAX_DEGREE>;
     Tensor result;
-    alg::shuffle_tensor_multiplication<typename Tensor::coefficient_field> mpl;
+    mul_type mpl;
     dtl::multiply_into(result, lhs, rhs, mpl, alg::mult::scalar_passthrough());
     return result;
 }
@@ -84,8 +88,9 @@ Tensor shuffle_multiply(const Tensor& lhs, const Tensor& rhs)
 template<typename Tensor>
 Tensor half_shuffle_multiply(const Tensor& lhs, const Tensor& rhs)
 {
+    using mul_type = alg::half_shuffle_multiplication<Tensor::BASIS::NO_LETTERS, Tensor::BASIS::MAX_DEGREE>;
     Tensor result;
-    half_shuffle_tensor_multiplication<typename Tensor::coefficient_field> mpl;
+    mul_type mpl;
     dtl::multiply_into(result, lhs, rhs, mpl, alg::mult::scalar_passthrough());
     return result;
 }
@@ -93,8 +98,9 @@ Tensor half_shuffle_multiply(const Tensor& lhs, const Tensor& rhs)
 template<typename Tensor>
 Tensor area_multiply(const Tensor& lhs, const Tensor& rhs)
 {
+    using mul_type = alg::area_tensor_multiplication<Tensor::BASIS::NO_LETTERS, Tensor::BASIS::MAX_DEGREE>;
     Tensor result;
-    area_tensor_multiplication<typename Tensor::coefficient_field> mpl;
+    mul_type mpl;
     dtl::multiply_into(result, lhs, rhs, mpl, alg::mult::scalar_passthrough());
     return result;
 }

@@ -16,7 +16,7 @@ Version 3. (See accompanying file License.txt)
 
 #include "constpower.h"
 #include "basis.h"
-#include "utils/integer_maths.h"
+#include "detail/integer_maths.h"
 #include "key_iterators.h"
 
 namespace alg {

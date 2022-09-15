@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "basis.h"
-#include "libalgebra/utils/meta.h"
+#include "detail/meta.h"
 #include "base_vector.h"
 #include "dense_storage.h"
 #include "iterators.h"
@@ -61,6 +61,12 @@ public:
     typedef typename COEFFS::Q RATIONAL;
 
     typedef typename dtl::requires_order<Basis>::key_ordering key_ordering;
+
+    using pointer = typename STORAGE::pointer;
+    using const_pointer = typename STORAGE::const_pointer;
+    using reference = typename STORAGE::reference;
+    using const_reference = typename STORAGE::const_reference;
+    using coefficient_ring = Coeffs;
 
 public:
     // static variables defined in base_vector
@@ -164,6 +170,11 @@ public:
 
     dense_vector& operator=(const dense_vector& other) = default;
     dense_vector& operator=(dense_vector&& other) noexcept = default;
+
+
+    pointer as_mut_ptr() noexcept { return m_data.begin(); }
+    const_pointer as_ptr() const noexcept { return m_data.begin(); }
+
 
 private:
     template<DEG D>
@@ -272,6 +283,9 @@ public:
     }
 
 public:
+
+
+
     class iterator_item
     {
         friend class iterators::vector_iterator<iterator_item>;

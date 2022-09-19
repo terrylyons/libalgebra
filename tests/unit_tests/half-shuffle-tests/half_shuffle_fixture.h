@@ -516,10 +516,11 @@ struct HalfShuffleFixture : public alg_types<D, W, F, VectorType> {
     template <typename Tensor>
     Tensor diff_shuffle_half_shuffle(const Tensor& lhs, const Tensor& rhs)
     {
-        return ((alg::shuffle_multiply(lhs, rhs)
-                 - Tensor(lhs[basis.begin()] * rhs[basis.begin()]))
-                - ((alg::half_shuffle_multiply(lhs, rhs))
-                   + (alg::half_shuffle_multiply(rhs, lhs))));
+        auto left = alg::shuffle_multiply(lhs, rhs);
+        auto right = Tensor(lhs[KEY()]*rhs[KEY()]) + ((alg::half_shuffle_multiply(lhs, rhs))
+                   + (alg::half_shuffle_multiply(rhs, lhs)));
+
+        return left - right;
     }
 
     template <typename Tensor>

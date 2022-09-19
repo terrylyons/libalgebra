@@ -442,7 +442,6 @@ private:
         }
     }
 
-
 public:
 
     template <typename OutVector, typename LeftVector, typename RightVector, typename Fn>
@@ -515,6 +514,100 @@ public:
 };
 
 
+namespace dtl {
+
+template <typename Multiplication>
+class hybrid_vector_mixin
+{
+
+    template <typename Basis, typename Coeffs, typename Fn>
+    void fma_mixed(
+            vectors::hybrid_vector<Basis, Coeffs>& out,
+            const vectors::hybrid_vector<Basis, Coeffs>& lhs,
+            const vectors::hybrid_vector<Basis, Coeffs>& rhs,
+            Fn op
+            ) const
+    {
+        using sparse_vec = vectors::sparse_vector<Basis, Coeffs>;
+
+        if (lhs.sparse_empty() || rhs.sparse_empty()) {
+            return;
+        }
+
+        const auto& self = static_cast<const Multiplication&>(*this);
+
+        multiplication_helper<sparse_vec> helper(rhs.sparse_part());
+
+        if (lhs.dense_dimension > 0) {
+
+        }
+
+        auto lit = lhs.sparse_begin();
+        auto lend = lhs.sparse_end();
+
+        auto rbegin = rhs.dense_part().begin();
+        auto rend = rhs.dense_part().end();
+
+        for (; lit!=lend; ++lit) {
+           if (rhs.dense_dimension > 0) {
+              for (auto rit = rbegin; rit!=rend; ++rit) {
+                  for (const auto& item : self.eval(lit->key(), rit->key())) {
+                      self.asp_helper()
+                  }
+              }
+           }
+
+        }
+
+    }
+
+public:
+    template <typename Basis, typename Coeffs, typename Fn>
+    void fma(vectors::hybrid_vector<Basis, Coeffs>& out,
+             const vectors::hybrid_vector<Basis, Coeffs>& lhs,
+             const vectors::hybrid_vector<Basis, Coeffs>& rhs,
+             Fn op) const
+    {
+        const auto& self = static_cast<const Multiplication&>(*this);
+
+        self.fma(out.dense_part(), lhs.dense_part(), rhs.dense_part(), op);
+        self.fma(out.sparse_part(), lhs.sparse_part(), rhs.sparse_part(), op);
+    }
+
+    template <typename Basis, typename Coeffs, typename Fn>
+    void fma(vectors::hybrid_vector<Basis, Coeffs>& out,
+             const vectors::hybrid_vector<Basis, Coeffs>& lhs,
+             const vectors::hybrid_vector<Basis, Coeffs>& rhs,
+             Fn op,
+             DEG max_degree) const
+    {
+        const auto& self = static_cast<const Multiplication&>(*this);
+        self.fma(out.dense_part(), lhs.dense_part(), rhs.dense_part(), op, max_degree);
+        self.fma(out.sparse_part(), lhs.sparse_part(), rhs.sparse_part(), op, max_degree);
+    }
+
+    template <typename Basis, typename Coeffs, typename Fn>
+    void fma_inplace(vectors::hybrid_vector<Basis, Coeffs>& lhs, const vectors::hybrid_vector<Basis, Coeffs>& rhs, Fn op) const
+    {
+        const auto& self = static_cast<const Multiplication&>(*this);
+
+        self.fma_inplace(lhs.dense_part(), rhs.dense_part(), op);
+        self.fma_inplace(rhs.sparse_part(), rhs.sparse_part(), op);
+    }
+
+    template <typename Basis, typename Coeffs, typename Fn>
+    void fma_inplace(vectors::hybrid_vector<Basis, Coeffs>& lhs, const vectors::hybrid_vector<Basis, Coeffs>& rhs, Fn op, DEG max_degree) const
+    {
+        const auto& self = static_cast<const Multiplication&>(*this);
+        self.fma_inplace(lhs.dense_part(), rhs.dense_part(), op, max_degree);
+        self.fma_inplace(lhs.sparse_part(), rhs.sparse_part(), op, max_degree);
+    }
+
+
+};
+
+
+} // namespace dtl
 
 
 /**

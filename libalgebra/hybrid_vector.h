@@ -442,7 +442,7 @@ public:
 
     using DENSE::next_resize_size;
 
-protected:
+
     // Sparse part and dense part access
 
     /// Get a reference to the dense part

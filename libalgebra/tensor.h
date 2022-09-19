@@ -586,6 +586,7 @@ public:
 
     result_type operator()(argument_type lhs, argument_type rhs) const
     {
+        assert(lhs.valid() && rhs.valid());
         return {{lhs*rhs, 1}};
     }
 
@@ -595,9 +596,11 @@ public:
 
 template <DEG Width, DEG Depth>
 class traditional_free_tensor_multiplication
-        : public base_multiplication<free_tensor_multiplier<Width, Depth>>
+        : public base_multiplication<free_tensor_multiplier<Width, Depth>>,
+          public dtl::hybrid_vector_mixin<traditional_free_tensor_multiplication<Width, Depth>>
 {
     using base = base_multiplication<free_tensor_multiplier<Width, Depth>>;
+    using mixin = dtl::hybrid_vector_mixin<traditional_free_tensor_multiplication>;
 
 protected:
     using base::m_multiplier;
@@ -605,6 +608,8 @@ protected:
 public:
     using base::fma;
     using base::fma_inplace;
+    using mixin::fma;
+    using mixin::fma_inplace;
 
     using basis_type = tensor_basis<Width, Depth>;
 
@@ -715,6 +720,7 @@ private:
 
     inner_result_type prod_impl(argument_type lhs, argument_type rhs) const
     {
+        assert(lhs.valid() && rhs.valid());
         if (rhs.size() == 0) {
             return {{key_type(lhs), 1}};
         }
@@ -723,12 +729,15 @@ private:
         const auto k1l(lhs.lparent());
 
         inner_result_type result;
-        result.reserve(recursed.size());
+        std::map<key_type, int> tmp;
+
 
         for (const auto& item : recursed) {
-            result.emplace_back(ftmul(k1l, item.first)[0].first, item.second);
+//        for (auto it=recursed.begin(); it!=recursed.end(); ++it) {
+            tmp[ftmul(k1l, item.first)[0].first] += item.second;
+//            tmp[ftmul(k1l, it->first)[0].first] += it->second;
         }
-        return result;
+        return {tmp.begin(), tmp.end()};
     }
 
 public:
@@ -738,16 +747,16 @@ public:
         static const boost::container::small_vector<pair_type, 0> null;
 
         auto lhs_deg = lhs.size();
-
-        if (Depth > 0 || (lhs_deg + rhs.size() > Depth )) {
-            return null;
-        }
-
         if (lhs_deg == 0) {
             return null;
         }
+        if (Depth > 0 && ((lhs_deg + rhs.size()) > Depth )) {
+            return null;
+        }
 
-        base::cached_compute(lhs, rhs);
+
+
+        return base::cached_compute(lhs, rhs);
     }
 
 };
@@ -779,6 +788,9 @@ private:
 
     inner_result_type prod_impl(argument_type lhs, argument_type rhs) const
     {
+        if (lhs.size() == 0 && rhs.size() == 0) {
+            return {{key_type(lhs), 1}};
+        }
         return half_shuffle_base::shuffle(lhs, rhs);
     }
 
@@ -789,11 +801,12 @@ public:
     {
         static const boost::container::small_vector<pair_type, 0> null;
 
-        if (lhs.size() + rhs.size() > Depth) {
+        if ((lhs.size() + rhs.size()) > Depth) {
             return null;
         }
 
         return base::cached_compute(lhs, rhs);
+//        return half_shuffle_base::shuffle(lhs, rhs);
     }
 
 
@@ -823,9 +836,10 @@ private:
 
     inner_result_type prod_impl(argument_type lhs, argument_type rhs) const
     {
+        assert(lhs.valid() && rhs.valid());
         return base::sub(
-                half_shuffle_base::operator()(lhs, rhs),
-                half_shuffle_base::operator()(rhs, lhs)
+                half_shuffle_base::operator()(rhs, lhs),
+                half_shuffle_base::operator()(lhs, rhs)
         );
     }
 
@@ -838,7 +852,7 @@ public:
     {
         static const boost::container::small_vector<pair_type, 0> null;
 
-        if (Depth > 0 && lhs.size() + rhs.size() > Depth) {
+        if (Depth > 0 && (lhs.size() + rhs.size()) > Depth) {
             return null;
         }
 

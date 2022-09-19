@@ -47,8 +47,8 @@ void multiply_into_impl(
         const alg::vectors::vector<Basis, Coeffs, ArgVector, ArgArgs...>& rhs)
 {
     using mtraits = dtl::multiplication_traits<Multiplication>;
-    alg::vectors::vector<Basis, Coeffs, ArgVector, ArgArgs...> tmp;
-    mtraits::multiply_and_add(mpl, tmp, lhs, rhs, op);
+//    alg::vectors::vector<Basis, Coeffs, ArgVector, ArgArgs...> tmp;
+    mtraits::multiply_and_add(mpl, result, lhs, rhs, op);
 
     //// This is slow, but at the moment it is the only way add different vector
     //// types.

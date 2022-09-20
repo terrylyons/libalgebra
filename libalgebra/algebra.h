@@ -432,6 +432,7 @@ private:
             is_compatible<V2>::value &&
             utils::void_or<V3, is_compatible, std::true_type>::value>;
 
+public:
     template <typename OutVector, typename Add, typename Scalar>
     void asp_helper(OutVector& out, Add&& add, Scalar scal) const
     {
@@ -442,7 +443,11 @@ private:
         }
     }
 
-public:
+    typename Multiplier::result_type
+    eval(typename Multiplier::argument_type lhs, typename Multiplier::argument_type rhs) const
+    {
+        return m_multiplier(lhs, rhs);
+    }
 
     template <typename OutVector, typename LeftVector, typename RightVector, typename Fn>
     checked_out_t<OutVector, LeftVector, RightVector>
@@ -468,18 +473,15 @@ public:
         dtl::graded_multiplication_helper<RightVector> helper(right, max_d);
 
         const auto out_deg = std::min(max_d, left.degree() + right.degree());
-
         const auto& basis = out.basis;
 
         for (auto litem : left) {
             auto lkey = litem.key();
             auto lhs_deg = basis.degree(lkey);
             auto rhs_deg = out_deg - lhs_deg;
-            auto dr = helper.degree_range(rhs_deg);
-            auto end = dr.end();
-            for (auto it=dr.begin(); it != end; ++it) {
-                asp_helper(out, m_multiplier(lkey, it->first),
-                            op(litem.value()*it->second));
+            for (const auto& ritem : helper.degree_range(rhs_deg)) {
+                asp_helper(out, m_multiplier(lkey, ritem.first),
+                            op(litem.value()*ritem.second));
             }
         }
 
@@ -516,6 +518,10 @@ public:
 
 namespace dtl {
 
+/**
+ * @brief Mixin to provide optimisation for the hybrid vector (for now)
+ * @tparam Multiplication
+ */
 template <typename Multiplication>
 class hybrid_vector_mixin
 {
@@ -530,7 +536,7 @@ class hybrid_vector_mixin
     {
         using sparse_vec = vectors::sparse_vector<Basis, Coeffs>;
 
-        if (lhs.sparse_empty() || rhs.sparse_empty()) {
+        if (lhs.sparse_empty() && rhs.sparse_empty()) {
             return;
         }
 
@@ -538,10 +544,20 @@ class hybrid_vector_mixin
 
         multiplication_helper<sparse_vec> helper(rhs.sparse_part());
 
-        if (lhs.dense_dimension > 0) {
+        // dense * sparse
+        if (lhs.dense_dimension() > 0) {
+            auto lbegin = lhs.dense_part().begin();
+            auto lend = lhs.dense_part().end();
 
+            for (auto lit=lbegin; lit!=lend; ++lit) {
+                for (const auto& ritem : helper) {
+                    self.asp_helper(out, self.eval(lit->key(), ritem.first),
+                                    op(lit->value()*ritem.second));
+                }
+            }
         }
 
+        // sparse * dense and sparse * sparse together
         auto lit = lhs.sparse_begin();
         auto lend = lhs.sparse_end();
 
@@ -549,17 +565,82 @@ class hybrid_vector_mixin
         auto rend = rhs.dense_part().end();
 
         for (; lit!=lend; ++lit) {
-           if (rhs.dense_dimension > 0) {
+           if (rhs.dense_dimension() > 0) {
               for (auto rit = rbegin; rit!=rend; ++rit) {
-                  for (const auto& item : self.eval(lit->key(), rit->key())) {
-                      self.asp_helper()
-                  }
+                  self.asp_helper(out, self.eval(lit->key(), rit->key()),
+                                  op(lit->value()*rit->value()));
               }
            }
 
+           for (const auto& item : helper) {
+               self.asp_helper(out, self.eval(lit->key(), item.first),
+                               op(lit->value()*item.second));
+           }
+
+        }
+        out.maybe_resize();
+    }
+
+    template <typename Basis, typename Coeffs, typename Fn>
+    void fma_mixed(
+            vectors::hybrid_vector<Basis, Coeffs>& out,
+            const vectors::hybrid_vector<Basis, Coeffs>& lhs,
+            const vectors::hybrid_vector<Basis, Coeffs>& rhs,
+            Fn op,
+            DEG max_degree
+    ) const
+    {
+        using sparse_vec = vectors::sparse_vector<Basis, Coeffs>;
+        const auto& basis = out.basis;
+        const auto& self = static_cast<const Multiplication&>(*this);
+
+        if (lhs.sparse_empty() && rhs.sparse_empty()) {
+            return;
         }
 
+        graded_multiplication_helper<sparse_vec> helper(rhs, max_degree);
+        auto out_deg = std::min(helper.depth(), lhs.degree() + rhs.degree());
+
+        // dense*sparse
+        if (lhs.dense_dimension() > 0) {
+            auto ld_degree = lhs.dense_degree();
+            auto rbegin = helper.begin();
+
+            for (DEG ldeg=0; ldeg<=ld_degree; ++ldeg) {
+                auto rend = helper.degree_range(out_deg - ldeg).end();
+                for (auto idx=basis.start_of_degree(ldeg); idx<basis.start_of_degree(ldeg+1); ++idx) {
+                    for (auto rit=rbegin; rit!=rend; ++rit) {
+                        self.asp_helper(out, self.eval(basis.index_to_key(idx), rit->first),
+                                        op(lhs.dense_value(idx)*rit->second));
+                    }
+                }
+            }
+        }
+
+        // sparse*dense and sparse*sparse
+        auto lbegin = lhs.sparse_part().begin();
+        auto lend = lhs.sparse_part().end();
+        auto rddeg = rhs.dense_degree();
+
+        for (auto lit=lbegin; lit!=lend; ++lit) {
+            auto lkey = lit->key();
+            auto lhs_deg = basis.degree(lkey);
+            assert(out_deg >= lhs_deg);
+            auto rhs_deg = out_deg - lhs_deg;
+            auto rhs_ddeg = std::min(rhs_deg, rddeg);
+
+            for (DIMN idx=0; idx<basis.start_of_degree(rhs_ddeg+1); ++idx) {
+                self.asp_helper(out, self.eval(lkey, basis.index_to_key(idx)), op(lit->value()*rhs.dense_value(idx)));
+            }
+
+            for (const auto& ritem : helper.degree_range(out_deg-lhs_deg)) {
+                self.asp_helper(out, self.eval(lkey, ritem.first), op(lit->value()*ritem.second));
+            }
+        }
+
+        out.maybe_resize();
     }
+
 
 public:
     template <typename Basis, typename Coeffs, typename Fn>
@@ -571,7 +652,7 @@ public:
         const auto& self = static_cast<const Multiplication&>(*this);
 
         self.fma(out.dense_part(), lhs.dense_part(), rhs.dense_part(), op);
-        self.fma(out.sparse_part(), lhs.sparse_part(), rhs.sparse_part(), op);
+        fma_mixed(out, lhs, rhs, op);
     }
 
     template <typename Basis, typename Coeffs, typename Fn>
@@ -583,24 +664,25 @@ public:
     {
         const auto& self = static_cast<const Multiplication&>(*this);
         self.fma(out.dense_part(), lhs.dense_part(), rhs.dense_part(), op, max_degree);
-        self.fma(out.sparse_part(), lhs.sparse_part(), rhs.sparse_part(), op, max_degree);
+//        std::cout << "BEFORE " << out << '\n';
+        fma_mixed(out, lhs, rhs, op, max_degree);
+//        std::cout << "AFTER " << out << '\n';
     }
 
     template <typename Basis, typename Coeffs, typename Fn>
     void fma_inplace(vectors::hybrid_vector<Basis, Coeffs>& lhs, const vectors::hybrid_vector<Basis, Coeffs>& rhs, Fn op) const
     {
-        const auto& self = static_cast<const Multiplication&>(*this);
-
-        self.fma_inplace(lhs.dense_part(), rhs.dense_part(), op);
-        self.fma_inplace(rhs.sparse_part(), rhs.sparse_part(), op);
+        vectors::hybrid_vector<Basis, Coeffs> tmp;
+        fma(tmp, lhs, rhs, op);
+        lhs.swap(tmp);
     }
 
     template <typename Basis, typename Coeffs, typename Fn>
     void fma_inplace(vectors::hybrid_vector<Basis, Coeffs>& lhs, const vectors::hybrid_vector<Basis, Coeffs>& rhs, Fn op, DEG max_degree) const
     {
-        const auto& self = static_cast<const Multiplication&>(*this);
-        self.fma_inplace(lhs.dense_part(), rhs.dense_part(), op, max_degree);
-        self.fma_inplace(lhs.sparse_part(), rhs.sparse_part(), op, max_degree);
+        vectors::hybrid_vector<Basis, Coeffs> tmp;
+        fma(tmp, lhs, rhs, op, max_degree);
+        lhs.swap(tmp);
     }
 
 

@@ -3,8 +3,8 @@
 //
 
 #include <UnitTest++/UnitTest++.h>
-#include <libalgebra/coefficients/rational_coefficients.h>
-#include <libalgebra/vectors/dense_storage.h>
+#include <libalgebra/rational_coefficients.h>
+#include <libalgebra/dense_storage.h>
 #include <random>
 
 #include "fixture.h"

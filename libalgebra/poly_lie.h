@@ -11,131 +11,86 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_POLYLIEH_SEEN
 #define DJC_COROPA_LIBALGEBRA_POLYLIEH_SEEN
 
-#include "libalgebra/polynomials.h"
+#include "poly_basis.h"
+#include "poly_lie_basis.h"
+#include "polynomials.h"
+
 
 namespace alg {
 
-template<typename Coeff>
-class poly_lie_multiplication : poly_multiplication<Coeff>
+
+template <DEG Width, DEG Depth>
+class poly_lie_multiplier : public multiplier_base<poly_lie_multiplier<Width, Depth>,
+        poly_lie_basis<Width, Depth>, 2>
 {
-    typedef typename Coeff::SCA scalar_t;
-    typedef poly_multiplication<Coeff> poly_multiplication_t;
+    using base = multiplier_base<poly_lie_multiplier<Width, Depth>,
+            poly_lie_basis<Width, Depth>, 2>;
+    friend base;
 
-    /// Returns the Lie bracket of two monomial vector fields.
-    /**
-    Returns the Vector field corresponding to the Lie bracket of two vector
-    fields. If we have have monomials m1 and m2 and Letters i and j then the
-    product of m1*d/dxi with m2*d/dxj is equal to m1*(d/dxi m2)*d/dxj - m2*(d/dxj
-    m1)*d/dxi
-    */
-    template<typename PolyLie>
-    static PolyLie prod(typename PolyLie::KEY const& k1, typename PolyLie::KEY const& k2)
-    {
-        typedef poly<Coeff> poly_t;
-        typedef typename PolyLie::KEY key_t;
-        poly_t poly1 = poly_t::prediff(k2.second, k1.first);
-        poly_t poly2 = poly_t::prediff(k1.second, k2.first);
-        key_t mon1(k2.first, k1.second);
-        key_t mon2(k1.first, k2.second);
-        PolyLie result;
-        result = prod2<PolyLie>(poly1, mon1) - prod2<PolyLie>(poly2, mon2);
-        return result;
-    }
-
-    /// Multiplication of a polynomial poly1 by a monomial vector field liemon1.
-    template<typename PolyLie>
-    static PolyLie prod2(poly<Coeff> const& poly1, typename PolyLie::KEY const& liemon1)
-    {
-        typedef poly<Coeff> poly_t;
-        //typedef typename PolyLie::KEY key_t;
-        PolyLie result;
-        for (typename poly_t::const_iterator it = poly1.begin(); it != poly1.end(); it++) {
-            scalar_t temp = it->value();
-            typename poly_t::BASIS::KEY temp2 = poly_multiplication_t::prod2(liemon1.second, it->key());
-            result[make_pair(liemon1.first, temp2)] = temp;
-        }
-        return result;
-    }
-
-    template<typename Transform, typename Algebra>
-    class key_operator
-    {
-
-        Transform m_transform;
-
-    public:
-#if __cplusplus >= 201103UL
-
-        template<typename... Args>
-        explicit key_operator(Args&&... args)
-            : m_transform(std::forward<Args>(args)...)
-        {}
-
-#else
-        template<typename Arg>
-        explicit key_operator(Arg arg) : m_transform(arg)
-        {}
-#endif
-
-        template<typename Vector>
-        void
-        operator()(Vector& result, typename Vector::KEY const& lhs_key, scalar_t const& lhs_val,
-                   typename Vector::KEY const& rhs_key, scalar_t const& rhs_val)
-        {
-            result.add_scal_prod(prod<Algebra>(lhs_key, rhs_key), m_transform(Coeff::mul(lhs_val, rhs_val)));
-        }
-    };
+    poly_multiplier polymul;
 
 public:
-    template<typename Algebra, typename Operator>
-    Algebra& multiply_and_add(Algebra& result, Algebra const& lhs, Algebra const& rhs, Operator op) const
+
+    using basis_type = poly_lie_basis<Width, Depth>;
+    using key_type = typename basis_type::KEY;
+    using result_type = typename base::inner_result_type;
+    using typename base::argument_type;
+
+private:
+    using poly_result_type = typename poly_multiplier::result_type;
+    using poly_reference = const boost::container::small_vector_base<
+            typename poly_multiplier::pair_type>&;
+    using poly_argument_type = typename poly_multiplier::argument_type;
+    using poly_let_type = typename poly_basis::LET;
+    using poly_key_type = typename poly_basis::KEY;
+
+    result_type prod2(poly_result_type pol, argument_type key) const
     {
-        key_operator<Operator, Algebra> kt(op);
-        lhs.buffered_apply_binary_transform(result, rhs, kt);
+        result_type result;
+        result.reserve(pol.size());
+        for (const auto& item : pol) {
+            result.emplace_back(
+                    key_type(key.first, polymul(key.second, item.first)[0].first),
+                    item.second
+                    );
+        }
         return result;
     }
 
-    template<typename Algebra, typename Operator>
-    Algebra&
-    multiply_and_add(Algebra& result, Algebra const& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
+    poly_result_type partial_diff(poly_argument_type mon, poly_let_type letter) const
     {
-        key_operator<Operator, Algebra> kt(op);
-        lhs.buffered_apply_binary_transform(result, rhs, kt, max_depth);
+        poly_result_type result;
+
+        poly_key_type mon_c(mon);
+        auto found = mon_c.find(letter);
+        if (found != mon_c.end()) {
+            if (found->second == 1) {
+                mon_c.erase(found);
+                result.emplace_back(mon_c, 1);
+            } else {
+                auto coeff = (found->second)--;
+                result.emplace_back(mon_c, coeff);
+            }
+        }
         return result;
     }
 
-    template<typename Algebra, typename Operator>
-    Algebra multiply(Algebra const& lhs, Algebra const& rhs, Operator op) const
-    {
-        Algebra result;
-        multiply_and_add(result, lhs, rhs, op);
-        return result;
-    }
+public:
 
-    template<typename Algebra, typename Operator>
-    Algebra multiply(Algebra const& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
+    result_type operator()(argument_type lhs, argument_type rhs) const
     {
-        Algebra result;
-        multiply_and_add(result, lhs, rhs, op, max_depth);
-        return result;
-    }
-
-    template<typename Algebra, typename Operator>
-    Algebra& multiply_inplace(Algebra& lhs, Algebra const& rhs, Operator op) const
-    {
-        key_operator<Operator, Algebra> kt(op);
-        lhs.unbuffered_apply_binary_transform(rhs, kt);
-        return lhs;
-    }
-
-    template<typename Algebra, typename Operator>
-    Algebra& multiply_inplace(Algebra& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
-    {
-        key_operator<Operator, Algebra> kt(op);
-        lhs.unbuffered_apply_binary_transform(rhs, kt, max_depth);
-        return lhs;
+        auto poly1 = partial_diff(rhs.second, lhs.first);
+        auto poly2 = partial_diff(lhs.second, rhs.first);
+        key_type mon1(rhs.first, lhs.second);
+        key_type mon2(lhs.first, rhs.second);
+        return base::sub(prod2(poly1, mon1), prod2(poly2, mon2));
     }
 };
+
+
+template <DEG Width, DEG Depth>
+using poly_lie_multiplication = base_multiplication<poly_lie_multiplier<Width, Depth>>;
+
 
 /// The Lie algebra for the commutative polynomials.
 
@@ -147,10 +102,10 @@ template<typename Coeff, DEG n_letters, DEG max_degree, template<typename, typen
 class poly_lie : public algebra<
                          poly_lie_basis<n_letters, max_degree>,
                          Coeff,
-                         poly_lie_multiplication<Coeff>,
+                         poly_lie_multiplication<n_letters, max_degree>,
                          VectorType, Args...>
 {
-    typedef poly_lie_multiplication<Coeff> multiplication_t;
+    typedef poly_lie_multiplication<n_letters, max_degree> multiplication_t;
 
 public:
     typedef typename Coeff::S SCA;

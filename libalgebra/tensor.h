@@ -23,9 +23,18 @@ Version 3. (See accompanying file License.txt)
 #include <unordered_set>
 #include <algorithm>
 
-#include <libalgebra/vectors/base_vector.h>
+#include <boost/container/small_vector.hpp>
+#include <boost/functional/hash.hpp>
+
+#include "tensor_basis.h"
+#include "base_vector.h"
+#include "half_shuffle_tensor_basis.h"
+#include "area_tensor_basis.h"
 
 namespace alg {
+
+
+
 
 namespace dtl{
 
@@ -471,127 +480,408 @@ namespace dtl{
 
         }
     };
+
+
+template <DEG Width, DEG Depth, typename Coeffs>
+class free_tensor_multiplication_helper
+{
+
+protected:
+    using basis_type        = tensor_basis<Width, Depth>;
+    using coefficient_ring  = Coeffs;
+    using scalar_type       = typename Coeffs::S;
+    using pointer           = scalar_type*;
+    using const_pointer     = const scalar_type*;
+
+    using tsi               = tensor_size_info<Width>;
+
+    template <typename B>
+    using dense_tensor      = vectors::dense_vector<B, coefficient_ring>;
+
+    const_pointer lhs_data;
+    const_pointer rhs_data;
+    pointer out_data;
+
+    IDEG lhs_deg, rhs_deg, out_deg;
+
+
+public:
+
+    template <typename B1, typename B2, typename B3>
+    free_tensor_multiplication_helper(dense_tensor<B1>& out,
+                                      const dense_tensor<B2>& left,
+                                      const dense_tensor<B3>& right,
+                                      DEG max_degree)
+        : lhs_deg(left.degree()), rhs_deg(right.degree()), out_deg(IDEG(max_degree))
+    {
+        static_assert(std::is_base_of<basis_type, B1>::value
+                      && std::is_base_of<basis_type, B2>::value
+                      && std::is_base_of<basis_type, B3>::value,
+                      "bases are not tensor bases");
+
+        out_deg = std::min(out_deg, lhs_deg + rhs_deg);
+        out.resize_to_degree(out_deg);
+
+        lhs_data = left.as_ptr();
+        rhs_data = right.as_ptr();
+        out_data = out.as_mut_ptr();
+
+    }
+
+    template <typename B1, typename B2>
+    free_tensor_multiplication_helper(dense_tensor<B1>& left,
+                                      const dense_tensor<B2>& right,
+                                      DEG max_degree)
+        : lhs_deg(left.degree()), rhs_deg(right.degree()), out_deg(IDEG(max_degree))
+    {
+        out_deg = std::min(out_deg, lhs_deg + rhs_deg);
+        left.resize_to_degree(out_deg);
+
+        lhs_data = nullptr;
+        rhs_data = right.as_ptr();
+        out_data = left.as_mut_ptr();
+    }
+
+    IDEG lhs_degree() const noexcept { return lhs_deg; }
+    IDEG rhs_degree() const noexcept { return rhs_deg; }
+    IDEG out_degree() const noexcept { return out_deg; }
+
+    const_pointer left_fwd_read(IDEG d) const noexcept
+    {
+        assert(d>=0 && d <= lhs_deg);
+        return lhs_data + basis_type::start_of_degree(d);
+    }
+    const_pointer right_fwd_read(IDEG d) const noexcept
+    {
+        assert(d>=0 && d <= rhs_deg);
+        return rhs_data + basis_type::start_of_degree(d);
+    }
+    pointer fwd_write(IDEG d) const noexcept
+    {
+        assert(d>=0 && d <= out_deg);
+        return out_data + basis_type::start_of_degree(d);
+    }
+
+    std::pair<DIMN, DIMN> range_size(IDEG lhs, IDEG rhs) const noexcept
+    { return std::pair<DIMN, DIMN>(tsi::powers[lhs], tsi::powers[rhs]); }
+
+};
+
+
 } // dtl
 
-template<typename Coeff>
-class free_tensor_multiplication;
 
-template<typename Coeff>
-class shuffle_tensor_multiplication;
+
+
+template <DEG Width, DEG Depth>
+class free_tensor_multiplier
+{
+public:
+
+    using basis_type = tensor_basis<Width, Depth>;
+    using key_type = typename basis_type::KEY;
+    using pair_type = std::pair<key_type, int>;
+    using result_type = boost::container::small_vector<pair_type, 1>;
+    using argument_type = key_type;
+
+    result_type operator()(argument_type lhs, argument_type rhs) const
+    {
+        assert(lhs.valid() && rhs.valid());
+        return {{lhs*rhs, 1}};
+    }
+
+};
+
+
+
+template <DEG Width, DEG Depth>
+class traditional_free_tensor_multiplication
+        : public base_multiplication<free_tensor_multiplier<Width, Depth>>,
+          public dtl::hybrid_vector_mixin<traditional_free_tensor_multiplication<Width, Depth>>
+{
+    using base = base_multiplication<free_tensor_multiplier<Width, Depth>>;
+    using mixin = dtl::hybrid_vector_mixin<traditional_free_tensor_multiplication>;
+
+protected:
+    using base::m_multiplier;
+
+public:
+    using base::fma;
+    using base::fma_inplace;
+    using mixin::fma;
+    using mixin::fma_inplace;
+
+    using basis_type = tensor_basis<Width, Depth>;
+
+
+protected:
+
+    template <typename Coeffs>
+    using helper = dtl::free_tensor_multiplication_helper<Width, Depth, Coeffs>;
+
+    template <typename Coeffs, typename Fn>
+    void fma(helper<Coeffs>& helper, Fn op) const noexcept
+    {
+        for (auto out_deg = helper.out_degree(); out_deg >= 0; --out_deg) {
+            auto lhs_deg_min = std::max(0, out_deg - helper.rhs_degree());
+            auto lhs_deg_max = std::min(out_deg, helper.lhs_degree());
+
+            auto* out_ptr = helper.fwd_write(out_deg);
+
+            for (auto lh_deg = lhs_deg_max; lh_deg >= lhs_deg_min; --lh_deg) {
+                auto rh_deg = out_deg - lh_deg;
+                auto lhs_ptr = helper.left_fwd_read(lh_deg);
+                auto rhs_ptr = helper.right_fwd_read(rh_deg);
+
+                auto* p = out_ptr;
+                auto sizes = helper.range_size(lh_deg, rh_deg);
+
+                for (IDIMN i=0; i<IDIMN(sizes.first); ++i) {
+                    for (IDIMN j=0; j<IDIMN(sizes.second); ++j) {
+                        *(p++) += op(lhs_ptr[i]*rhs_ptr[j]);
+                    }
+                }
+            }
+        }
+    }
+
+
+public:
+
+    template <typename Basis, typename Coeffs, typename Fn>
+    std::enable_if_t<std::is_base_of<basis_type, Basis>::value>
+    fma(vectors::dense_vector<Basis, Coeffs>& out,
+        const vectors::dense_vector<Basis, Coeffs>& lhs,
+        const vectors::dense_vector<Basis, Coeffs>& rhs,
+        Fn op,
+        DEG max_degree
+        ) const
+    {
+        if (!lhs.empty() && !rhs.empty()) {
+            helper<Coeffs> help(out, lhs, rhs, max_degree);
+            fma(help, op);
+        }
+    }
+
+    template <typename Basis, typename Coeffs, typename Fn>
+    std::enable_if_t<std::is_base_of<basis_type, Basis>::value>
+    fma_inplace(vectors::dense_vector<Basis, Coeffs>& lhs,
+                const vectors::dense_vector<Basis, Coeffs>& rhs,
+                Fn op,
+                DEG max_degree
+    ) const
+    {
+        if (!rhs.empty()) {
+            vectors::dense_vector<Basis, Coeffs> tmp;
+            helper<Coeffs> help(tmp, lhs, rhs, max_degree);
+            fma(help, op);
+            lhs.swap(tmp);
+        } else {
+            lhs.clear();
+        }
+    }
+
+
+
+};
+
+
+template <DEG Width, DEG Depth>
+using free_tensor_multiplication = traditional_free_tensor_multiplication<Width, Depth>;
+
+
+
+template <DEG Width, DEG Depth>
+class left_half_shuffle_multiplier
+        : public multiplier_base<left_half_shuffle_multiplier<Width, Depth>,
+                                 tensor_basis<Width, Depth>>
+{
+    using base = multiplier_base<left_half_shuffle_multiplier, tensor_basis<Width, Depth>>;
+    friend base;
+
+    free_tensor_multiplier<Width, Depth> ftmul;
+
+public:
+    using basis_type = tensor_basis<Width, Depth>;
+    using key_type = typename basis_type::KEY;
+    using typename base::result_type;
+    using typename base::inner_result_type;
+    using typename base::pair_type;
+    using typename base::argument_type;
+
+protected:
+
+    inner_result_type shuffle(argument_type lhs, argument_type rhs) const
+    {
+        return base::add(operator()(lhs, rhs), operator()(rhs, lhs));
+    }
+
+private:
+
+    inner_result_type prod_impl(argument_type lhs, argument_type rhs) const
+    {
+        assert(lhs.valid() && rhs.valid());
+        if (rhs.size() == 0) {
+            return {{key_type(lhs), 1}};
+        }
+
+        result_type recursed = shuffle(lhs.rparent(), rhs);
+        const auto k1l(lhs.lparent());
+
+        inner_result_type result;
+        std::map<key_type, int> tmp;
+
+
+        for (const auto& item : recursed) {
+//        for (auto it=recursed.begin(); it!=recursed.end(); ++it) {
+            tmp[ftmul(k1l, item.first)[0].first] += item.second;
+//            tmp[ftmul(k1l, it->first)[0].first] += it->second;
+        }
+        return {tmp.begin(), tmp.end()};
+    }
+
+public:
+
+    result_type operator()(argument_type lhs, argument_type rhs) const
+    {
+        static const boost::container::small_vector<pair_type, 0> null;
+
+        auto lhs_deg = lhs.size();
+        if (lhs_deg == 0) {
+            return null;
+        }
+        if (Depth > 0 && ((lhs_deg + rhs.size()) > Depth )) {
+            return null;
+        }
+
+
+
+        return base::cached_compute(lhs, rhs);
+    }
+
+};
+
+template <DEG Width, DEG Depth>
+using half_shuffle_multiplier = left_half_shuffle_multiplier<Width, Depth>;
+
+template <DEG Width, DEG Depth>
+class shuffle_tensor_multiplier
+        : multiplier_base<shuffle_tensor_multiplier<Width, Depth>, tensor_basis<Width, Depth>>,
+          left_half_shuffle_multiplier<Width, Depth>
+{
+    using base = multiplier_base<shuffle_tensor_multiplier<Width, Depth>, tensor_basis<Width, Depth>>;
+    friend base;
+
+    using half_shuffle_base = left_half_shuffle_multiplier<Width, Depth>;
+public:
+
+    using basis_type = tensor_basis<Width, Depth>;
+    using key_type = typename basis_type::KEY;
+    using scalar_type = int;
+    using typename base::pair_type;
+
+    using typename base::inner_result_type;
+    using typename base::result_type;
+    using argument_type = const key_type&;
+
+private:
+
+    inner_result_type prod_impl(argument_type lhs, argument_type rhs) const
+    {
+        if (lhs.size() == 0 && rhs.size() == 0) {
+            return {{key_type(lhs), 1}};
+        }
+        return half_shuffle_base::shuffle(lhs, rhs);
+    }
+
+
+public:
+
+    result_type operator()(argument_type lhs, argument_type rhs) const
+    {
+        static const boost::container::small_vector<pair_type, 0> null;
+
+        if ((lhs.size() + rhs.size()) > Depth) {
+            return null;
+        }
+
+        return base::cached_compute(lhs, rhs);
+//        return half_shuffle_base::shuffle(lhs, rhs);
+    }
+
+
+};
+
+
+template <DEG Width, DEG Depth>
+class area_tensor_multiplier :
+        multiplier_base<area_tensor_multiplier<Width, Depth>, tensor_basis<Width, Depth>>,
+        left_half_shuffle_multiplier<Width, Depth>
+{
+    using base = multiplier_base<area_tensor_multiplier, tensor_basis<Width, Depth>>;
+    using half_shuffle_base = left_half_shuffle_multiplier<Width, Depth>;
+    friend base;
+
+public:
+
+    using basis_type = tensor_basis<Width, Depth>;
+    using key_type = typename basis_type::KEY;
+    using typename base::pair_type;
+    using typename base::result_type;
+    using typename base::inner_result_type;
+    using typename base::argument_type;
+
+
+private:
+
+    inner_result_type prod_impl(argument_type lhs, argument_type rhs) const
+    {
+        assert(lhs.valid() && rhs.valid());
+        return base::sub(
+                half_shuffle_base::operator()(rhs, lhs),
+                half_shuffle_base::operator()(lhs, rhs)
+        );
+    }
+
+
+public:
+
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "HidingNonVirtualFunction"
+    result_type operator()(argument_type lhs, argument_type rhs) const
+    {
+        static const boost::container::small_vector<pair_type, 0> null;
+
+        if (Depth > 0 && (lhs.size() + rhs.size()) > Depth) {
+            return null;
+        }
+
+        return base::cached_compute(lhs, rhs);
+    }
+#pragma clang diagnostic pop
+
+};
+
+
+template <DEG Width, DEG Depth>
+using left_half_shuffle_multiplication =
+        base_multiplication<left_half_shuffle_multiplier<Width, Depth>>;
+
+template <DEG Width, DEG Depth>
+using half_shuffle_multiplication =
+        left_half_shuffle_multiplication<Width, Depth>;
+
+template <DEG Width, DEG Depth>
+using area_tensor_multiplication =
+        base_multiplication<area_tensor_multiplier<Width, Depth>>;
+
+template <DEG Width, DEG Depth>
+using shuffle_tensor_multiplication =
+        base_multiplication<shuffle_tensor_multiplier<Width, Depth>>;
 
 template<typename Coeff, DEG n_letters, DEG max_degree, typename...>
 class shuffle_tensor;
 
-template<typename Coeff>
-struct free_tensor_multiplication
-{
-    typedef typename Coeff::SCA scalar_t;
-
-    template<typename Transform>
-    class index_operator
-    {
-        Transform m_transform;
-
-    public:
-        index_operator(Transform t)
-            : m_transform(t)
-        {}
-
-        void operator()(scalar_t* result_ptr, scalar_t const* lhs_ptr, scalar_t const* rhs_ptr, DIMN const lhs_target,
-                        DIMN const rhs_target, bool assign = false)
-        {
-            scalar_t lhs;
-            if (assign) {
-                for (IDIMN i = 0; i < static_cast<IDIMN>(lhs_target); ++i) {
-                    lhs = lhs_ptr[i];
-                    for (IDIMN j = 0; j < static_cast<IDIMN>(rhs_target); ++j) {
-                        *(result_ptr++) = m_transform(Coeff::mul(lhs, rhs_ptr[j]));
-                    }
-                }
-            }
-            else {
-                for (IDIMN i = 0; i < static_cast<IDIMN>(lhs_target); ++i) {
-                    lhs = lhs_ptr[i];
-                    for (IDIMN j = 0; j < static_cast<IDIMN>(rhs_target); ++j) {
-                        *(result_ptr++) += m_transform(Coeff::mul(lhs, rhs_ptr[j]));
-                    }
-                }
-            }
-        }
-    };
-
-    template<typename Transform>
-    class key_operator
-    {
-        Transform m_transform;
-
-    public:
-        key_operator(Transform t)
-            : m_transform(t)
-        {}
-
-        template<typename Vector>
-        void
-        operator()(Vector& result, typename Vector::KEY const& lhs_key, scalar_t const& lhs_val,
-                   typename Vector::KEY const& rhs_key, scalar_t const& rhs_val)
-        {
-            result.add_scal_prod(lhs_key * rhs_key, m_transform(Coeff::mul(lhs_val, rhs_val)));
-        }
-    };
-
-    template<typename Algebra, typename Operator>
-    Algebra& multiply_and_add(Algebra& result, Algebra const& lhs, Algebra const& rhs, Operator op) const
-    {
-        key_operator<Operator> kt(op);
-        index_operator<Operator> it(op);
-        lhs.buffered_apply_binary_transform(result, rhs, kt, it);
-        return result;
-    }
-
-    template<typename Algebra, typename Operator>
-    Algebra&
-    multiply_and_add(Algebra& result, Algebra const& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
-    {
-        key_operator<Operator> kt(op);
-        index_operator<Operator> it(op);
-        lhs.buffered_apply_binary_transform(result, rhs, kt, it, max_depth);
-        return result;
-    }
-
-    template<typename Algebra, typename Operator>
-    Algebra multiply(Algebra const& lhs, Algebra const& rhs, Operator op) const
-    {
-        Algebra result;
-        multiply_and_add(result, lhs, rhs, op);
-        return result;
-    }
-
-    template<typename Algebra, typename Operator>
-    Algebra multiply(Algebra const& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
-    {
-        Algebra result;
-        multiply_and_add(result, lhs, rhs, op, max_depth);
-        return result;
-    }
-
-    template<typename Algebra, typename Operator>
-    Algebra& multiply_inplace(Algebra& lhs, Algebra const& rhs, Operator op) const
-    {
-        key_operator<Operator> kt(op);
-        index_operator<Operator> it(op);
-        lhs.unbuffered_apply_binary_transform(rhs, kt, it);
-        return lhs;
-    }
-
-    template<typename Algebra, typename Operator>
-    Algebra& multiply_inplace(Algebra& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
-    {
-        key_operator<Operator> kt(op);
-        index_operator<Operator> it(op);
-        lhs.unbuffered_apply_binary_transform(rhs, kt, it, max_depth);
-        return lhs;
-    }
-};
 
 /**
  * @brief A specialisation of the algebra class with a free tensor basis.
@@ -609,9 +899,13 @@ template<typename Coeff, DEG n_letters, DEG max_degree,
          template<typename, typename, typename...> class VectorType,
          typename... Args>
 class free_tensor : public algebra<
-                            free_tensor_basis<n_letters, max_degree>, Coeff, free_tensor_multiplication<Coeff>, VectorType, Args...>
+                            free_tensor_basis<n_letters, max_degree>,
+                            Coeff,
+                            free_tensor_multiplication<n_letters, max_degree>,
+                            VectorType,
+                            Args...>
 {
-    typedef free_tensor_multiplication<Coeff> multiplication_t;
+    typedef free_tensor_multiplication<n_letters, max_degree> multiplication_t;
 
 public:
     /// The basis type.
@@ -939,151 +1233,8 @@ private:
 #endif
 };
 
-template<typename Coeff>
-class shuffle_tensor_multiplication
-{
-
-    typedef typename Coeff::SCA scalar_t;
-
-    /// Computes recursively the shuffle product of two keys
-    template<typename Tensor>
-    static Tensor _prod(typename Tensor::KEY const& k1, typename Tensor::KEY const& k2)
-    {
-        typedef typename Tensor::KEY key_type;
-
-        typedef typename Tensor::BASIS basis_t;
-
-        Tensor result;
-        // unsigned i, j;
-        const scalar_t one(+1);
-
-        if ((basis_t::degree_tag::max_degree == 0) || (k1.size() + k2.size() <= basis_t::degree_tag::max_degree)) {
-            if (k1.size() == 0) {
-                result[k2] = one;
-                return result;
-            }
-            if (k2.size() == 0) {
-                result[k1] = one;
-                return result;
-            }
-            // k1.size() >= 1 and k2.size() >= 1
-            // let's just implement the multiplication
-            const Tensor& first = prod<Tensor>(k1.rparent(), k2);
-            const Tensor& second = prod<Tensor>(k1, k2.rparent());
-            const key_type k1l{k1.lparent()}, k2l{k2.lparent()};
 
 
-            typename Tensor::const_iterator cit;
-
-            for (cit = first.begin(); cit != first.end(); ++cit) {
-                result[k1l * cit->key()] += first [cit->key()];
-            }
-            for (cit = second.begin(); cit != second.end(); ++cit) {
-                result[k2l * cit->key()] += second[cit->key()];
-            }
-        }
-
-        return result;
-    }
-
-    /// The shuffle product of two basis elements.
-    /**
-    Returns the shuffle_tensor obtained by the concatenation product of two
-    keys viewed as words of letters. The result is a unidimensional
-    shuffle_tensor with a unique key (the concatenation of k1 and k2)
-    associated to the +1 scalar. The already computed products are stored in
-    a static mutiplication table to speed up further calculations.
-    */
-    template<typename Tensor>
-    static const Tensor& prod(typename Tensor::KEY const& k1, typename Tensor::KEY const& k2)
-    {
-        typedef typename Tensor::KEY key_t;
-        static boost::recursive_mutex table_access;
-        // get exclusive recursive access for the thread
-        boost::lock_guard<boost::recursive_mutex> lock(table_access);
-
-        typedef std::map<std::pair<key_t, key_t>, Tensor> TABLE_T;
-        static TABLE_T table;
-        typename TABLE_T::iterator it;
-        std::pair<key_t, key_t> p(std::min(k1, k2), std::max(k1, k2));
-        it = table.find(p);
-        if (it == table.end()) {
-            return table[p] = _prod<Tensor>(k1, k2);
-        }
-        else {
-            return it->second;
-        }
-    }
-
-    template<typename Transform>
-    class key_operator
-    {
-        Transform m_transform;
-
-    public:
-        explicit key_operator(Transform t)
-            : m_transform(t)
-        {}
-
-        template<typename Vector>
-        void
-        operator()(Vector& result, typename Vector::KEY const& lhs_key, scalar_t const& lhs_val,
-                   typename Vector::KEY const& rhs_key, scalar_t const& rhs_val)
-        {
-            result.add_scal_prod(prod<Vector>(lhs_key, rhs_key), m_transform(Coeff::mul(lhs_val, rhs_val)));
-        }
-    };
-
-public:
-    template<typename Algebra, typename Operator>
-    Algebra& multiply_and_add(Algebra& result, Algebra const& lhs, Algebra const& rhs, Operator op) const
-    {
-        key_operator<Operator> kt(op);
-        lhs.buffered_apply_binary_transform(result, rhs, kt);
-        return result;
-    }
-
-    template<typename Algebra, typename Operator>
-    Algebra&
-    multiply_and_add(Algebra& result, Algebra const& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
-    {
-        key_operator<Operator> kt(op);
-        lhs.buffered_apply_binary_transform(result, rhs, kt, max_depth);
-        return result;
-    }
-
-    template<typename Algebra, typename Operator>
-    Algebra multiply(Algebra const& lhs, Algebra const& rhs, Operator op) const
-    {
-        Algebra result;
-        multiply_and_add(result, lhs, rhs, op);
-        return result;
-    }
-
-    template<typename Algebra, typename Operator>
-    Algebra multiply(Algebra const& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
-    {
-        Algebra result;
-        multiply_and_add(result, lhs, rhs, op, max_depth);
-        return result;
-    }
-
-    template<typename Algebra, typename Operator>
-    Algebra& multiply_inplace(Algebra& lhs, Algebra const& rhs, Operator op) const
-    {
-        key_operator<Operator> kt(op);
-        lhs.unbuffered_apply_binary_transform(rhs, kt);
-        return lhs;
-    }
-
-    template<typename Algebra, typename Operator>
-    Algebra& multiply_inplace(Algebra& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
-    {
-        key_operator<Operator> kt(op);
-        lhs.unbuffered_apply_binary_transform(rhs, kt, max_depth);
-        return lhs;
-    }
-};
 
 /**
  * @brief A specialisation of the algebra class with a shuffle tensor basis.
@@ -1100,9 +1251,11 @@ public:
  */
 template<typename Coeff, DEG n_letters, DEG max_degree, typename...>
 class shuffle_tensor : public algebra<
-                               shuffle_tensor_basis<n_letters, max_degree>, Coeff, shuffle_tensor_multiplication<Coeff>>
+                               shuffle_tensor_basis<n_letters, max_degree>,
+                               Coeff,
+                               shuffle_tensor_multiplication<n_letters, max_degree>>
 {
-    typedef shuffle_tensor_multiplication<Coeff> multiplication_t;
+    typedef shuffle_tensor_multiplication<n_letters, max_degree> multiplication_t;
 
 public:
     /// The basis type.
@@ -1184,6 +1337,30 @@ private:
     }
 #endif
 };
+
+
+template <typename Coeff, DEG Width, DEG Depth,
+         template <typename, typename, typename...> class VectorType,
+         typename... Args>
+using half_shuffle_tensor = algebra<half_shuffle_tensor_basis<Width, Depth>,
+                                    Coeff,
+                                    half_shuffle_multiplication<Width, Depth>,
+                                    VectorType,
+                                    Args...>;
+
+template <typename Coeff, DEG Width, DEG Depth,
+         template <typename, typename, typename...> class VectorType,
+         typename... Args>
+using area_tensor = algebra<area_tensor_basis<Width, Depth>,
+                                    Coeff,
+                                    area_tensor_multiplication<Width, Depth>,
+                                    VectorType,
+                                    Args...>;
+
+
+
+
+
 
 }// namespace alg
 // Include once wrapper

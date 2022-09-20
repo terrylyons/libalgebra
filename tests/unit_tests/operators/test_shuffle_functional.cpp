@@ -5,8 +5,8 @@
 #include <UnitTest++/UnitTest++.h>
 
 #include <libalgebra/alg_types.h>
-#include <libalgebra/operators/functionals.h>
-#include <libalgebra/operators/operators.h>
+#include <libalgebra/functionals.h>
+#include <libalgebra/operators.h>
 
 #include "../../common/random_vector_generator.h"
 #include "../../common/rng.h"

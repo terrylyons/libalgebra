@@ -14,6 +14,10 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_area_TENSOR_MULTIPLICATIONH_SEEN
 #define DJC_COROPA_LIBALGEBRA_area_TENSOR_MULTIPLICATIONH_SEEN
 
+
+#include "tensor.h"
+
+#if 0
 #include "half_shuffle_tensor_basis.h"
 #include "area_tensor_basis.h"
 
@@ -29,8 +33,6 @@ class area_tensor_multiplication
     template<typename Tensor>
     static Tensor _prod(typename Tensor::KEY const& k1, typename Tensor::KEY const& k2)
     {
-        typedef typename Tensor::KEY key_t;
-
         typedef typename Tensor::BASIS basis_t;
         typedef half_shuffle_tensor<Coeff, basis_t::s_no_letters, basis_t::s_max_degree> half_shuffle_tensor_t;
 
@@ -271,7 +273,7 @@ public:
 };
 
 } // namespace alg
-
+#endif
 // Include once wrapper
 #endif // DJC_COROPA_LIBALGEBRA_area_TENSOR_MULTIPLICATIONH_SEEN
 

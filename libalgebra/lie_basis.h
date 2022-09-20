@@ -15,9 +15,9 @@ Version 3. (See accompanying file License.txt)
 #define DJC_COROPA_LIBALGEBRA_LIEBASISH_SEEN
 
 #include "constpower.h"
-#include "libalgebra/basis/basis.h"
-#include "utils/integer_maths.h"
-#include <libalgebra/basis/key_iterators.h>
+#include "basis.h"
+#include "detail/integer_maths.h"
+#include "key_iterators.h"
 
 namespace alg {
 

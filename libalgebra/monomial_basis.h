@@ -198,7 +198,7 @@ public:
 public:
     // Property tags
     typedef alg::basis::with_degree<max_degree> degree_tag;
-    typedef alg::basis::unordered ordering_tag;
+    typedef alg::basis::ordered<std::less<>> ordering_tag;
 
 public:
     /// Default constructor.

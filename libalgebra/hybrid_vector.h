@@ -5,10 +5,14 @@
 #ifndef LIBALGEBRA_HYBRID_VECTOR_H
 #define LIBALGEBRA_HYBRID_VECTOR_H
 
-#include "libalgebra/utils/order_trait.h"
-#include "libalgebra/vectors/base_vector.h"
-#include "libalgebra/vectors/dense_vector.h"
-#include "libalgebra/vectors/sparse_vector.h"
+
+#include <algorithm>
+#include <numeric>
+
+#include "detail/order_trait.h"
+#include "base_vector.h"
+#include "dense_vector.h"
+#include "sparse_vector.h"
 
 #define DEFINE_FUSED_OP(NAME, ST, OP1, OP2)                            \
     hybrid_vector& NAME(const KEY& rhs, const ST s)                    \
@@ -181,6 +185,7 @@ public:
     using DENSE::mone;
     using DENSE::one;
     using DENSE::zero;
+    using typename SPARSE::coefficient_ring;
 
 public:
     // Constructors
@@ -286,6 +291,7 @@ protected:
         resize_dense_to_dimension(DENSE::start_of_degree(deg));
     }
 
+public:
     /// Trigger a resize and incorporate action if appropriate
     void maybe_resize()
     {
@@ -437,7 +443,7 @@ public:
 
     using DENSE::next_resize_size;
 
-protected:
+
     // Sparse part and dense part access
 
     /// Get a reference to the dense part

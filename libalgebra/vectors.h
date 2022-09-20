@@ -15,10 +15,10 @@
 #define __DECLARE_UNARY_OPERATOR(NEWT, NEWOP, OLDOP, OLDT) \
     NEWT operator NEWOP(void) const { return OLDT::operator OLDOP(); }
 
-#include "libalgebra/vectors/dense_vector.h"
-#include "libalgebra/vectors/hybrid_vector.h"
-#include "libalgebra/vectors/sparse_vector.h"
-#include "libalgebra/vectors/vector.h"
+#include "dense_vector.h"
+#include "hybrid_vector.h"
+#include "sparse_vector.h"
+#include "vector.h"
 
 namespace alg {
 namespace vectors {

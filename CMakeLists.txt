@@ -58,28 +58,26 @@ add_library(Libalgebra INTERFACE)
 # For IDEs that use target sources lists to generate project information
 # we add a custom target that attaches these sources.
 add_custom_target(Libalgebra_headers SOURCES
-        libalgebra/basis/tags.h
-        libalgebra/basis/basis.h
-        libalgebra/basis/key_iterators.h
-        libalgebra/coefficients/coefficients.h
-        libalgebra/coefficients/complex.h
-        libalgebra/coefficients/mpfloat_coefficients.h
-        libalgebra/coefficients/rational_coefficients.h
-        libalgebra/utils/caching_tags.h
-        libalgebra/utils/function_extension_cache_base.h
-        libalgebra/utils/integer_maths.h
-        libalgebra/utils/iterators.h
-        libalgebra/utils/meta.h
-        libalgebra/utils/order_trait.h
-        libalgebra/utils/is_vector_trait.h
-        libalgebra/vectors/base_vector.h
-        libalgebra/vectors/dense_storage.h
-        libalgebra/vectors/dense_vector.h
-        libalgebra/vectors/hybrid_vector.h
-        libalgebra/vectors/iterators.h
-        libalgebra/vectors/sparse_vector.h
-        libalgebra/vectors/vector.h
-        libalgebra/vectors/vectors.h
+        libalgebra/tags.h
+        libalgebra/basis.h
+        libalgebra/key_iterators.h
+        libalgebra/coefficients.h
+        libalgebra/complex.h
+        libalgebra/mpfloat_coefficients.h
+        libalgebra/rational_coefficients.h
+        libalgebra/detail/caching_tags.h
+        libalgebra/detail/function_extension_cache_base.h
+        libalgebra/detail/integer_maths.h
+        libalgebra/detail/meta.h
+        libalgebra/detail/order_trait.h
+        libalgebra/base_vector.h
+        libalgebra/dense_storage.h
+        libalgebra/dense_vector.h
+        libalgebra/hybrid_vector.h
+        libalgebra/iterators.h
+        libalgebra/sparse_vector.h
+        libalgebra/vector.h
+        libalgebra/vectors.h
         libalgebra/_tensor_basis.h
         libalgebra/alg_types.h
         libalgebra/algebra.h
@@ -94,16 +92,16 @@ add_custom_target(Libalgebra_headers SOURCES
         libalgebra/monomial_basis.h
         libalgebra/multi_polynomial.h
         libalgebra/multiplication_helpers.h
-        libalgebra/operators/operators.h
-        libalgebra/operators/dot_product_implementations.h
-        libalgebra/operators/functionals.h
-        libalgebra/operators/free_extension.h
-        libalgebra/operators/tensor_operator.h
-        libalgebra/operators/lie_inner_product.h
-        libalgebra/operators/scalar_multiply_operator.h
-        libalgebra/operators/sum_operator.h
-        libalgebra/operators/composition_operator.h
-        libalgebra/operators/multi_linear_operators.h
+        libalgebra/operators.h
+        libalgebra/dot_product_implementations.h
+        libalgebra/functionals.h
+        libalgebra/free_extension.h
+        libalgebra/tensor_operator.h
+        libalgebra/lie_inner_product.h
+        libalgebra/scalar_multiply_operator.h
+        libalgebra/sum_operator.h
+        libalgebra/composition_operator.h
+        libalgebra/multi_linear_operators.h
         libalgebra/poly_basis.h
         libalgebra/poly_lie.h
         libalgebra/poly_lie_basis.h

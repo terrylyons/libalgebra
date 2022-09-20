@@ -18,9 +18,9 @@
 #endif
 
 #include "implementation_types.h"
-#include "utils/integer_maths.h"
-#include <libalgebra/utils/caching_tags.h>
-#include <libalgebra/utils/function_extension_cache_base.h>
+#include "detail/integer_maths.h"
+#include "detail/caching_tags.h"
+#include "detail/function_extension_cache_base.h"
 
 namespace alg {
 

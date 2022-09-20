@@ -5,16 +5,16 @@
 #ifndef LIBALGEBRA_MPFLOAT_COEFFICIENTS_H
 #define LIBALGEBRA_MPFLOAT_COEFFICIENTS_H
 
-#include <libalgebra/implementation_types.h>
+#include "implementation_types.h"
 
 #ifndef LIBALGEBRA_NO_GMP
 #include <boost/multiprecision/gmp.hpp>
-#include <libalgebra/coefficients/gmp_ser.h>
+#include "coefficients/gmp_ser.h"
 #else
 #include <boost/multipricision/cpp_bin_float.hpp>
 #endif
 
-#include <libalgebra/coefficients/coefficients.h>
+#include "coefficients.h"
 
 namespace alg {
 namespace coefficients {

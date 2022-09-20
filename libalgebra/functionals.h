@@ -5,12 +5,12 @@
 #ifndef LIBALGEBRA_FUNCTIONALS_H
 #define LIBALGEBRA_FUNCTIONALS_H
 
-#include <libalgebra/implementation_types.h>
+#include "implementation_types.h"
 
-#include <libalgebra/operators/dot_product_implementations.h>
-#include <libalgebra/operators/operators.h>
+#include "dot_product_implementations.h"
+#include "operators.h"
 
-#include <libalgebra/tensor.h>
+#include "tensor.h"
 
 namespace alg {
 namespace operators {

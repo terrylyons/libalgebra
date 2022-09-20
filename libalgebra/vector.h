@@ -8,7 +8,7 @@
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 #include <boost/serialization/serialization.hpp>
 #endif
-#include "libalgebra/vectors/sparse_vector.h"
+#include "sparse_vector.h"
 
 namespace alg {
 namespace vectors {
@@ -127,7 +127,6 @@ public:
     // Utility
     using UnderlyingVectorType::comp;
 
-protected:
     using UnderlyingVectorType::degree_tag;
 
 protected:
@@ -223,6 +222,9 @@ public:
 
     vector& operator=(const vector& other) = default;
     vector& operator=(vector&& other) noexcept = default;
+
+    UnderlyingVectorType& base_vector() noexcept { return *this; }
+    const UnderlyingVectorType& base_vector() const noexcept { return *this; }
 
 protected:
     bool ensure_sized_for_degree(const DEG deg)
@@ -944,5 +946,28 @@ public:
 };
 
 }// namespace vectors
+
+namespace utils {
+
+
+template<typename T>
+struct is_vector_type {
+private:
+
+    template <typename B, typename C, template <typename, typename, typename...> class Type, typename... Args>
+    static std::true_type check(vectors::vector<B, C, Type, Args...>&);
+
+    static std::false_type check(...);
+
+public:
+
+    static constexpr bool value = decltype(check(std::declval<T>()))::value;
+
+};
+
+
+} // namespace utils
+
+
 }// namespace alg
 #endif// LIBALGEBRA_VECTOR_H

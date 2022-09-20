@@ -14,11 +14,15 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_TENSORBASISH_SEEN
 #define DJC_COROPA_LIBALGEBRA_TENSORBASISH_SEEN
 
+#include "implementation_types.h"
+
+#include <cmath>
+#include <limits>
+
 #include "_tensor_basis.h"
 #include "basis_traits.h"
-#include <cmath>
-#include <libalgebra/basis/key_iterators.h>
-#include <limits>
+#include "key_iterators.h"
+#include "detail/meta.h"
 
 namespace alg {
 
@@ -37,8 +41,15 @@ struct tensor_size_info {
         static constexpr DIMN value = (power(NoLetters, Depth + 1) - 1) / (NoLetters - 1);
     };
 
-    using holder = typename alg::utils::generate_array<max_depth + 1, helper>::result;
+    template <DIMN D>
+    struct power_helper {
+        static constexpr DIMN value = power(NoLetters, D);
+    };
 
+    using holder = typename alg::utils::generate_array<max_depth + 1, helper>::result;
+    using power_holder = typename alg::utils::generate_array<max_depth, power_helper>::result;
+
+    static const std::array<DIMN, max_depth + 1> powers;
     static const std::array<DIMN, max_depth + 2> degree_sizes;
 };
 
@@ -47,6 +58,11 @@ const std::array<DIMN,
                  tensor_size_info<N>::max_depth
                          + 2>
         tensor_size_info<N>::degree_sizes = tensor_size_info<N>::holder::data;
+
+template <DEG Width>
+const std::array<DIMN, tensor_size_info<Width>::max_depth+1> tensor_size_info<Width>::powers
+    = tensor_size_info<Width>::power_holder::data;
+
 
 }// namespace dtl
 

@@ -5,8 +5,8 @@
 #ifndef LIBALGEBRA_COEFFICIENTS_H
 #define LIBALGEBRA_COEFFICIENTS_H
 
-#include <libalgebra/implementation_types.h>
-#include <libalgebra/utils/meta.h>
+#include "implementation_types.h"
+#include "detail/meta.h"
 
 #include <type_traits>
 

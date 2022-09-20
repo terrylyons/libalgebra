@@ -5,9 +5,8 @@
 #ifndef LIBALGEBRA_TAGS_H
 #define LIBALGEBRA_TAGS_H
 
-#include <functional>
-
-#include "libalgebra/utils/meta.h"
+#include <type_traits>
+#include <utility>
 
 namespace alg {
 namespace basis {

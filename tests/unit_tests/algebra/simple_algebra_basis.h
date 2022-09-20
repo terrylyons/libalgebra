@@ -2,80 +2,33 @@
 // Created by sam on 12/02/2021.
 //
 
+#include <libalgebra/algebra.h>
+#include "simple_basis.h"
 
-/*
- * Multiplication operator for simple_integer_basis
- */
-struct pointwise_multiplication
+template <typename Basis>
+class pointwise_multiplier : alg::multiplier_base<pointwise_multiplier<Basis>, Basis>
 {
-    typedef unsigned key_type;
+    using base = alg::multiplier_base<pointwise_multiplier, Basis>;
+    friend base;
 
-    template <typename Transform>
-    struct key_operator
+public:
+
+    using basis_type = Basis;
+    using key_type = typename Basis::KEY;
+    using typename base::pair_type;
+    using result_type = typename base::inner_result_type;
+    using typename base::argument_type;
+
+
+    result_type operator()(argument_type lhs, argument_type rhs) const
     {
-        key_operator(Transform fn) : m_transform(fn)
-        {}
-
-        template <typename Vector, typename Scalar>
-        void operator()(
-                Vector& result, const key_type& k1, const Scalar& s1, const key_type& k2, const Scalar& s2)
-        {
-            if (k1 == k2) {
-                result.add_scal_prod(k1, m_transform(s1 * s2));
-            }
+        if (lhs != rhs) {
+            return {};
         }
-
-    private:
-        Transform m_transform;
-    };
-
-    template <typename Algebra, typename Operator>
-    Algebra &multiply_and_add(Algebra &result, Algebra const &lhs, Algebra const &rhs, Operator op) const
-    {
-        key_operator <Operator> kt(op);
-        lhs.buffered_apply_binary_transform(result, rhs, kt);
-        return result;
+        return {{lhs, 1}};
     }
 
-    template <typename Algebra, typename Operator> Algebra &
-    multiply_and_add(Algebra &result, Algebra const &lhs, Algebra const &rhs, Operator op, DEG const max_depth) const
-    {
-        key_operator <Operator> kt(op);
-        lhs.buffered_apply_binary_transform(result, rhs, kt, max_depth);
-        return result;
-    }
-
-    template <typename Algebra, typename Operator>
-    Algebra multiply(Algebra const &lhs, Algebra const &rhs, Operator op) const
-    {
-        Algebra result;
-        multiply_and_add(result, lhs, rhs, op);
-        return result;
-    }
-
-    template <typename Algebra, typename Operator>
-    Algebra multiply(Algebra const &lhs, Algebra const &rhs, Operator op, DEG const max_depth) const
-    {
-        Algebra result;
-        multiply_and_add(result, lhs, rhs, op, max_depth);
-        return result;
-    }
-
-    template <typename Algebra, typename Operator>
-    Algebra &multiply_inplace(Algebra &lhs, Algebra const &rhs, Operator op) const
-    {
-        key_operator <Operator> kt(op);
-        lhs.unbuffered_apply_binary_transform(rhs, kt);
-        return lhs;
-    }
-
-    template <typename Algebra, typename Operator>
-    Algebra &multiply_inplace(Algebra &lhs, Algebra const &rhs, Operator op, DEG const max_depth) const
-    {
-        key_operator <Operator> kt(op);
-        lhs.unbuffered_apply_binary_transform(rhs, kt, max_depth);
-        return lhs;
-    }
 };
 
-
+template <typename Basis>
+using pointwise_multiplication = alg::base_multiplication<pointwise_multiplier<Basis>>;

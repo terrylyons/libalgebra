@@ -35,7 +35,7 @@ SUITE (hybrid_tensor_multiplication) {
                 std::map<KEY, typename field::S>
                 > HYBRID;
         typedef alg::algebra<TBASIS, field,
-        alg::free_tensor_multiplication<field>,
+        alg::free_tensor_multiplication<5, 5>,
         alg::vectors::hybrid_vector> TENSOR;
 
         const TENSOR tunit;

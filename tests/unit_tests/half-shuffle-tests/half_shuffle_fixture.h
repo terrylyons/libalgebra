@@ -32,8 +32,8 @@ struct HalfShuffleFixture : public alg_types<D, W, F, VectorType> {
     typedef typename alg::lie<typename ALG_TYPES::COEFF, ALG_TYPES::ALPHABET_SIZE, 1> MDEGREE;
     typedef typename ALG_TYPES::TENSOR TENSOR;
     typedef typename ALG_TYPES::SHUFFLE_TENSOR SHUFFLE_TENSOR;
-    typedef typename alg::half_shuffle_tensor<typename ALG_TYPES::COEFF, ALG_TYPES::ALPHABET_SIZE, ALG_TYPES::DEPTH> HALF_SHUFFLE_TENSOR;
-    typedef typename alg::area_tensor<typename ALG_TYPES::COEFF, ALG_TYPES::ALPHABET_SIZE, ALG_TYPES::DEPTH> AREA_TENSOR;
+    typedef typename alg::half_shuffle_tensor<typename ALG_TYPES::COEFF, ALG_TYPES::ALPHABET_SIZE, ALG_TYPES::DEPTH, alg::vectors::sparse_vector> HALF_SHUFFLE_TENSOR;
+    typedef typename alg::area_tensor<typename ALG_TYPES::COEFF, ALG_TYPES::ALPHABET_SIZE, ALG_TYPES::DEPTH, alg::vectors::sparse_vector> AREA_TENSOR;
     typedef typename alg::free_tensor<typename ALG_TYPES::COEFF, ALG_TYPES::ALPHABET_SIZE, ALG_TYPES::DEPTH> FREE_TENSOR;
 
     //template <typename Tensor>
@@ -516,10 +516,11 @@ struct HalfShuffleFixture : public alg_types<D, W, F, VectorType> {
     template <typename Tensor>
     Tensor diff_shuffle_half_shuffle(const Tensor& lhs, const Tensor& rhs)
     {
-        return ((alg::shuffle_multiply(lhs, rhs)
-                 - Tensor(lhs[basis.begin()] * rhs[basis.begin()]))
-                - ((alg::half_shuffle_multiply(lhs, rhs))
-                   + (alg::half_shuffle_multiply(rhs, lhs))));
+        auto left = alg::shuffle_multiply(lhs, rhs);
+        auto right = Tensor(lhs[KEY()]*rhs[KEY()]) + ((alg::half_shuffle_multiply(lhs, rhs))
+                   + (alg::half_shuffle_multiply(rhs, lhs)));
+
+        return left - right;
     }
 
     template <typename Tensor>

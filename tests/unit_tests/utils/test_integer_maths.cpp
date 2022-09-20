@@ -5,7 +5,7 @@
 #include <UnitTest++/UnitTest++.h>
 
 #include <libalgebra/libalgebra.h>
-#include <libalgebra/utils/integer_maths.h>
+#include <libalgebra/detail/integer_maths.h>
 
 #include "../../common/time_and_details.h"
 

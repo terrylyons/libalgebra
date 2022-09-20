@@ -291,6 +291,7 @@ protected:
         resize_dense_to_dimension(DENSE::start_of_degree(deg));
     }
 
+public:
     /// Trigger a resize and incorporate action if appropriate
     void maybe_resize()
     {

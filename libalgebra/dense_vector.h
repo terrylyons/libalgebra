@@ -328,15 +328,7 @@ public:
 
         void advance()
         {
-            const auto storage_end = m_vector->m_data.end();
-            for (;;) {
-                if (++m_iterator == storage_end) {
-                    break;
-                }
-                if (*m_iterator != Coeffs::zero) {
-                    break;
-                }
-            }
+            ++m_iterator;
         }
 
     public:
@@ -389,15 +381,7 @@ public:
 
         void advance()
         {
-            const auto storage_end = m_vector->m_data.end();
-            for (;;) {
-                if (++m_iterator == storage_end) {
-                    break;
-                }
-                if (*m_iterator != Coeffs::zero) {
-                    break;
-                }
-            }
+            ++m_iterator;
         }
 
     public:

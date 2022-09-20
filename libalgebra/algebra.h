@@ -563,9 +563,10 @@ class hybrid_vector_mixin
 
         auto rbegin = rhs.dense_part().begin();
         auto rend = rhs.dense_part().end();
+        auto rhs_has_dense = rhs.dense_dimension() > 0;
 
         for (; lit!=lend; ++lit) {
-           if (rhs.dense_dimension() > 0) {
+           if (rhs_has_dense) {
               for (auto rit = rbegin; rit!=rend; ++rit) {
                   self.asp_helper(out, self.eval(lit->key(), rit->key()),
                                   op(lit->value()*rit->value()));
@@ -621,6 +622,7 @@ class hybrid_vector_mixin
         auto lbegin = lhs.sparse_part().begin();
         auto lend = lhs.sparse_part().end();
         auto rddeg = rhs.dense_degree();
+        auto rhs_has_dense = rhs.dense_dimension() > 0;
 
         for (auto lit=lbegin; lit!=lend; ++lit) {
             auto lkey = lit->key();
@@ -629,8 +631,10 @@ class hybrid_vector_mixin
             auto rhs_deg = out_deg - lhs_deg;
             auto rhs_ddeg = std::min(rhs_deg, rddeg);
 
-            for (DIMN idx=0; idx<basis.start_of_degree(rhs_ddeg+1); ++idx) {
-                self.asp_helper(out, self.eval(lkey, basis.index_to_key(idx)), op(lit->value()*rhs.dense_value(idx)));
+            if (rhs_has_dense) {
+                for (DIMN idx=0; idx<basis.start_of_degree(rhs_ddeg+1); ++idx) {
+                    self.asp_helper(out, self.eval(lkey, basis.index_to_key(idx)), op(lit->value()*rhs.dense_value(idx)));
+                }
             }
 
             for (const auto& ritem : helper.degree_range(out_deg-lhs_deg)) {

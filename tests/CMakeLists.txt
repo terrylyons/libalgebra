@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED  ON)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (WIN32)
     ## better remove this and add it to the command line as machine specific
@@ -31,7 +31,7 @@ message(STATUS ">>> OpenMP_CXX_FLAGS = ${OpenMP_CXX_FLAGS}")
 message(STATUS ">>> Boost libraries: ${Boost_LIBRARIES}")
 
 add_subdirectory(common)
-if (LA_TESTIN_INCLUDE_INTEGRATION)
+if (LA_TESTING_INCLUDE_INTEGRATION)
     add_subdirectory(integration_tests)
 endif ()
 

@@ -200,7 +200,10 @@ void tiled_fma(dense_ft_vec_t<Coeffs, Width, Depth>& out,
                 for (DIMN i = 0; i < helper.tile_width; ++i) {
                     const auto split = helper.split_key(lh_deg, i);
                     const auto& left_val = *helper.left_fwd_read(lh_deg, split.first);
-                    helper.read_right_tile(out_deg - rh_deg, helper.combine_keys(out_deg - 2 * TileLetters, split.second, k));
+                    helper.read_right_tile(out_deg - rh_deg,
+                                           helper.combine_keys(
+                                                   out_deg - 2 * TileLetters,
+                                                   split.second, k));
 
                     for (DIMN j = 0; j < helper.tile_width; ++j) {
                         tile[i * helper.tile_width + j] += op(left_val * right_rtile[j]);
@@ -213,7 +216,8 @@ void tiled_fma(dense_ft_vec_t<Coeffs, Width, Depth>& out,
                 const auto rhs_deg = out_deg - 2 * TileLetters - lhs_deg;
                 auto split = helper.split_key(rhs_deg, k);
                 //                    assert(split.first*integer_maths::power(WIDTH_HALL_BASIS, rhs_deg) + split.second == k);
-                helper.read_left_tile(lhs_deg + TileLetters, helper.reverse_key(lhs_deg, split.first));
+                helper.read_left_tile(lhs_deg + TileLetters, helper.reverse_key(
+                                                                     lhs_deg, split.first));
                 helper.read_right_tile(rhs_deg + TileLetters, split.second);
 
                 for (DIMN i = 0; i < helper.tile_width; ++i) {
@@ -234,7 +238,11 @@ void tiled_fma(dense_ft_vec_t<Coeffs, Width, Depth>& out,
                 for (DIMN j = 0; j < helper.tile_width; ++j) {
                     const auto split = helper.split_key(rh_deg, j);
                     const auto& right_val = *helper.right_fwd_read(rh_deg, split.second);
-                    helper.read_left_tile(out_deg - rh_deg, helper.combine_keys(TileLetters - rh_deg, k_reverse, helper.reverse_key(TileLetters - rh_deg, split.first)));
+                    helper.read_left_tile(out_deg - rh_deg,
+                                          helper.combine_keys(TileLetters - rh_deg,
+                                                              k_reverse,
+                                                              helper.reverse_key(TileLetters - rh_deg,
+                                                                                 split.first)));
 
                     for (DIMN i = 0; i < helper.tile_width; ++i) {
                         tile[helper.reverse(i) * helper.tile_width + j] += op(left_rtile[i] * right_val);

@@ -1,6 +1,6 @@
 #include <vector>
 
-#include <libalgebra/vectors/vectors.h>
+#include "vectors.h"
 
 namespace alg {
 

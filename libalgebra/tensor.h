@@ -469,6 +469,209 @@ private:
         write_tile(tile, output_data + rword_index * block_offset, stride);
     }
 };
+
+
+
+template <DEG Width, DEG Depth, typename Coeffs>
+class free_tensor_multiplication_helper
+{
+
+protected:
+    using basis_type        = tensor_basis<Width, Depth>;
+    using coefficient_ring  = Coeffs;
+    using scalar_type       = typename Coeffs::S;
+    using pointer           = scalar_type*;
+    using const_pointer     = const scalar_type*;
+
+    using tsi               = tensor_size_info<Width>;
+
+    template <typename B>
+    using dense_tensor      = vectors::dense_vector<B, coefficient_ring>;
+
+    const_pointer lhs_data;
+    const_pointer rhs_data;
+    pointer out_data;
+
+    IDEG lhs_deg, rhs_deg, out_deg;
+
+
+public:
+
+    template <typename B1, typename B2, typename B3>
+    free_tensor_multiplication_helper(dense_tensor<B1>& out,
+                                      const dense_tensor<B2>& left,
+                                      const dense_tensor<B3>& right,
+                                      DEG max_degree)
+        : lhs_deg(left.degree()), rhs_deg(right.degree()), out_deg(IDEG(max_degree))
+    {
+        static_assert(std::is_base_of<basis_type, B1>::value
+                      && std::is_base_of<basis_type, B2>::value
+                      && std::is_base_of<basis_type, B3>::value,
+                      "bases are not tensor bases");
+
+        out_deg = std::min(out_deg, lhs_deg + rhs_deg);
+        out.resize_to_degree(out_deg);
+
+        lhs_data = left.as_ptr();
+        rhs_data = right.as_ptr();
+        out_data = out.as_mut_ptr();
+
+    }
+
+    template <typename B1, typename B2>
+    free_tensor_multiplication_helper(dense_tensor<B1>& left,
+                                      const dense_tensor<B2>& right,
+                                      DEG max_degree)
+        : lhs_deg(left.degree()), rhs_deg(right.degree()), out_deg(IDEG(max_degree))
+    {
+        out_deg = std::min(out_deg, lhs_deg + rhs_deg);
+        left.resize_to_degree(out_deg);
+
+        lhs_data = nullptr;
+        rhs_data = right.as_ptr();
+        out_data = left.as_mut_ptr();
+    }
+
+    IDEG lhs_degree() const noexcept { return lhs_deg; }
+    IDEG rhs_degree() const noexcept { return rhs_deg; }
+    IDEG out_degree() const noexcept { return out_deg; }
+
+    const_pointer left_fwd_read(IDEG d) const noexcept
+    {
+        assert(d>=0 && d <= lhs_deg);
+        return lhs_data + basis_type::start_of_degree(d);
+    }
+    const_pointer right_fwd_read(IDEG d) const noexcept
+    {
+        assert(d>=0 && d <= rhs_deg);
+        return rhs_data + basis_type::start_of_degree(d);
+    }
+    pointer fwd_write(IDEG d) const noexcept
+    {
+        assert(d>=0 && d <= out_deg);
+        return out_data + basis_type::start_of_degree(d);
+    }
+
+    std::pair<DIMN, DIMN> range_size(IDEG lhs, IDEG rhs) const noexcept
+    { return std::pair<DIMN, DIMN>(tsi::powers[lhs], tsi::powers[rhs]); }
+
+};
+
+template <DEG Width, DEG Depth, typename Coeffs, IDEG TileLetters=0>
+class tiled_free_tensor_multiplication_helper
+    : public free_tensor_multiplication_helper<Width, Depth, Coeffs>
+{
+    using base = free_tensor_multiplication_helper<Width, Depth, Coeffs>;
+
+public:
+    using scalar_type       = typename Coeffs::SCA;
+    using pointer           = scalar_type*;
+    using const_pointer     = const scalar_type*;
+    using reference         = scalar_type&;
+    using const_reference   = const scalar_type&;
+
+private:
+    template <typename B>
+    using dense_tensor = vectors::dense_vector<B, Coeffs>;
+
+    using basis_type = tensor_basis<Width, Depth>;
+
+    std::vector<scalar_type> left_read_tile;
+    std::vector<scalar_type> right_read_tile;
+    std::vector<scalar_type> output_tile;
+    std::vector<scalar_type> reverse_data;
+    const_pointer left_reverse_read_ptr;
+
+
+public:
+    static constexpr DIMN tile_letters = TileLetters;
+    static constexpr DIMN tile_width = integer_maths::power(Width, tile_letters);
+    static constexpr DIMN tile_size = tile_width*tile_width;
+    static constexpr DIMN tile_shift = integer_maths::power(Width, tile_letters-1);
+
+
+
+    template <typename B1, typename B2, typename B3>
+    tiled_free_tensor_multiplication_helper(dense_tensor<B1>& out,
+                                            const dense_tensor<B2>& lhs,
+                                            const dense_tensor<B3>& rhs,
+                                            DEG max_degree)
+        : free_tensor_multiplication_helper(out, lhs, rhs, max_degree)
+    {
+
+    }
+
+    pointer out_tile_ptr() noexcept
+    { return output_tile.data(); }
+    const_pointer left_read_tile_ptr() const noexcept
+    { return left_read_tile.data(); }
+    const_pointer right_read_tile_ptr() const noexcept
+    { return right_read_tile.data(); }
+
+    void read_left_tile(DEG degree, DIMN index) noexcept
+    {
+        const auto start_of_degree = basis_type::start_of_degree(degree);
+        const auto* ptr_begin = left_reverse_read_ptr + index*tile_width + start_of_degree;
+        std::copy(ptr_begin, ptr_begin + tile_width, left_read_tile.data());
+    }
+    void read_right_tile(DEG degree, DIMN index) noexcept
+    {
+        const auto start_of_degree = basis_type::start_of_degree(degree);
+        const auto* ptr_begin = base::rhs_data + index*tile_width + start_of_degree;
+        std::copy(ptr_begin, ptr_begin + tile_width, right_read_tile.data());
+    }
+
+    void write_tile(DEG degree, DIMN index, DIMN reverse_index) noexcept
+    {
+        const auto start_of_degree = basis_type::start_of_degree(degree);
+        pointer optr = base::out_data + index*tile_width + start_of_degree;
+        const_pointer tptr = output_tile.data();
+        auto stride = tensor_size_info::powers[degree-tile_letters];
+
+        for (DIMN i=0; i<tile_width; ++i) {
+            for (DIMN j=0; j<tile_width; ++j) {
+                optr[i*stride + j] += tptr[i*tile_width + j]
+            }
+        }
+
+        if (degree < Depth) {
+            // Write out reverse data
+        }
+    }
+
+    static std::pair<DIMN, DIMN> split_key(DEG split_deg, DIMN key) noexcept
+    {
+        const DIMN splitter = tensor_size_info::powers[split_deg];
+        return {key / splitter, key & splitter };
+    }
+
+    static DIMN combine_keys(DEG right_deg, DIMN left, DIMN right) noexcept
+    {
+        const DIMN shift = tensor_size_info::powers[right_deg];
+        return left*shift + right;
+    }
+
+    static DIMN reverse_key(DEG degree, DIMN index) noexcept
+    {
+        DIMN result = 0;
+        for (auto i=0; i<degree; ++i) {
+            result *= Width;
+            result += (index % Width);
+            index /= Width;
+        }
+        return result;
+    }
+
+    const_reference left_unit() const noexcept { return base::lhs_data[0]; }
+    const_reference right_unit() const noexcept { return base::rhs_data[0]; }
+
+
+
+};
+
+
+
+
 }// namespace dtl
 
 template <DEG Width, DEG Depth>
@@ -578,10 +781,61 @@ public:
             lhs.clear();
         }
     }
+};
+
+#define LA_RESTRICT __restrict
+#define LA_INLINE_ALWAYS __attribute__((inline_always))
+
+template <DEG Width, DEG Depth>
+class tiled_free_tensor_multiplication
+        : public traditional_free_tensor_multiplication<Width, Depth>
+{
+    using base = traditional_free_tensor_multiplication<Width, Depth>;
+
+    template <typename C>
+    using helper_type = dtl::tiled_free_tensor_multiplication_helper<
+            Width, Depth, C>;
 
 
+    template <typename S, typename Fn>
+    LA_INLINE_ALWAYS
+    static void impl_0bd(S* LA_RESTRICT tile,
+                     S& lhs_unit,
+                     const S* LA_RESTRICT rhs_ptr,
+                     Fn op) noexcept
+    {
+        for (std::ptrdiff_t i=0; i<)
+    }
+
+
+
+protected:
+
+
+    template <typename Coeffs, typename Fn>
+    void fma(helper_type<Coeffs>& helper, Fn op) const
+    {
+
+    }
+
+public:
+
+    using base::fma;
+
+
+    template <typename B1, typename B2, typename B3, typename Coeffs, typename Fn>
+    void fma(vectors::dense_vector<B1, Coeffs>& out,
+             const vectors::dense_vector<B2, Coeffs>& lhs,
+             const vectors::dense_vector<B3, Coeffs>& rhs,
+             Fn op,
+             DEG max_degree) const
+    {
+        helper_type<Coeffs> helper(out, lhs, rhs, max_degree);
+        fma(helper, op);
+    }
 
 };
+
 
 
 template <DEG Width, DEG Depth>

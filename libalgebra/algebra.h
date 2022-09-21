@@ -53,55 +53,55 @@ class multiplication_traits
     using mul_reference = const Multiplication&;
 
     template<typename Result, typename LeftVector, typename RightVector, typename Fn>
-    static void fma(mul_reference mul, Result& out, const LeftVector& lhs, const RightVector& rhs, Fn op)
+    static void fma_impl(mul_reference mul, Result& out, const LeftVector& lhs, const RightVector& rhs, Fn op)
     {
         mul.fma(out.base_vector(), lhs.base_vector(), rhs.base_vector(), op);
     }
 
     template<typename Result, typename LeftVector, typename RightVector, typename Fn>
-    static void fma(mul_reference mul, Result& out, const LeftVector& lhs, const RightVector& rhs, Fn op, DEG max_degree)
+    static void fma_impl(mul_reference mul, Result& out, const LeftVector& lhs, const RightVector& rhs, Fn op, DEG max_degree)
     {
         mul.fma(out.base_vector(), lhs.base_vector(), rhs.base_vector(), op, max_degree);
     }
 
     template<typename LeftVector, typename RightVector, typename Fn>
-    static void fma_inplace(mul_reference mul, LeftVector& lhs, const RightVector& rhs, Fn op)
+    static void multiply_inplace_impl(mul_reference mul, LeftVector& lhs, const RightVector& rhs, Fn op)
     {
-        mul.fma_inplace(lhs.base_vector(), rhs.base_vector(), op);
+        mul.multiply_inplace(lhs.base_vector(), rhs.base_vector(), op);
     }
 
     template<typename LeftVector, typename RightVector, typename Fn>
-    static void fma_inplace(mul_reference mul, LeftVector& lhs, const RightVector& rhs, Fn op, DEG max_degree)
+    static void multiply_inplace_impl(mul_reference mul, LeftVector& lhs, const RightVector& rhs, Fn op, DEG max_degree)
     {
-        mul.fma_inplace(lhs.base_vector(), rhs.base_vector(), op, max_degree);
+        mul.multiply_inplace(lhs.base_vector(), rhs.base_vector(), op, max_degree);
     }
 
     template<typename Result, typename LeftVector, typename RightVector, typename Fn>
     static void dispatch(mul_reference mul, Result& out, const LeftVector& lhs, const RightVector& rhs,
                          Fn op, basis::without_degree)
     {
-        fma(mul, out, lhs, rhs, op);
+        fma_impl(mul, out, lhs, rhs, op);
     }
 
     template<typename Result, typename LeftVector, typename RightVector, typename Fn, DEG D>
     static void dispatch(mul_reference mul, Result& out, const LeftVector& lhs, const RightVector& rhs,
                          Fn op, basis::with_degree<D>)
     {
-        fma(mul, out, lhs, rhs, op, D);
+        fma_impl(mul, out, lhs, rhs, op, D);
     }
 
     template<typename LeftVector, typename RightVector, typename Fn>
     static void dispatch(mul_reference mul, LeftVector& lhs, const RightVector& rhs,
                          Fn op, basis::without_degree)
     {
-        fma_inplace(mul, lhs, rhs, op);
+        multiply_inplace_impl(mul, lhs, rhs, op);
     }
 
     template<typename LeftVector, typename RightVector, typename Fn, DEG D>
     static void dispatch(mul_reference mul, LeftVector& lhs, const RightVector& rhs,
                          Fn op, basis::with_degree<D>)
     {
-        fma_inplace(mul, lhs, rhs, op, D);
+        multiply_inplace_impl(mul, lhs, rhs, op, D);
     }
 
     template<typename Result, typename LeftVector, typename RightVector, typename Fn>
@@ -144,13 +144,13 @@ public:
     }
 
     template<typename LeftVector, typename RightVector, typename Fn>
-    static void multiply_and_add_inplace(mul_reference mul, LeftVector& lhs, const RightVector& rhs, Fn op)
+    static void multiply_inplace(mul_reference mul, LeftVector& lhs, const RightVector& rhs, Fn op)
     {
         dispatch(mul, lhs, rhs, op);
     }
 
     template<typename LeftVector, typename RightVector>
-    static void multiply_and_add_inplace(mul_reference mul, LeftVector& lhs, const RightVector& rhs)
+    static void multiply_inplace(mul_reference mul, LeftVector& lhs, const RightVector& rhs)
     {
         dispatch(mul, lhs, rhs, mult::scalar_passthrough());
     }
@@ -166,15 +166,15 @@ public:
                                  Fn op,
                                  DEG max_degree)
     {
-        fma(mul, result, lhs, rhs, op, max_degree);
+        fma_impl(mul, result, lhs, rhs, op, max_degree);
     }
 
     template<typename LeftVector, typename RightVector, typename Fn>
-    static void multiply_and_add_inplace(mul_reference mul, LeftVector& lhs,
+    static void multiply_inplace(mul_reference mul, LeftVector& lhs,
                                          const RightVector& rhs, Fn op,
                                          DEG max_degree)
     {
-        fma_inplace(mul, lhs, rhs, op, max_degree);
+        multiply_inplace_impl(mul, lhs, rhs, op, max_degree);
     }
 };
 
@@ -496,7 +496,7 @@ public:
     }
 
     template<typename LeftVector, typename RightVector, typename Fn>
-    checked_out_t<LeftVector, RightVector> fma_inplace(LeftVector& left, const RightVector& right, Fn op) const
+    checked_out_t<LeftVector, RightVector> multiply_inplace(LeftVector& left, const RightVector& right, Fn op) const
     {
         if (!right.empty() && !left.empty()) {
             LeftVector tmp;
@@ -509,7 +509,7 @@ public:
     }
 
     template<typename LeftVector, typename RightVector, typename Fn>
-    checked_out_t<LeftVector, RightVector> fma_inplace(LeftVector& left, const RightVector& right, Fn op, DEG max_degree) const
+    checked_out_t<LeftVector, RightVector> multiply_inplace(LeftVector& left, const RightVector& right, Fn op, DEG max_degree) const
     {
         if (!right.empty() && !left.empty()) {
             LeftVector tmp;
@@ -676,7 +676,7 @@ public:
     }
 
     template<typename Basis, typename Coeffs, typename Fn>
-    void fma_inplace(vectors::hybrid_vector<Basis, Coeffs>& lhs, const vectors::hybrid_vector<Basis, Coeffs>& rhs, Fn op) const
+    void multiply_inplace(vectors::hybrid_vector<Basis, Coeffs>& lhs, const vectors::hybrid_vector<Basis, Coeffs>& rhs, Fn op) const
     {
         vectors::hybrid_vector<Basis, Coeffs> tmp;
         fma(tmp, lhs, rhs, op);
@@ -684,7 +684,7 @@ public:
     }
 
     template<typename Basis, typename Coeffs, typename Fn>
-    void fma_inplace(vectors::hybrid_vector<Basis, Coeffs>& lhs, const vectors::hybrid_vector<Basis, Coeffs>& rhs, Fn op, DEG max_degree) const
+    void multiply_inplace(vectors::hybrid_vector<Basis, Coeffs>& lhs, const vectors::hybrid_vector<Basis, Coeffs>& rhs, Fn op, DEG max_degree) const
     {
         vectors::hybrid_vector<Basis, Coeffs> tmp;
         fma(tmp, lhs, rhs, op, max_degree);
@@ -872,28 +872,28 @@ public:
     /// Multiplies the instance by (algebra instance)*s.
     inline algebra& mul_scal_prod(const algebra& rhs, const SCALAR& s)
     {
-        mtraits::multiply_and_add_inplace(s_multiplication, *this, rhs, scalar_post_mult(s));
+        mtraits::multiply_inplace(s_multiplication, *this, rhs, scalar_post_mult(s));
         return *this;
     }
 
     /// Multiplies the instance by (algebra instance)*s up to maximum depth
     algebra& mul_scal_prod(const algebra& rhs, const RATIONAL& s, const DEG depth)
     {
-        mtraits::mutiply_and_add_inplace(s_multiplication, *this, rhs, scalar_post_mult(s), depth);
+        mtraits::mutiply_inplace(s_multiplication, *this, rhs, scalar_post_mult(s), depth);
         return *this;
     }
 
     /// Multiplies the instance by (algebra instance)/s.
     inline algebra& mul_scal_div(const algebra& rhs, const RATIONAL& s)
     {
-        mtraits::multiply_and_add_inplace(s_multiplication, *this, rhs, rational_post_div(s));
+        mtraits::multiply_inplace(s_multiplication, *this, rhs, rational_post_div(s));
         return *this;
     }
 
     /// Multiplies the instance by (algebra instance)/s up to maximum depth
     algebra& mul_scal_div(const algebra& rhs, const RATIONAL& s, const DEG depth)
     {
-        mtraits::multiply_and_add_inplace(s_multiplication, *this, rhs, rational_post_div(s), depth);
+        mtraits::multiply_inplace(s_multiplication, *this, rhs, rational_post_div(s), depth);
         return *this;
     }
 
@@ -950,7 +950,7 @@ public:
                     Algebra1>::type&
             operator*=(Algebra1& lhs, const Algebra2& rhs)
     {
-        mtraits::multiply_and_add_inplace(s_multiplication, lhs, rhs, scalar_passthrough());
+        mtraits::multiply_inplace(s_multiplication, lhs, rhs, scalar_passthrough());
         return lhs;
     }
 };

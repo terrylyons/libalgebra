@@ -543,6 +543,7 @@ public:
     IDEG rhs_degree() const noexcept { return rhs_deg; }
     IDEG out_degree() const noexcept { return out_deg; }
 
+    reference out_unit() noexcept { return out_data[0]; }
     const_reference left_unit() const noexcept { return lhs_data[0]; }
     const_reference right_unit() const noexcept { return rhs_data[0]; }
     const_pointer left_fwd_read(IDEG d, IDIMN offset=0) const noexcept
@@ -760,14 +761,15 @@ class traditional_free_tensor_multiplication
             traditional_free_tensor_multiplication>;
     using mixin = dtl::hybrid_vector_mixin<traditional_free_tensor_multiplication>;
 
+    using tsi = dtl::tensor_size_info<Width>;
 protected:
     using base::m_multiplier;
 
 public:
     using base::fma;
-    using base::fma_inplace;
+    using base::multiply_inplace;
     using mixin::fma;
-    using mixin::fma_inplace;
+    using mixin::multiply_inplace;
 
     using basis_type = tensor_basis<Width, Depth>;
 
@@ -781,8 +783,19 @@ private:
                        Fn op) noexcept
     {
         for (IDIMN i=0; i<lhs_count; ++i) {
-            *lhs_ptr = op(Coeffs::template mul(*lhs_ptr, rhs_val));
-            ++lhs_ptr;
+            lhs_ptr[i] = op(Coeffs::template mul(lhs_ptr[i], rhs_val));
+        }
+    }
+
+    template <typename Coeffs, typename Fn>
+    LA_INLINE_ALWAYS static void update_rhs_max(typename Coeffs::S* LA_RESTRICT lhs_ptr,
+                                                const typename Coeffs::S& lhs_unit,
+                                                const typename Coeffs::S* LA_RESTRICT rhs_ptr,
+                                                IDIMN rhs_count,
+                                                Fn op) noexcept
+    {
+        for (IDIMN i=0; i<rhs_count; ++i) {
+            Coeffs::template add_inplace(lhs_ptr[i], op(Coeffs::template mul(lhs_unit, rhs_ptr[i])));
         }
     }
 
@@ -857,20 +870,64 @@ protected:
     {
 
         const auto old_out_deg = helper.lhs_degree();
+        const auto out_deg_max = helper.out_degree();
         const auto rhs_max_deg = helper.rhs_degree();
-        IDEG offset = 0;
 
-        if (helper.right_unit() == Coeffs::zero) {
-            offset = 1;
+        const auto& lhs_unit = helper.left_unit();
+        const auto& rhs_unit = helper.right_unit();
+        bool default_assign = rhs_unit == Coeffs::zero;
+        bool do_rhs_outdeg = lhs_unit == Coeffs::zero;
+
+        for (IDEG out_deg=out_deg_max; out_deg > 0; --out_deg) {
+            bool assign = out_deg > old_out_deg || default_assign;
+            auto lhs_deg_min = std::max(IDEG(1), out_deg - rhs_max_deg);
+            auto lhs_deg_max = std::min(out_deg - 1, old_out_deg);
+
+            if (!assign && rhs_unit != Coeffs::one) {
+                update_inplace_lhs(helper.fwd_write(out_deg),
+                                   rhs_unit,
+                                   static_cast<IDIMN>(tsi::powers[out_deg]),
+                                   op);
+            }
+
+            for (IDEG lhs_deg=lhs_deg_max; lhs_deg>=lhs_deg_min; --lhs_deg) {
+                auto rhs_deg = out_deg - lhs_deg;
+
+                const auto lhs_count = static_cast<IDIMN>(tsi::powers[lhs_deg]);
+                const auto rhs_count = static_cast<IDIMN>(tsi::powers[rhs_deg]);
+
+                if (assign) {
+                    update_assign<Coeffs>(helper.fwd_write(out_deg),
+                                          helper.fwd_write(lhs_deg),
+                                          helper.right_fwd_read(rhs_deg),
+                                          lhs_count,
+                                          rhs_count,
+                                          op
+                                          );
+                    assign = false;
+                } else {
+                    update_accumulate<Coeffs>(helper.fwd_write(out_deg),
+                                              helper.fwd_write(lhs_deg),
+                                              helper.right_fwd_read(rhs_deg),
+                                              lhs_count,
+                                              rhs_count,
+                                              op
+                                              );
+                }
+            }
+
+            if (do_rhs_outdeg) {
+                update_rhs_max(helper.fwd_write(out_deg),
+                               lhs_unit,
+                               helper.right_fwd_read(out_deg),
+                               static_cast<IDIMN>(tsi::powers[out_deg]),
+                               op);
+            }
+
         }
 
-        for (IDEG out_deg = helper.out_degree(); out_deg >= 0; --out_deg) {
-            auto lhs_deg_min = std::max(IDEG(0), out_deg - rhs_max_deg);
-            auto lhs_deg_max = std::min(out_deg - offset, old_out_deg);
-
-        }
-
-
+        auto& out_unit = helper.out_unit();
+        out_unit = op(Coeffs::template mul(out_unit, rhs_unit));
 
     }
 
@@ -894,7 +951,7 @@ public:
 
 //    template <typename Basis, typename Coeffs, typename Fn>
 //    std::enable_if_t<std::is_base_of<basis_type, Basis>::value>
-//    fma_inplace(vectors::dense_vector<Basis, Coeffs>& lhs,
+//    multiply_inplace(vectors::dense_vector<Basis, Coeffs>& lhs,
 //                const vectors::dense_vector<Basis, Coeffs>& rhs,
 //                Fn op,
 //                DEG max_degree

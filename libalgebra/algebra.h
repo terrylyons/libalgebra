@@ -171,8 +171,8 @@ public:
 
     template<typename LeftVector, typename RightVector, typename Fn>
     static void multiply_inplace(mul_reference mul, LeftVector& lhs,
-                                         const RightVector& rhs, Fn op,
-                                         DEG max_degree)
+                                 const RightVector& rhs, Fn op,
+                                 DEG max_degree)
     {
         multiply_inplace_impl(mul, lhs, rhs, op, max_degree);
     }
@@ -379,7 +379,6 @@ protected:
     }
 };
 
-
 namespace dtl {
 
 template<typename Derived>
@@ -391,20 +390,16 @@ struct derived_or_this {
     }
 };
 
-template <>
-struct derived_or_this<void>
-{
-    template <typename Base>
+template<>
+struct derived_or_this<void> {
+    template<typename Base>
     static const Base& cast(const Base& arg) noexcept
     {
         return arg;
     }
 };
 
-
-
-} // namespace dtl
-
+}// namespace dtl
 
 /*
  * The new multiplication structure is as follows: Every multiplication is given

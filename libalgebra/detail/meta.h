@@ -6,6 +6,8 @@
 #define LIBALGEBRA_META_H
 
 #include <array>
+#include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <type_traits>
 
@@ -74,22 +76,22 @@ struct type_selector<true, T1, T2> {
 // This pattern is for filling an array at compiletime based on template arguments
 // Credit to https://stackoverflow.com/a/2981617/9225581. Slightly modified from
 // the original.
-template<DIMN... Args>
+template<std::size_t... Args>
 struct array_holder {
-    static constexpr std::array<DIMN, sizeof...(Args)> data = {Args...};
+    static constexpr std::array<std::size_t, sizeof...(Args)> data = {Args...};
 };
 
-template<DIMN N, template<DIMN> class F, DIMN... Past>
+template<std::size_t N, template<std::size_t> class F, std::size_t... Past>
 struct generate_array_impl {
     using result = typename generate_array_impl<N - 1, F, F<N>::value, Past...>::result;
 };
 
-template<template<DIMN> class F, DIMN... Past>
-struct generate_array_impl<static_cast<DIMN>(0), F, Past...> {
-    using result = array_holder<F<static_cast<DIMN>(0)>::value, Past...>;
+template<template<std::size_t> class F, std::size_t... Past>
+struct generate_array_impl<static_cast<std::size_t>(0), F, Past...> {
+    using result = array_holder<F<static_cast<std::size_t>(0)>::value, Past...>;
 };
 
-template<DIMN N, template<DIMN> class F>
+template<std::size_t N, template<std::size_t> class F>
 struct generate_array {
     using result = typename generate_array_impl<N, F>::result;
 };
@@ -106,13 +108,13 @@ struct template_selector<true, T1, T2> {
     using type = T2<A...>;
 };
 
-template <typename T, template <typename> class MetaFunc, typename>
-struct void_or : MetaFunc<T>::type
-{};
+template<typename T, template<typename> class MetaFunc, typename>
+struct void_or : MetaFunc<T>::type {
+};
 
-template <template <typename> class UNUSED, typename Void>
-struct void_or<void, UNUSED, Void> : Void {};
-
+template<template<typename> class UNUSED, typename Void>
+struct void_or<void, UNUSED, Void> : Void {
+};
 
 }// namespace utils
 }// namespace alg

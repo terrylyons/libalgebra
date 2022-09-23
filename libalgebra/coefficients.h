@@ -5,9 +5,10 @@
 #ifndef LIBALGEBRA_COEFFICIENTS_H
 #define LIBALGEBRA_COEFFICIENTS_H
 
-#include "implementation_types.h"
 #include "detail/meta.h"
+#include "implementation_types.h"
 
+#include <functional>
 #include <type_traits>
 
 namespace alg {

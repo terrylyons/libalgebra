@@ -2,16 +2,16 @@
 // Created by sam on 18/07/22.
 //
 
+#include "libalgebra/polynomial_coefficients.h"
 #include <UnitTest++/UnitTest++.h>
-#include <libalgebra/coefficients/polynomial_coefficients.h>
 #include <libalgebra/implementation_types.h>
 
 using namespace alg;
 
-SUITE(polynomial_ring_tests) {
+SUITE(polynomial_ring_tests)
+{
 
-    struct fixture
-    {
+    struct fixture {
         static constexpr DEG WIDTH = 5;
         static constexpr DEG DEPTH = 5;
 
@@ -23,7 +23,8 @@ SUITE(polynomial_ring_tests) {
         using key_type = typename S::KEY;
     };
 
-    TEST_FIXTURE(fixture, test_addition) {
+    TEST_FIXTURE(fixture, test_addition)
+    {
         S one(LET(1), rational(1));
         S two(LET(2), rational(1));
 
@@ -31,7 +32,4 @@ SUITE(polynomial_ring_tests) {
 
         CHECK_EQUAL(expected, coeff_ring::add(one, two));
     }
-
-
-
 }

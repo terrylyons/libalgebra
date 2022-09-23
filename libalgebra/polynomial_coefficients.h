@@ -5,9 +5,9 @@
 #ifndef LIBALGEBRA_POLYNOMIAL_COEFFICIENTS_H
 #define LIBALGEBRA_POLYNOMIAL_COEFFICIENTS_H
 
-#include <libalgebra/coefficients/coefficients.h>
-#include <libalgebra/coefficients/rational_coefficients.h>
-#include <libalgebra/polynomials.h>
+#include "coefficients.h"
+#include "polynomials.h"
+#include "rational_coefficients.h"
 
 namespace alg {
 namespace coefficients {

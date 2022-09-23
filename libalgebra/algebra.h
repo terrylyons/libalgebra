@@ -14,6 +14,10 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_ALGEBRAH_SEEN
 #define DJC_COROPA_LIBALGEBRA_ALGEBRAH_SEEN
 
+#include "implementation_types.h"
+
+#include <algorithm>
+#include <functional>
 #include <map>
 #include <mutex>
 #include <type_traits>
@@ -23,9 +27,12 @@ Version 3. (See accompanying file License.txt)
 #include <boost/container/small_vector.hpp>
 #include <boost/functional/hash.hpp>
 
+#include "basis.h"
 #include "detail/meta.h"
-#include "implementation_types.h"
+#include "hybrid_vector.h"
+#include "multiplication_helpers.h"
 #include "tags.h"
+#include "vectors.h"
 
 namespace alg {
 

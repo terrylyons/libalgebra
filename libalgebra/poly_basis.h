@@ -14,9 +14,9 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_POLYBASISH_SEEN
 #define DJC_COROPA_LIBALGEBRA_POLYBASISH_SEEN
 
-#include <libalgebra/basis/basis.h>
-#include <libalgebra/implementation_types.h>
-#include <libalgebra/vectors/vectors.h>
+#include "basis.h"
+#include "implementation_types.h"
+#include "vectors.h"
 
 #include <iosfwd>
 #include <map>

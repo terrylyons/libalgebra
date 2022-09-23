@@ -960,7 +960,6 @@ public:
                      Fn op,
                      DEG max_degree) const
     {
-        std::cout << lhs << '\n';
         if (!rhs.empty()) {
             helper<Coeffs> help(lhs, rhs, max_degree);
             multiply_inplace_impl(help, op, help.out_degree());
@@ -968,7 +967,6 @@ public:
         else {
             lhs.clear();
         }
-        std::cout << lhs << '\n';
     }
 };
 
@@ -1049,10 +1047,10 @@ class tiled_free_tensor_multiplication
                                           Fn op,
                                           IDIMN j) noexcept
     {
-        using perm = dtl::reversing_permutation<Width, tile_info::tile_letters>;
+//        using perm = dtl::reversing_permutation<Width, tile_info::tile_letters>;
         constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
         for (IDIMN i = 0; i < tile_width; ++i) {
-            tile[perm::permute_idx(i) * tile_width + j] += op(lhs_tile[i] * rhs_val);
+            tile[i * tile_width + j] += op(lhs_tile[i] * rhs_val);
         }
     }
 
@@ -1146,14 +1144,12 @@ protected:
         const auto old_lhs_deg = helper.lhs_degree();
         const auto rhs_max_deg = helper.rhs_degree();
 
-        tensor_basis<Width, Depth> tbasis;
-
         for (IDEG out_deg = static_cast<IDEG>(max_degree); out_deg > 2 * tile_letters; --out_deg) {
             const auto mid_deg = out_deg - 2 * tile_letters;
             const auto stride = static_cast<IDIMN>(tsi::powers[out_deg - tile_letters]);
 
             auto lhs_deg_min = std::max(IDEG(1), out_deg - rhs_max_deg);
-            auto lhs_deg_max = std::min(out_deg - 1, old_lhs_deg);
+            auto lhs_deg_max = std::min(out_deg - 1, old_lhs_deg-1);
 
             for (IDIMN k = 0; k < static_cast<IDIMN>(tsi::powers[mid_deg]); ++k) {
                 auto k_reverse = helper.reverse_key(mid_deg, k);

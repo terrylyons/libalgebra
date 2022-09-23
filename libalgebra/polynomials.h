@@ -210,12 +210,12 @@ public:
 
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
-
     friend class boost::serialization::access;
 
-    template <typename Archive>
-    void serialize(Archive &ar, unsigned int const /* version */) {
-        ar & boost::serialization::base_object<ALG>(*this);
+    template<typename Archive>
+    void serialize(Archive& ar, unsigned int const /* version */)
+    {
+        ar& boost::serialization::base_object<ALG>(*this);
     }
 
 #endif

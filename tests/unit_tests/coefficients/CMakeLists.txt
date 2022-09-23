@@ -2,7 +2,7 @@
 
 add_library(
         Libalgebra_tests_coefficient_tests OBJECT EXCLUDE_FROM_ALL
-)
+        polynomial_coeff_ring.cpp)
 
 target_sources(Libalgebra_tests_coefficient_tests PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/test_float_field.cpp

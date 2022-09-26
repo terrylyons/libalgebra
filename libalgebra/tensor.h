@@ -663,6 +663,8 @@ public:
 
     void reset_tile(IDEG degree, IDIMN index, IDIMN /*reverse_index*/) noexcept
     {
+        assert(0 <= degree && degree <= static_cast<IDEG>(Depth));
+        assert(index < static_cast<IDEG>(tsi::powers[degree-2*TileLetters]));
         const auto start_of_degree = basis_type::start_of_degree(degree);
         const auto stride = tsi::powers[degree - tile_letters];
 
@@ -683,6 +685,8 @@ public:
 
     void write_tile(IDEG degree, IDIMN index, IDIMN /*reverse_index*/) noexcept
     {
+        assert(0 <= degree && degree <= static_cast<IDEG>(Depth));
+        assert(index <= static_cast<IDIMN>(tsi::powers[degree-2*TileLetters]));
         const auto start_of_degree = basis_type::start_of_degree(degree);
         pointer optr = base::out_data + index * tile_width + start_of_degree;
         const_pointer tptr = output_tile.data();
@@ -854,7 +858,7 @@ protected:
     template<typename Coeffs, typename Fn>
     void fma_impl(helper<Coeffs>& helper, Fn op, IDEG max_degree) const noexcept
     {
-        for (IDEG out_deg = max_degree; out_deg >= 0; --out_deg) {
+        for (IDEG out_deg = max_degree; out_deg > 0; --out_deg) {
             auto lhs_deg_min = std::max(0, out_deg - helper.rhs_degree());
             auto lhs_deg_max = std::min(out_deg, helper.lhs_degree());
 
@@ -876,6 +880,9 @@ protected:
                 }
             }
         }
+
+        auto& out_unit = helper.out_unit();
+        out_unit = op(Coeffs::template mul(helper.left_unit(), helper.right_unit()));
     }
 
     template<typename Coeffs, typename Fn>
@@ -1077,12 +1084,10 @@ protected:
         const auto* LA_RESTRICT right_rtile = helper.right_read_tile_ptr();
 
         const auto& lhs_unit = helper.left_unit();
-        const auto& rhs_unit = helper.right_unit();
+//        const auto& rhs_unit = helper.right_unit();
 
-        const auto rhs_max_deg = helper.rhs_degree();
 
         const auto mid_deg = out_deg - 2 * tile_letters;
-        const auto stride = static_cast<IDIMN>(tsi::powers[out_deg - tile_letters]);
 
 
 
@@ -1146,7 +1151,7 @@ protected:
             const auto stride = static_cast<IDIMN>(tsi::powers[out_deg - tile_letters]);
 
             auto lhs_deg_min = std::max(IDEG(1), out_deg - helper.rhs_degree());
-            auto lhs_deg_max = std::min(out_deg - 1, helper.lhs_degree());
+            auto lhs_deg_max = std::min(out_deg, helper.lhs_degree()) - 1;
 
             for (IDIMN k = 0; k < static_cast<IDIMN>(tsi::powers[mid_deg]); ++k) {
                 auto k_reverse = helper.reverse_key(mid_deg, k);
@@ -1154,12 +1159,12 @@ protected:
                 helper.reset_tile(out_deg, k, k_reverse);
 
                 const auto& lhs_unit = helper.left_unit();
-                if (lhs_unit != Coeffs::zero) {
+                if (helper.rhs_degree() >= out_deg && lhs_unit != Coeffs::zero) {
                     impl_0bd(tile, lhs_unit, helper.right_fwd_read_ptr(out_deg, k), stride, op);
                 }
 
                 const auto& rhs_unit = helper.right_unit();
-                if (rhs_unit != Coeffs::zero) {
+                if (helper.lhs_degree() >= out_deg && rhs_unit != Coeffs::zero) {
                     impl_db0(tile, helper.left_fwd_read_ptr(out_deg, k), rhs_unit, stride, op);
                 }
 
@@ -1174,11 +1179,8 @@ protected:
     void multiply_inplace_impl(helper_type<Coeffs>& helper, Fn op, DEG max_degree) const
     {
         constexpr auto tile_letters = static_cast<IDEG>(tile_info::tile_letters);
-        constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
 
         auto* LA_RESTRICT tile = helper.out_tile_ptr();
-        const auto* LA_RESTRICT left_rtile = helper.left_read_tile_ptr();
-        const auto* LA_RESTRICT right_rtile = helper.right_read_tile_ptr();
 
         const auto& lhs_unit = helper.left_unit();
         const auto& rhs_unit = helper.right_unit();
@@ -1191,7 +1193,7 @@ protected:
             const auto stride = static_cast<IDIMN>(tsi::powers[out_deg - tile_letters]);
 
             auto lhs_deg_min = std::max(IDEG(1), out_deg - rhs_max_deg);
-            auto lhs_deg_max = std::min(out_deg - 1, old_lhs_deg - 1);
+            auto lhs_deg_max = std::min(out_deg, old_lhs_deg)-1;
 
             for (IDIMN k = 0; k < static_cast<IDIMN>(tsi::powers[mid_deg]); ++k) {
                 auto k_reverse = helper.reverse_key(mid_deg, k);
@@ -1227,6 +1229,11 @@ public:
              Fn op,
              DEG max_degree) const
     {
+        if (max_degree <= 2*tile_info::tile_letters) {
+            base::fma(out, lhs, rhs, op, max_degree);
+            return;
+        }
+
         if (!lhs.empty() && !rhs.empty()) {
             helper_type<Coeffs> helper(out, lhs, rhs, max_degree);
             fma_impl(helper, op, helper.out_degree());
@@ -1239,6 +1246,11 @@ public:
                           Fn op, DEG max_degree) const
     {
         //        std::cout << "BEFORE " << lhs << '\n';
+        if (max_degree <= 2*tile_info::tile_letters) {
+            base::multiply_inplace(lhs, rhs, op, max_degree);
+            return;
+        }
+
         if (!rhs.empty()) {
             helper_type<Coeffs> helper(lhs, rhs, max_degree);
             multiply_inplace_impl(helper, op, helper.out_degree());
@@ -1251,11 +1263,11 @@ public:
 #pragma clang diagnostic pop
 };
 
-//template <DEG Width, DEG Depth>
-//using free_tensor_multiplication = traditional_free_tensor_multiplication<Width, Depth>;
+template <DEG Width, DEG Depth>
+using free_tensor_multiplication = traditional_free_tensor_multiplication<Width, Depth>;
 
-template<DEG Width, DEG Depth>
-using free_tensor_multiplication = tiled_free_tensor_multiplication<Width, Depth, 1>;
+//template<DEG Width, DEG Depth>
+//using free_tensor_multiplication = tiled_free_tensor_multiplication<Width, Depth, 1>;
 
 template<DEG Width, DEG Depth>
 class left_half_shuffle_multiplier

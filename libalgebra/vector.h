@@ -847,7 +847,7 @@ public:
             Vector1>::type&
     operator+=(Vector1& lhs, const Vector2& rhs)
     {
-        UnderlyingVectorType::apply_inplace_flat_binary_op(lhs, rhs, Coeffs::template add<>);
+        UnderlyingVectorType::apply_inplace_flat_binary_op(lhs, rhs, std::plus<>());
         return lhs;
     }
 

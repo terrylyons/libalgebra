@@ -539,11 +539,13 @@ public:
     const_pointer left_fwd_read(IDEG d, IDIMN offset = 0) const noexcept
     {
         assert(d >= 0 && d <= lhs_deg);
+        assert(offset + basis_type::start_of_degree(d)<=basis_type::start_of_degree(d+1));
         return ((lhs_data == nullptr) ? out_data : lhs_data) + offset + basis_type::start_of_degree(d);
     }
     const_pointer right_fwd_read(IDEG d, IDIMN offset = 0) const noexcept
     {
         assert(d >= 0 && d <= rhs_deg);
+        assert(offset + basis_type::start_of_degree(d)<=basis_type::start_of_degree(d+1));
         return rhs_data + offset + basis_type::start_of_degree(d);
     }
     pointer fwd_write(IDEG d) const noexcept
@@ -977,7 +979,7 @@ class tiled_free_tensor_multiplication
 
     template<typename C>
     using helper_type = dtl::tiled_free_tensor_multiplication_helper<
-            Width, Depth, C>;
+            Width, Depth, C, TileLetters>;
 
     using tile_info = dtl::tile_details<Width, Depth, TileLetters>;
     using tsi = dtl::tensor_size_info<Width>;
@@ -1018,10 +1020,11 @@ class tiled_free_tensor_multiplication
                                           const S* LA_RESTRICT rhs_tile,
                                           Fn op) noexcept
     {
+        using perm = dtl::reversing_permutation<Width, tile_info::tile_letters>;
         constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
         for (IDIMN i = 0; i < tile_width; ++i) {
             for (IDIMN j = 0; j < tile_width; ++j) {
-                tile[i * tile_width + j] += op(lhs_tile[i] * rhs_tile[j]);
+                tile[perm::permute_idx(i) * tile_width + j] += op(lhs_tile[i] * rhs_tile[j]);
             }
         }
     }
@@ -1046,16 +1049,25 @@ class tiled_free_tensor_multiplication
                                           Fn op,
                                           IDIMN j) noexcept
     {
-        //        using perm = dtl::reversing_permutation<Width, tile_info::tile_letters>;
+        using perm = dtl::reversing_permutation<Width, tile_info::tile_letters>;
         constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
         for (IDIMN i = 0; i < tile_width; ++i) {
-            tile[i * tile_width + j] += op(lhs_tile[i] * rhs_val);
+            tile[perm::permute_idx(i) * tile_width + j] += op(lhs_tile[i] * rhs_val);
         }
     }
 
 protected:
-    template<typename Coeffs, typename Fn>
-    void fma_impl(helper_type<Coeffs>& helper, Fn op, DEG max_degree) const
+
+    template <typename Coeffs, typename Fn>
+    LA_INLINE_ALWAYS
+    void impl_common(helper_type<Coeffs>& helper,
+                     Fn op,
+                     IDEG out_deg,
+                     IDIMN k,
+                     IDIMN k_reverse,
+                        IDEG lhs_deg_min,
+                        IDEG lhs_deg_max
+                        ) const
     {
         constexpr auto tile_letters = static_cast<IDEG>(tile_info::tile_letters);
         constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
@@ -1064,12 +1076,80 @@ protected:
         const auto* LA_RESTRICT left_rtile = helper.left_read_tile_ptr();
         const auto* LA_RESTRICT right_rtile = helper.right_read_tile_ptr();
 
+        const auto& lhs_unit = helper.left_unit();
+        const auto& rhs_unit = helper.right_unit();
+
+        const auto rhs_max_deg = helper.rhs_degree();
+
+        const auto mid_deg = out_deg - 2 * tile_letters;
+        const auto stride = static_cast<IDIMN>(tsi::powers[out_deg - tile_letters]);
+
+
+
+        for (IDEG lhs_deg = lhs_deg_min; lhs_deg < std::min(tile_letters, lhs_deg_max); ++lhs_deg) {
+            const auto rhs_deg = out_deg - lhs_deg;
+
+            assert(1 <= lhs_deg && lhs_deg <= tile_letters);
+            for (IDIMN i = 0; i < tile_width; ++i) {
+                const auto split = helper.split_key(lhs_deg, i);
+                const auto& left_val = *helper.left_fwd_read(lhs_deg, split.first);
+                helper.read_right_tile(rhs_deg, helper.combine_keys(mid_deg, split.second, k));
+                impl_lb1(tile, left_val, right_rtile, op, i);
+            }
+        }
+
+        for (IDEG lhs_deg = std::max(tile_letters, lhs_deg_min);
+             lhs_deg <= std::min(out_deg - tile_letters, lhs_deg_max); ++lhs_deg) {
+            const auto rhs_deg = out_deg - lhs_deg;
+            assert(tile_letters <= lhs_deg && lhs_deg <= out_deg - tile_letters);
+            assert(tile_letters <= rhs_deg && rhs_deg <= out_deg - tile_letters);
+            const auto lhs_split = lhs_deg - tile_letters;
+            const auto rhs_split = rhs_deg - tile_letters;
+            assert(lhs_split + rhs_split == mid_deg);
+
+            const auto split = helper.split_key(rhs_split, k);
+            helper.read_left_tile(lhs_deg, helper.reverse_key(lhs_split, split.first));
+            helper.read_right_tile(rhs_deg, split.second);
+            impl_mid(tile, left_rtile, right_rtile, op);
+        }
+
+        for (IDEG lhs_deg = std::max(out_deg - tile_letters + 1, lhs_deg_min);
+             lhs_deg <= lhs_deg_max; ++lhs_deg) {
+            const auto rhs_deg = out_deg - lhs_deg;
+            assert(mid_deg < lhs_deg && lhs_deg < out_deg);
+            assert(1 <= rhs_deg && rhs_deg < tile_letters);
+            const auto split_left_letters = tile_letters - rhs_deg;
+            assert(0 < split_left_letters && split_left_letters < tile_letters);
+            assert(lhs_deg == mid_deg + split_left_letters + tile_letters);
+
+            for (IDIMN j = 0; j < tile_width; ++j) {
+                const auto split = helper.split_key(rhs_deg, j);
+                const auto& right_val = *helper.right_fwd_read(rhs_deg, split.second);
+                helper.read_left_tile(lhs_deg, helper.combine_keys(split_left_letters, helper.reverse_key(split_left_letters, split.first), k_reverse));
+                impl_1br(tile, left_rtile, right_val, op, j);
+            }
+        }
+
+        helper.write_tile(out_deg, k, k_reverse);
+    }
+
+
+    template<typename Coeffs, typename Fn>
+    void fma_impl(helper_type<Coeffs>& helper, Fn op, DEG max_degree) const
+    {
+        constexpr auto tile_letters = static_cast<IDEG>(tile_info::tile_letters);
+
+        auto* LA_RESTRICT tile = helper.out_tile_ptr();
+
         for (IDEG out_deg = static_cast<IDEG>(max_degree); out_deg > 2 * tile_letters; --out_deg) {
             const auto mid_deg = out_deg - 2 * tile_letters;
             const auto stride = static_cast<IDIMN>(tsi::powers[out_deg - tile_letters]);
 
+            auto lhs_deg_min = std::max(IDEG(1), out_deg - helper.rhs_degree());
+            auto lhs_deg_max = std::min(out_deg - 1, helper.lhs_degree());
+
             for (IDIMN k = 0; k < static_cast<IDIMN>(tsi::powers[mid_deg]); ++k) {
-                auto k_reverse = helper.reverse_key(out_deg, k);
+                auto k_reverse = helper.reverse_key(mid_deg, k);
 
                 helper.reset_tile(out_deg, k, k_reverse);
 
@@ -1083,48 +1163,11 @@ protected:
                     impl_db0(tile, helper.left_fwd_read_ptr(out_deg, k), rhs_unit, stride, op);
                 }
 
-                for (IDEG lhs_deg = 1; lhs_deg < tile_letters; ++lhs_deg) {
-                    const auto rhs_deg = mid_deg - lhs_deg;
-
-                    for (IDIMN i = 0; i < tile_width; ++i) {
-                        const auto split = helper.split_key(lhs_deg, i);
-                        const auto& left_val = *helper.left_fwd_read_ptr(lhs_deg, split.first);
-                        helper.read_right_tile(out_deg - rhs_deg, helper.combine_keys(mid_deg, split.second, k));
-
-                        impl_lb1(tile, left_val, right_rtile, op, i);
-                    }
-                }
-
-                for (IDEG lhs_deg = 0; lhs_deg <= mid_deg; ++lhs_deg) {
-                    const auto rhs_deg = mid_deg - lhs_deg;
-                    const auto split = helper.split_key(rhs_deg, k);
-                    helper.read_left_tile(lhs_deg + tile_letters, helper.reverse_key(lhs_deg, split.first));
-                    helper.read_right_tile(rhs_deg + tile_letters, split.second);
-
-                    impl_mid(tile, left_rtile, right_rtile, op);
-                }
-
-                for (IDEG rhs_deg = 1; rhs_deg < tile_letters; ++rhs_deg) {
-                    //                    const auto lhs_deg = mid_deg - rhs_deg;
-
-                    for (IDIMN j = 0; j < tile_width; ++j) {
-                        const auto split = helper.split_key(rhs_deg, j);
-                        const auto& right_val = *helper.right_fwd_read_ptr(rhs_deg, split.second);
-                        helper.read_left_tile(out_deg - rhs_deg,
-                                              helper.combine_keys(
-                                                      tile_letters - rhs_deg,
-                                                      k_reverse,
-                                                      helper.reverse_key(tile_letters - rhs_deg, split.first)));
-
-                        impl_1br(tile, left_rtile, right_val, op, j);
-                    }
-                }
-
-                helper.write_tile(out_deg, k, k_reverse);
+                impl_common(helper, op, out_deg, k, k_reverse, lhs_deg_min, lhs_deg_max);
             }
         }
 
-        base::fma(helper, op, std::min(max_degree, 2 * tile_info::tile_letters));
+        base::fma_impl(helper, op, std::min(max_degree, DEG(2 * tile_info::tile_letters)));
     }
 
     template<typename Coeffs, typename Fn>
@@ -1164,45 +1207,7 @@ protected:
                 if (out_deg <= rhs_max_deg && lhs_unit != Coeffs::zero) {
                     impl_0bd(tile, lhs_unit, helper.right_fwd_read_ptr(out_deg, k), stride, op);
                 }
-
-                for (IDEG lhs_deg = lhs_deg_min; lhs_deg < std::min(tile_letters, lhs_deg_max); ++lhs_deg) {
-                    const auto rhs_deg = mid_deg - lhs_deg;
-
-                    assert(1 <= lhs_deg && lhs_deg <= tile_letters);
-                    for (IDIMN i = 0; i < tile_width; ++i) {
-                        const auto split = helper.split_key(lhs_deg, i);
-                        const auto& left_val = *helper.left_fwd_read_ptr(lhs_deg, split.first);
-                        helper.read_right_tile(out_deg - rhs_deg, helper.combine_keys(mid_deg, split.second, k));
-                        impl_lb1(tile, left_val, right_rtile, op, i);
-                    }
-                }
-
-                for (IDEG lhs_deg = std::max(tile_letters, lhs_deg_min);
-                     lhs_deg <= std::min(out_deg - tile_letters, lhs_deg_max); ++lhs_deg) {
-                    const auto rhs_deg = out_deg - lhs_deg;
-                    assert(tile_letters <= lhs_deg && lhs_deg <= out_deg - tile_letters);
-                    assert(tile_letters <= rhs_deg && rhs_deg <= out_deg - tile_letters);
-
-                    const auto split = helper.split_key(rhs_deg - tile_letters, k);
-                    helper.read_left_tile(lhs_deg, helper.reverse_key(lhs_deg - tile_letters, split.first));
-                    helper.read_right_tile(rhs_deg, split.second);
-                    impl_mid(tile, left_rtile, right_rtile, op);
-                }
-
-                for (IDEG lhs_deg = std::max(out_deg - tile_letters + 1, lhs_deg_min);
-                     lhs_deg <= lhs_deg_max; ++lhs_deg) {
-                    const auto rhs_deg = out_deg - lhs_deg;
-                    assert(1 <= rhs_deg && rhs_deg < tile_letters);
-
-                    for (IDIMN j = 0; j < tile_width; ++j) {
-                        const auto split = helper.split_key(rhs_deg, j);
-                        const auto& right_val = *helper.right_fwd_read_ptr(rhs_deg, split.second);
-                        helper.read_left_tile(lhs_deg, helper.combine_keys(tile_letters - rhs_deg, k_reverse, helper.reverse_key(tile_letters - rhs_deg, split.first)));
-                        impl_1br(tile, left_rtile, right_val, op, j);
-                    }
-                }
-
-                helper.write_tile(out_deg, k, k_reverse);
+                impl_common(helper, op, out_deg, k, k_reverse, lhs_deg_min, lhs_deg_max);
             }
         }
 
@@ -1215,10 +1220,10 @@ public:
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "HidingNonVirtualFunction"
-    template<typename B1, typename B2, typename B3, typename Coeffs, typename Fn>
+    template<typename B1, typename Coeffs, typename Fn>
     void fma(vectors::dense_vector<B1, Coeffs>& out,
-             const vectors::dense_vector<B2, Coeffs>& lhs,
-             const vectors::dense_vector<B3, Coeffs>& rhs,
+             const vectors::dense_vector<B1, Coeffs>& lhs,
+             const vectors::dense_vector<B1, Coeffs>& rhs,
              Fn op,
              DEG max_degree) const
     {

@@ -15,7 +15,7 @@ project(Libalgebra VERSION 2.0.0)
 option(LIBALGEBRA_TESTING "Enable building test targets" OFF)
 option(LIBALGEBRA_NO_SERIALIZATION "Turn off building serialization dependency" OFF)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # This helps IDEs that can arrange projects into folders (apparently)

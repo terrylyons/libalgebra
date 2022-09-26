@@ -286,7 +286,12 @@ SUITE(tensor_multiplication)
         lhs *= rhs;                                                                           \
         REQUIRE CHECK_EQUAL(3906, lhs.size());                                                \
         for (auto item : lhs) {                                                               \
+            auto result = item.value();                                                       \
+            auto expected = construct_expected(item.key(), 1000000, 2000000);                 \
             CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value());      \
+            if (result != expected) {                                                         \
+                std::cout << result - expected << '\n';                                       \
+            }                                                                                 \
         }                                                                                     \
     }
 

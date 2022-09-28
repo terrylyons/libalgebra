@@ -9,15 +9,16 @@
 
 #include "fixture.h"
 
-struct fixture : fixture_base {
-    using storage = alg::vectors::dense_storage<double>;
-    using size_type = storage::size_type;
-};
+
 
 SUITE(dense_storage_serialization)
 {
+    struct DenseStorageSerializationFixture : fixture_base {
+        using storage = alg::vectors::dense_storage<double>;
+        using size_type = storage::size_type;
+    };
 
-    TEST_FIXTURE(fixture, test_empty_storage_serialize)
+    TEST_FIXTURE(DenseStorageSerializationFixture, test_empty_storage_serialize)
     {
         storage x;
 
@@ -29,7 +30,7 @@ SUITE(dense_storage_serialization)
         CHECK_EQUAL(x, y);
     }
 
-    TEST_FIXTURE(fixture, test_non_empty_storage_serialize)
+    TEST_FIXTURE(DenseStorageSerializationFixture, test_non_empty_storage_serialize)
     {
         storage x{1.0, 2.0, 3.0, 4.0, 5.0};
 
@@ -41,7 +42,7 @@ SUITE(dense_storage_serialization)
         CHECK_EQUAL(x, y);
     }
 
-    TEST_FIXTURE(fixture, test_serialization_borrowed_random)
+    TEST_FIXTURE(DenseStorageSerializationFixture, test_serialization_borrowed_random)
     {
         std::vector<double> data;
         data.reserve(50);
@@ -69,7 +70,7 @@ SUITE(dense_storage_serialization)
         CHECK_EQUAL(borrowed, y);
     }
 
-    TEST_FIXTURE(fixture, test_serialization_borrowed_mut_random)
+    TEST_FIXTURE(DenseStorageSerializationFixture, test_serialization_borrowed_mut_random)
     {
         std::vector<double> data;
         data.reserve(50);
@@ -97,7 +98,7 @@ SUITE(dense_storage_serialization)
         CHECK_EQUAL(borrowed, y);
     }
 
-    TEST_FIXTURE(fixture, test_serialization_rational_storage)
+    TEST_FIXTURE(DenseStorageSerializationFixture, test_serialization_rational_storage)
     {
         using rational = alg::coefficients::rational;
         alg::vectors::dense_storage<rational> data{rational(1), rational(2), rational(3.1415)};

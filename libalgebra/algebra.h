@@ -54,6 +54,19 @@ using vector_deg_tag = typename basis::basis_traits<
 template<typename Vector>
 using has_degree_t = has_degree_impl<vector_deg_tag<Vector>>;
 
+template <typename LhsType, typename RhsType, typename OutType=LhsType>
+struct original_algebras
+{
+    using lhs_type = LhsType;
+    using rhs_type = RhsType;
+    using out_type = OutType;
+
+    const LhsType& lhs;
+    const RhsType& rhs;
+    OutType& out;
+};
+
+
 template<typename Multiplication>
 class multiplication_traits
 {
@@ -62,25 +75,29 @@ class multiplication_traits
     template<typename Result, typename LeftVector, typename RightVector, typename Fn>
     static void fma_impl(mul_reference mul, Result& out, const LeftVector& lhs, const RightVector& rhs, Fn op)
     {
-        mul.fma(out.base_vector(), lhs.base_vector(), rhs.base_vector(), op);
+        original_algebras<LeftVector, RightVector, Result> orig {lhs, rhs, out};
+        mul.fma(out.base_vector(), lhs.base_vector(), rhs.base_vector(), op, orig);
     }
 
     template<typename Result, typename LeftVector, typename RightVector, typename Fn>
     static void fma_impl(mul_reference mul, Result& out, const LeftVector& lhs, const RightVector& rhs, Fn op, DEG max_degree)
     {
-        mul.fma(out.base_vector(), lhs.base_vector(), rhs.base_vector(), op, max_degree);
+        original_algebras<LeftVector, RightVector, Result> orig {lhs, rhs, out};
+        mul.fma(out.base_vector(), lhs.base_vector(), rhs.base_vector(), op, max_degree, orig);
     }
 
     template<typename LeftVector, typename RightVector, typename Fn>
     static void multiply_inplace_impl(mul_reference mul, LeftVector& lhs, const RightVector& rhs, Fn op)
     {
-        mul.multiply_inplace(lhs.base_vector(), rhs.base_vector(), op);
+        original_algebras <LeftVector, RightVector> orig {lhs, rhs, lhs};
+        mul.multiply_inplace(lhs.base_vector(), rhs.base_vector(), op, orig);
     }
 
     template<typename LeftVector, typename RightVector, typename Fn>
     static void multiply_inplace_impl(mul_reference mul, LeftVector& lhs, const RightVector& rhs, Fn op, DEG max_degree)
     {
-        mul.multiply_inplace(lhs.base_vector(), rhs.base_vector(), op, max_degree);
+        original_algebras<LeftVector, RightVector> orig {lhs, rhs, lhs};
+        mul.multiply_inplace(lhs.base_vector(), rhs.base_vector(), op, max_degree, orig);
     }
 
     template<typename Result, typename LeftVector, typename RightVector, typename Fn>
@@ -461,9 +478,9 @@ public:
         return m_multiplier(lhs, rhs);
     }
 
-    template<typename OutVector, typename LeftVector, typename RightVector, typename Fn>
+    template<typename OutVector, typename LeftVector, typename RightVector, typename Fn, typename O, typename=std::enable_if_t<!std::is_integral<O>::value>>
     checked_out_t<OutVector, LeftVector, RightVector>
-    fma(OutVector& out, const LeftVector& left, const RightVector& right, Fn op) const
+    fma(OutVector& out, const LeftVector& left, const RightVector& right, Fn op, O) const
     {
         dtl::multiplication_helper<RightVector> helper(right);
 
@@ -475,9 +492,9 @@ public:
         }
     }
 
-    template<typename OutVector, typename LeftVector, typename RightVector, typename Fn>
+    template<typename OutVector, typename LeftVector, typename RightVector, typename Fn, typename O>
     checked_out_t<OutVector, LeftVector, RightVector>
-    fma(OutVector& out, const LeftVector& left, const RightVector& right, Fn op, DEG max_degree) const
+    fma(OutVector& out, const LeftVector& left, const RightVector& right, Fn op, DEG max_degree, O) const
     {
         using out_traits = basis::basis_traits<typename OutVector::BASIS>;
         const auto max_d = std::min(max_degree, out_traits::degree_tag::max_degree);
@@ -498,12 +515,12 @@ public:
         }
     }
 
-    template<typename LeftVector, typename RightVector, typename Fn>
-    checked_out_t<LeftVector, RightVector> multiply_inplace(LeftVector& left, const RightVector& right, Fn op) const
+    template<typename LeftVector, typename RightVector, typename Fn, typename O, typename = std::enable_if_t<!std::is_integral<O>::value>>
+    checked_out_t<LeftVector, RightVector> multiply_inplace(LeftVector& left, const RightVector& right, Fn op, O orig) const
     {
         if (!right.empty() && !left.empty()) {
             LeftVector tmp;
-            caster::cast(*this).fma(tmp, left, right, op);
+            caster::cast(*this).fma(tmp, left, right, op, orig);
             left.swap(tmp);
         }
         else {
@@ -511,12 +528,12 @@ public:
         }
     }
 
-    template<typename LeftVector, typename RightVector, typename Fn>
-    checked_out_t<LeftVector, RightVector> multiply_inplace(LeftVector& left, const RightVector& right, Fn op, DEG max_degree) const
+    template<typename LeftVector, typename RightVector, typename Fn, typename O>
+    checked_out_t<LeftVector, RightVector> multiply_inplace(LeftVector& left, const RightVector& right, Fn op, DEG max_degree, O orig) const
     {
         if (!right.empty() && !left.empty()) {
             LeftVector tmp;
-            caster::cast(*this).fma(tmp, left, right, op, max_degree);
+            caster::cast(*this).fma(tmp, left, right, op, max_degree, orig);
             left.swap(tmp);
         }
         else {

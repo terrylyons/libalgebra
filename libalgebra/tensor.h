@@ -980,13 +980,15 @@ protected:
     }
 
 public:
-    template<typename Basis, typename Coeffs, typename Fn>
+    template<typename Basis, typename Coeffs, typename Fn, typename OriginalVectors>
     std::enable_if_t<std::is_base_of<basis_type, Basis>::value>
     fma(vectors::dense_vector<Basis, Coeffs>& out,
         const vectors::dense_vector<Basis, Coeffs>& lhs,
         const vectors::dense_vector<Basis, Coeffs>& rhs,
         Fn op,
-        DEG max_degree) const
+        DEG max_degree,
+        OriginalVectors&
+        ) const
     {
         if (!lhs.empty() && !rhs.empty()) {
             helper<Coeffs> help(out, lhs, rhs, max_degree);
@@ -994,12 +996,12 @@ public:
         }
     }
 
-    template<typename Basis, typename Coeffs, typename Fn>
+    template<typename Basis, typename Coeffs, typename Fn, typename OriginalVectors>
     std::enable_if_t<std::is_base_of<basis_type, Basis>::value>
     multiply_inplace(vectors::dense_vector<Basis, Coeffs>& lhs,
                      const vectors::dense_vector<Basis, Coeffs>& rhs,
                      Fn op,
-                     DEG max_degree) const
+                     DEG max_degree, OriginalVectors&) const
     {
         if (!rhs.empty()) {
             helper<Coeffs> help(lhs, rhs, max_degree);
@@ -1096,18 +1098,6 @@ class tiled_free_tensor_multiplication
         }
     }
 
-    template<typename S, typename Fn>
-    LA_INLINE_ALWAYS static void impl_1br_no_reverse(S* LA_RESTRICT tile,
-                                          const S* LA_RESTRICT lhs_tile,
-                                          const S& rhs_val,
-                                          Fn op,
-                                          IDIMN j) noexcept
-    {
-        constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
-        for (IDIMN i = 0; i < tile_width; ++i) {
-            tile[i * tile_width + j] += op(lhs_tile[i] * rhs_val);
-        }
-    }
 
 protected:
 
@@ -1270,15 +1260,16 @@ public:
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "HidingNonVirtualFunction"
-    template<typename B1, typename Coeffs, typename Fn>
+    template<typename B1, typename Coeffs, typename Fn, typename OriginalVectors>
     void fma(vectors::dense_vector<B1, Coeffs>& out,
              const vectors::dense_vector<B1, Coeffs>& lhs,
              const vectors::dense_vector<B1, Coeffs>& rhs,
              Fn op,
-             DEG max_degree) const
+             DEG max_degree,
+             OriginalVectors& orig) const
     {
         if (max_degree <= 2*tile_info::tile_letters) {
-            base::fma(out, lhs, rhs, op, max_degree);
+            base::fma(out, lhs, rhs, op, max_degree, orig);
             return;
         }
 
@@ -1288,14 +1279,14 @@ public:
         }
     }
 
-    template<typename Basis, typename Coeffs, typename Fn>
+    template<typename Basis, typename Coeffs, typename Fn, typename OriginalVectors>
     void multiply_inplace(vectors::dense_vector<Basis, Coeffs>& lhs,
                           const vectors::dense_vector<Basis, Coeffs>& rhs,
-                          Fn op, DEG max_degree) const
+                          Fn op, DEG max_degree, OriginalVectors& orig) const
     {
         //        std::cout << "BEFORE " << lhs << '\n';
         if (max_degree <= 2*tile_info::tile_letters) {
-            base::multiply_inplace(lhs, rhs, op, max_degree);
+            base::multiply_inplace(lhs, rhs, op, max_degree, orig);
             return;
         }
 

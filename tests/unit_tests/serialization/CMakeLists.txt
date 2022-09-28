@@ -16,4 +16,6 @@ libalgebra_test(NAME serialization
         DEPS
         Boost::boost
         Boost::serialization
+        DEFN
+            LIBALGEBRA_ENABLE_SERIALIZATION
         )

@@ -27,7 +27,7 @@ SUITE(dense_vector) {
 #include "vector_iterator_suite.h"
 #include "vector_properties_suite.h"
 #include "vector_norm_suite.h"
-#include "vector_binary_transform_suite.h"
+//#include "vector_binary_transform_suite.h"
 
 }
 

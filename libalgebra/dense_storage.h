@@ -842,6 +842,7 @@ private:
         ar >> sz;
         m_base = base_type(sz);
         if (sz > 0) {
+            assert(m_base.m_data != nullptr);
             fill_range_default_construct(m_base.m_data, m_base.m_data + m_base.m_size);
             ar >> boost::serialization::make_array(m_base.m_data, m_base.m_size);
         }

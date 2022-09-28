@@ -408,10 +408,6 @@ SUITE(Multiplication)
         tiled_fma<1>(result, lhs, rhs, mult::scalar_passthrough());
 
 
-        std::cout << "result=" << result << '\n' << std::endl;
-        std::cout << "expected" << expected << '\n' << std::endl;
-
-
         // ############## end multiplication.cpp ################## //
         CHECK_EQUAL(TENSOR {}, expected - result);
         CHECK_EQUAL(expected, result);

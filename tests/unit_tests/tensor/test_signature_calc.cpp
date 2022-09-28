@@ -11,8 +11,11 @@
 
 #include "../../common/helpers.h"
 
-struct fixture
-{
+
+
+SUITE(tensor_signature_calc_check) {
+
+struct TensorSignatureCalcFixture {
 
     typedef alg::free_tensor_basis<2, 2> tensor_basis;
     typedef typename tensor_basis::KEY tkey;
@@ -31,7 +34,7 @@ struct fixture
 
     dense_tensor expected;
 
-    fixture(double lower = 0.0, double upper = 2.0, unsigned length = 5) : increments(), expected()
+    TensorSignatureCalcFixture(double lower = 0.0, double upper = 2.0, unsigned length = 5) : increments(), expected()
     {
         increments.reserve(length);
 
@@ -57,11 +60,7 @@ struct fixture
 
 };
 
-
-
-SUITE(tensor_signature_calc_check) {
-
-    TEST_FIXTURE(fixture, check_signature_calculation_correct_exp) {
+    TEST_FIXTURE(TensorSignatureCalcFixture, check_signature_calculation_correct_exp) {
 
         dense_tensor tmp(1);
 
@@ -76,7 +75,7 @@ SUITE(tensor_signature_calc_check) {
 
     }
 
-    TEST_FIXTURE(fixture, check_signature_calculation_correct_fmexp) {
+    TEST_FIXTURE(TensorSignatureCalcFixture, check_signature_calculation_correct_fmexp) {
 
         dense_tensor tmp(1);
 
@@ -90,13 +89,13 @@ SUITE(tensor_signature_calc_check) {
         CHECK_VEC_CLOSE(expected, tmp, 2e-15);
     }
 
-    TEST_FIXTURE(fixture, check_log_exp_roundtrip) {
+    TEST_FIXTURE(TensorSignatureCalcFixture, check_log_exp_roundtrip) {
 
         CHECK_VEC_CLOSE(expected, exp(log(expected)), 2e-15);
 
     }
 
-    TEST_FIXTURE(fixture, check_exp_cbh) {
+    TEST_FIXTURE(TensorSignatureCalcFixture, check_exp_cbh) {
 
         maps maps_;
         cbh cbh_;

@@ -491,6 +491,16 @@ protected:
 
     IDEG lhs_deg, rhs_deg, out_deg, old_out_deg;
 
+    template <typename B>
+    void resize_result(dense_tensor<B>& result) const
+    {
+        // Special treatment for old_out_deg == 0 because otherwise an empty
+        // vector is never resized
+        if (out_deg > old_out_deg || old_out_deg == 0) {
+            result.resize_to_degree(out_deg);
+        }
+    }
+
 public:
     template<typename B1, typename B2, typename B3>
     free_tensor_multiplication_helper(dense_tensor<B1>& out,
@@ -506,7 +516,7 @@ public:
                       "bases are not tensor bases");
 
         out_deg = std::min(out_deg, lhs_deg + rhs_deg);
-        out.resize_to_degree(out_deg);
+        resize_result(out);
 
         lhs_data = left.as_ptr();
         rhs_data = right.as_ptr();
@@ -521,7 +531,7 @@ public:
           old_out_deg(IDEG(lhs_deg))
     {
         out_deg = std::min(out_deg, lhs_deg + rhs_deg);
-        left.resize_to_degree(out_deg);
+        resize_result(left);
 
         lhs_data = nullptr;
         rhs_data = right.as_ptr();
@@ -613,9 +623,9 @@ public:
           output_tile(tile_size)
     {
         if (base::lhs_deg > 0) {
-            reverse_data.resize(basis_type::start_of_degree(base::lhs_deg));
+            reverse_data.resize(basis_type::start_of_degree(base::lhs_deg+1));
             dtl::tiled_inverse_operator<Width, (Depth > 0) ? Depth - 1 : 0, TileLetters, scalar_type, dtl::non_signing_signer> reverser;
-            reverser(base::lhs_data, reverse_data.data(), base::lhs_deg - 1);
+            reverser(base::lhs_data, reverse_data.data(), base::lhs_deg);
             left_reverse_read_ptr = reverse_data.data();
         }
     }
@@ -628,9 +638,9 @@ public:
           output_tile(tile_size)
     {
         if (base::lhs_deg > 0) {
-            reverse_data.resize(basis_type::start_of_degree(base::lhs_deg));
+            reverse_data.resize(basis_type::start_of_degree(base::lhs_deg+1));
             dtl::tiled_inverse_operator<Width, (Depth > 0) ? Depth - 1 : 0, TileLetters, scalar_type, dtl::non_signing_signer> reverser;
-            reverser(base::out_data, reverse_data.data(), base::lhs_deg - 1);
+            reverser(base::out_data, reverse_data.data(), base::lhs_deg);
             left_reverse_read_ptr = reverse_data.data();
         }
     }
@@ -821,6 +831,18 @@ private:
     }
 
     template<typename Coeffs, typename Fn>
+    LA_INLINE_ALWAYS static void assign_rhs_max(typename Coeffs::S* LA_RESTRICT lhs_ptr,
+                                                const typename Coeffs::S& lhs_unit,
+                                                const typename Coeffs::S* LA_RESTRICT rhs_ptr,
+                                                IDIMN rhs_count,
+                                                Fn op) noexcept
+    {
+        for (IDIMN i = 0; i < rhs_count; ++i) {
+            lhs_ptr[i] = op(Coeffs::template mul(lhs_unit, rhs_ptr[i]));
+        }
+    }
+
+    template<typename Coeffs, typename Fn>
     LA_INLINE_ALWAYS static void update_accumulate(typename Coeffs::S* LA_RESTRICT optr,
                                                    const typename Coeffs::S* LA_RESTRICT lhs_ptr,
                                                    const typename Coeffs::S* LA_RESTRICT rhs_ptr,
@@ -899,13 +921,16 @@ protected:
         for (IDEG out_deg = max_degree; out_deg > 0; --out_deg) {
             bool assign = out_deg > old_out_deg || default_assign;
             auto lhs_deg_min = std::max(IDEG(1), out_deg - rhs_max_deg);
-            auto lhs_deg_max = std::min(out_deg - 1, old_out_deg);
+            auto lhs_deg_max = std::min(out_deg-1, old_out_deg);
 
-            if (!assign && rhs_unit != Coeffs::one) {
+            if (!assign) {
                 update_inplace_lhs<Coeffs>(helper.fwd_write(out_deg),
                                            rhs_unit,
                                            static_cast<IDIMN>(tsi::powers[out_deg]),
                                            op);
+            } else if (default_assign && out_deg > rhs_max_deg && lhs_deg_max < lhs_deg_min) {
+                update_inplace_lhs<Coeffs>(helper.fwd_write(out_deg), rhs_unit,
+                                           static_cast<IDIMN>(tsi::powers[out_deg]), op);
             }
 
             for (IDEG lhs_deg = lhs_deg_max; lhs_deg >= lhs_deg_min; --lhs_deg) {
@@ -916,7 +941,7 @@ protected:
 
                 if (assign) {
                     update_assign<Coeffs>(helper.fwd_write(out_deg),
-                                          helper.fwd_write(lhs_deg),
+                                          helper.left_fwd_read(lhs_deg),
                                           helper.right_fwd_read(rhs_deg),
                                           lhs_count,
                                           rhs_count,
@@ -925,7 +950,7 @@ protected:
                 }
                 else {
                     update_accumulate<Coeffs>(helper.fwd_write(out_deg),
-                                              helper.fwd_write(lhs_deg),
+                                              helper.left_fwd_read(lhs_deg),
                                               helper.right_fwd_read(rhs_deg),
                                               lhs_count,
                                               rhs_count,
@@ -933,17 +958,25 @@ protected:
                 }
             }
 
-            if (rhs_max_deg >= out_deg) {
-                update_rhs_max<Coeffs>(helper.fwd_write(out_deg),
-                                       lhs_unit,
-                                       helper.right_fwd_read(out_deg),
-                                       static_cast<IDIMN>(tsi::powers[out_deg]),
-                                       op);
+            if (out_deg <= rhs_max_deg) {
+                if (assign) {
+                    assign_rhs_max<Coeffs>(helper.fwd_write(out_deg),
+                            lhs_unit,
+                            helper.right_fwd_read(out_deg),
+                            static_cast<IDIMN>(tsi::powers[out_deg]),
+                            op);
+                } else {
+                    update_rhs_max<Coeffs>(helper.fwd_write(out_deg),
+                                           lhs_unit,
+                                           helper.right_fwd_read(out_deg),
+                                           static_cast<IDIMN>(tsi::powers[out_deg]),
+                                           op);
+                }
             }
         }
 
         auto& out_unit = helper.out_unit();
-        out_unit = op(Coeffs::template mul(out_unit, rhs_unit));
+        out_unit = op(Coeffs::template mul(lhs_unit, rhs_unit));
     }
 
 public:
@@ -1063,6 +1096,19 @@ class tiled_free_tensor_multiplication
         }
     }
 
+    template<typename S, typename Fn>
+    LA_INLINE_ALWAYS static void impl_1br_no_reverse(S* LA_RESTRICT tile,
+                                          const S* LA_RESTRICT lhs_tile,
+                                          const S& rhs_val,
+                                          Fn op,
+                                          IDIMN j) noexcept
+    {
+        constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
+        for (IDIMN i = 0; i < tile_width; ++i) {
+            tile[i * tile_width + j] += op(lhs_tile[i] * rhs_val);
+        }
+    }
+
 protected:
 
     template <typename Coeffs, typename Fn>
@@ -1083,7 +1129,7 @@ protected:
         const auto* LA_RESTRICT left_rtile = helper.left_read_tile_ptr();
         const auto* LA_RESTRICT right_rtile = helper.right_read_tile_ptr();
 
-        const auto& lhs_unit = helper.left_unit();
+//        const auto& lhs_unit = helper.left_unit();
 //        const auto& rhs_unit = helper.right_unit();
 
 
@@ -1159,12 +1205,12 @@ protected:
                 helper.reset_tile(out_deg, k, k_reverse);
 
                 const auto& lhs_unit = helper.left_unit();
-                if (helper.rhs_degree() >= out_deg && lhs_unit != Coeffs::zero) {
+                if (helper.rhs_degree() >= out_deg) {
                     impl_0bd(tile, lhs_unit, helper.right_fwd_read_ptr(out_deg, k), stride, op);
                 }
 
                 const auto& rhs_unit = helper.right_unit();
-                if (helper.lhs_degree() >= out_deg && rhs_unit != Coeffs::zero) {
+                if (helper.lhs_degree() >= out_deg) {
                     impl_db0(tile, helper.left_fwd_read_ptr(out_deg, k), rhs_unit, stride, op);
                 }
 
@@ -1193,16 +1239,18 @@ protected:
             const auto stride = static_cast<IDIMN>(tsi::powers[out_deg - tile_letters]);
 
             auto lhs_deg_min = std::max(IDEG(1), out_deg - rhs_max_deg);
-            auto lhs_deg_max = std::min(out_deg, old_lhs_deg)-1;
+            auto lhs_deg_max = std::min(out_deg-1, old_lhs_deg);
 
             for (IDIMN k = 0; k < static_cast<IDIMN>(tsi::powers[mid_deg]); ++k) {
                 auto k_reverse = helper.reverse_key(mid_deg, k);
 
-                if (out_deg > old_lhs_deg || rhs_unit == Coeffs::zero) {
-                    helper.reset_tile(out_deg, k, k_reverse);
-                }
-                else {
+//                if (out_deg > old_lhs_deg) {
+//                    helper.reset_tile(out_deg, k, k_reverse);
+//                }
+//                else {
                     helper.reset_tile_to_zero();
+//                }
+                if (out_deg <= old_lhs_deg && rhs_unit != Coeffs::zero) {
                     impl_db0(tile, helper.left_fwd_read_ptr(out_deg, k), rhs_unit, stride, op);
                 }
 
@@ -1540,6 +1588,11 @@ public:
                 SCA const* begin, SCA const* end) : ALG(offset, begin, end)
     {
     }
+
+    template <typename B, typename M>
+    explicit free_tensor(const algebra<B, Coeff, M, VectorType>& arg)
+            : ALG(arg)
+    {}
 
     free_tensor& operator=(const free_tensor&) = default;
     //free_tensor& operator=(free_tensor&&) noexcept = default;

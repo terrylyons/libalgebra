@@ -187,6 +187,15 @@ public:
         }
     }
 
+    template <typename B>
+    explicit vector(const vector<B, Coeffs, VectorImpl>& arg)
+            : UnderlyingVectorType()
+    {
+        for (auto cit = arg.begin(); cit != arg.end(); ++cit) {
+            operator[](cit->key()) = cit->value();
+        }
+    }
+
     /**
      * @brief Construct from iterator
      * @tparam InputIt

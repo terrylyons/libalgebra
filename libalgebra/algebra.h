@@ -188,13 +188,14 @@ public:
 template<typename Vector>
 class multiplication_helper
 {
-protected:
+public:
     using basis_type = typename Vector::BASIS;
     using key_type = typename basis_type::KEY;
     using coeff_ring = typename Vector::coefficient_ring;
     using scalar_type = typename coeff_ring::S;
     using key_value = std::pair<key_type, scalar_type>;
 
+protected:
     std::vector<key_value> buffer;
 
 public:
@@ -791,8 +792,15 @@ public:
     algebra(InputIt begin, InputIt end) : VECT(begin, end)
     {}
 
+    template <typename B, typename M>
+    explicit algebra(const algebra<B, Coeff, M, VectorType>& arg)
+            : VECT(arg)
+    {}
+
     algebra& operator=(const algebra&) = default;
     algebra& operator=(algebra&&) noexcept = default;
+
+    const Multiplication& multiplication() const noexcept { return s_multiplication; }
 
 public:
     //    /// Multiplies the instance with scalar s.

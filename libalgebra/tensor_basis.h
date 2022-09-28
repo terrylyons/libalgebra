@@ -236,6 +236,11 @@ public:
         return basis::key_range<tensor_basis>(*this);
     }
 
+    basis::key_range<tensor_basis> iterate_keys_to_deg(DEG mdeg) const noexcept
+    { return basis::key_range<tensor_basis>(*this, index_to_key(start_of_degree(mdeg))); }
+
+
+
     basis::key_range<tensor_basis> iterate_keys(const KEY& begin, const KEY& end) const noexcept
     {
         return basis::key_range<tensor_basis>{*this, begin, end};

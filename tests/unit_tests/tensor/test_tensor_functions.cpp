@@ -114,9 +114,6 @@ SUITE(test_tensor_functions) {
         TENSOR no_unit (LET(1), S(1));
         TENSOR ten = tunit + no_unit;
 
-        std:: cout << ten << '\n' << no_unit << '\n'
-                    << log(ten) << '\n' << log(no_unit) << '\n';
-
         CHECK_EQUAL(log(ten), log(no_unit));
     }
 

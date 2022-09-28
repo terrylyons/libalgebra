@@ -40,7 +40,7 @@ function(libalgebra_test)
             "${LA_TESTS_DEPS}"
             )
     if (LA_TESTS_DEFN)
-        target_compile_definitions(${_lib_name} PRIVATE "${LA_TESTS_DEFN}")
+        target_compile_definitions(${_lib_name} PUBLIC "${LA_TESTS_DEFN}")
     endif()
 
 

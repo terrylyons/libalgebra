@@ -1197,7 +1197,7 @@ protected:
             const auto stride = static_cast<IDIMN>(tsi::powers[out_deg - tile_letters]);
 
             auto lhs_deg_min = std::max(IDEG(1), out_deg - helper.rhs_degree());
-            auto lhs_deg_max = std::min(out_deg, helper.lhs_degree()) - 1;
+            auto lhs_deg_max = std::min(out_deg-1, helper.lhs_degree());
 
             for (IDIMN k = 0; k < static_cast<IDIMN>(tsi::powers[mid_deg]); ++k) {
                 auto k_reverse = helper.reverse_key(mid_deg, k);
@@ -1311,11 +1311,11 @@ public:
 #pragma clang diagnostic pop
 };
 
-template <DEG Width, DEG Depth>
-using free_tensor_multiplication = traditional_free_tensor_multiplication<Width, Depth>;
+//template <DEG Width, DEG Depth>
+//using free_tensor_multiplication = traditional_free_tensor_multiplication<Width, Depth>;
 
-//template<DEG Width, DEG Depth>
-//using free_tensor_multiplication = tiled_free_tensor_multiplication<Width, Depth, 1>;
+template<DEG Width, DEG Depth>
+using free_tensor_multiplication = tiled_free_tensor_multiplication<Width, Depth, 1>;
 
 template<DEG Width, DEG Depth>
 class left_half_shuffle_multiplier

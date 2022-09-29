@@ -323,7 +323,7 @@ public:
     private:
         bool compare_iterators(const iterator_item& other) const
         {
-            return (m_iterator == other.m_iterator);
+            return (m_iterator >= other.m_iterator);
         }
 
         void advance()
@@ -376,7 +376,7 @@ public:
     private:
         bool compare_iterators(const const_iterator_item& other) const
         {
-            return (m_iterator == other.m_iterator);
+            return (m_iterator >= other.m_iterator);
         }
 
         void advance()

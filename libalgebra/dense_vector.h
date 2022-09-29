@@ -328,7 +328,10 @@ public:
 
         void advance()
         {
-            ++m_iterator;
+            const auto end = m_vector->m_data.end();
+            do {
+                ++m_iterator;
+            } while (m_iterator != end && *m_iterator == Coeffs::zero);
         }
 
     public:
@@ -381,7 +384,10 @@ public:
 
         void advance()
         {
-            ++m_iterator;
+            const auto end = m_vector->m_data.end();
+            do {
+                ++m_iterator;
+            } while (m_iterator != end && *m_iterator == Coeffs::zero);
         }
 
     public:

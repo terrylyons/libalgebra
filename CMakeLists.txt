@@ -83,7 +83,7 @@ add_custom_target(Libalgebra_headers SOURCES
         libalgebra/_tensor_basis.h
         libalgebra/alg_types.h
         libalgebra/algebra.h
-        libalgebra/basis_traits.h
+        libalgebra/base_basis.h
         libalgebra/constlog2.h
         libalgebra/constpower.h
         libalgebra/hall_set.h

@@ -20,9 +20,9 @@ Version 3. (See accompanying file License.txt)
 #include <limits>
 
 #include "_tensor_basis.h"
-#include "basis_traits.h"
-#include "key_iterators.h"
+#include "base_basis.h"
 #include "detail/meta.h"
+#include "key_iterators.h"
 
 namespace alg {
 
@@ -390,7 +390,7 @@ public:
 */
 template<DEG n_letters, DEG max_degree>
 class free_tensor_basis : public tensor_basis<n_letters, max_degree>,
-                          public basis_traits<With_Degree, n_letters, max_degree>
+                          public base_basis<With_Degree, n_letters, max_degree>
 {
 public:
     /// The tensor_basis type.
@@ -501,7 +501,7 @@ struct vector_type_selector<free_tensor_basis<n_letters, max_depth>, Field> {
 */
 template<DEG n_letters, DEG max_degree>
 class shuffle_tensor_basis : public tensor_basis<n_letters, max_degree>,
-                             public basis_traits<With_Degree, n_letters, max_degree>
+                             public base_basis<With_Degree, n_letters, max_degree>
 {
 public:
     /// The tensor_basis type.

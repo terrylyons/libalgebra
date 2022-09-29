@@ -24,8 +24,10 @@ Version 3. (See accompanying file License.txt)
 #include <unordered_map>
 #include <utility>
 
+#include <boost/call_traits.hpp>
 #include <boost/container/small_vector.hpp>
 #include <boost/functional/hash.hpp>
+
 
 #include "basis.h"
 #include "detail/meta.h"
@@ -314,7 +316,7 @@ protected:
     using pair_type = std::pair<key_type, Scalar>;
     using inner_result_type = boost::container::small_vector<pair_type, SSO>;
     using result_type = const boost::container::small_vector_base<pair_type>&;
-    using argument_type = const key_type&;
+    using argument_type = typename  boost::call_traits<key_type>::param_type;
 
     struct cache_entry {
         inner_result_type data;

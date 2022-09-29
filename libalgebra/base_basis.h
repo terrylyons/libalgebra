@@ -9,17 +9,13 @@ Version 3. (See accompanying file License.txt)
 ************************************************************* */
 
 #pragma once
-#ifndef basis_traits_h__
-#define basis_traits_h__
+#ifndef LIBALGEBRA_BASE_BASIS_H__
+#define LIBALGEBRA_BASE_BASIS_H__
 
 namespace alg {
 
 /// Basis traits
 
-/// Without_degree: an algebra with a product but no meaningful degree function
-/// defined on basis KEYs. With_Degree: an algebra with degree(KEY) defined and
-/// with the property that degree(KEY1) + degree(KEY2) > max_degree =>
-/// prod(KEY1,KEY2)=0. No_Product: no product structure.
 enum basis_product_trait
 {
     Without_Degree,
@@ -33,17 +29,17 @@ enum basis_product_trait
 /// MAX_DEGREE and the product_trait, either Without_Degree, With_Degree or
 /// No_Product.
 template<basis_product_trait trait = Without_Degree, DEG no_letters = 0, DEG max_degree = 0>
-struct basis_traits {
+struct base_basis {
 
     /// The number of letters used to generate the algebra
     /// zero if there is no well defined finite generating set
-    static const DEG NO_LETTERS = no_letters;
+    static constexpr DEG NO_LETTERS = no_letters;
     /// The trait of the product; either Without_Degree, With_Degree or No_Product
-    static const basis_product_trait PRODUCT_TYPE = trait;
+    static constexpr basis_product_trait PRODUCT_TYPE = trait;
     /// The maximum degree
-    static const DEG MAX_DEGREE = (trait == With_Degree) ? max_degree : DEG(0);
+    static constexpr DEG MAX_DEGREE = (trait == With_Degree) ? max_degree : DEG(0);
 };
 
 }// namespace alg
 
-#endif// basis_traits_h__
+#endif// LIBALGEBRA_BASE_BASIS_H__

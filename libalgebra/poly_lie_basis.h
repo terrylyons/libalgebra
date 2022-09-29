@@ -10,7 +10,7 @@ Version 3. (See accompanying file License.txt)
 
 #ifndef DJC_COROPA_LIBALGEBRA_POLYLIEBASISH_SEEN
 #define DJC_COROPA_LIBALGEBRA_POLYLIEBASISH_SEEN
-#include "basis_traits.h"
+#include "base_basis.h"
 
 namespace alg {
 

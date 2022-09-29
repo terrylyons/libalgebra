@@ -323,12 +323,15 @@ public:
     private:
         bool compare_iterators(const iterator_item& other) const
         {
-            return (m_iterator == other.m_iterator);
+            return (m_iterator >= other.m_iterator);
         }
 
         void advance()
         {
-            ++m_iterator;
+            const auto end = m_vector->m_data.end();
+            do {
+                ++m_iterator;
+            } while (m_iterator != end && *m_iterator == Coeffs::zero);
         }
 
     public:
@@ -376,12 +379,15 @@ public:
     private:
         bool compare_iterators(const const_iterator_item& other) const
         {
-            return (m_iterator == other.m_iterator);
+            return (m_iterator >= other.m_iterator);
         }
 
         void advance()
         {
-            ++m_iterator;
+            const auto end = m_vector->m_data.end();
+            do {
+                ++m_iterator;
+            } while (m_iterator != end && *m_iterator == Coeffs::zero);
         }
 
     public:

@@ -14,8 +14,9 @@ namespace alg {
 namespace basis {
 
 template<typename Basis1, typename Basis2>
-struct related_to : std::false_type {
+struct related_to : std::is_same<Basis1, Basis2> {
 };
+
 
 template<typename Basis>
 struct basis_traits {

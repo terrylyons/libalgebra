@@ -457,7 +457,7 @@ public:
 
 private:
     template<typename T>
-    using is_compatible = std::is_base_of<basis_type, typename T::BASIS>;
+    using is_compatible = typename vectors::vector_traits<T>::template is_compatible<basis_type>;
 
     template<typename V1, typename V2, typename V3 = void>
     using checked_out_t = std::enable_if_t<
@@ -960,24 +960,24 @@ private:
 #endif
 
 public:
-    template<typename Algebra1, typename Algebra2>
+    template<typename Algebra1, typename OtherBasis, template<typename, typename, typename...> class VType>
     friend
             typename std::enable_if<
-                    std::is_base_of<algebra, Algebra1>::value && std::is_base_of<algebra, Algebra2>::value,
+                    std::is_base_of<algebra, Algebra1>::value && basis::related_to<OtherBasis, BASIS>::value,
                     Algebra1>::type
-            operator*(const Algebra1& lhs, const Algebra2& rhs)
+            operator*(const Algebra1& lhs, const vectors::vector<OtherBasis, Coeff, VType>& rhs)
     {
         Algebra1 result;
         mtraits::multiply_and_add(s_multiplication, result, lhs, rhs, scalar_passthrough());
         return result;
     }
 
-    template<typename Algebra1, typename Algebra2>
+    template<typename Algebra1, typename OtherBasis, template <typename, typename, typename...> class VType>
     friend
             typename std::enable_if<
-                    std::is_base_of<algebra, Algebra1>::value && std::is_base_of<algebra, Algebra2>::value,
+                    std::is_base_of<algebra, Algebra1>::value && basis::related_to<OtherBasis, BASIS>::value,
                     Algebra1>::type&
-            operator*=(Algebra1& lhs, const Algebra2& rhs)
+            operator*=(Algebra1& lhs, const vectors::vector<OtherBasis, Coeff, VType>& rhs)
     {
         mtraits::multiply_inplace(s_multiplication, lhs, rhs, scalar_passthrough());
         return lhs;

@@ -19,6 +19,7 @@ Version 3. (See accompanying file License.txt)
 #include <cmath>
 #include <limits>
 
+#include "basis.h"
 #include "_tensor_basis.h"
 #include "base_basis.h"
 #include "detail/meta.h"
@@ -538,6 +539,49 @@ struct vector_type_selector<shuffle_tensor_basis<n_letters, max_depth>, Field> {
 };
 
 }// namespace vectors
+
+
+namespace basis {
+
+template <DEG Width, DEG Depth1, DEG Depth2>
+struct related_to<tensor_basis<Width, Depth1>, tensor_basis<Width, Depth2>>
+    : std::true_type
+{};
+
+template <DEG Width, DEG Depth1, DEG Depth2>
+struct related_to<free_tensor_basis<Width, Depth1>, free_tensor_basis<Width, Depth2>>
+    : std::true_type
+{};
+
+template <DEG Width, DEG Depth1, DEG Depth2>
+struct related_to<shuffle_tensor_basis<Width, Depth1>, shuffle_tensor_basis<Width, Depth2>>
+    : std::true_type
+{};
+
+template <DEG Width, DEG Depth1, DEG Depth2>
+struct related_to<free_tensor_basis<Width, Depth1>, tensor_basis<Width, Depth2>>
+    : std::true_type
+{};
+
+template <DEG Width, DEG Depth1, DEG Depth2>
+struct related_to<tensor_basis<Width, Depth1>, free_tensor_basis<Width, Depth2>>
+    : std::true_type
+{};
+
+template <DEG Width, DEG Depth1, DEG Depth2>
+struct related_to<shuffle_tensor_basis<Width, Depth1>, tensor_basis<Width, Depth2>>
+    : std::true_type
+{};
+
+template <DEG Width, DEG Depth1, DEG Depth2>
+struct related_to<tensor_basis<Width, Depth1>, shuffle_tensor_basis<Width, Depth2>>
+    : std::true_type
+{};
+
+
+
+
+} // namespace basis
 
 }// namespace alg
 // Include once wrapper

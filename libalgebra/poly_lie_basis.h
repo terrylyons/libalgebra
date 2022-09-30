@@ -11,6 +11,7 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_POLYLIEBASISH_SEEN
 #define DJC_COROPA_LIBALGEBRA_POLYLIEBASISH_SEEN
 #include "base_basis.h"
+#include "basis.h"
 
 namespace alg {
 
@@ -89,18 +90,24 @@ struct vector_type_selector<poly_lie_basis<n_letters, max_degree>, Field> {
     typedef sparse_vector<BASIS, Field, std::map<typename BASIS::KEY, typename Field::S, typename BASIS::KEY_LESS>> type;
 };
 
-template <DEG n_letters, DEG max_degree, typename Field>
-struct template_vector_type_selector<poly_lie_basis<n_letters, max_degree>, Field>
-{
+template<DEG n_letters, DEG max_degree, typename Field>
+struct template_vector_type_selector<poly_lie_basis<n_letters, max_degree>, Field> {
     typedef poly_lie_basis<n_letters, max_degree> BASIS;
 
-    template <typename B, typename C>
-    using type = sparse_vector<B, C, std::map<typename B::KEY, typename C::S, typename B::KEY_LESS> >;
+    template<typename B, typename C>
+    using type = sparse_vector<B, C, std::map<typename B::KEY, typename C::S, typename B::KEY_LESS>>;
 };
 
-
-
 }// namespace vectors
+
+namespace basis {
+
+template<DEG Width, DEG Depth1, DEG Depth2>
+struct related_to<poly_lie_basis<Width, Depth1>, poly_lie_basis<Width, Depth2>>
+    : std::true_type {
+};
+
+}// namespace basis
 
 }// namespace alg
 #endif

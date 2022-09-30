@@ -13,16 +13,15 @@
 namespace alg {
 namespace basis {
 
+template<typename Basis1, typename Basis2>
+struct related_to : std::false_type {
+};
+
 template<typename Basis>
 struct basis_traits {
     typedef typename Basis::ordering_tag ordering_tag;
     typedef typename Basis::degree_tag degree_tag;
 };
-
-
-template <typename Basis1, typename Basis2>
-struct is_related : std::false_type {};
-
 
 }// namespace basis
 }// namespace alg

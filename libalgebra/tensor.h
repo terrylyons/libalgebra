@@ -28,6 +28,7 @@ Version 3. (See accompanying file License.txt)
 
 #include "area_tensor_basis.h"
 #include "base_vector.h"
+#include "dense_vector.h"
 #include "half_shuffle_tensor_basis.h"
 #include "tensor_basis.h"
 
@@ -1481,8 +1482,95 @@ template<typename Coeff, DEG n_letters, DEG max_degree, typename...>
 class shuffle_tensor;
 
 
-template <typename, DEG, DEG, template <typename, typename, typename...> class, typename...>
-class free_tensor;
+namespace dtl {
+
+template <template <typename, typename, typename...> class BaseVector>
+class reverse_data_storage {};
+
+template <>
+class reverse_data_storage<vectors::dense_vector>
+{
+
+};
+
+template <DEG Width, DEG Depth, typename FreeTensor>
+class fused_multiply_exp_mixin
+{
+public:
+    /**
+     * Fused multiply exponential operation for free tensors.
+     *
+     * Computes a*exp(x) using a modified Horner's method for the case when x does
+     * not have a constant term. If the argument exp_arg has a constant term, it
+     * is ignored.
+     *
+     * For a real number x, one can expand exp(x) up to degree n as
+     *
+     *     1 + b_1 x(1 + b_2 x(1 + ... b_n x(1)) ...)
+     *
+     * where each b_i has the value 1/i. This formulae works when x is a free
+     * tensor, or indeed any element in an unital (associative) algebra. Working
+     * through the result of multiplying on the left by another element a in the
+     * above gives the expansion
+     *
+     *     a + b1 (a + b_2 (a + ... b_n (a)x) ... x)x.
+     *
+     * This is the result of a*exp(x). In a non-commutative algebra this need not
+     * be equal to exp(x)*a.
+     *
+     * @param exp_arg free_tensor (const reference) to expentiate (x).
+     * @return free_tensor containing a*exp(x)
+     */
+    FreeTensor fmexp(const FreeTensor& exp_arg) const
+    {
+        FreeTensor result(static_cast<const FreeTensor&>(*this)), x(exp_arg);
+        typename FreeTensor::KEY kunit;
+
+        auto unit_elt = x.find(kunit);
+        if (unit_elt != x.end() && unit_elt->value() != typename FreeTensor::SCALAR(0)) {
+            x.erase(unit_elt);
+        }
+
+        for (DEG i = Depth; i >= 1; --i) {
+            result.mul_scal_div(x, typename FreeTensor::SCALAR(i), Depth - i + 1);
+            result += static_cast<const FreeTensor&>(*this);
+        }
+
+        return result;
+    }
+
+    /// Inplace version of fmexp
+    FreeTensor& fmexp_inplace(const FreeTensor& exp_arg)
+    {
+        auto& self = static_cast<FreeTensor&>(*this);
+        FreeTensor original(self), x(exp_arg);
+        typename FreeTensor::KEY kunit;
+        auto unit_elt = x.find(kunit);
+
+        if (unit_elt != x.end() && unit_elt->value() != typename FreeTensor::SCALAR(0)) {
+            x.erase(unit_elt);
+        }
+
+        for (DEG i = Depth; i >= 1; --i) {
+            self.mul_scal_div(x, typename FreeTensor::SCALAR(i), Depth - i + 1);
+            self += original;
+        }
+
+        return self;
+    }
+
+
+
+
+
+};
+
+
+
+
+} // namespace dtl
+
+
 
 /**
  * @brief A specialisation of the algebra class with a free tensor basis.
@@ -1505,7 +1593,8 @@ class free_tensor : public algebra<
                             free_tensor_multiplication<n_letters, max_degree>,
                             VectorType,
                             free_tensor<Coeff, n_letters, max_degree, VectorType, Args...>,
-                            Args...>
+                            Args...>,
+                    public dtl::fused_multiply_exp_mixin<n_letters, max_degree, free_tensor<Coeff, n_letters, max_degree, VectorType, Args...>>
 {
     typedef free_tensor_multiplication<n_letters, max_degree> multiplication_t;
 
@@ -1594,151 +1683,11 @@ public:
     //free_tensor& operator=(free_tensor&&) noexcept = default;
 
 public:
-    /// Computes the truncated exponential of a free_tensor instance.
-    inline friend free_tensor exp(const free_tensor& arg)
-    {
-        // Computes the truncated exponential of arg
-        // 1 + arg + arg^2/2! + ... + arg^n/n! where n = max_degree
-        KEY kunit;
-        free_tensor result(kunit);
-        for (DEG i = max_degree; i >= 1; --i) {
-            result.mul_scal_div(arg, (RAT)i);
-            result += (free_tensor)
-                    kunit;
-        }
-        return result;
-    }
 
-    /**
-     * Fused multiply exponential operation for free tensors.
-     *
-     * Computes a*exp(x) using a modified Horner's method for the case when x does
-     * not have a constant term. If the argument exp_arg has a constant term, it
-     * is ignored.
-     *
-     * For a real number x, one can expand exp(x) up to degree n as
-     *
-     *     1 + b_1 x(1 + b_2 x(1 + ... b_n x(1)) ...)
-     *
-     * where each b_i has the value 1/i. This formulae works when x is a free
-     * tensor, or indeed any element in an unital (associative) algebra. Working
-     * through the result of multiplying on the left by another element a in the
-     * above gives the expansion
-     *
-     *     a + b1 (a + b_2 (a + ... b_n (a)x) ... x)x.
-     *
-     * This is the result of a*exp(x). In a non-commutative algebra this need not
-     * be equal to exp(x)*a.
-     *
-     * @param exp_arg free_tensor (const reference) to expentiate (x).
-     * @return free_tensor containing a*exp(x)
-     */
-    free_tensor fmexp(const free_tensor& exp_arg) const
-    {
-        free_tensor result(*this), x(exp_arg);
-        KEY kunit;
-        typename free_tensor::iterator unit_elt;
 
-        if ((unit_elt = x.find(kunit)) != x.end() && unit_elt->value() != VECT::zero) {
-            x.erase(unit_elt);
-        }
 
-        for (DEG i = max_degree; i >= 1; --i) {
-            result.mul_scal_div(x, static_cast<RAT>(i), max_degree - i + 1);
-            result += *this;
-        }
 
-        return result;
-    }
 
-    /// Inplace version of fmexp
-    free_tensor& fmexp_inplace(const free_tensor& exp_arg)
-    {
-        free_tensor self(*this), x(exp_arg);
-        KEY kunit;
-        typename free_tensor::iterator unit_elt;
-
-        if ((unit_elt = x.find(kunit)) != x.end() && unit_elt->value() != VECT::zero) {
-            x.erase(unit_elt);
-        }
-
-        for (DEG i = max_degree; i >= 1; --i) {
-            this->mul_scal_div(x, static_cast<RAT>(i), max_degree - i + 1);
-            *this += self;
-        }
-
-        return *this;
-    }
-
-    /// Computes the truncated logarithm of a free_tensor instance.
-    inline friend free_tensor log(const free_tensor& arg)
-    {
-        // Computes the truncated log of arg up to degree max_degree
-        // The coef. of the constant term (empty word in the monoid) of arg
-        // is forced to 1.
-        // log(arg) = log(1+x) = x - x^2/2 + ... + (-1)^(n+1) x^n/n.
-        // max_degree must be > 0
-        KEY kunit;
-        free_tensor tunit(kunit);
-        free_tensor x(arg);
-        iterator it = x.find(kunit);
-        if (it != x.end()) {
-            x.erase(it);
-        }
-        free_tensor result;
-
-        for (DEG i = max_degree; i >= 1; --i) {
-            if (i % 2 == 0) {
-                result.sub_scal_div(tunit, (RAT)i);
-            }
-            else {
-                result.add_scal_div(tunit, (RAT)i);
-            }
-            result *= x;
-        }
-
-        return result;
-    }
-
-    /// Computes the truncated inverse of a free_tensor instance.
-    inline friend free_tensor inverse(const free_tensor& arg)
-    {
-        // Computes the truncated inverse of arg up to degree max_degree
-        // An exception is thrown if the leading term is zero.
-        // the module assumes
-        // (a+x)^(-1) = (a(1+x/a))^(-1)
-        //  = a^(-1)(1 - x/a + x^2/a^2 + ... + (-1)^(n) x^n/a^n)
-        // = a^(-1) - x/a*[a^(-1)(1 - x/a + x^2/a^2 + ... + (-1)^(n)
-        // x^(n-1)/a^(n-1)))]. S_n = a^(-1) + z S_{n-1}; z = - x/a ; S_0 = a^(-1)
-        // max_degree must be > 0
-
-        static KEY kunit;
-        SCA a(0);
-        free_tensor x, z(a);
-
-        const_iterator it(arg.find(kunit));
-        if (it == arg.end()) {
-            // const term a is 0;
-            throw std::invalid_argument("divide-by-zero");
-        }
-        else {
-            a = (*it).value();
-            x = arg;
-            x.erase(kunit);
-        }
-
-        // S_n = a + z S_{ n - 1 }; z = -x / a; S_0 = a
-        //
-        //  the nonzero scalar component a of the tensor arg restored to a tensor
-        free_tensor free_tensor_a_inverse(SCA(1) / a), result(free_tensor_a_inverse);
-        // z := - x/a
-        z.sub_scal_div(x, a);
-        // the iteration
-        for (DEG i = 0; i != max_degree; ++i) {
-            result = free_tensor_a_inverse + z * result;
-        }
-        return result;
-    }
 
     /// Computes the truncated inverse of a free_tensor instance.
     inline friend free_tensor reflect(const free_tensor& arg)
@@ -1831,6 +1780,103 @@ private:
     }
 #endif
 };
+
+
+/// Computes the truncated exponential of a free_tensor instance.
+template <typename Coeffs, DEG Width, DEG Depth, template <typename, typename, typename...> class VectorType, typename... Args>
+free_tensor<Coeffs, Width, Depth, VectorType, Args...>
+exp(const free_tensor<Coeffs, Width, Depth, VectorType, Args...>& arg)
+{
+    // Computes the truncated exponential of arg
+    // 1 + arg + arg^2/2! + ... + arg^n/n! where n = max_degree
+    typename tensor_basis<Width, Depth>::KEY kunit;
+    free_tensor<Coeffs, Width, Depth, VectorType, Args...> result(kunit);
+    free_tensor<Coeffs, Width, Depth, VectorType, Args...> unit(kunit);
+    for (DEG i = Depth; i >= 1; --i) {
+        result.mul_scal_div(arg, typename Coeffs::Q(i));
+        result += unit;
+    }
+    return result;
+}
+
+/// Computes the truncated logarithm of a free_tensor instance.
+template <typename Coeffs, DEG Width, DEG Depth, template <typename, typename, typename...> class VectorType, typename... Args>
+free_tensor<Coeffs, Width, Depth, VectorType, Args...>
+log(const free_tensor<Coeffs, Width, Depth, VectorType, Args...>& arg)
+{
+    // Computes the truncated log of arg up to degree max_degree
+    // The coef. of the constant term (empty word in the monoid) of arg
+    // is forced to 1.
+    // log(arg) = log(1+x) = x - x^2/2 + ... + (-1)^(n+1) x^n/n.
+    // max_degree must be > 0
+    using ft_type = free_tensor<Coeffs, Width, Depth, VectorType, Args...>;
+
+    typename tensor_basis<Width, Depth>::KEY kunit;
+    ft_type tunit(kunit);
+    ft_type x(arg);
+    auto it = x.find(kunit);
+    if (it != x.end()) {
+        x.erase(it);
+    }
+    ft_type result;
+
+    for (DEG i = Depth; i >= 1; --i) {
+        if (i % 2 == 0) {
+            result.sub_scal_div(tunit, typename Coeffs::Q(i));
+        }
+        else {
+            result.add_scal_div(tunit, typename Coeffs::Q(i));
+        }
+        result *= x;
+    }
+
+    return result;
+}
+
+/// Computes the truncated inverse of a free_tensor instance.
+template <typename Coeffs, DEG Width, DEG Depth, template <typename, typename, typename...> class VectorType, typename... Args>
+free_tensor<Coeffs, Width, Depth, VectorType, Args...>
+inverse(const free_tensor<Coeffs, Width, Depth, VectorType, Args...>& arg)
+{
+    // Computes the truncated inverse of arg up to degree max_degree
+    // An exception is thrown if the leading term is zero.
+    // the module assumes
+    // (a+x)^(-1) = (a(1+x/a))^(-1)
+    //  = a^(-1)(1 - x/a + x^2/a^2 + ... + (-1)^(n) x^n/a^n)
+    // = a^(-1) - x/a*[a^(-1)(1 - x/a + x^2/a^2 + ... + (-1)^(n)
+    // x^(n-1)/a^(n-1)))]. S_n = a^(-1) + z S_{n-1}; z = - x/a ; S_0 = a^(-1)
+    // max_degree must be > 0
+    using ft_type = free_tensor<Coeffs, Width, Depth, VectorType, Args...>;
+
+    typename tensor_basis<Width, Depth>::KEY kunit;
+    typename Coeffs::S a(0);
+    ft_type x, z(a);
+
+    auto it(arg.find(kunit));
+    if (it == arg.end()) {
+        // const term a is 0;
+        throw std::invalid_argument("divide-by-zero");
+    }
+    else {
+        a = (*it).value();
+        x = arg;
+        x.erase(kunit);
+    }
+
+    // S_n = a + z S_{ n - 1 }; z = -x / a; S_0 = a
+    //
+    //  the nonzero scalar component a of the tensor arg restored to a tensor
+    ft_type free_tensor_a_inverse(typename Coeffs::S(1) / a), result(free_tensor_a_inverse);
+    // z := - x/a
+    z.sub_scal_div(x, a);
+    // the iteration
+    for (DEG i = 0; i != Depth; ++i) {
+        result = free_tensor_a_inverse + z * result;
+    }
+    return result;
+}
+
+
 
 /**
  * @brief A specialisation of the algebra class with a shuffle tensor basis.

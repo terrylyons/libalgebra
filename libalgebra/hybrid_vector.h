@@ -98,7 +98,8 @@ public:
         DIMN dense_dim(vect.dense_dimension());
         DIMN sparse_dim(vect.sparse_size());
 
-        DIMN next_dense_size(vect.next_resize_size());
+        auto info = basis::basis_traits<typename Vector::BASIS>::next_resize_dimension(vect.basis, dense_dim+1, vect.dense_degree());
+        DIMN next_dense_size(info.dimension);
         assert(next_dense_size <= vect.max_dense_dimension());
         assert(dense_dim <= vect.max_dense_dimension());
 
@@ -441,7 +442,6 @@ public:
         return SPARSE::empty();
     }
 
-    using DENSE::next_resize_size;
 
 
     // Sparse part and dense part access

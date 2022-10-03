@@ -46,7 +46,8 @@ class dense_vector : protected base_vector<Basis, Coeffs>, dtl::requires_order<B
 
     friend class dtl::data_access_base<dense_vector>;
 
-private:
+    using basis_traits = basis::basis_traits<Basis>;
+
     // Data members
     STORAGE m_data;
     DIMN m_dimension;
@@ -98,11 +99,10 @@ public:
     explicit dense_vector(const KEY& k, const SCALAR& s = one)
         : m_data(), m_dimension(0), m_degree(0)
     {
-        DIMN idx = resize_for_key(k, degree_tag);
+        DIMN idx = resize_for_key(k);
         assert(m_dimension == m_data.size());
         assert(m_data.size() > idx);
         m_data[idx] = s;
-        set_degree(degree_tag);
     }
 
     /**
@@ -115,12 +115,7 @@ public:
           m_dimension(m_data.size()),
           m_degree(0)
     {
-        if (m_data.size() != adjust_dimension(m_data.size(), degree_tag)) {
-            resize_to_dimension(m_data.size());
-        }
-        else {
-            set_degree(degree_tag);
-        }
+        resize_to_dimension(m_data.size());
     }
 
     /**
@@ -139,12 +134,7 @@ public:
           m_dimension(0),
           m_degree(0)
     {
-        if (m_data.size() != adjust_dimension(m_data.size(), degree_tag)) {
-            resize_to_dimension(m_data.size());
-        }
-        else {
-            set_degree(degree_tag);
-        }
+        resize_to_dimension(m_data.size());
     }
 
     /**
@@ -176,60 +166,6 @@ public:
     const_pointer as_ptr() const noexcept { return m_data.begin(); }
 
 
-private:
-    template<DEG D>
-    DIMN resize_for_key(const KEY& key, alg::basis::with_degree<D>)
-    {
-        DEG d = basis.degree(key);
-        if (m_degree == 0 || m_degree < d) {
-            resize_to_degree(d);
-        }
-        return key_to_index(key);
-    }
-
-    DIMN resize_for_key(const KEY& key, alg::basis::without_degree)
-    {
-        DIMN idx = key_to_index(key);
-        if (m_data.size() == 0 || m_data.size() <= idx) {
-            resize_to_dimension(idx + 1);
-        }
-        return idx;
-    }
-
-    template<DEG D>
-    DIMN adjust_dimension(const DIMN dim, alg::basis::with_degree<D>) const
-    {
-        if (dim >= max_dimension(degree_tag)) {
-            return max_dimension(degree_tag);
-        }
-
-        DEG d = index_to_degree(dim);
-        if (dim == start_of_degree(d)) {
-            return dim;
-        }
-        assert(d <= D);
-        return start_of_degree(d + 1);
-    }
-
-    DIMN adjust_dimension(const DIMN dim, alg::basis::without_degree) const
-    {
-        return std::min(max_dimension(degree_tag), dim);
-    }
-
-    template<DEG D>
-    void set_degree(alg::basis::with_degree<D>)
-    {
-        if (dimension() == 0) {
-            m_degree = 0;
-        }
-        else {
-            m_degree = index_to_degree(dimension() - 1);
-        }
-        assert(m_degree <= D);
-    }
-
-    void set_degree(alg::basis::without_degree)
-    {}
 
 public:
     // resizing methods
@@ -237,49 +173,58 @@ public:
     /// Reserve to dimension
     void reserve_to_dimension(const DIMN dim)
     {
-        if (dim > size()) {
-            auto adjusted = adjust_dimension(dim, degree_tag);
-            m_data.reserve(adjusted);
-            m_dimension = adjusted;
-            set_degree(degree_tag);
+        if (dim > m_dimension) {
+            auto info = basis_traits::next_resize_dimension(basis, dim, m_degree);
+            m_data.reserve(info.size);
+            m_dimension = info.dimension;
+            m_degree = info.degree;
         }
-
     }
 
     /// Reserve to degree
     void reserve_to_degree(const DEG deg)
     {
-        DEG target_deg = std::min(degree_tag.max_degree, deg);
-        DIMN target_dim = start_of_degree(target_deg + 1);
-        m_data.reserve(target_dim);
-        m_dimension = target_dim;
-        m_degree = target_deg;
+        if (deg > m_degree) {
+            auto info = basis_traits::next_resize_dimension(basis, 0, deg);
+            m_data.reserve(info.size);
+            m_dimension = info.dimension;
+            m_degree = info.degree;
+        }
+    }
+
+    DIMN resize_for_key(const KEY& key)
+    {
+        auto info = basis_traits::key_resize_dimension(basis, key);
+        if (info.dimension > m_dimension) {
+            m_data.resize(info.size);
+            m_dimension = info.dimension;
+            m_degree = info.degree;
+        }
+        return basis_traits::key_to_index(basis, key);
     }
 
     /// Resize to dimension
-    void resize_to_dimension(const DIMN dim)
+    void resize_to_dimension(DIMN dim)
     {
-        DIMN new_dim = adjust_dimension(dim, degree_tag);
-        assert(new_dim <= max_dimension(degree_tag));
-        m_data.resize(new_dim, zero);
-        m_dimension = new_dim;
-        set_degree(degree_tag);
+        auto info = basis_traits::next_resize_dimension(basis, dim, m_degree);
+        if (info.dimension > m_dimension) {
+            m_data.resize(info.size);
+            m_dimension = info.dimension;
+            m_degree = info.degree;
+        } else if (info.dimension == m_dimension) {
+            m_degree = info.degree;
+        }
     }
 
     /// Reserve to degree
-    void resize_to_degree(const DEG deg)
+    void resize_to_degree(DEG deg)
     {
-        DEG target_deg = std::min(degree_tag.max_degree, deg);
-        DIMN dim = start_of_degree(target_deg + 1);
-        m_data.resize(dim, zero);
-        m_dimension = dim;
-        m_degree = target_deg;
-    }
-
-    /// Get the next valid size of a vector
-    DIMN next_resize_size() const
-    {
-        return adjust_dimension(dimension() + 1, degree_tag);
+        if (deg > m_degree || m_dimension == 0) {
+            auto size = basis_traits::size(basis, deg);
+            m_data.resize(size);
+            m_dimension = size;
+            m_degree = deg;
+        }
     }
 
 public:

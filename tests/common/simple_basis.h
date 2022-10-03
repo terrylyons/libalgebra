@@ -34,12 +34,12 @@ public:
         return (os << arg.second);
     }
 
-    DIMN key_to_index(const KEY k)
+    DIMN key_to_index(const KEY k) const
     {
         return static_cast<DIMN>(k);
     }
 
-    KEY index_to_key(const DIMN idx)
+    KEY index_to_key(const DIMN idx) const
     {
         return static_cast<KEY>(idx);
     }

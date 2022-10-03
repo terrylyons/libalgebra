@@ -1480,6 +1480,10 @@ using shuffle_tensor_multiplication =
 template<typename Coeff, DEG n_letters, DEG max_degree, typename...>
 class shuffle_tensor;
 
+
+template <typename, DEG, DEG, template <typename, typename, typename...> class, typename...>
+class free_tensor;
+
 /**
  * @brief A specialisation of the algebra class with a free tensor basis.
  *
@@ -1500,6 +1504,7 @@ class free_tensor : public algebra<
                             Coeff,
                             free_tensor_multiplication<n_letters, max_degree>,
                             VectorType,
+                            free_tensor<Coeff, n_letters, max_degree, VectorType, Args...>,
                             Args...>
 {
     typedef free_tensor_multiplication<n_letters, max_degree> multiplication_t;
@@ -1510,7 +1515,7 @@ public:
     /// Import of the KEY type.
     typedef typename BASIS::KEY KEY;
     /// The algebra type.
-    typedef algebra<BASIS, Coeff, multiplication_t, VectorType, Args...> ALG;
+    typedef algebra<BASIS, Coeff, multiplication_t, VectorType, free_tensor<Coeff, n_letters, max_degree, VectorType, Args...>, Args...> ALG;
 
     typedef typename Coeff::SCA SCA;
     typedef typename Coeff::RAT RAT;

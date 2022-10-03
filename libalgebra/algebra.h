@@ -27,6 +27,7 @@ Version 3. (See accompanying file License.txt)
 #include <boost/call_traits.hpp>
 #include <boost/container/small_vector.hpp>
 #include <boost/functional/hash.hpp>
+#include <boost/type_traits/type_identity.hpp>
 
 
 #include "basis.h"
@@ -35,6 +36,7 @@ Version 3. (See accompanying file License.txt)
 #include "multiplication_helpers.h"
 #include "tags.h"
 #include "vectors.h"
+
 
 namespace alg {
 
@@ -461,7 +463,7 @@ private:
 
     template<typename V1, typename V2, typename V3 = void>
     using checked_out_t = std::enable_if_t<
-            is_compatible<V1>::value && is_compatible<V2>::value && utils::void_or<V3, is_compatible, std::true_type>::value>;
+            is_compatible<V1>::value && is_compatible<V2>::value && utils::void_or<V3, is_compatible, std::true_type>::type::value>;
 
 public:
     template<typename OutVector, typename Add, typename Scalar>
@@ -714,7 +716,15 @@ public:
     }
 };
 
+
+
+
 }// namespace dtl
+
+
+
+
+
 
 /**
  * @brief Class to store and manipulate associative algebra elements
@@ -732,6 +742,7 @@ public:
  */
 template<typename Basis, typename Coeff, typename Multiplication,
          template<typename, typename, typename...> class VectorType = alg::vectors::template_vector_type_selector<Basis, Coeff>::template type,
+         typename Derived = void,
          typename... Args>
 class algebra : public vectors::vector<Basis, Coeff, VectorType, Args...>
 {
@@ -740,6 +751,10 @@ class algebra : public vectors::vector<Basis, Coeff, VectorType, Args...>
     typedef mult::scalar_minus<Coeff> scalar_minus;
     typedef mult::scalar_post_mult<Coeff> scalar_post_mult;
     typedef mult::rational_post_div<Coeff> rational_post_div;
+
+//    using derived_type = typename utils::void_or<Derived, boost::type_identity, algebra>::type;
+
+    using derived_type = std::conditional_t<std::is_void<Derived>::value, algebra, Derived>;
 
 public:
     typedef Basis BASIS;
@@ -822,123 +837,70 @@ public:
     const Multiplication& multiplication() const noexcept { return s_multiplication; }
 
 public:
-    //    /// Multiplies the instance with scalar s.
-    //    inline algebra& operator*=(const SCALAR& s)
-    //    {
-    //        VECT::operator*=(s);
-    //        return *this;
-    //    }
-    //
-    //    /// Divides the instance by scalar s.
-    //    inline algebra& operator/=(const RATIONAL& s)
-    //    {
-    //        VECT::operator/=(s);
-    //        return *this;
-    //    }
-    //
-    //    /// Ensures that the return type is an instance of algebra.
-    //    inline algebra operator*(const SCALAR& rhs) const
-    //    {
-    //        algebra result(*this);
-    //        result *= rhs;
-    //        return result;
-    //    }
-    //
-    //    /// Ensures that the return type is an instance of algebra.
-    //    inline algebra operator/(const SCALAR& rhs) const
-    //    {
-    //        algebra result(*this);
-    //        result /= rhs;
-    //        return result;
-    //    }
-    //
-    //    /// Ensures that the return type is an instance of algebra.
-    //    inline algebra operator+(const algebra& rhs) const
-    //    {
-    //        algebra result(*this);
-    //        result += rhs;
-    //        return result;
-    //    }
-    //
-    //    /// Ensures that the return type is an instance of algebra.
-    //    inline algebra operator-(const algebra& rhs) const
-    //    {
-    //        algebra result(*this);
-    //        result -= rhs;
-    //        return result;
-    //    }
 
-    //    /// Ensures that the return type is an instance of algebra.
-    //    inline algebra operator-() const { return algebra(VECT::operator-()); };
-
-    //    /// Multiplies the instance by an instance of algebra.
-    //    inline algebra& operator*=(const algebra& rhs)
-    //    {
-    //        return s_multiplication.multiply_inplace(*this, rhs, scalar_passthrough());
-    //    }
-
-    //    /// Binary version of the product of algebra instances.
-    //    // inline __DECLARE_BINARY_OPERATOR(algebra, *, *=, algebra);
-    //    algebra operator*(algebra const& rhs) const
-    //    {
-    //        return s_multiplication.multiply(*this, rhs, scalar_passthrough());
-    //    }
+    //TODO: templatise these methods
 
     /// Adds to the instance a product of algebra instances.
-    inline algebra& add_mul(const algebra& a, const algebra& b)
+    derived_type& add_mul(const algebra& a, const algebra& b)
     {
-        mtraits::multiply_and_add(s_multiplication, *this, a, b, scalar_passthrough());
-        return *this;
+        auto& derived = static_cast<derived_type&>(*this);
+        mtraits::multiply_and_add(s_multiplication, derived, a, b, scalar_passthrough());
+        return derived;
     }
 
     /// Subtracts to the instance a product of algebra instances.
-    inline algebra& sub_mul(const algebra& a, const algebra& b)
+    derived_type& sub_mul(const algebra& a, const algebra& b)
     {
-        mtraits::multiply_and_add(s_multiplication, *this, a, b, scalar_minus());
-        return *this;
+        auto& derived = static_cast<derived_type&>(*this);
+        mtraits::multiply_and_add(s_multiplication, derived, a, b, scalar_minus());
+        return derived;
     }
 
     /// Multiplies the instance by (algebra instance)*s.
-    inline algebra& mul_scal_prod(const algebra& rhs, const SCALAR& s)
+    derived_type& mul_scal_prod(const algebra& rhs, const SCALAR& s)
     {
-        mtraits::multiply_inplace(s_multiplication, *this, rhs, scalar_post_mult(s));
-        return *this;
+        auto& derived = static_cast<derived_type&>(*this);
+        mtraits::multiply_inplace(s_multiplication, derived, rhs, scalar_post_mult(s));
+        return derived;
     }
 
     /// Multiplies the instance by (algebra instance)*s up to maximum depth
-    algebra& mul_scal_prod(const algebra& rhs, const RATIONAL& s, const DEG depth)
+    derived_type& mul_scal_prod(const algebra& rhs, const RATIONAL& s, const DEG depth)
     {
-        mtraits::mutiply_inplace(s_multiplication, *this, rhs, scalar_post_mult(s), depth);
-        return *this;
+        auto& derived = static_cast<derived_type&>(*this);
+        mtraits::mutiply_inplace(s_multiplication, derived, rhs, scalar_post_mult(s), depth);
+        return derived;
     }
 
     /// Multiplies the instance by (algebra instance)/s.
-    inline algebra& mul_scal_div(const algebra& rhs, const RATIONAL& s)
+    derived_type& mul_scal_div(const algebra& rhs, const RATIONAL& s)
     {
-        mtraits::multiply_inplace(s_multiplication, *this, rhs, rational_post_div(s));
-        return *this;
+        auto& derived = static_cast<derived_type&>(*this);
+        mtraits::multiply_inplace(s_multiplication, derived, rhs, rational_post_div(s));
+        return derived;
     }
 
     /// Multiplies the instance by (algebra instance)/s up to maximum depth
-    algebra& mul_scal_div(const algebra& rhs, const RATIONAL& s, const DEG depth)
+    derived_type& mul_scal_div(const algebra& rhs, const RATIONAL& s, const DEG depth)
     {
-        mtraits::multiply_inplace(s_multiplication, *this, rhs, rational_post_div(s), depth);
-        return *this;
+        auto& derived = static_cast<derived_type&>(*this);
+        mtraits::multiply_inplace(s_multiplication, derived, rhs, rational_post_div(s), depth);
+        return derived;
     }
 
     /// Returns an instance of the commutator of two algebra instances.
-    inline friend algebra commutator(const algebra& a, const algebra& b)
+    inline friend derived_type commutator(const algebra& a, const algebra& b)
     {// Returns a * b - b * a
-        algebra result;
+        derived_type result;
         mtraits::multiply_and_add(s_multiplication, result, a, b, scalar_passthrough());
         mtraits::multiply_and_add(s_multiplication, result, b, a, scalar_minus());
         return result;
     }
 
     /// Returns a truncated version of the instance, by using basis::degree().
-    inline algebra truncate(const DEG min, const DEG max) const
+    inline derived_type truncate(const DEG min, const DEG max) const
     {
-        algebra result;
+        derived_type result;
         const_iterator i;
         for (i = VECT::begin(); i != VECT::end(); ++i) {
             if ((VECT::basis.degree(i->key()) >= min) && (VECT::basis.degree(i->key()) <= max)) {
@@ -984,8 +946,8 @@ public:
     }
 };
 
-template<typename B, typename C, typename M, template<typename, typename, typename...> class V, typename... Args>
-const M algebra<B, C, M, V, Args...>::s_multiplication;
+template<typename B, typename C, typename M, template<typename, typename, typename...> class V, typename D, typename... Args>
+const M algebra<B, C, M, V, D, Args...>::s_multiplication;
 
 }// namespace alg
 // Include once wrapper

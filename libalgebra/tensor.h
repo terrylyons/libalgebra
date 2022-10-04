@@ -23,6 +23,7 @@ Version 3. (See accompanying file License.txt)
 #include <algorithm>
 #include <unordered_set>
 
+#include <boost/call_traits.hpp>
 #include <boost/container/small_vector.hpp>
 #include <boost/functional/hash.hpp>
 
@@ -492,7 +493,7 @@ protected:
 
     IDEG lhs_deg, rhs_deg, out_deg, old_out_deg;
 
-    template <typename B>
+    template<typename B>
     void resize_result(dense_tensor<B>& result) const
     {
         // Special treatment for old_out_deg == 0 because otherwise an empty
@@ -550,13 +551,13 @@ public:
     const_pointer left_fwd_read(IDEG d, IDIMN offset = 0) const noexcept
     {
         assert(d >= 0 && d <= lhs_deg);
-        assert(offset + basis_type::start_of_degree(d)<=basis_type::start_of_degree(d+1));
+        assert(offset + basis_type::start_of_degree(d) <= basis_type::start_of_degree(d + 1));
         return ((lhs_data == nullptr) ? out_data : lhs_data) + offset + basis_type::start_of_degree(d);
     }
     const_pointer right_fwd_read(IDEG d, IDIMN offset = 0) const noexcept
     {
         assert(d >= 0 && d <= rhs_deg);
-        assert(offset + basis_type::start_of_degree(d)<=basis_type::start_of_degree(d+1));
+        assert(offset + basis_type::start_of_degree(d) <= basis_type::start_of_degree(d + 1));
         return rhs_data + offset + basis_type::start_of_degree(d);
     }
     pointer fwd_write(IDEG d) const noexcept
@@ -624,7 +625,7 @@ public:
           output_tile(tile_size)
     {
         if (base::lhs_deg > 0) {
-            reverse_data.resize(basis_type::start_of_degree(base::lhs_deg+1));
+            reverse_data.resize(basis_type::start_of_degree(base::lhs_deg + 1));
             dtl::tiled_inverse_operator<Width, (Depth > 0) ? Depth - 1 : 0, TileLetters, scalar_type, dtl::non_signing_signer> reverser;
             reverser(base::lhs_data, reverse_data.data(), base::lhs_deg);
             left_reverse_read_ptr = reverse_data.data();
@@ -639,7 +640,7 @@ public:
           output_tile(tile_size)
     {
         if (base::lhs_deg > 0) {
-            reverse_data.resize(basis_type::start_of_degree(base::lhs_deg+1));
+            reverse_data.resize(basis_type::start_of_degree(base::lhs_deg + 1));
             dtl::tiled_inverse_operator<Width, (Depth > 0) ? Depth - 1 : 0, TileLetters, scalar_type, dtl::non_signing_signer> reverser;
             reverser(base::out_data, reverse_data.data(), base::lhs_deg);
             left_reverse_read_ptr = reverse_data.data();
@@ -675,7 +676,7 @@ public:
     void reset_tile(IDEG degree, IDIMN index, IDIMN /*reverse_index*/) noexcept
     {
         assert(0 <= degree && degree <= static_cast<IDEG>(Depth));
-        assert(index < static_cast<IDEG>(tsi::powers[degree-2*TileLetters]));
+        assert(index < static_cast<IDEG>(tsi::powers[degree - 2 * TileLetters]));
         const auto start_of_degree = basis_type::start_of_degree(degree);
         const auto stride = tsi::powers[degree - tile_letters];
 
@@ -697,7 +698,7 @@ public:
     void write_tile(IDEG degree, IDIMN index, IDIMN /*reverse_index*/) noexcept
     {
         assert(0 <= degree && degree <= static_cast<IDEG>(Depth));
-        assert(index <= static_cast<IDIMN>(tsi::powers[degree-2*TileLetters]));
+        assert(index <= static_cast<IDIMN>(tsi::powers[degree - 2 * TileLetters]));
         const auto start_of_degree = basis_type::start_of_degree(degree);
         pointer optr = base::out_data + index * tile_width + start_of_degree;
         const_pointer tptr = output_tile.data();
@@ -922,14 +923,15 @@ protected:
         for (IDEG out_deg = max_degree; out_deg > 0; --out_deg) {
             bool assign = out_deg > old_out_deg || default_assign;
             auto lhs_deg_min = std::max(IDEG(1), out_deg - rhs_max_deg);
-            auto lhs_deg_max = std::min(out_deg-1, old_out_deg);
+            auto lhs_deg_max = std::min(out_deg - 1, old_out_deg);
 
             if (!assign) {
                 update_inplace_lhs<Coeffs>(helper.fwd_write(out_deg),
                                            rhs_unit,
                                            static_cast<IDIMN>(tsi::powers[out_deg]),
                                            op);
-            } else if (default_assign && out_deg > rhs_max_deg && lhs_deg_max < lhs_deg_min) {
+            }
+            else if (default_assign && out_deg > rhs_max_deg && lhs_deg_max < lhs_deg_min) {
                 update_inplace_lhs<Coeffs>(helper.fwd_write(out_deg), rhs_unit,
                                            static_cast<IDIMN>(tsi::powers[out_deg]), op);
             }
@@ -962,11 +964,12 @@ protected:
             if (out_deg <= rhs_max_deg) {
                 if (assign) {
                     assign_rhs_max<Coeffs>(helper.fwd_write(out_deg),
-                            lhs_unit,
-                            helper.right_fwd_read(out_deg),
-                            static_cast<IDIMN>(tsi::powers[out_deg]),
-                            op);
-                } else {
+                                           lhs_unit,
+                                           helper.right_fwd_read(out_deg),
+                                           static_cast<IDIMN>(tsi::powers[out_deg]),
+                                           op);
+                }
+                else {
                     update_rhs_max<Coeffs>(helper.fwd_write(out_deg),
                                            lhs_unit,
                                            helper.right_fwd_read(out_deg),
@@ -988,8 +991,7 @@ public:
         const vectors::dense_vector<Basis, Coeffs>& rhs,
         Fn op,
         DEG max_degree,
-        OriginalVectors&
-        ) const
+        OriginalVectors&) const
     {
         if (!lhs.empty() && !rhs.empty()) {
             helper<Coeffs> help(out, lhs, rhs, max_degree);
@@ -1099,19 +1101,15 @@ class tiled_free_tensor_multiplication
         }
     }
 
-
 protected:
-
-    template <typename Coeffs, typename Fn>
-    LA_INLINE_ALWAYS
-    void impl_common(helper_type<Coeffs>& helper,
-                     Fn op,
-                     IDEG out_deg,
-                     IDIMN k,
-                     IDIMN k_reverse,
-                        IDEG lhs_deg_min,
-                        IDEG lhs_deg_max
-                        ) const
+    template<typename Coeffs, typename Fn>
+    LA_INLINE_ALWAYS void impl_common(helper_type<Coeffs>& helper,
+                                      Fn op,
+                                      IDEG out_deg,
+                                      IDIMN k,
+                                      IDIMN k_reverse,
+                                      IDEG lhs_deg_min,
+                                      IDEG lhs_deg_max) const
     {
         constexpr auto tile_letters = static_cast<IDEG>(tile_info::tile_letters);
         constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
@@ -1120,13 +1118,10 @@ protected:
         const auto* LA_RESTRICT left_rtile = helper.left_read_tile_ptr();
         const auto* LA_RESTRICT right_rtile = helper.right_read_tile_ptr();
 
-//        const auto& lhs_unit = helper.left_unit();
-//        const auto& rhs_unit = helper.right_unit();
-
+        //        const auto& lhs_unit = helper.left_unit();
+        //        const auto& rhs_unit = helper.right_unit();
 
         const auto mid_deg = out_deg - 2 * tile_letters;
-
-
 
         for (IDEG lhs_deg = lhs_deg_min; lhs_deg < std::min(tile_letters, lhs_deg_max); ++lhs_deg) {
             const auto rhs_deg = out_deg - lhs_deg;
@@ -1175,7 +1170,6 @@ protected:
         helper.write_tile(out_deg, k, k_reverse);
     }
 
-
     template<typename Coeffs, typename Fn>
     void fma_impl(helper_type<Coeffs>& helper, Fn op, DEG max_degree) const
     {
@@ -1188,7 +1182,7 @@ protected:
             const auto stride = static_cast<IDIMN>(tsi::powers[out_deg - tile_letters]);
 
             auto lhs_deg_min = std::max(IDEG(1), out_deg - helper.rhs_degree());
-            auto lhs_deg_max = std::min(out_deg-1, helper.lhs_degree());
+            auto lhs_deg_max = std::min(out_deg - 1, helper.lhs_degree());
 
             for (IDIMN k = 0; k < static_cast<IDIMN>(tsi::powers[mid_deg]); ++k) {
                 auto k_reverse = helper.reverse_key(mid_deg, k);
@@ -1230,17 +1224,17 @@ protected:
             const auto stride = static_cast<IDIMN>(tsi::powers[out_deg - tile_letters]);
 
             auto lhs_deg_min = std::max(IDEG(1), out_deg - rhs_max_deg);
-            auto lhs_deg_max = std::min(out_deg-1, old_lhs_deg);
+            auto lhs_deg_max = std::min(out_deg - 1, old_lhs_deg);
 
             for (IDIMN k = 0; k < static_cast<IDIMN>(tsi::powers[mid_deg]); ++k) {
                 auto k_reverse = helper.reverse_key(mid_deg, k);
 
-//                if (out_deg > old_lhs_deg) {
-//                    helper.reset_tile(out_deg, k, k_reverse);
-//                }
-//                else {
-                    helper.reset_tile_to_zero();
-//                }
+                //                if (out_deg > old_lhs_deg) {
+                //                    helper.reset_tile(out_deg, k, k_reverse);
+                //                }
+                //                else {
+                helper.reset_tile_to_zero();
+                //                }
                 if (out_deg <= old_lhs_deg && rhs_unit != Coeffs::zero) {
                     impl_db0(tile, helper.left_fwd_read_ptr(out_deg, k), rhs_unit, stride, op);
                 }
@@ -1269,7 +1263,7 @@ public:
              DEG max_degree,
              OriginalVectors& orig) const
     {
-        if (max_degree <= 2*tile_info::tile_letters) {
+        if (max_degree <= 2 * tile_info::tile_letters) {
             base::fma(out, lhs, rhs, op, max_degree, orig);
             return;
         }
@@ -1286,7 +1280,7 @@ public:
                           Fn op, DEG max_degree, OriginalVectors& orig) const
     {
         //        std::cout << "BEFORE " << lhs << '\n';
-        if (max_degree <= 2*tile_info::tile_letters) {
+        if (max_degree <= 2 * tile_info::tile_letters) {
             base::multiply_inplace(lhs, rhs, op, max_degree, orig);
             return;
         }
@@ -1481,22 +1475,127 @@ using shuffle_tensor_multiplication =
 template<typename Coeff, DEG n_letters, DEG max_degree, typename...>
 class shuffle_tensor;
 
-
 namespace dtl {
 
-template <template <typename, typename, typename...> class BaseVector>
-class reverse_data_storage {};
+template<template<typename, typename, typename...> class BaseVector>
+class reverse_data_storage
+{
+};
 
-template <>
+template<>
 class reverse_data_storage<vectors::dense_vector>
 {
+};
+
+
+
+template<typename Coeff, DEG n_letters, DEG max_degree,
+         template<typename, typename, typename...> class VectorType,
+         typename Derived,
+         typename... Args>
+class free_tensor_base : public algebra<
+                                 free_tensor_basis<n_letters, max_degree>,
+                                 Coeff,
+                                 free_tensor_multiplication<n_letters, max_degree>,
+                                 VectorType,
+                                 Derived,
+                                 Args...>
+{
+    using algebra_type = algebra<
+            free_tensor_basis<n_letters, max_degree>,
+            Coeff,
+            free_tensor_multiplication<n_letters, max_degree>,
+            VectorType,
+            Derived,
+            Args...>;
+
+public:
+    using basis_type = free_tensor_basis<n_letters, max_degree>;
+    using key_type = typename basis_type::KEY;
+    using scalar_type = typename Coeff::S;
+
+    // Inherit constructors
+    using algebra_type::algebra_type;
+
+    explicit free_tensor_base(typename boost::call_traits<scalar_type>::param_type s)
+        : algebra_type(key_type{}, s)
+    {}
+
+    template <typename Letter, typename Scalar>
+    explicit free_tensor_base(Letter let, Scalar sca)
+        : algebra_type(algebra_type::basis.keyofletter(LET(let)), scalar_type(sca))
+    {}
 
 };
 
-template <DEG Width, DEG Depth, typename FreeTensor>
-class fused_multiply_exp_mixin
+}// namespace dtl
+
+/**
+ * @brief A specialisation of the algebra class with a free tensor basis.
+ *
+ * Mathematically, the algebra of free_tensor instances is a free associative
+ * algebra. With respect to the inherited algebra class, the essential
+ * distinguishing feature of this class is the basis class used, and in
+ * particular the basis::prod() member function. Thus, the most important
+ * information is in the definition of free_tensor_basis. Notice that this
+ * associative algebra of free tensors includes as a sub-algebra the
+ * associative algebra corresponding to the SCALAR type. This is permitted by
+ * the existence of empty keys in free_tensor_basis.
+ */
+template<typename Coeff, DEG n_letters, DEG max_degree,
+         template<typename, typename, typename...> class VectorType,
+         typename... Args>
+class free_tensor
+    : public dtl::free_tensor_base<Coeff,
+                                   n_letters,
+                                   max_degree,
+                                   VectorType,
+                                   free_tensor<Coeff, n_letters, max_degree, VectorType, Args...>,
+                                   Args...>
 {
+    typedef free_tensor_multiplication<n_letters, max_degree> multiplication_t;
+
+    using base = dtl::free_tensor_base<Coeff, n_letters, max_degree, VectorType,
+          free_tensor<Coeff, n_letters, max_degree, VectorType, Args...>, Args...>;
 public:
+    /// The basis type.
+    typedef free_tensor_basis<n_letters, max_degree> BASIS;
+    /// Import of the KEY type.
+    typedef typename BASIS::KEY KEY;
+    /// The algebra type.
+    typedef algebra<BASIS, Coeff, multiplication_t, VectorType, free_tensor<Coeff, n_letters, max_degree, VectorType, Args...>, Args...> ALG;
+
+    typedef typename Coeff::SCA SCA;
+    typedef typename Coeff::RAT RAT;
+
+    /// The sparse_vector type.
+    typedef typename ALG::VECT VECT;
+
+    /// Import of the iterator type.
+    typedef typename ALG::iterator iterator;
+    /// Import of the constant iterator type.
+    typedef typename ALG::const_iterator const_iterator;
+
+public:
+
+    using base::base;
+
+//    free_tensor& operator=(const free_tensor&) = default;
+
+    friend free_tensor exp(const free_tensor& arg)
+    {
+        // Computes the truncated exponential of arg
+        // 1 + arg + arg^2/2! + ... + arg^n/n! where n = max_degree
+        typename tensor_basis<n_letters, max_degree>::KEY kunit;
+        free_tensor result(kunit);
+        free_tensor unit(kunit);
+        for (DEG i = max_degree; i >= 1; --i) {
+            result.mul_scal_div(arg, typename Coeff::Q(i));
+            result += unit;
+        }
+        return result;
+    }
+
     /**
      * Fused multiply exponential operation for free tensors.
      *
@@ -1521,195 +1620,49 @@ public:
      * @param exp_arg free_tensor (const reference) to expentiate (x).
      * @return free_tensor containing a*exp(x)
      */
-    FreeTensor fmexp(const FreeTensor& exp_arg) const
+    free_tensor fmexp(const free_tensor& exp_arg) const
     {
-        FreeTensor result(static_cast<const FreeTensor&>(*this)), x(exp_arg);
-        typename FreeTensor::KEY kunit;
+        free_tensor result(*this), x(exp_arg);
+        typename free_tensor::KEY kunit;
 
         auto unit_elt = x.find(kunit);
-        if (unit_elt != x.end() && unit_elt->value() != typename FreeTensor::SCALAR(0)) {
+        if (unit_elt != x.end() && unit_elt->value() != typename free_tensor::SCALAR(0)) {
             x.erase(unit_elt);
         }
 
-        for (DEG i = Depth; i >= 1; --i) {
-            result.mul_scal_div(x, typename FreeTensor::SCALAR(i), Depth - i + 1);
-            result += static_cast<const FreeTensor&>(*this);
+        for (DEG i = max_degree; i >= 1; --i) {
+            result.mul_scal_div(x, typename free_tensor::SCALAR(i), max_degree - i + 1);
+            result += *this;
         }
 
         return result;
     }
 
     /// Inplace version of fmexp
-    FreeTensor& fmexp_inplace(const FreeTensor& exp_arg)
+    free_tensor& fmexp_inplace(const free_tensor& exp_arg)
     {
-        auto& self = static_cast<FreeTensor&>(*this);
-        FreeTensor original(self), x(exp_arg);
-        typename FreeTensor::KEY kunit;
+        free_tensor original(*this), x(exp_arg);
+        typename free_tensor::KEY kunit;
         auto unit_elt = x.find(kunit);
 
-        if (unit_elt != x.end() && unit_elt->value() != typename FreeTensor::SCALAR(0)) {
+        if (unit_elt != x.end() && unit_elt->value() != typename free_tensor::SCALAR(0)) {
             x.erase(unit_elt);
         }
 
-        for (DEG i = Depth; i >= 1; --i) {
-            self.mul_scal_div(x, typename FreeTensor::SCALAR(i), Depth - i + 1);
-            self += original;
+        for (DEG i = max_degree; i >= 1; --i) {
+            this->mul_scal_div(x, typename free_tensor::SCALAR(i), max_degree - i + 1);
+            *this += original;
         }
 
-        return self;
+        return *this;
     }
 
-
-
-
-
-};
-
-
-
-
-} // namespace dtl
-
-
-
-/**
- * @brief A specialisation of the algebra class with a free tensor basis.
- *
- * Mathematically, the algebra of free_tensor instances is a free associative
- * algebra. With respect to the inherited algebra class, the essential
- * distinguishing feature of this class is the basis class used, and in
- * particular the basis::prod() member function. Thus, the most important
- * information is in the definition of free_tensor_basis. Notice that this
- * associative algebra of free tensors includes as a sub-algebra the
- * associative algebra corresponding to the SCALAR type. This is permitted by
- * the existence of empty keys in free_tensor_basis.
- */
-template<typename Coeff, DEG n_letters, DEG max_degree,
-         template<typename, typename, typename...> class VectorType,
-         typename... Args>
-class free_tensor : public algebra<
-                            free_tensor_basis<n_letters, max_degree>,
-                            Coeff,
-                            free_tensor_multiplication<n_letters, max_degree>,
-                            VectorType,
-                            free_tensor<Coeff, n_letters, max_degree, VectorType, Args...>,
-                            Args...>,
-                    public dtl::fused_multiply_exp_mixin<n_letters, max_degree, free_tensor<Coeff, n_letters, max_degree, VectorType, Args...>>
-{
-    typedef free_tensor_multiplication<n_letters, max_degree> multiplication_t;
-
-public:
-    /// The basis type.
-    typedef free_tensor_basis<n_letters, max_degree> BASIS;
-    /// Import of the KEY type.
-    typedef typename BASIS::KEY KEY;
-    /// The algebra type.
-    typedef algebra<BASIS, Coeff, multiplication_t, VectorType, free_tensor<Coeff, n_letters, max_degree, VectorType, Args...>, Args...> ALG;
-
-    typedef typename Coeff::SCA SCA;
-    typedef typename Coeff::RAT RAT;
-
-    /// The sparse_vector type.
-    typedef typename ALG::VECT VECT;
-
-    /// Import of the iterator type.
-    typedef typename ALG::iterator iterator;
-    /// Import of the constant iterator type.
-    typedef typename ALG::const_iterator const_iterator;
-
-public:
-    /// Default constructor.
-    free_tensor()
-    {}
-
-    /// Copy constructor.
-    free_tensor(const free_tensor& t)
-        : ALG(t)
-    {}
-
-    /// Constructs an instance from a shuffle_tensor instance.
-    free_tensor(const shuffle_tensor<Coeff, n_letters, max_degree>& t)
-    {
-        typename shuffle_tensor<Coeff, n_letters, max_degree>::const_iterator i;
-        for (i = t.begin(); i != t.end(); ++i) {
-            (*this)[i->key()] += i->value();
-        }
-    }
-
-    /// Constructs an instance from an algebra instance.
-    free_tensor(const ALG& a)
-        : ALG(a)
-    {}
-
-    /// Constructs an instance from a sparse_vector instance.
-    free_tensor(const VECT& v)
-        : ALG(v)
-    {}
-
-    /// Constructs a unidimensional instance from a letter and a scalar.
-    free_tensor(LET letter, const SCA& s) : ALG(VECT::basis.keyofletter(letter), s)
-    {
-    }
-
-    /// Constructor from pointers to data range
-    free_tensor(SCA const* begin,
-                SCA const* end) : ALG(begin, end)
-    {
-    }
-
-    /// Explicit unidimensional constructor from a given key (basis element).
-    explicit free_tensor(const KEY& k)
-        : ALG(k)
-    {}
-
-    /// Explicit unidimensional constructor from a given scalar.
-    explicit free_tensor(const SCA& s)
-        : ALG(VECT::basis.empty_key, s)
-    {}
-
-    /// Constructor from pointers to data range with offset
-    free_tensor(DIMN
-                        offset,
-                SCA const* begin, SCA const* end) : ALG(offset, begin, end)
-    {
-    }
-
-    template <typename B, typename M>
-    explicit free_tensor(const algebra<B, Coeff, M, VectorType>& arg)
-            : ALG(arg)
-    {}
-
-    free_tensor& operator=(const free_tensor&) = default;
-    //free_tensor& operator=(free_tensor&&) noexcept = default;
-
-public:
-
-
-
-
-
-
-    /// Computes the truncated inverse of a free_tensor instance.
-    inline friend free_tensor reflect(const free_tensor& arg)
-    {
-        // Computes the alternating reflection of arg up to degree max_degree
-        // For group-like elements this is the same as the inverse
-        free_tensor ans(SCA(0));
-        for (const_iterator it = arg.begin(); it != arg.end(); ++it) {
-            KEY old_key = it->key();
-            SCA old_value = it->value();
-            ans[old_key.reverse()] = (old_key.size() % 2) ? SCA(0) - old_value : old_value;
-        }
-        return ans;
-    }
-
-private:
-    // Implementation of the antipode for sparse vector types.
-    free_tensor antipode_impl(vectors::dtl::access_type_sparse) const
+    /// Computes the antipode of a free_tensor instance.
+    friend free_tensor antipode(const free_tensor& arg)
     {
         free_tensor result;
 
-        for (auto cit = this->begin(); cit != this->end(); ++cit) {
+        for (auto cit = arg.begin(); cit != arg.end(); ++cit) {
             KEY temp_key = cit->key();
             KEY temp_key_reverse = temp_key.reverse();
             SCA temp_value = cit->value();
@@ -1729,61 +1682,162 @@ private:
         return result;
     }
 
-    // Implementation of the antipode for dense vector types.
-    free_tensor antipode_impl(vectors::dtl::access_type_dense) const
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
+private:
+    friend class boost::serialization::access;
+
+    template<typename archive>
+    void serialize(archive& ar, unsigned int const /* version */)
+    {
+        ar& boost::serialization::base_object<base>(*this);
+    }
+#endif
+};
+
+
+
+template<typename Coeff, DEG n_letters, DEG max_degree,
+        typename... Args>
+class free_tensor<Coeff, n_letters, max_degree, vectors::dense_vector, Args...>
+    : public dtl::free_tensor_base<Coeff, n_letters, max_degree, vectors::dense_vector,
+        free_tensor<Coeff, n_letters, max_degree, vectors::dense_vector, Args...>,
+                Args...>
+{
+
+    using base = dtl::free_tensor_base<Coeff, n_letters, max_degree, vectors::dense_vector,
+                                       free_tensor<Coeff, n_letters, max_degree, vectors::dense_vector, Args...>, Args...>;
+
+public:
+
+    using base::base;
+
+    friend free_tensor exp(const free_tensor& arg)
+    {
+        // Computes the truncated exponential of arg
+        // 1 + arg + arg^2/2! + ... + arg^n/n! where n = max_degree
+        typename tensor_basis<n_letters, max_degree>::KEY kunit;
+        free_tensor result(kunit);
+        free_tensor unit(kunit);
+        result.base_vector().resize_to_degree(max_degree);
+        for (DEG i = max_degree; i >= 1; --i) {
+            result.mul_scal_div(arg, typename Coeff::Q(i));
+            result += unit;
+        }
+        return result;
+    }
+
+    /**
+     * Fused multiply exponential operation for free tensors.
+     *
+     * Computes a*exp(x) using a modified Horner's method for the case when x does
+     * not have a constant term. If the argument exp_arg has a constant term, it
+     * is ignored.
+     *
+     * For a real number x, one can expand exp(x) up to degree n as
+     *
+     *     1 + b_1 x(1 + b_2 x(1 + ... b_n x(1)) ...)
+     *
+     * where each b_i has the value 1/i. This formulae works when x is a free
+     * tensor, or indeed any element in an unital (associative) algebra. Working
+     * through the result of multiplying on the left by another element a in the
+     * above gives the expansion
+     *
+     *     a + b1 (a + b_2 (a + ... b_n (a)x) ... x)x.
+     *
+     * This is the result of a*exp(x). In a non-commutative algebra this need not
+     * be equal to exp(x)*a.
+     *
+     * @param exp_arg free_tensor (const reference) to expentiate (x).
+     * @return free_tensor containing a*exp(x)
+     */
+    free_tensor fmexp(const free_tensor& exp_arg) const
+    {
+        if (this->empty() || exp_arg.empty()) {
+            // If this is zero then the result is zero.
+            // if exp_arg is zero then exp(exp_arg) = tunit, so the result is this
+            return free_tensor(*this);
+        }
+
+
+        free_tensor result(*this), x(exp_arg);
+
+        result.base_vector().resize_to_degree(max_degree);
+        x.base_vector().value(0) = typename base::scalar_type(0);
+
+        for (DEG i = max_degree; i >= 1; --i) {
+            result.mul_scal_div(x, typename free_tensor::SCALAR(i), max_degree - i + 1);
+            result += *this;
+        }
+
+        return result;
+    }
+
+    /// Inplace version of fmexp
+    free_tensor& fmexp_inplace(const free_tensor& exp_arg)
+    {
+        if (this->empty() || exp_arg.empty()) {
+            // If this is zero then the result is zero.
+            // if exp_arg is zero then exp(exp_arg) = tunit, so the result is this
+            return *this;
+        }
+        free_tensor original(*this), x(exp_arg);
+
+        this->base_vector().resize_to_degree(max_degree);
+        x.base_vector().value(0) = typename base::scalar_type(0);
+
+        for (DEG i = max_degree; i >= 1; --i) {
+            this->mul_scal_div(x, typename free_tensor::SCALAR(i), max_degree - i + 1);
+            *this += original;
+        }
+
+        return *this;
+    }
+
+    friend free_tensor antipode(const free_tensor& arg)
     {
         free_tensor result;
+        auto& base_result = result.base_vector();
+        const auto& base_arg = arg.base_vector();
 
 #ifdef LIBALGEBRA_MAX_TILE_LETTERS
         constexpr DEG CalcLetters = integer_maths::logN(static_cast<unsigned>(LIBALGEBRA_L1_CACHE_SIZE), n_letters) / 2;
         constexpr DEG BlockLetters = (CalcLetters > LIBALGEBRA_MAX_TILE_LETTERS) ? LIBALGEBRA_MAX_TILE_LETTERS : CalcLetters;
 #else
-        constexpr DEG BlockLetters = integer_maths::logN(LIBALGEBRA_L1_CACHE_SIZE / sizeof(SCA), n_letters) / 2;
+        constexpr DEG BlockLetters = integer_maths::logN(LIBALGEBRA_L1_CACHE_SIZE / sizeof(typename base::scalar_type), n_letters) / 2;
 #endif
 
-        const auto curr_degree = this->degree();
+        const auto curr_degree = arg.degree();
 
-        vectors::dtl::vector_base_access::convert(result).resize_to_degree(curr_degree);
+        base_result.resize_to_degree(curr_degree);
 
         // Get the pointers to the start of the data blob in memory.
-        const SCA* src_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(*this));
-        SCA* dst_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(result));
+        const auto* src_ptr = base_arg.as_ptr();
+        auto* dst_ptr = base_result.as_mut_ptr();
 
-        dtl::tiled_inverse_operator<n_letters, max_degree, BlockLetters, SCA, dtl::default_signer> t;
+        dtl::tiled_inverse_operator<n_letters, max_degree, BlockLetters, typename base::scalar_type, dtl::default_signer> t;
 
         t(src_ptr, dst_ptr, curr_degree);
 
         return result;
     }
 
-public:
-    /// Computes the antipode of a free_tensor instance.
-    inline friend free_tensor antipode(const free_tensor& arg)
-    {
-        // Get the trait to access the storage tag, although it now occurs to me that we already had
-        // the vector type as a template argument, so we might be able to dispatch off that instead
-        // of a tag. But the tag will do for now.
-        using trait = vectors::dtl::data_access<VectorType<BASIS, Coeff>>;
-
-        // Now use tagged dispatch to pick the correct implementation
-        return arg.antipode_impl(typename trait::tag());
-    }
 
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;
 
-    template<typename Archive>
-    void serialize(Archive& ar, unsigned int const /* version */)
+    template<typename archive>
+    void serialize(archive& ar, unsigned int const /* version */)
     {
-        ar& boost::serialization::base_object<ALG>(*this);
+        ar& boost::serialization::base_object<base>(*this);
     }
 #endif
 };
 
+/*
 
 /// Computes the truncated exponential of a free_tensor instance.
-template <typename Coeffs, DEG Width, DEG Depth, template <typename, typename, typename...> class VectorType, typename... Args>
+template<typename Coeffs, DEG Width, DEG Depth, template<typename, typename, typename...> class VectorType, typename... Args>
 free_tensor<Coeffs, Width, Depth, VectorType, Args...>
 exp(const free_tensor<Coeffs, Width, Depth, VectorType, Args...>& arg)
 {
@@ -1798,9 +1852,10 @@ exp(const free_tensor<Coeffs, Width, Depth, VectorType, Args...>& arg)
     }
     return result;
 }
+*/
 
 /// Computes the truncated logarithm of a free_tensor instance.
-template <typename Coeffs, DEG Width, DEG Depth, template <typename, typename, typename...> class VectorType, typename... Args>
+template<typename Coeffs, DEG Width, DEG Depth, template<typename, typename, typename...> class VectorType, typename... Args>
 free_tensor<Coeffs, Width, Depth, VectorType, Args...>
 log(const free_tensor<Coeffs, Width, Depth, VectorType, Args...>& arg)
 {
@@ -1834,7 +1889,7 @@ log(const free_tensor<Coeffs, Width, Depth, VectorType, Args...>& arg)
 }
 
 /// Computes the truncated inverse of a free_tensor instance.
-template <typename Coeffs, DEG Width, DEG Depth, template <typename, typename, typename...> class VectorType, typename... Args>
+template<typename Coeffs, DEG Width, DEG Depth, template<typename, typename, typename...> class VectorType, typename... Args>
 free_tensor<Coeffs, Width, Depth, VectorType, Args...>
 inverse(const free_tensor<Coeffs, Width, Depth, VectorType, Args...>& arg)
 {
@@ -1874,6 +1929,14 @@ inverse(const free_tensor<Coeffs, Width, Depth, VectorType, Args...>& arg)
         result = free_tensor_a_inverse + z * result;
     }
     return result;
+}
+
+/// Computes the truncated inverse of a free_tensor instance.
+template<typename Coeffs, DEG Width, DEG Depth, template<typename, typename, typename...> class VectorType, typename... Args>
+free_tensor<Coeffs, Width, Depth, VectorType, Args...>
+reflect(const free_tensor<Coeffs, Width, Depth, VectorType, Args...>& arg)
+{
+    return antipode(arg);
 }
 
 

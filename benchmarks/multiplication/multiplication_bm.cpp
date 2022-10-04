@@ -19,37 +19,6 @@ typedef alg::coefficients::coefficient_field<alg::coefficients::rational> ration
 
 using namespace alg;
 
-//template<unsigned Width, unsigned Depth>
-//struct RandomFloatDenseFixture {
-//
-//    static constexpr unsigned width = Width;
-//    static constexpr unsigned depth = Depth;
-//
-//    typedef alg::free_tensor<float_field, Width, Depth, alg::vectors::dense_vector> TENSOR;
-//    typedef alg::lie<float_field, Width, Depth, alg::vectors::dense_vector> LIE;
-//
-//    using float_dist = la_testing::uniform_rational_distribution<rational_field::S>;
-//    using rvg_t = la_testing::random_vector_generator<TENSOR, float_dist>;
-//    using rvg_l = la_testing::random_vector_generator<LIE, float_dist>;
-//
-//    const TENSOR tunit;
-//    const TENSOR tzero;
-//
-//    std::mt19937 rngt;
-//    rvg_t rvgt;
-//
-//    std::mt19937 rngl;
-//    rvg_l rvgl;
-//
-//    typedef typename TENSOR::KEY KEY;
-//
-//    RandomFloatDenseFixture() : tunit(KEY()), tzero(),
-//                                   rngt(std::random_device()()), rvgt(-1, 1),
-//                                   rngl(std::random_device()()), rvgl(-1, 1)
-//
-//    {}
-//};
-
 template <DEG CalcDepth, typename Coeffs, DEG Width, DEG Depth, DEG TileLetters, typename Fn>
 void fma_traditional(dtl::GilesMultiplier<Coeffs,Width, Depth, TileLetters>& helper, Fn op) noexcept
 {
@@ -188,44 +157,9 @@ void tiled_fma(dense_ft_vec_t<Coeffs, Width, Depth>& out,
 }
 
 
-//template<int W, int D>
-//static void BM_multiplication(benchmark::State& state)
-//{
-//
-//    const DEG TileLetters = 1;        // TODO: implement properly
-////    DEG tensor_width = W;        // TODO: implement properly
-////    DEG max_depth = D;         // TODO: implement properly
-//
-////    TENSOR lhs;
-////    TENSOR rhs;
-////    TENSOR result;
-////
-////    dtl::GilesMultiplier<float_field , W, D, TileLetters> helper(result, lhs, rhs);
-////
-////    tiled_fma<1>(result, lhs, rhs, mult::scalar_passthrough());
-//
-//    for (auto _ : state) {
-////        auto result = tiled_inverse(t);
-////        benchmark::DoNotOptimize(result);
-////        benchmark::ClobberMemory();
-//    }
-////
-////    state.SetBytesProcessed(state.iterations()*2 * sizeof(double) * playground::tensor_alg_size(W, D));
-////    state.counters["block_letters"] = tiled_inverse.block_letters;
-////    state.counters["block_size"] = tiled_inverse.block_size * sizeof(double);
-////    state.counters["blob size"] = sizeof(double) * playground::tensor_alg_size(W, D);
-//
-//}
-//
-//BENCHMARK_TEMPLATE(BM_multiplication, 1, 1);
-
 template<unsigned Width, unsigned Depth>
 class RandomRationalDenseFixture : public ::benchmark::Fixture {
 public:
-//    MyFixture() : data(0) {}
-//
-//    T data;
-
 
     static constexpr unsigned width = Width;
     static constexpr unsigned depth = Depth;
@@ -256,59 +190,23 @@ public:
 
 };
 
-//BENCHMARK_TEMPLATE_F(RandomRationalDenseFixture, Foo, 4, 4)(benchmark::State& st) {
-//    for (auto _ : st) {
-////        data += 1;
-//    }
-//}
 
 
 BENCHMARK_TEMPLATE_DEFINE_F(RandomRationalDenseFixture, TraditionalMultiplication, 4, 4)(benchmark::State& state) {
-//    for (auto _ : st) {
-//        data += 1.0;
-//
-//    }
-
-//    TENSOR lhs;
-//    TENSOR rhs;
-//    TENSOR result;
-//
-//    SHOW(lhs);
 
     auto lhs = rvgt(rngt);
     auto rhs = rvgt(rngt);
 
-    //    SHOW(lhs);
-    //    SHOW(rhs);
-
-    TENSOR result;
-
     const DEG TileLetters = 1;        // TODO: implement properly
 
-    dtl::GilesMultiplier<rational_field , 4, 4, TileLetters> helper(result, lhs, rhs);
-
     for (auto _ : state) {
-//        auto result = tiled_inverse(t);
-//        benchmark::DoNotOptimize(result);
-        fma_traditional<2*TileLetters>(helper, mult::scalar_passthrough());
+        auto result = lhs*rhs;
+        benchmark::DoNotOptimize(result);
         benchmark::ClobberMemory();
     }
 }
-BENCHMARK_REGISTER_F(RandomRationalDenseFixture, TraditionalMultiplication);
-
-
 
 BENCHMARK_TEMPLATE_DEFINE_F(RandomRationalDenseFixture, TiledMultiplication, 4, 4)(benchmark::State& state) {
-//    for (auto _ : st) {
-//        data += 1.0;
-//
-//    }
-
-//    TENSOR lhs;
-//    TENSOR rhs;
-//    TENSOR result;
-//
-//    SHOW(lhs);
 
     auto lhs = rvgt(rngt);
     auto rhs = rvgt(rngt);
@@ -323,12 +221,14 @@ BENCHMARK_TEMPLATE_DEFINE_F(RandomRationalDenseFixture, TiledMultiplication, 4, 
     dtl::GilesMultiplier<rational_field , 4, 4, TileLetters> helper(result, lhs, rhs);
 
     for (auto _ : state) {
-//        auto result = tiled_inverse(t);
-//        benchmark::DoNotOptimize(result);
         tiled_fma<1>(result, lhs, rhs, mult::scalar_passthrough());
+        benchmark::DoNotOptimize(result);
         benchmark::ClobberMemory();
     }
 }
+
+BENCHMARK_REGISTER_F(RandomRationalDenseFixture, TraditionalMultiplication);
+
 BENCHMARK_REGISTER_F(RandomRationalDenseFixture, TiledMultiplication);
 
 BENCHMARK_MAIN();

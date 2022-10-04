@@ -100,10 +100,19 @@ struct dense_storage_base {
     /// Move assignment
     dense_storage_base& operator=(dense_storage_base&& other) noexcept
     {
-        std::swap(m_alloc, other.m_alloc);
-        std::swap(m_data, other.m_data);
-        std::swap(m_type, other.m_type);
-        std::swap(m_size, other.m_size);
+        if (this != &other) {
+            if (m_type == owned) {
+                alloc_traits::deallocate(m_alloc, m_data, m_size);
+            }
+            m_alloc = std::move(other.m_alloc);
+            m_data = other.m_data;
+            m_type = other.m_type;
+            m_size = other.m_size;
+
+            other.m_data = nullptr;
+            other.m_size = 0;
+        }
+
         return *this;
     }
 
@@ -346,7 +355,7 @@ public:
     }
 
     /// Move constructor
-    dense_storage& operator=(dense_storage&& other)
+    dense_storage& operator=(dense_storage&& other) noexcept
     {
         if (m_base.is_owned()) {
             destroy_range(m_base.m_data, m_base.m_data + m_base.m_size);

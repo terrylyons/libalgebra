@@ -5,12 +5,47 @@
 #include <libalgebra/giles_multiplication.h>
 #include <libalgebra/multiplication_helpers.h>
 
+#include <libalgebra/tensor.h>
+#include "../../tests/common/random_vector_generator.h"
+#include "../../tests/common/rng.h"
+
 using alg::LET;
 
 typedef alg::coefficients::coefficient_field<float> float_field;
 typedef alg::coefficients::coefficient_field<alg::coefficients::rational> rational_field;
 
 using namespace alg;
+
+template<unsigned Width, unsigned Depth>
+struct RandomFloatDenseFixture {
+
+    static constexpr unsigned width = Width;
+    static constexpr unsigned depth = Depth;
+
+    typedef alg::free_tensor<float_field, Width, Depth, alg::vectors::dense_vector> TENSOR;
+    typedef alg::lie<float_field, Width, Depth, alg::vectors::dense_vector> LIE;
+
+    using float_dist = la_testing::uniform_rational_distribution<rational_field::S>;
+    using rvg_t = la_testing::random_vector_generator<TENSOR, float_dist>;
+    using rvg_l = la_testing::random_vector_generator<LIE, float_dist>;
+
+    const TENSOR tunit;
+    const TENSOR tzero;
+
+    std::mt19937 rngt;
+    rvg_t rvgt;
+
+    std::mt19937 rngl;
+    rvg_l rvgl;
+
+    typedef typename TENSOR::KEY KEY;
+
+    RandomFloatDenseFixture() : tunit(KEY()), tzero(),
+                                   rngt(std::random_device()()), rvgt(-1, 1),
+                                   rngl(std::random_device()()), rvgl(-1, 1)
+
+    {}
+};
 
 template <DEG CalcDepth, typename Coeffs, DEG Width, DEG Depth, DEG TileLetters, typename Fn>
 void fma_traditional(dtl::GilesMultiplier<Coeffs,Width, Depth, TileLetters>& helper, Fn op) noexcept
@@ -158,13 +193,13 @@ static void BM_multiplication(benchmark::State& state)
 //    DEG tensor_width = W;        // TODO: implement properly
 //    DEG max_depth = D;         // TODO: implement properly
 
-    TENSOR lhs;
-    TENSOR rhs;
-    TENSOR result;
-
-    dtl::GilesMultiplier<float_field , W, D, TileLetters> helper(result, lhs, rhs);
-
-    tiled_fma<1>(result, lhs, rhs, mult::scalar_passthrough());
+//    TENSOR lhs;
+//    TENSOR rhs;
+//    TENSOR result;
+//
+//    dtl::GilesMultiplier<float_field , W, D, TileLetters> helper(result, lhs, rhs);
+//
+//    tiled_fma<1>(result, lhs, rhs, mult::scalar_passthrough());
 
     for (auto _ : state) {
 //        auto result = tiled_inverse(t);

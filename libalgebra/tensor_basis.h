@@ -19,9 +19,9 @@ Version 3. (See accompanying file License.txt)
 #include <cmath>
 #include <limits>
 
-#include "basis.h"
 #include "_tensor_basis.h"
 #include "base_basis.h"
+#include "basis.h"
 #include "detail/meta.h"
 #include "key_iterators.h"
 
@@ -42,13 +42,14 @@ struct tensor_size_info {
         static constexpr DIMN value = (power(NoLetters, Depth + 1) - 1) / (NoLetters - 1);
     };
 
-    template <DIMN D>
+    template<DIMN D>
     struct power_helper {
         static constexpr DIMN value = power(NoLetters, D);
     };
 
     using holder = typename alg::utils::generate_array<max_depth + 1, helper>::result;
     using power_holder = typename alg::utils::generate_array<max_depth, power_helper>::result;
+    using degree_sizes_t = std::array<DIMN, max_depth + 2>;
 
     static const std::array<DIMN, max_depth + 1> powers;
     static const std::array<DIMN, max_depth + 2> degree_sizes;
@@ -60,10 +61,8 @@ const std::array<DIMN,
                          + 2>
         tensor_size_info<N>::degree_sizes = tensor_size_info<N>::holder::data;
 
-template <DEG Width>
-const std::array<DIMN, tensor_size_info<Width>::max_depth+1> tensor_size_info<Width>::powers
-    = tensor_size_info<Width>::power_holder::data;
-
+template<DEG Width>
+const std::array<DIMN, tensor_size_info<Width>::max_depth + 1> tensor_size_info<Width>::powers = tensor_size_info<Width>::power_holder::data;
 
 }// namespace dtl
 
@@ -238,9 +237,9 @@ public:
     }
 
     basis::key_range<tensor_basis> iterate_keys_to_deg(DEG mdeg) const noexcept
-    { return basis::key_range<tensor_basis>(*this, index_to_key(start_of_degree(mdeg))); }
-
-
+    {
+        return basis::key_range<tensor_basis>(*this, index_to_key(start_of_degree(mdeg)));
+    }
 
     basis::key_range<tensor_basis> iterate_keys(const KEY& begin, const KEY& end) const noexcept
     {
@@ -540,48 +539,44 @@ struct vector_type_selector<shuffle_tensor_basis<n_letters, max_depth>, Field> {
 
 }// namespace vectors
 
-
 namespace basis {
 
-template <DEG Width, DEG Depth1, DEG Depth2>
+template<DEG Width, DEG Depth1, DEG Depth2>
 struct related_to<tensor_basis<Width, Depth1>, tensor_basis<Width, Depth2>>
-    : std::true_type
-{};
+    : std::true_type {
+};
 
-template <DEG Width, DEG Depth1, DEG Depth2>
+template<DEG Width, DEG Depth1, DEG Depth2>
 struct related_to<free_tensor_basis<Width, Depth1>, free_tensor_basis<Width, Depth2>>
-    : std::true_type
-{};
+    : std::true_type {
+};
 
-template <DEG Width, DEG Depth1, DEG Depth2>
+template<DEG Width, DEG Depth1, DEG Depth2>
 struct related_to<shuffle_tensor_basis<Width, Depth1>, shuffle_tensor_basis<Width, Depth2>>
-    : std::true_type
-{};
+    : std::true_type {
+};
 
-template <DEG Width, DEG Depth1, DEG Depth2>
+template<DEG Width, DEG Depth1, DEG Depth2>
 struct related_to<free_tensor_basis<Width, Depth1>, tensor_basis<Width, Depth2>>
-    : std::true_type
-{};
+    : std::true_type {
+};
 
-template <DEG Width, DEG Depth1, DEG Depth2>
+template<DEG Width, DEG Depth1, DEG Depth2>
 struct related_to<tensor_basis<Width, Depth1>, free_tensor_basis<Width, Depth2>>
-    : std::true_type
-{};
+    : std::true_type {
+};
 
-template <DEG Width, DEG Depth1, DEG Depth2>
+template<DEG Width, DEG Depth1, DEG Depth2>
 struct related_to<shuffle_tensor_basis<Width, Depth1>, tensor_basis<Width, Depth2>>
-    : std::true_type
-{};
+    : std::true_type {
+};
 
-template <DEG Width, DEG Depth1, DEG Depth2>
+template<DEG Width, DEG Depth1, DEG Depth2>
 struct related_to<tensor_basis<Width, Depth1>, shuffle_tensor_basis<Width, Depth2>>
-    : std::true_type
-{};
+    : std::true_type {
+};
 
-
-
-
-} // namespace basis
+}// namespace basis
 
 }// namespace alg
 // Include once wrapper

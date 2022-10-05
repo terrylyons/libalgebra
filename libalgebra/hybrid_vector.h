@@ -5,13 +5,12 @@
 #ifndef LIBALGEBRA_HYBRID_VECTOR_H
 #define LIBALGEBRA_HYBRID_VECTOR_H
 
-
 #include <algorithm>
 #include <numeric>
 
-#include "detail/order_trait.h"
 #include "base_vector.h"
 #include "dense_vector.h"
+#include "detail/order_trait.h"
 #include "sparse_vector.h"
 
 #define DEFINE_FUSED_OP(NAME, ST, OP1, OP2)                            \
@@ -98,7 +97,7 @@ public:
         DIMN dense_dim(vect.dense_dimension());
         DIMN sparse_dim(vect.sparse_size());
 
-        auto info = basis::basis_traits<typename Vector::BASIS>::next_resize_dimension(vect.basis, dense_dim+1, vect.dense_degree());
+        auto info = basis::basis_traits<typename Vector::BASIS>::next_resize_dimension(vect.basis, dense_dim + 1, vect.dense_degree());
         DIMN next_dense_size(info.dimension);
         assert(next_dense_size <= vect.max_dense_dimension());
         assert(dense_dim <= vect.max_dense_dimension());
@@ -127,6 +126,56 @@ private:
 };
 
 }// namespace policy
+
+namespace dtl {
+
+#define LIBALGEBRA_HYBRID_REF_BINOP(OP)                              \
+    template<typename T>                                             \
+    hybrid_reference& operator OP(T arg)                             \
+    {                                                                \
+        if (m_is_dense) {                                            \
+            p_vector->DENSE::operator[](m_key) OP scalar_type(arg);  \
+        }                                                            \
+        else {                                                       \
+            p_vector->SPARSE::operator[](m_key) OP scalar_type(arg); \
+        }                                                            \
+        return *this;                                                \
+    }
+
+template<typename Hybrid>
+class hybrid_reference
+{
+    using key_type = typename Hybrid::KEY;
+
+    Hybrid* p_vector;
+    const key_type& m_key;
+    bool m_is_dense;
+
+public:
+    using scalar_type = typename Hybrid::SCALAR;
+
+    explicit hybrid_reference(Hybrid* vector, const key_type& key, bool is_dense)
+        : p_vector(vector), m_key(key), m_is_dense(is_dense)
+    {}
+
+    operator const scalar_type&() const noexcept
+    {
+        if (m_is_dense) {
+            return static_cast<const scalar_type&>(p_vector->DENSE::operator[](m_key));
+        }
+        return static_cast<const scalar_type&>(p_vector->SPARSE::operator[](m_key));
+    }
+
+    LIBALGEBRA_HYBRID_REF_BINOP(=)
+    LIBALGEBRA_HYBRID_REF_BINOP(+=)
+    LIBALGEBRA_HYBRID_REF_BINOP(-=)
+    LIBALGEBRA_HYBRID_REF_BINOP(*=)
+    LIBALGEBRA_HYBRID_REF_BINOP(/=)
+    LIBALGEBRA_HYBRID_REF_BINOP(&=)
+    LIBALGEBRA_HYBRID_REF_BINOP(|=)
+};
+
+}// namespace dtl
 
 /**
  * @brief Hybrid between a dense vector and a sparse vector.
@@ -159,6 +208,7 @@ class hybrid_vector : public dense_vector<Basis, Coeffs>, public sparse_vector<B
 
     friend struct tools::size_control;
     friend class dtl::data_access_base<hybrid_vector>;
+    friend class dtl::hybrid_reference<hybrid_vector>;
 
 private:
     // The resize manager is responsible for dictating when the
@@ -178,6 +228,8 @@ public:
     typedef typename Coeffs::Q RATIONAL;
 
     typedef typename dtl::requires_order<Basis>::key_ordering key_ordering;
+
+    using reference = dtl::hybrid_reference<hybrid_vector>;
 
 public:
     // Static variables from base_Vec (via DENSE)
@@ -337,7 +389,7 @@ private:
 
         typename std::vector<std::pair<DIMN, SCALAR>>::const_iterator cit;
         for (cit = buffer.begin(); cit != buffer.end(); ++cit) {
-            dense_value(cit->first) += cit->second;
+            DENSE::value(cit->first) += cit->second;
         }
     }
 
@@ -441,8 +493,6 @@ public:
     {
         return SPARSE::empty();
     }
-
-
 
     // Sparse part and dense part access
 
@@ -882,15 +932,10 @@ public:
     }
 
     /// Get reference to coefficient of key
-    SCALAR& operator[](const KEY& key)
+    reference operator[](const KEY& key)
     {
-        DIMN idx;
-        if ((idx = key_to_index(key)) < DENSE::dimension()) {
-            return DENSE::value(idx);
-        }
-        else {
-            return SPARSE::operator[](key);
-        }
+        DIMN idx = key_to_index(key);
+        return reference(this, key, idx < dense_dimension());
     }
 
     /// Get a reference to the coefficient of the key using index
@@ -915,11 +960,11 @@ public:
         }
     }
 
-    /// Get reference to an element from the dense part at index
-    SCALAR& dense_value(const DIMN idx)
-    {
-        return DENSE::value(idx);
-    }
+    //    /// Get reference to an element from the dense part at index
+    //    SCALAR& dense_value(const DIMN idx)
+    //    {
+    //        return DENSE::value(idx);
+    //    }
 
     /// Get a const reference to an element from the dense part at index
     const SCALAR& dense_value(const DIMN idx) const
@@ -1040,48 +1085,41 @@ public:
         return !operator==(other);
     }
 
-
-
 public:
-
-    template <typename F>
+    template<typename F>
     static void apply_unary_operation(
             hybrid_vector& result,
             const hybrid_vector& arg,
-            F&& func
-            )
+            F&& func)
     {
         DENSE::apply_unary_operation(result, arg, func);
         SPARSE::apply_unary_operation(result, arg, func);
     }
 
-    template <typename F>
+    template<typename F>
     static void apply_inplace_unary_op(hybrid_vector& arg, F&& func)
     {
         DENSE::apply_inplace_unary_op(arg, func);
         SPARSE::apply_inplace_unary_op(arg, func);
     }
 
-
-    template <typename F>
+    template<typename F>
     static void apply_flat_binary_operation(
             hybrid_vector& result,
             const hybrid_vector& lhs,
             const hybrid_vector& rhs,
-            F&& func
-            )
+            F&& func)
     {
         DENSE::apply_flat_binary_operation(result, lhs, rhs, func);
         SPARSE::apply_flat_binary_operation(result, lhs, rhs, func);
         result.incorporate_sparse();
     }
 
-    template <typename F>
+    template<typename F>
     static void apply_inplace_flat_binary_op(
             hybrid_vector& lhs,
             const hybrid_vector& rhs,
-            F&& func
-            )
+            F&& func)
     {
         DENSE::apply_inplace_flat_binary_op(lhs, rhs, func);
         SPARSE::apply_inplace_flat_binary_op(lhs, rhs, func);
@@ -1269,7 +1307,6 @@ public:
         key_ordering ord;
         return ord(lhs.first, rhs.first);
     }
-
 
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:

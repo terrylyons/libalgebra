@@ -41,12 +41,11 @@ public:
         return arg;
     }
 
-
-//    template<typename B, typename C, template<typename, typename, typename...> class Vector, typename... Args>
-//    static const Vector<B, C, Args...>& convert(const Vector<B, C, Args...>& arg)
-//    {
-//        return arg;
-//    }
+    //    template<typename B, typename C, template<typename, typename, typename...> class Vector, typename... Args>
+    //    static const Vector<B, C, Args...>& convert(const Vector<B, C, Args...>& arg)
+    //    {
+    //        return arg;
+    //    }
 
     template<typename Basis, typename Coeffs, template<typename, typename, typename...> class Vector, typename... Args>
     static const Vector<Basis, Coeffs, Args...>& convert(const vector<Basis, Coeffs, Vector, Args...>& arg)
@@ -105,6 +104,8 @@ public:
 public:
     // Pull through function definitions from the underlying vector
     using UnderlyingVectorType::begin;
+    using UnderlyingVectorType::cbegin;
+    using UnderlyingVectorType::cend;
     using UnderlyingVectorType::end;
     using UnderlyingVectorType::erase;
     using UnderlyingVectorType::find;
@@ -187,9 +188,9 @@ public:
         }
     }
 
-    template <typename B>
+    template<typename B>
     explicit vector(const vector<B, Coeffs, VectorImpl>& arg)
-            : UnderlyingVectorType()
+        : UnderlyingVectorType()
     {
         for (auto cit = arg.begin(); cit != arg.end(); ++cit) {
             operator[](cit->key()) = cit->value();
@@ -278,7 +279,7 @@ public:
     vector& add_scal_prod(const vector& rhs, const SCALAR& s)
     {
         auto op = [s](const SCALAR& l, const SCALAR& r) {
-          return Coeffs::template add(l, Coeffs::template mul(r, s));
+            return Coeffs::template add(l, Coeffs::template mul(r, s));
         };
         UnderlyingVectorType::apply_inplace_flat_binary_op(*this, rhs, op);
         return *this;
@@ -344,7 +345,7 @@ public:
     vector& add_scal_div(const vector& rhs, const RATIONAL& s)
     {
         auto op = [s](const SCALAR& l, const SCALAR& r) {
-          return Coeffs::template add(l, Coeffs::template div(r, s));
+            return Coeffs::template add(l, Coeffs::template div(r, s));
         };
         UnderlyingVectorType::apply_inplace_flat_binary_op(*this, rhs, op);
         return *this;
@@ -501,10 +502,8 @@ private:
     }
 
 public:
-
-    template <typename Vector>
-    friend typename
-    std::enable_if<std::is_base_of<vector, Vector>::value, Vector>::type
+    template<typename Vector>
+    friend typename std::enable_if<std::is_base_of<vector, Vector>::value, Vector>::type
     operator-(const Vector& arg)
     {
         Vector result;
@@ -512,63 +511,57 @@ public:
         return result;
     }
 
-    template <typename Vector, typename Scalar>
+    template<typename Vector, typename Scalar>
     friend
-    typename std::enable_if<
-            std::is_base_of<vector, Vector>::value &&
-                    std::is_constructible<SCALAR, const Scalar&>::value,
-            Vector>::type
-    operator*(const Vector& arg, const Scalar& scal)
+            typename std::enable_if<
+                    std::is_base_of<vector, Vector>::value && std::is_constructible<SCALAR, const Scalar&>::value,
+                    Vector>::type
+            operator*(const Vector& arg, const Scalar& scal)
     {
         Vector result;
         SCALAR s(scal);
         UnderlyingVectorType::apply_unary_operation(result, arg,
-                                                    [=](const SCALAR& a) { return Coeffs::mul(a, s); }
-        );
+                                                    [=](const SCALAR& a) { return Coeffs::mul(a, s); });
         return result;
     }
 
-    template <typename Vector>
+    template<typename Vector>
     friend
-    typename std::enable_if<
-            std::is_base_of<vector, Vector>::value,
-            Vector>::type
-    operator*(const Vector& arg, const SCALAR& scal)
+            typename std::enable_if<
+                    std::is_base_of<vector, Vector>::value,
+                    Vector>::type
+            operator*(const Vector& arg, const SCALAR& scal)
     {
         Vector result;
         UnderlyingVectorType::apply_unary_operation(result, arg,
-                                                    [=](const SCALAR& a) { return Coeffs::mul(a, scal); }
-        );
+                                                    [=](const SCALAR& a) { return Coeffs::mul(a, scal); });
         return result;
     }
 
-    template <typename Vector, typename Scalar>
+    template<typename Vector, typename Scalar>
     friend
-    typename std::enable_if<
-            std::is_base_of<vector, Vector>::value &&
-            std::is_constructible<SCALAR, const Scalar&>::value,
-            Vector>::type
-    operator*(const Scalar& scal, const Vector& arg)
+            typename std::enable_if<
+                    std::is_base_of<vector, Vector>::value && std::is_constructible<SCALAR, const Scalar&>::value,
+                    Vector>::type
+            operator*(const Scalar& scal, const Vector& arg)
     {
         Vector result;
         SCALAR s(scal);
         UnderlyingVectorType::apply_unary_operation(result, arg,
-                    [=](const SCALAR& a) { return Coeffs::mul(s, a); }
-                );
+                                                    [=](const SCALAR& a) { return Coeffs::mul(s, a); });
         return result;
     }
 
-    template <typename Vector>
+    template<typename Vector>
     friend
-    typename std::enable_if<
-            std::is_base_of<vector, Vector>::value,
-            Vector>::type
-    operator*(const SCALAR& scal, const Vector& arg)
+            typename std::enable_if<
+                    std::is_base_of<vector, Vector>::value,
+                    Vector>::type
+            operator*(const SCALAR& scal, const Vector& arg)
     {
         Vector result;
         UnderlyingVectorType::apply_unary_operation(result, arg,
-                    [=](const SCALAR& a) { return Coeffs::mul(scal, a); }
-                );
+                                                    [=](const SCALAR& a) { return Coeffs::mul(scal, a); });
         return result;
     }
 
@@ -587,10 +580,10 @@ public:
 
     template<typename Vector1, typename Vector2>
     friend
-    typename std::enable_if<
-            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
-            Vector1>::type
-    operator+(const Vector1& lhs, const Vector2& rhs)
+            typename std::enable_if<
+                    std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
+                    Vector1>::type
+            operator+(const Vector1& lhs, const Vector2& rhs)
     {
         Vector1 result;
         UnderlyingVectorType::apply_flat_binary_operation(
@@ -598,8 +591,8 @@ public:
         return result;
     }
 
-    template <typename Vector,
-             template <typename, typename, typename...> class OtherVType,
+    template<typename Vector,
+             template<typename, typename, typename...> class OtherVType,
              typename... OtherArgs>
     friend typename std::enable_if<
             std::is_base_of<vector, Vector>::value,
@@ -615,10 +608,10 @@ public:
 
     template<typename Vector1, typename Vector2>
     friend
-    typename std::enable_if<
-            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
-            Vector1>::type
-    operator-(const Vector1& lhs, const Vector2& rhs)
+            typename std::enable_if<
+                    std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
+                    Vector1>::type
+            operator-(const Vector1& lhs, const Vector2& rhs)
     {
         Vector1 result;
         UnderlyingVectorType::apply_flat_binary_operation(
@@ -626,8 +619,8 @@ public:
         return result;
     }
 
-    template <typename Vector,
-             template <typename, typename, typename...> class OtherVType,
+    template<typename Vector,
+             template<typename, typename, typename...> class OtherVType,
              typename... OtherArgs>
     friend typename std::enable_if<
             std::is_base_of<vector, Vector>::value,
@@ -665,10 +658,9 @@ public:
         return arg;
     }
 
-    template <typename Vector1, typename Vector2>
+    template<typename Vector1, typename Vector2>
     friend typename std::enable_if<
-            std::is_base_of<vector, Vector1>::value &&
-            std::is_base_of<vector, Vector2>::value,
+            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
             Vector1>::type&
     operator+=(Vector1& lhs, const Vector2& rhs)
     {
@@ -676,7 +668,7 @@ public:
         return lhs;
     }
 
-    template <typename Vector, template <typename, typename, typename...> class OtherVType, typename... OtherArgs>
+    template<typename Vector, template<typename, typename, typename...> class OtherVType, typename... OtherArgs>
     friend typename std::enable_if<std::is_base_of<vector, Vector>::value, Vector>::type&
     operator+=(Vector& lhs, const vector<Basis, Coeffs, OtherVType, OtherArgs...>& rhs)
     {
@@ -686,10 +678,9 @@ public:
         return lhs;
     }
 
-    template <typename Vector1, typename Vector2>
+    template<typename Vector1, typename Vector2>
     friend typename std::enable_if<
-            std::is_base_of<vector, Vector1>::value &&
-            std::is_base_of<vector, Vector2>::value,
+            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
             Vector1>::type&
     operator-=(Vector1& lhs, const Vector2& rhs)
     {
@@ -697,7 +688,7 @@ public:
         return lhs;
     }
 
-    template <typename Vector, template<typename, typename, typename...> class OtherVType, typename... OtherArgs>
+    template<typename Vector, template<typename, typename, typename...> class OtherVType, typename... OtherArgs>
     friend typename std::enable_if<std::is_base_of<vector, Vector>::value, Vector>::type&
     operator-=(Vector& lhs, const vector<Basis, Coeffs, OtherVType, OtherArgs...>& rhs)
     {
@@ -707,7 +698,6 @@ public:
         return lhs;
     }
 
-
     /*
      * Ordering operators are interesting because not all coefficient rings
      * are necessarily ordered. To make sure things are only defined when
@@ -716,36 +706,33 @@ public:
      * until proper support is added to the coefficient trait.
      */
 
-    template <typename Vector1, typename Vector2, typename Order=std::less<SCALAR>>
+    template<typename Vector1, typename Vector2, typename Order = std::less<SCALAR>>
     friend typename std::enable_if<
-            std::is_base_of<vector, Vector1>::value &&
-            std::is_base_of<vector, Vector2>::value,
+            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
             Vector1>::type
     operator|(const Vector1& lhs, const Vector2& rhs)
     {
         Vector1 result;
         Order cmp;
         UnderlyingVectorType::apply_flat_binary_operation(
-                result, lhs, rhs, [=](const SCALAR& l, const SCALAR& r)
-                { return std::max(l, r, cmp); });
+                result, lhs, rhs, [=](const SCALAR& l, const SCALAR& r) { return std::max(l, r, cmp); });
         return result;
     }
 
-    template <typename Vector1, typename Vector2, typename Order=std::less<SCALAR>>
+    template<typename Vector1, typename Vector2, typename Order = std::less<SCALAR>>
     friend typename std::enable_if<
-            std::is_base_of<vector, Vector1>::value &&
-            std::is_base_of<vector, Vector2>::value,
+            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
             Vector1>::type
     operator&(const Vector1& lhs, const Vector2& rhs)
     {
         Vector1 result;
         Order cmp;
         UnderlyingVectorType::apply_flat_binary_operation(result, lhs, rhs,
-                  [=](const SCALAR& l, const SCALAR& r) { return std::min(l, r, cmp); });
+                                                          [=](const SCALAR& l, const SCALAR& r) { return std::min(l, r, cmp); });
         return result;
     }
 
-    template <typename Vector1, typename Vector2, typename Order=std::less<SCALAR>>
+    template<typename Vector1, typename Vector2, typename Order = std::less<SCALAR>>
     friend typename std::enable_if<
             std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
             Vector1>::type
@@ -753,11 +740,11 @@ public:
     {
         Order cmp;
         UnderlyingVectorType::apply_inplace_flat_binary_op(lhs, rhs,
-                           [=](const SCALAR& l, const SCALAR& r) { return std::max(l ,r, cmp); });
+                                                           [=](const SCALAR& l, const SCALAR& r) { return std::max(l, r, cmp); });
         return lhs;
     }
 
-    template <typename Vector1, typename Vector2, typename Order=std::less<SCALAR>>
+    template<typename Vector1, typename Vector2, typename Order = std::less<SCALAR>>
     friend typename std::enable_if<
             std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
             Vector1>::type
@@ -765,7 +752,7 @@ public:
     {
         Order cmp;
         UnderlyingVectorType::apply_inplace_flat_binary_op(lhs, rhs,
-                           [=](const SCALAR& l, const SCALAR& r) { return std::min(l ,r, cmp); });
+                                                           [=](const SCALAR& l, const SCALAR& r) { return std::min(l, r, cmp); });
         return lhs;
     }
 };
@@ -774,25 +761,19 @@ public:
 
 namespace utils {
 
-
 template<typename T>
 struct is_vector_type {
 private:
-
-    template <typename B, typename C, template <typename, typename, typename...> class Type, typename... Args>
+    template<typename B, typename C, template<typename, typename, typename...> class Type, typename... Args>
     static std::true_type check(vectors::vector<B, C, Type, Args...>&);
 
     static std::false_type check(...);
 
 public:
-
     static constexpr bool value = decltype(check(std::declval<T>()))::value;
-
 };
 
-
-} // namespace utils
-
+}// namespace utils
 
 }// namespace alg
 #endif// LIBALGEBRA_VECTOR_H

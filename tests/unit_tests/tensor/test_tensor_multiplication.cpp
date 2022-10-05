@@ -337,27 +337,27 @@ SUITE(tensor_multiplication)
         }                                                                                     \
     }
 
-#define LA_TESTING_TENSOR_MAX_DEG_MSD(MUL, VEC, DEGREE)                                                  \
-    TEST_FIXTURE(PolyMultiplicationTests, VEC##_##MUL##_msd_max_deg_rzu_##DEGREE)                        \
-    {                                                                                                    \
-        auto lhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(1000000);            \
-        auto rhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(2000000);            \
-        rhs[key_type()] = scalar_type();                                                                 \
-                                                                                                         \
-        lhs.mul_scal_div(rhs, rational_type(2), DEGREE);                                                 \
-                                                                                                         \
-        CHECK_EQUAL(3905, lhs.size());                                                                   \
-        for (auto item : lhs) {                                                                          \
-            if (item.key() == key_type()) {                                                              \
-                CHECK_EQUAL(scalar_type(), item.value());                                                \
-            }                                                                                            \
-            else if (basis.degree(item.key()) < DEGREE + 1) {                                            \
+#define LA_TESTING_TENSOR_MAX_DEG_MSD(MUL, VEC, DEGREE)                                                      \
+    TEST_FIXTURE(PolyMultiplicationTests, VEC##_##MUL##_msd_max_deg_rzu_##DEGREE)                            \
+    {                                                                                                        \
+        auto lhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(1000000);                \
+        auto rhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(2000000);                \
+        rhs[key_type()] = scalar_type();                                                                     \
+                                                                                                             \
+        lhs.mul_scal_div(rhs, rational_type(2), DEGREE);                                                     \
+                                                                                                             \
+        CHECK_EQUAL(3905, lhs.size());                                                                       \
+        for (auto item : lhs) {                                                                              \
+            if (item.key() == key_type()) {                                                                  \
+                CHECK_EQUAL(scalar_type(), item.value());                                                    \
+            }                                                                                                \
+            else if (basis.degree(item.key()) < DEGREE + 1) {                                                \
                 REQUIRE CHECK_EQUAL(construct_expected_rzu(item.key(), 1000000, 2000000) / 2, item.value()); \
-            }                                                                                            \
-            else {                                                                                       \
-                REQUIRE CHECK_EQUAL(to_poly_key(item.key(), 1000000), item.value());                     \
-            }                                                                                            \
-        }                                                                                                \
+            }                                                                                                \
+            else {                                                                                           \
+                REQUIRE CHECK_EQUAL(to_poly_key(item.key(), 1000000), item.value());                         \
+            }                                                                                                \
+        }                                                                                                    \
     }
 
 #define LA_TESTING_TENSOR_MUL_MAKE_TESTS(MUL, VEC)                                                        \
@@ -457,11 +457,11 @@ SUITE(tensor_multiplication)
     TEST_FIXTURE(PolyMultiplicationTests, VEC##_##MUL##_exp_test)                                         \
     {                                                                                                     \
         auto arg = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>();                    \
-        arg[key_type()] = scalar_type();\
+        arg[key_type()] = scalar_type();                                                                  \
                                                                                                           \
         tensor_type<MUL##_multiplication, alg::vectors::VEC##_vector> result{key_type(), scalar_type(1)}; \
         tensor_type<MUL##_multiplication, alg::vectors::VEC##_vector> one{key_type(), scalar_type(1)};    \
-        for (DEG d = depth; d > 0; --d) {                                                                     \
+        for (DEG d = depth; d > 0; --d) {                                                                 \
             result.mul_scal_div(arg, rational_type(d), 5 - d + 1);                                        \
             result += one;                                                                                \
         }                                                                                                 \
@@ -469,14 +469,14 @@ SUITE(tensor_multiplication)
         alg::free_tensor<coeff_ring, 5, 5, alg::vectors::VEC##_vector> expected_a(arg);                   \
         auto expected = exp(expected_a);                                                                  \
                                                                                                           \
-        auto it = expected.begin();                                                                       \
+        auto it = expected.cbegin();                                                                      \
         CHECK_EQUAL(3906, result.size());                                                                 \
         for (auto item : result) {                                                                        \
             REQUIRE CHECK_EQUAL(it->key(), item.key());                                                   \
             CHECK_EQUAL(it->value().size(), item.value().size());                                         \
-            if (it->value().size() != item.value().size()) {                                                \
-                std::cout << it->key() << ' ' << item.value() - it->value() << "\n\n";                                                                                              \
-            }\
+            if (it->value().size() != item.value().size()) {                                              \
+                std::cout << it->key() << ' ' << item.value() - it->value() << "\n\n";                    \
+            }                                                                                             \
             REQUIRE CHECK_EQUAL(it->value(), item.value());                                               \
             ++it;                                                                                         \
         }                                                                                                 \

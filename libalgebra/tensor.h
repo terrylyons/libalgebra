@@ -29,6 +29,7 @@ Version 3. (See accompanying file License.txt)
 
 #include "area_tensor_basis.h"
 #include "base_vector.h"
+#include "dense_storage.h"
 #include "dense_vector.h"
 #include "half_shuffle_tensor_basis.h"
 #include "tensor_basis.h"
@@ -1718,7 +1719,12 @@ public:
         typename tensor_basis<n_letters, max_degree>::KEY kunit;
         free_tensor result(kunit);
         free_tensor unit(kunit);
-        result.base_vector().resize_to_degree(max_degree);
+
+        auto& base_result = result.base_vector();
+        if (base_result.dimension() < typename base::basis_type::start_of_degree(max_degree+1)) {
+            base_result.resize_to_degree(max_degree);
+        }
+
         for (DEG i = max_degree; i >= 1; --i) {
             result.mul_scal_div(arg, typename Coeff::Q(i));
             result += unit;
@@ -1761,7 +1767,9 @@ public:
 
         free_tensor result(*this), x(exp_arg);
 
-        result.base_vector().resize_to_degree(max_degree);
+        if (result.degree() < max_degree) {
+            result.base_vector().resize_to_degree(max_degree);
+        }
         x.base_vector().value(0) = typename base::scalar_type(0);
 
         for (DEG i = max_degree; i >= 1; --i) {
@@ -1782,7 +1790,9 @@ public:
         }
         free_tensor original(*this), x(exp_arg);
 
-        this->base_vector().resize_to_degree(max_degree);
+        if (this->degree() < max_degree) {
+            this->base_vector().resize_to_degree(max_degree);
+        }
         x.base_vector().value(0) = typename base::scalar_type(0);
 
         for (DEG i = max_degree; i >= 1; --i) {
@@ -2059,6 +2069,745 @@ using area_tensor = algebra<area_tensor_basis<Width, Depth>,
                             area_tensor_multiplication<Width, Depth>,
                             VectorType,
                             Args...>;
+
+
+
+namespace vectors {
+
+namespace dtl {
+
+#define LIBALGEBRA_DENSE_TENSOR_REF_BINOP(OP)          \
+    template<typename T>                               \
+    dense_tensor_item_reference& operator OP(T other)  \
+    {                                                  \
+        *m_item OP scalar_type(other);                 \
+        if (m_reverse_item != nullptr) {               \
+            *m_reverse_item OP scalar_type(other);     \
+        }                                              \
+        return *this;                                  \
+    }
+
+template<typename Coeffs>
+class dense_tensor_item_reference
+{
+    using scalar_type = typename Coeffs::S;
+    scalar_type* m_item;
+    scalar_type* m_reverse_item;
+
+public:
+    explicit dense_tensor_item_reference(scalar_type* item, scalar_type* reverse_item) noexcept
+            : m_item(item), m_reverse_item(reverse_item)
+    {
+        assert(m_reverse_item == nullptr || *m_item == *m_reverse_item);
+    }
+
+    operator const scalar_type&() noexcept { return m_item; }
+
+    template<typename T>
+    dense_tensor_item_reference& operator=(const T& new_val)
+    {
+        *m_item = scalar_type(new_val);
+        if (m_reverse_item != nullptr) {
+            m_reverse_item = scalar_type(new_val);
+        }
+        return *this;
+    }
+
+    template<typename T>
+    dense_tensor_item_reference& operator=(T&& new_val) noexcept
+    {
+        *m_item = scalar_type(std::forward<T>(new_val));
+        if (m_reverse_item != nullptr) {
+            *m_reverse_item = *m_item;
+        }
+        return *this;
+    }
+
+    LIBALGEBRA_DENSE_TENSOR_REF_BINOP(+=)
+    LIBALGEBRA_DENSE_TENSOR_REF_BINOP(-=)
+    LIBALGEBRA_DENSE_TENSOR_REF_BINOP(*=)
+    LIBALGEBRA_DENSE_TENSOR_REF_BINOP(/=)
+    LIBALGEBRA_DENSE_TENSOR_REF_BINOP(&=)
+    LIBALGEBRA_DENSE_TENSOR_REF_BINOP(|=)
+
+};
+
+#undef LIBALGEBRA_DENSE_TENSOR_REF_BINOP
+
+
+template <DEG Width, DEG Depth, typename Coeffs>
+class dense_tensor_const_iterator_item
+{
+    using scalar_type = typename Coeffs::S;
+    const scalar_type* m_ptr;
+
+    using vector_type = dense_vector<free_tensor_basis<Width, Depth>, Coeffs>;
+
+    friend class iterators::vector_iterator<dense_tensor_const_iterator_item>;
+    friend vector_type;
+
+    const vector_type* p_vector;
+
+
+public:
+
+    using key_type = typename free_tensor_basis<Width, Depth>::KEY;
+    using reference = const scalar_type&;
+
+
+    explicit dense_tensor_const_iterator_item(const vector_type& vect,
+                                              const scalar_type* item)
+            : m_ptr(&item), p_vector(vect)
+    {}
+
+    DIMN index() const {
+        return static_cast<DIMN>(m_ptr - p_vector->begin());
+    }
+
+    key_type key()
+    {
+        assert(index() < p_vector->dimension());
+        return index_to_key(index());
+    }
+
+    reference value()
+    {
+        return *m_ptr;
+    }
+
+private:
+
+    bool compare_iterators(const dense_tensor_const_iterator_item& other) const
+    {
+        return m_ptr >= other.m_ptr;
+    }
+
+    void advance()
+    {
+        const auto end = p_vector->end();
+        do {
+            ++m_ptr;
+        } while (m_ptr != end && *m_ptr != Coeffs::zero);
+    }
+};
+
+template <DEG Width, DEG Depth, typename Coeffs>
+class dense_tensor_iterator_item
+{
+    using tsi = alg::dtl::tensor_size_info<Width>;
+    using vector_type = dense_vector<free_tensor_basis<Width, Depth>, Coeffs>;
+    using scalar_type = typename Coeffs::S;
+
+    const scalar_type* m_ptr;
+    const scalar_type* m_rptr;
+    const vector_type* p_vector;
+    DEG m_degree;
+
+
+    friend class iterators::vector_iterator<dense_tensor_iterator_item>;
+    friend vector_type;
+
+
+    scalar_type* reverse_ptr()
+    {
+        auto idx = index();
+        DIMN size;
+        while (idx > (size = tsi::degree_sizes[m_degree])) {
+            ++m_degree;
+        }
+        scalar_type* rptr = nullptr;
+
+        if (m_degree < p_vector->degree()) {
+            auto tmp = idx - size;
+            DIMN result = 0;
+            for (DEG i=0; i<m_degree; ++i) {
+                result *= Width;
+                result += tmp % Width;
+                tmp /= Width;
+            }
+            result += size;
+
+            rptr = m_rptr + result;
+        }
+
+        return rptr;
+    }
+
+
+public:
+    using basis_type = free_tensor_basis<Width, Depth>;
+    using key_type = typename free_tensor_basis<Width, Depth>::KEY;
+    using reference = dense_tensor_item_reference<Coeffs>;
+
+
+    explicit dense_tensor_iterator_item(vector_type& vect,
+                                        scalar_type* item)
+            : m_ptr(&item),
+              m_rptr(vect->as_mut_rptr()),
+              p_vector(vect)
+    {
+        auto it = std::lower_bound(tsi::degree_sizes.begin(), tsi::degree_sizes.end(), index(), std::less_equal<>());
+        m_degree = static_cast<DEG>(it - tsi::degree_sizes.begin());
+    }
+
+    DIMN index() const {
+        return static_cast<DIMN>(m_ptr - p_vector->begin());
+    }
+
+    key_type key()
+    {
+        assert(index() < p_vector->dimension());
+        return index_to_key(index());
+    }
+
+    reference value()
+    {
+        return reference(m_ptr, reverse_ptr());
+    }
+
+private:
+
+    bool compare_iterators(const dense_tensor_iterator_item& other) const
+    {
+        return m_ptr >= other.m_ptr;
+    }
+
+    void advance()
+    {
+        const auto end = p_vector->end();
+        do {
+            ++m_ptr;
+        } while (m_ptr != end && *m_ptr != Coeffs::zero);
+    }
+};
+
+
+
+
+}// namespace dtl
+
+template<DEG Width, DEG Depth, typename Coeffs>
+class dense_vector<free_tensor_basis<Width, Depth>, Coeffs>
+        : protected base_vector<free_tensor_basis<Width, Depth>, Coeffs>
+{
+    using storage_type = dense_storage<typename Coeffs::S>;
+    using base_vector_type = base_vector<free_tensor_basis<Width, Depth>, Coeffs>;
+    using tsi = ::alg::dtl::tensor_size_info<Width>;
+
+    storage_type m_data;
+    storage_type m_reverse_data;
+    DIMN m_dimension;
+    DEG m_degree;
+
+    using basis_traits = basis::basis_traits<free_tensor_basis<Width, Depth>>;
+
+    static typename tsi::holder::const_iterator index_to_size_iter(DIMN index) noexcept
+    {
+        return std::lower_bound(tsi::degree_sizes.begin(), tsi::degree_sizes.end(), index, std::less_equal<>());
+    }
+
+    static DEG size_iter_to_deg(typename tsi::holder::const_iterator it) noexcept
+    {
+        return static_cast<DEG>(it - tsi::degree_sizes.begin());
+    }
+
+    static DIMN reverse_index(DIMN index_in_degree, DEG deg) noexcept
+    {
+        DIMN result = 0;
+        for (DEG i = 0; i < deg; ++i) {
+            result *= DIMN(Width);
+            result += index_in_degree % Width;
+            index_in_degree /= Width;
+        }
+
+        return result;
+    }
+
+public:
+    using basis_type = free_tensor_basis<Width, Depth>;
+    using key_type = typename basis_type::KEY;
+    using coefficient_ring = Coeffs;
+    using scalar_type = typename Coeffs::S;
+    using rational_type = typename Coeffs::Q;
+
+    using scalar_param_type = typename boost::call_traits<scalar_type>::param_type;
+
+    using pointer = typename storage_type::pointer;
+    using const_pointer = typename storage_type::const_pointer;
+    using reference = dtl::dense_tensor_item_reference<Coeffs>;
+    using const_reference = typename storage_type::const_reference;
+
+    using iterator = iterators::vector_iterator<
+            dtl::dense_tensor_iterator_item<Width, Depth, Coeffs>>;
+    using const_iterator = iterators::vector_iterator<
+            dtl::dense_tensor_const_iterator_item<Width, Depth, Coeffs>>;
+
+    using base_vector_type::degree_tag;
+
+    explicit dense_vector(key_type key, scalar_param_type scalar = Coeffs::one)
+            : m_data(), m_reverse_data(), m_dimension(0), m_degree(0)
+    {
+    }
+
+    const_reference value(DIMN index) const noexcept
+    {
+        return m_data[index];
+    }
+
+    reference value(DIMN index) noexcept
+    {
+        resize_to_dimension(index + 1);
+        auto it = index_to_size_iter(index);
+        auto deg = size_iter_to_deg(it);
+        if (deg < m_degree) {
+            auto rindex = reverse_index(index - *it) + *it;
+            return reference(m_data + index, m_reverse_data + rindex);
+        }
+        return reference(m_data + index, nullptr);
+    }
+
+    const_reference operator[](key_type key) const noexcept
+    {
+        if (key.size() <= m_degree) {
+            return m_data[basis_type::key_to_index(key)];
+        }
+        return Coeffs::zero;
+    }
+
+    reference operator[](key_type key) noexcept
+    {
+        resize_for_key(key);
+        assert(key.size() <= m_degree);
+        if (key.size() < m_degree) {
+            return reference(m_data + basis_type::key_to_index(key),
+                             m_reverse_data + basis_type::key_to_index(key.reverse()));
+        }
+        else {
+            return reference(m_data + basis_type::key_to_index(key), nullptr);
+        }
+    }
+
+    /// Reserve to dimension
+    void reserve_to_dimension(const DIMN dim)
+    {
+        if (dim > m_dimension) {
+            auto info = basis_traits::next_resize_dimension(base_vector_type::basis, dim, m_degree);
+            m_data.reserve(info.size);
+            m_reverse_data.reserve(basis_traits::start_of_degree(info.degree));
+            m_dimension = info.dimension;
+            m_degree = info.degree;
+        }
+    }
+
+    /// Reserve to degree
+    void reserve_to_degree(const DEG deg)
+    {
+        if (deg > m_degree) {
+            auto info = basis_traits::next_resize_dimension(base_vector_type::basis, 0, deg);
+            m_data.reserve(info.size);
+            m_reverse_data.reserve(basis_traits::start_of_degree(info.degree));
+            m_dimension = info.dimension;
+            m_degree = info.degree;
+        }
+    }
+
+    DIMN resize_for_key(key_type key)
+    {
+        auto info = basis_traits::key_resize_dimension(base_vector_type::basis, key);
+        if (info.dimension > m_dimension) {
+            m_data.resize(info.size);
+            m_reverse_data.resize(basis_traits::start_of_degree(info.degree));
+            m_dimension = info.dimension;
+            m_degree = info.degree;
+        }
+        return basis_traits::key_to_index(base_vector_type::basis, key);
+    }
+
+    /// Resize to dimension
+    void resize_to_dimension(DIMN dim)
+    {
+        auto info = basis_traits::next_resize_dimension(base_vector_type::basis, dim, m_degree);
+        if (info.dimension > m_dimension) {
+            m_data.resize(info.size);
+            m_reverse_data.resize(basis_traits::start_of_degree(info.degree));
+            m_dimension = info.dimension;
+            m_degree = info.degree;
+        }
+        else if (info.dimension == m_dimension) {
+            m_degree = info.degree;
+        }
+    }
+
+    /// Reserve to degree
+    void resize_to_degree(const DEG deg)
+    {
+        if (deg > m_degree) {
+            auto info = basis_traits::next_resize_dimension(base_vector_type::basis, 0, deg);
+            m_data.resize(info.size);
+            m_reverse_data.resize(basis_traits::start_of_degree(info.degree));
+            m_dimension = info.dimension;
+            m_degree = info.degree;
+        }
+    }
+
+    DEG degree() const noexcept { return m_degree; }
+    DIMN dimension() const noexcept { return m_dimension; };
+    bool degree_equals(DEG degree) const noexcept { return m_degree == degree; }
+
+    bool empty() const noexcept
+    {
+        if (m_data.empty()) {
+            return true;
+        }
+
+        for (DIMN i = 0; i < m_dimension; ++i) {
+            if (m_data[i] != Coeffs::zero) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    DIMN size() const noexcept
+    {
+        DIMN result = 0;
+        for (DIMN i = 0; i < m_dimension; ++i) {
+            result += static_cast<DIMN>(m_data[i] == Coeffs::zero);
+        }
+        return result;
+    }
+
+    void swap(dense_vector& other)
+    {
+        m_data.swap(other.m_data);
+        m_reverse_data.swap(other.m_reverse_data);
+        std::swap(m_dimension, other.m_dimension);
+        std::swap(m_degree, other.m_degree);
+    }
+
+    template <typename Scalar>
+    void insert(key_type key, Scalar val)
+    {
+        operator[](key) = val;
+    }
+
+    void erase(key_type key)
+    {
+        auto deg = key.size();
+        if (deg < m_degree) {
+            operator[](key) = Coeffs::zero;
+        } else if (deg == m_degree) {
+            m_data[basis_type::key_to_index(key)] = Coeffs::zero;
+        }
+    }
+
+    void clear()
+    {
+        std::fill(m_data.begin(), m_data.end(), Coeffs::zero);
+        std::fill(m_reverse_data.begin(), m_reverse_data.end(), Coeffs::zero);
+    }
+
+    iterator begin()
+    {
+        return iterator(*this, m_data.begin());
+    }
+    iterator end()
+    {
+        return iterator(*this, m_data.end());
+    }
+    const_iterator begin() const
+    {
+        return const_iterator(*this, m_data.begin());
+    }
+    const_iterator end() const
+    {
+        return const_iterator(*this, m_data.end());
+    }
+    const_iterator cbegin() const
+    {
+        return const_iterator(*this, m_data.begin());
+    }
+    const_iterator cend() const
+    {
+        return const_iterator(*this, m_data.end());
+    }
+
+    const_iterator find(key_type key) const
+    {
+        auto deg = key.size();
+        if (deg <= m_degree) {
+            return const_iterator(*this, m_data.begin() +
+                    basis_type::key_to_index(key));
+        }
+        return end();
+    }
+    iterator find(key_type key)
+    {
+        auto deg = key.size();
+        if (deg <= m_degree) {
+            return const_iterator(*this, m_data.begin() +
+                    basis_type::key_to_index(key));
+        }
+        return end();
+    }
+    const_iterator find_index(DIMN idx) const
+    {
+        if (idx < m_dimension) {
+            return const_iterator(*this, m_data.begin() + idx);
+        }
+        return end();
+    }
+    iterator find_index(DIMN idx)
+    {
+        if (idx < m_dimension) {
+            return const_iterator(*this, m_data.begin() + idx);
+        }
+        return end();
+    }
+
+    template <typename InputIt>
+    void insert(InputIt begin, InputIt end)
+    {
+        for (auto it=begin; it!=end; ++it) {
+            add_scal_prod(it->first, it->second);
+        }
+    }
+
+
+    template <typename Scalar>
+    void add_scal_prod(key_type key, Scalar s)
+    {
+        operator[](key) += scalar_type(s);
+    }
+
+    template <typename Fn>
+    static void apply_unary_operation(
+            dense_vector& result,
+            const dense_vector& arg,
+            Fn fn
+    )
+    {
+        assert(result.m_dimension == 0);
+        result.reserve_to_dimension(arg.m_dimension);
+        for (DIMN i=0; i<arg.m_dimension; ++i) {
+            result.m_data.emplace(i, fn(arg.m_data[i]));
+        }
+
+        const auto size = arg.m_reverse_data.size();
+        for (DIMN i=0; i<size; ++i) {
+            result.m_reverse_data.emplace(i, fn(arg.m_reverse_data[i]));
+        }
+    }
+
+    template <typename Fn>
+    static void apply_inplace_unary_op(dense_vector& arg, Fn op)
+    {
+        for (DIMN i=0; i<arg.m_dimension; ++i) {
+            arg.m_data[i] = op(arg.m_data[i]);
+        }
+
+        const auto size = arg.m_reverse_data.size();
+        for (DIMN i=0; i<size; ++i) {
+            arg.m_reverse_data[i] = op(arg.m_reverse_data[i]);
+        }
+    }
+
+    template <typename Fn>
+    static void apply_flat_binary_operation(
+            dense_vector& result,
+            const dense_vector& lhs,
+            const dense_vector& rhs,
+            Fn op)
+    {
+        auto minmax = std::minmax(lhs.m_degree, rhs.m_degree);
+
+        result.reserve_to_degree(minmax.second);
+
+        const auto size_fwd = basis_type::start_of_degree(minmax.first+1);
+        const auto size_rev = basis_type::start_of_degree(minmax.first);
+
+        for (DIMN i=0; i<size_fwd; ++i) {
+            result.m_data.emplace(i, op(lhs.m_data[i], rhs.m_data[i]));
+        }
+
+        for (DIMN i=size_fwd; i<lhs.m_dimension; ++i) {
+            result.m_data.emplace(i, op(lhs.m_data[i], Coeffs::zero));
+        }
+        for (DIMN i=size_fwd; i<rhs.m_dimension; ++i) {
+            result.m_data.emplace(i, op(Coeffs::zero, rhs.m_data[i]));
+        }
+
+        const auto lhs_rsize = lhs.m_reverse_data.size();
+        const auto rhs_rsize = rhs.m_reverse_data.size();
+
+        for (DIMN i=0; i<size_rev; ++i) {
+            result.m_reverse_data.emplace(i, op(lhs.m_reverse_data[i],
+                                                rhs.m_reverse_data[i]));
+        }
+
+        for (DIMN i=size_rev; i<lhs_rsize; ++i) {
+            result.m_reverse_data.emplace(i, op(lhs.m_reverse_data[i], Coeffs::zero));
+        }
+        for (DIMN i=size_rev; i<rhs_rsize; ++i) {
+            result.m_reverse_data.emplace(i, op(Coeffs::zero, rhs.m_reverse_data[i]));
+        }
+    }
+
+    template <typename Fn>
+    static void apply_inplace_flat_binary_op(
+            dense_vector& lhs,
+            const dense_vector& rhs,
+            Fn op)
+    {
+        auto minmax = std::minmax(lhs.m_degree, rhs.m_degree);
+
+        lhs.reserve_to_degree(minmax.second);
+        const auto size_fwd = basis_type::start_of_degree(minmax.first+1);
+        const auto size_rev = basis_type::start_of_degree(minmax.first);
+
+        for (DIMN i=0; i<size_fwd; ++i) {
+            lhs.m_data[i] = op(lhs.m_data[i], rhs.m_data[i]);
+        }
+        for (DIMN i=size_fwd; i<lhs.m_dimension; ++i) {
+            lhs.m_data.emplace(i, op(Coeffs::zero, rhs.m_data[i]));
+        }
+        for (DIMN i=size_fwd; i<rhs.m_dimension; ++i) {
+            lhs.m_data[i] = op(lhs.m_data[i], Coeffs::zero);
+        }
+
+        const auto lhs_rsize = lhs.m_reverse_data.size();
+        const auto rhs_rsize = rhs.m_reverse_data.size();
+
+        for (DIMN i=0; i<size_rev; ++i) {
+            lhs.m_reverse_data[i] = op(lhs.m_reverse_data[i],
+                                       rhs.m_reverse_data[i]);
+        }
+        for (DIMN i=size_rev; i<lhs_rsize; ++i) {
+            lhs.m_reverse_data.emplace(i, op(Coeffs::zero, rhs.m_reverse_data[i]));
+        }
+        for (DIMN i=size_rev; i<rhs_rsize; ++i) {
+            lhs.m_reverse_data[i] = op(lhs.m_reverse_data[i], Coeffs::zero);
+        }
+    }
+
+    scalar_type NormL1() const
+    {
+        auto ans = Coeffs::zero;
+        for (DIMN i=0; i<m_dimension; ++i) {
+            Coeffs::add_inplace(ans, abs(m_data[i]));
+        }
+        return ans;
+    }
+
+    scalar_type NormL1(const DEG degree) const
+    {
+        auto begin = std::min(m_dimension, basis_type::start_of_degree(degree));
+        auto end = std::min(m_dimension, basis_type::start_of_degree(degree+1));
+
+        auto ans = Coeffs::zero;
+        for (DIMN i=begin; i<end; ++i) {
+            Coeffs::add_inplace(ans, abs(m_data[i]));
+        }
+        return ans;
+    }
+
+    scalar_type NormLInf() const
+    {
+        auto ans = Coeffs::zero;
+        for (DIMN i=0; i<m_dimension; ++i) {
+            auto abs_val = abs(m_data[i]);
+            ans = (abs_val > ans) ? abs_val : ans;
+        }
+        return ans;
+    }
+
+    scalar_type NormLInf(const DEG degree) const
+    {
+        auto begin = std::min(m_dimension, basis_type::start_of_degree(degree));
+        auto end = std::min(m_dimension, basis_type::start_of_degree(degree+1));
+
+        auto ans = Coeffs::zero;
+        for (DIMN i=begin; i<end; ++i) {
+            auto abs_val = abs(m_data[i]);
+            ans = (abs_val > ans) ? abs_val : ans;
+        }
+        return ans;
+    }
+
+
+protected:
+    std::pair<DIMN, bool> equal_to_min(const dense_vector& rhs) const
+    {
+        DIMN mid = std::min(m_dimension, rhs.m_dimension);
+
+        for (DIMN i=0; i<mid; ++i) {
+            if (m_data[i] != rhs.m_data[i]) {
+                return {mid, false};
+            }
+        }
+
+        return {mid, true};
+    }
+
+    void print_members(std::ostream& os) const
+    {
+        std::pair<basis_type*, key_type> token;
+        token.first = &base_vector_type::basis;
+        for (DIMN i=0; i<m_dimension; ++i) {
+            if (m_data[i] != Coeffs::zero) {
+                token.second = basis_type::index_to_key(i);
+                os << ' ' << m_data[i] << '(' << token << ')';
+            }
+        }
+    }
+
+public:
+
+    bool operator==(const dense_vector& rhs) const
+    {
+        if (m_dimension != rhs.m_dimension) {
+            return false;
+        }
+        auto mid_eq = equal_to_min(rhs);
+        return mid_eq.second;
+    }
+
+    bool operator!=(const dense_vector& rhs) const
+    {
+        return !operator==(rhs);
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const dense_vector& rhs)
+    {
+        os << '{';
+        rhs.print_members(os);
+        os << " }";
+        return os;
+    }
+
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
+private:
+    friend class boost::serialization::access;
+
+    template<typename Archive>
+    void serialize(Archive& ar, const unsigned /*version*/)
+    {
+        ar& m_dimension;
+        ar& m_degree;
+        ar& m_data;
+        ar& m_reverse_data;
+    }
+#endif
+
+};
+
+}// namespace vectors
+
+
+
+
+
+
 
 }// namespace alg
 // Include once wrapper

@@ -277,7 +277,10 @@ public:
      */
     vector& add_scal_prod(const vector& rhs, const SCALAR& s)
     {
-        UnderlyingVectorType::add_scal_prod(rhs, s);
+        auto op = [s](const SCALAR& l, const SCALAR& r) {
+          return Coeffs::template add(l, Coeffs::template mul(r, s));
+        };
+        UnderlyingVectorType::apply_inplace_flat_binary_op(*this, rhs, op);
         return *this;
     }
 
@@ -292,7 +295,7 @@ public:
      */
     vector& sub_scal_prod(const KEY& rhs, const SCALAR& s)
     {
-        UnderlyingVectorType::sub_scal_prod(rhs, s);
+        UnderlyingVectorType::add_scal_prod(rhs, Coeffs::uminus(s));
         return *this;
     }
 
@@ -307,7 +310,10 @@ public:
      */
     vector& sub_scal_prod(const vector& rhs, const SCALAR& s)
     {
-        UnderlyingVectorType::sub_scal_prod(rhs, s);
+        auto op = [s](const SCALAR& l, const SCALAR& r) {
+            return Coeffs::template sub(l, Coeffs::template mul(r, s));
+        };
+        UnderlyingVectorType::apply_inplace_flat_binary_op(*this, rhs, op);
         return *this;
     }
 
@@ -322,7 +328,7 @@ public:
      */
     vector& add_scal_div(const KEY& rhs, const RATIONAL& s)
     {
-        UnderlyingVectorType::add_scal_div(rhs, s);
+        UnderlyingVectorType::add_scal_prod(rhs, Coeffs::div(Coeffs::one, s));
         return *this;
     }
 
@@ -337,7 +343,10 @@ public:
      */
     vector& add_scal_div(const vector& rhs, const RATIONAL& s)
     {
-        UnderlyingVectorType::add_scal_div(rhs, s);
+        auto op = [s](const SCALAR& l, const SCALAR& r) {
+          return Coeffs::template add(l, Coeffs::template div(r, s));
+        };
+        UnderlyingVectorType::apply_inplace_flat_binary_op(*this, rhs, op);
         return *this;
     }
 
@@ -352,7 +361,7 @@ public:
      */
     vector& sub_scal_div(const KEY& rhs, const RATIONAL& s)
     {
-        UnderlyingVectorType::sub_scal_div(rhs, s);
+        UnderlyingVectorType::add_scal_prod(rhs, Coeffs::div(Coeffs::mone, s));
         return *this;
     }
 
@@ -367,7 +376,10 @@ public:
      */
     vector& sub_scal_div(const vector& rhs, const RATIONAL& s)
     {
-        UnderlyingVectorType::sub_scal_div(rhs, s);
+        auto op = [s](const SCALAR& l, const SCALAR& r) {
+            return Coeffs::template sub(l, Coeffs::template div(r, s));
+        };
+        UnderlyingVectorType::apply_inplace_flat_binary_op(*this, rhs, op);
         return *this;
     }
 
@@ -390,8 +402,9 @@ public:
     {
         using VectorType = V<Basis, Coeffs>;
         typename VectorType::const_iterator cit;
+        const auto m = Coeffs::uminus(s);
         for (cit = rhs.begin(); cit != rhs.end(); ++cit) {
-            UnderlyingVectorType::sub_scal_prod(cit->key(), cit->value() * s);
+            UnderlyingVectorType::add_scal_prod(cit->key(), cit->value() * m);
         }
         return *this;
     }
@@ -412,8 +425,9 @@ public:
     {
         using VectorType = V<Basis, Coeffs>;
         typename VectorType::const_iterator cit;
+        const auto m = Coeffs::div(Coeffs::mone, s);
         for (cit = rhs.begin(); cit != rhs.end(); ++cit) {
-            UnderlyingVectorType::sub_scal_prod(cit->key(), cit->value() / s);
+            UnderlyingVectorType::add_scal_prod(cit->key(), cit->value() * m);
         }
         return *this;
     }
@@ -485,204 +499,6 @@ private:
     {
         return 0;
     }
-
-public:
-    // Apply transform methods
-
-    /**
-     * @brief Buffered apply transform with separate transforms
-     *
-     * Apply transform to paired vectors using a buffer. Apply using different
-     * transforms for by-index or by-key chosen by the under data source.
-     *
-     * @tparam KeyTransform Key transform type
-     * @tparam IndexTransform Index transform type
-     * @param result Buffer in which to place the result
-     * @param rhs Right hand side buffer
-     * @param key_transform Transform to apply by keys (sparse elements)
-     * @param index_transform Transform to apply by index (dense elements)
-     */
-    template<typename KeyTransform, typename IndexTransform>
-    void
-    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
-                                    IndexTransform index_transform) const
-    {
-        buffered_apply_binary_transform(result, rhs, key_transform, index_transform, UnderlyingVectorType::degree_tag);
-    }
-
-    /// Buffered apply transform with only key transform
-    template<typename KeyTransform>
-    void buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform) const
-    {
-        buffered_apply_binary_transform(result, rhs, key_transform, UnderlyingVectorType::degree_tag);
-    }
-
-    /**
-     * @brief Unbuffered apply transform with separate transforms
-     *
-     * Apply transform to paired vectors using a buffer. Apply using different
-     * transforms for by-index or by-key chosen by the under data source.
-     *
-     * @tparam KeyTransform Key transform type
-     * @tparam IndexTransform Index transform type
-     * @param rhs Right hand side buffer
-     * @param key_transform Transform to apply by keys (sparse elements)
-     * @param index_transform Transform to apply by index (dense elements)
-     */
-    template<typename KeyTransform, typename IndexTransform>
-    void
-    unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform, IndexTransform index_transform)
-    {
-        unbuffered_apply_binary_transform(rhs, key_transform, index_transform, UnderlyingVectorType::degree_tag);
-    }
-
-    /// Buffered apply transform with only key transform
-    template<typename KeyTransform>
-    void unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform)
-    {
-        unbuffered_apply_binary_transform(rhs, key_transform, UnderlyingVectorType::degree_tag);
-    }
-
-    /**
-     * @brief Buffered apply transform with separate transforms up to max degree
-     *
-     * @tparam KeyTransform Key transform type
-     * @tparam IndexTransform Index transform type
-     * @param result Buffer in which to place the result
-     * @param rhs Right hand side buffer
-     * @param key_transform Transform to apply by keys (sparse elements)
-     * @param index_transform Transform to apply by index (dense elements)
-     * @param max_depth Maximum depth to compute the result
-     */
-    template<typename KeyTransform, typename IndexTransform>
-    void
-    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
-                                    IndexTransform index_transform, const DEG max_depth) const
-    {
-        UnderlyingVectorType::triangular_buffered_apply_transform(result, rhs, key_transform, index_transform,
-                                                                  max_depth);
-    }
-
-    /**
-     * @brief Unbuffered apply transform with separate transforms up to max degree
-     *
-     * @tparam KeyTransform Key transform type
-     * @tparam IndexTransform Index transform type
-     * @param rhs Right hand side buffer
-     * @param key_transform Transform to apply by keys (sparse elements)
-     * @param index_transform Transform to apply by index (dense elements)
-     * @param max_depth Maximum depth to compute the result
-     */
-    template<typename KeyTransform, typename IndexTransform>
-    void
-    unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform, IndexTransform index_transform,
-                                      const DEG max_depth)
-    {
-        UnderlyingVectorType::triangular_unbuffered_apply_binary_transform(rhs, key_transform, index_transform,
-                                                                           max_depth);
-    }
-
-    /// Buffered apply transform with only key transform up to max degree
-    template<typename KeyTransform>
-    void
-    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
-                                    const DEG max_depth) const
-    {
-        UnderlyingVectorType::triangular_buffered_apply_binary_transform(result, rhs, key_transform, max_depth);
-    }
-
-
-private:
-    template<typename KeyTransform>
-    void
-    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
-                                    alg::basis::without_degree) const
-    {
-        UnderlyingVectorType::square_buffered_apply_binary_transform(result, rhs, key_transform);
-    }
-
-    template<DEG D, typename KeyTransform>
-    void
-    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
-                                    alg::basis::with_degree<D>) const
-    {
-        UnderlyingVectorType::triangular_buffered_apply_binary_transform(result, rhs, key_transform, D);
-    }
-
-    template<typename KeyTransform, typename IndexTransform>
-    void
-    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
-                                    IndexTransform index_transform, alg::basis::without_degree) const
-    {
-        UnderlyingVectorType::square_buffered_apply_binary_transform(result, rhs, key_transform, index_transform);
-    }
-
-    template<DEG D, typename KeyTransform, typename IndexTransform>
-    void
-    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
-                                    IndexTransform index_transform, alg::basis::with_degree<D>) const
-    {
-        UnderlyingVectorType::triangular_buffered_apply_binary_transform(result, rhs, key_transform, index_transform,
-                                                                         D);
-    }
-
-    template<typename KeyTransform>
-    void unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform, alg::basis::without_degree)
-    {
-        vector result;
-        UnderlyingVectorType::square_buffered_apply_binary_transform(result, rhs, key_transform);
-        swap(result);
-    }
-
-    template<DEG D, typename KeyTransform>
-    void unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform, alg::basis::with_degree<D>)
-    {
-        vector result;
-        UnderlyingVectorType::triangular_buffered_apply_binary_transform(result, rhs, key_transform, D);
-        swap(result);
-    }
-
-    template<typename KeyTransform, typename IndexTransform>
-    void
-    unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform, IndexTransform index_transform,
-                                      alg::basis::without_degree)
-    {
-        vector result;
-        UnderlyingVectorType::square_buffered_apply_binary_transform(result, rhs, key_transform, index_transform);
-        swap(result);
-    }
-
-    template<DEG D, typename KeyTransform, typename IndexTransform>
-    void
-    unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform, IndexTransform index_transform,
-                                      alg::basis::with_degree<D>)
-    {
-        UnderlyingVectorType::triangular_unbuffered_apply_binary_transform(rhs, key_transform, index_transform, D);
-    }
-
-public:
-    // Methods for operator implementation
-
-    /// Apply a transform inplace to the vector with buffering
-    template<typename Transform>
-    void buffered_apply_unary_transform(vector& result, Transform transform) const
-    {
-        buffered_apply_unary_transform_impl(result, transform, UnderlyingVectorType::degree_tag);
-    }
-
-private:
-    template<DEG D, typename Transform>
-    void buffered_apply_unary_transform_impl(vector& result, Transform transform, alg::basis::with_degree<D>) const
-    {
-        UnderlyingVectorType::buffered_apply_unary_transform(result, transform, D);
-    }
-
-    template<typename Transform>
-    void buffered_apply_unary_transform_impl(vector& result, Transform transform, alg::basis::without_degree) const
-    {
-        UnderlyingVectorType::buffered_apply_unary_transform(result, transform);
-    }
-
 
 public:
 

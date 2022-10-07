@@ -332,6 +332,7 @@ public:
              */
         void operator()(const SCA* __restrict src_ptr, SCA* __restrict dst_ptr, DEG curr_deg) const noexcept
         {
+            assert(curr_deg >= Level);
             // Copy from src to test and adjust sign.
             //                signer_t signer;
             Signer signer(Level);
@@ -609,7 +610,8 @@ private:
     std::vector<scalar_type> right_read_tile;
     std::vector<scalar_type> output_tile;
     std::vector<scalar_type> reverse_data;
-    const_pointer left_reverse_read_ptr;
+    const_pointer left_reverse_read_ptr = nullptr;
+    pointer reverse_write_ptr = nullptr;
 
 public:
     using tile_info::tile_letters;
@@ -649,6 +651,51 @@ public:
             left_reverse_read_ptr = reverse_data.data();
         }
     }
+
+/*    template<typename B>
+    tiled_free_tensor_multiplication_helper(
+            dense_tensor<free_tensor_basis<Width, Depth>>& out,
+            const dense_tensor<free_tensor_basis<Width, Depth>>& lhs,
+            const dense_tensor<B>& rhs,
+            DEG max_degree)
+        : base(out, lhs, rhs, max_degree),
+          left_read_tile(tile_width),
+          right_read_tile(tile_width),
+          output_tile(tile_size)
+    {
+//        assert(base::out_deg == 0 || out.reverse_dimension() == tsi::degree_sizes[base::out_deg-1]);
+//        reverse_write_ptr = out.as_mut_rptr();
+//        left_reverse_read_ptr = lhs.as_rptr();
+
+
+        if (base::lhs_deg > 0) {
+            reverse_data.resize(basis_type::start_of_degree(base::lhs_deg + 1));
+            dtl::tiled_inverse_operator<Width, (Depth > 0) ? Depth - 1 : 0, TileLetters, scalar_type, dtl::non_signing_signer> reverser;
+            reverser(base::out_data, reverse_data.data(), base::lhs_deg);
+            left_reverse_read_ptr = reverse_data.data();
+        }
+    }
+
+    template<typename B>
+    tiled_free_tensor_multiplication_helper(
+            dense_tensor<free_tensor_basis<Width, Depth>>& lhs,
+            const dense_tensor<B>& rhs,
+            DEG max_degree)
+        : base(lhs, rhs, max_degree),
+          left_read_tile(tile_width),
+          right_read_tile(tile_width),
+          output_tile(tile_size)
+    {
+//        assert(base::out_deg == 0 || lhs.reverse_dimension() >= tsi::degree_sizes[base::out_deg-1]);
+//        reverse_write_ptr = lhs.as_mut_rptr();
+//        left_reverse_read_ptr = reverse_write_ptr;
+        if (base::lhs_deg > 0) {
+            reverse_data.resize(basis_type::start_of_degree(base::lhs_deg + 1));
+            dtl::tiled_inverse_operator<Width, (Depth > 0) ? Depth - 1 : 0, TileLetters, scalar_type, dtl::non_signing_signer> reverser;
+            reverser(base::out_data, reverse_data.data(), base::lhs_deg);
+            left_reverse_read_ptr = reverse_data.data();
+        }
+    }*/
 
     pointer out_tile_ptr() noexcept
     {
@@ -698,10 +745,11 @@ public:
         std::fill(output_tile.begin(), output_tile.end(), Coeffs::zero);
     }
 
-    void write_tile(IDEG degree, IDIMN index, IDIMN /*reverse_index*/) noexcept
+    void write_tile(IDEG degree, IDIMN index, IDIMN reverse_index) noexcept
     {
         assert(0 <= degree && degree <= static_cast<IDEG>(Depth));
         assert(index <= static_cast<IDIMN>(tsi::powers[degree - 2 * TileLetters]));
+        assert(reverse_index <= static_cast<IDIMN>(tsi::powers[degree - 2 * TileLetters]));
         const auto start_of_degree = basis_type::start_of_degree(degree);
         pointer optr = base::out_data + index * tile_width + start_of_degree;
         const_pointer tptr = output_tile.data();
@@ -713,8 +761,17 @@ public:
             }
         }
 
-        if (degree < IDEG(Depth)) {
+        if (reverse_write_ptr != nullptr && degree < base::out_deg) {
             // Write out reverse data
+            using perm = reversing_permutation<Width, tile_info::tile_letters>;
+
+            assert(((tile_width-1)*stride + (tile_width-1) + reverse_index*tile_width+start_of_degree) < tsi::degree_sizes[degree]);
+            optr = reverse_write_ptr + reverse_index * tile_width + start_of_degree;
+            for (DIMN i = 0; i < tile_width; ++i) {
+                for (DIMN j = 0; j < tile_width; ++j) {
+                    optr[i * stride + j] = tptr[perm::permute_idx(i) * tile_width + j];
+                }
+            }
         }
     }
 
@@ -809,6 +866,19 @@ public:
     using mixin::multiply_inplace;
 
     using basis_type = tensor_basis<Width, Depth>;
+
+protected:
+    template<typename B, typename Coeffs>
+    static void update_reverse_data(vectors::dense_vector<B, Coeffs>& out, DEG max_degree)
+    {}
+
+    template<typename Coeffs>
+    static void update_reverse_data(vectors::dense_vector<free_tensor_basis<Width, Depth>, Coeffs>& out, DEG max_degree)
+    {
+        if (max_degree > 0) {
+            out.construct_reverse_data(max_degree-1);
+        }
+    }
 
 private:
     template<typename Coeffs, typename Fn>
@@ -999,6 +1069,7 @@ public:
         if (!lhs.empty() && !rhs.empty()) {
             helper<Coeffs> help(out, lhs, rhs, max_degree);
             fma_impl(help, op, help.out_degree());
+//            update_reverse_data(out, help.out_degree());
         }
     }
 
@@ -1012,6 +1083,7 @@ public:
         if (!rhs.empty()) {
             helper<Coeffs> help(lhs, rhs, max_degree);
             multiply_inplace_impl(help, op, help.out_degree());
+//            update_reverse_data(lhs, help.out_degree());
         }
         else {
             lhs.clear();
@@ -1274,6 +1346,10 @@ public:
         if (!lhs.empty() && !rhs.empty()) {
             helper_type<Coeffs> helper(out, lhs, rhs, max_degree);
             fma_impl(helper, op, helper.out_degree());
+            if (helper.out_degree() > 0) {
+                auto update_deg = std::min(helper.out_degree()-1, 2*tile_info::tile_letters);
+//                base::update_reverse_data(out, update_deg);
+            }
         }
     }
 
@@ -1291,11 +1367,14 @@ public:
         if (!rhs.empty()) {
             helper_type<Coeffs> helper(lhs, rhs, max_degree);
             multiply_inplace_impl(helper, op, helper.out_degree());
+            if (helper.out_degree() > 0) {
+                auto update_deg = std::min(helper.out_degree()-1, 2*tile_info::tile_letters);
+//                base::update_reverse_data(lhs, update_deg);
+            }
         }
         else {
             lhs.clear();
         }
-        //        std::cout << "AFTER " << lhs << '\n';
     }
 #pragma clang diagnostic pop
 };
@@ -2168,15 +2247,21 @@ public:
 private:
     bool compare_iterators(const dense_tensor_const_iterator_item& other) const
     {
+        if (m_ptr == nullptr || other.m_ptr == nullptr) {
+            return true;
+        }
         return m_ptr >= other.m_ptr;
     }
 
     void advance()
     {
+        if (m_ptr == nullptr) {
+            return;
+        }
         const auto* end = p_vector->as_ptr() + p_vector->dimension();
         do {
             ++m_ptr;
-        } while (m_ptr != end && *m_ptr != Coeffs::zero);
+        } while (m_ptr != end && *m_ptr == Coeffs::zero);
     }
 };
 
@@ -2188,49 +2273,22 @@ class dense_tensor_iterator_item
     using scalar_type = typename Coeffs::S;
 
     scalar_type* m_ptr;
-    scalar_type* m_rptr;
     vector_type* p_vector;
     DEG m_degree;
 
     friend class iterators::vector_iterator<dense_tensor_iterator_item>;
     friend vector_type;
 
-    scalar_type* reverse_ptr()
-    {
-        auto idx = index();
-        DIMN size;
-        while (idx > (size = tsi::degree_sizes[m_degree])) {
-            ++m_degree;
-        }
-        scalar_type* rptr = nullptr;
-
-        if (m_degree < p_vector->degree()) {
-            auto tmp = idx - size;
-            DIMN result = 0;
-            for (DEG i = 0; i < m_degree; ++i) {
-                result *= Width;
-                result += tmp % Width;
-                tmp /= Width;
-            }
-            result += size;
-
-            rptr = m_rptr + result;
-        }
-
-        return rptr;
-    }
-
 public:
     using basis_type = free_tensor_basis<Width, Depth>;
     using key_type = typename free_tensor_basis<Width, Depth>::KEY;
-    using reference = dense_tensor_item_reference<Coeffs>;
+    using reference = scalar_type&;
 
     dense_tensor_iterator_item() = default;
 
     explicit dense_tensor_iterator_item(vector_type& vect,
                                         scalar_type* item)
         : m_ptr(item),
-          m_rptr(vect.as_mut_rptr()),
           p_vector(&vect)
     {
         auto it = std::lower_bound(tsi::degree_sizes.begin(), tsi::degree_sizes.end(), index(), std::less_equal<>());
@@ -2250,12 +2308,15 @@ public:
 
     reference value()
     {
-        return reference(m_ptr, reverse_ptr());
+        return *m_ptr;
     }
 
 private:
     bool compare_iterators(const dense_tensor_iterator_item& other) const
     {
+        if (m_ptr == nullptr || other.m_ptr == nullptr) {
+            return true;
+        }
         return m_ptr >= other.m_ptr;
     }
 
@@ -2264,12 +2325,12 @@ private:
         auto* end = p_vector->as_mut_ptr() + p_vector->dimension();
         do {
             ++m_ptr;
-        } while (m_ptr != end && *m_ptr != Coeffs::zero);
+        } while (m_ptr != end && *m_ptr == Coeffs::zero);
     }
 };
 
 }// namespace dtl
-
+/*
 template<DEG Width, DEG Depth, typename Coeffs>
 class dense_vector<free_tensor_basis<Width, Depth>, Coeffs>
     : protected base_vector<free_tensor_basis<Width, Depth>, Coeffs>
@@ -2278,9 +2339,12 @@ class dense_vector<free_tensor_basis<Width, Depth>, Coeffs>
     using base_vector_type = base_vector<free_tensor_basis<Width, Depth>, Coeffs>;
     using tsi = ::alg::dtl::tensor_size_info<Width>;
     friend class dtl::data_access_base<dense_vector>;
+    friend class dtl::dense_tensor_iterator_item<Width, Depth, Coeffs>;
+
+    friend class traditional_free_tensor_multiplication<Width, Depth>;
 
     storage_type m_data;
-    storage_type m_reverse_data;
+    std::vector<typename Coeffs::S> m_reverse_data;
     DIMN m_dimension;
     DEG m_degree;
 
@@ -2288,7 +2352,7 @@ class dense_vector<free_tensor_basis<Width, Depth>, Coeffs>
 
     static typename tsi::degree_sizes_t::const_iterator index_to_size_iter(DIMN index) noexcept
     {
-        return std::lower_bound(tsi::degree_sizes.begin(), tsi::degree_sizes.end(), index, std::less_equal<>());
+        return std::upper_bound(tsi::degree_sizes.begin(), tsi::degree_sizes.end(), index, std::less_equal<>());
     }
 
     static DEG size_iter_to_deg(typename tsi::degree_sizes_t::const_iterator it) noexcept
@@ -2308,6 +2372,27 @@ class dense_vector<free_tensor_basis<Width, Depth>, Coeffs>
         return result;
     }
 
+    void construct_reverse_data(DEG degree)
+    {
+#ifdef LIBALGEBRA_MAX_TILE_LETTERS
+        constexpr DEG CalcLetters = integer_maths::logN(static_cast<unsigned>(LIBALGEBRA_L1_CACHE_SIZE), n_letters) / 2;
+        constexpr DEG BlockLetters = (CalcLetters > LIBALGEBRA_MAX_TILE_LETTERS) ? LIBALGEBRA_MAX_TILE_LETTERS : CalcLetters;
+#else
+        constexpr DEG BlockLetters = ::alg::integer_maths::logN(LIBALGEBRA_L1_CACHE_SIZE / sizeof(scalar_type), Width) / 2;
+#endif
+        const auto& dsizes = tsi::degree_sizes;
+
+        if (degree > 0) {
+            if (m_reverse_data.size() < tsi::degree_sizes[degree]) {
+                m_reverse_data.resize(tsi::degree_sizes[degree]);
+            }
+            assert(m_reverse_data.size() >= tsi::degree_sizes[degree]);
+            ::alg::dtl::tiled_inverse_operator<Width, Depth, BlockLetters, scalar_type, ::alg::dtl::non_signing_signer> t;
+            t(m_data.begin(), m_reverse_data.data(), degree);
+            assert(*m_data.begin() == *m_reverse_data.begin());
+        }
+    }
+
 public:
     using basis_type = free_tensor_basis<Width, Depth>;
     using key_type = typename basis_type::KEY;
@@ -2319,7 +2404,7 @@ public:
 
     using pointer = typename storage_type::pointer;
     using const_pointer = typename storage_type::const_pointer;
-    using reference = dtl::dense_tensor_item_reference<Coeffs>;
+    using reference = scalar_type&;
     using const_reference = typename storage_type::const_reference;
 
     using iterator = iterators::vector_iterator<
@@ -2340,28 +2425,25 @@ public:
     using base_vector_type::one;
     using base_vector_type::zero;
 
-    dense_vector() = default;
-
-    explicit dense_vector(key_type key, scalar_param_type scalar = Coeffs::one)
+    dense_vector()
         : m_data(), m_reverse_data(), m_dimension(0), m_degree(0)
     {
     }
 
+    explicit dense_vector(key_type key, scalar_param_type scalar = Coeffs::one)
+        : m_data(), m_reverse_data(), m_dimension(0), m_degree(0)
+    {
+        operator[](key) = scalar;
+    }
+
     dense_vector(const_pointer begin, const_pointer end)
+        : m_data(), m_reverse_data(), m_dimension(0), m_degree(0)
     {
         resize_to_dimension(static_cast<DIMN>(end - begin));
         std::copy(begin, end, m_data.begin());
-
-#ifdef LIBALGEBRA_MAX_TILE_LETTERS
-        constexpr DEG CalcLetters = integer_maths::logN(static_cast<unsigned>(LIBALGEBRA_L1_CACHE_SIZE), n_letters) / 2;
-        constexpr DEG BlockLetters = (CalcLetters > LIBALGEBRA_MAX_TILE_LETTERS) ? LIBALGEBRA_MAX_TILE_LETTERS : CalcLetters;
-#else
-        constexpr DEG BlockLetters = ::alg::integer_maths::logN(LIBALGEBRA_L1_CACHE_SIZE / sizeof(scalar_type), Width) / 2;
-#endif
-
-        ::alg::dtl::tiled_inverse_operator<Width, Depth, BlockLetters, scalar_type, ::alg::dtl::non_signing_signer> t;
-
-        t(m_data.begin(), m_reverse_data.begin(), m_degree - 1);
+        if (m_degree > 0) {
+            construct_reverse_data(m_degree-1);
+        }
     }
 
     const_reference value(DIMN index) const noexcept
@@ -2372,13 +2454,7 @@ public:
     reference value(DIMN index) noexcept
     {
         resize_to_dimension(index + 1);
-        auto it = index_to_size_iter(index);
-        auto deg = size_iter_to_deg(it);
-        if (deg < m_degree) {
-            auto rindex = reverse_index(index - *it, deg) + *it;
-            return reference(m_data.begin() + index, m_reverse_data.begin() + rindex);
-        }
-        return reference(m_data.begin() + index, nullptr);
+        return m_data[index];
     }
 
     const_reference operator[](key_type key) const noexcept
@@ -2391,15 +2467,9 @@ public:
 
     reference operator[](key_type key) noexcept
     {
-        resize_for_key(key);
+        auto idx = resize_for_key(key);
         assert(key.size() <= m_degree);
-        if (key.size() < m_degree) {
-            return reference(m_data.begin() + basis_type::key_to_index(key),
-                             m_reverse_data.begin() + basis_type::key_to_index(key.reverse()));
-        }
-        else {
-            return reference(m_data.begin() + basis_type::key_to_index(key), nullptr);
-        }
+        return value(idx);
     }
 
     /// Reserve to dimension
@@ -2408,7 +2478,6 @@ public:
         if (dim > m_dimension) {
             auto info = basis_traits::next_resize_dimension(base_vector_type::basis, dim, m_degree);
             m_data.reserve(info.size);
-            m_reverse_data.reserve(basis_type::start_of_degree(info.degree));
             m_dimension = info.dimension;
             m_degree = info.degree;
         }
@@ -2420,7 +2489,6 @@ public:
         if (deg > m_degree) {
             auto info = basis_traits::next_resize_dimension(base_vector_type::basis, 0, deg);
             m_data.reserve(info.size);
-            m_reverse_data.reserve(basis_type::start_of_degree(info.degree));
             m_dimension = info.dimension;
             m_degree = info.degree;
         }
@@ -2431,7 +2499,6 @@ public:
         auto info = basis_traits::key_resize_dimension(base_vector_type::basis, key);
         if (info.dimension > m_dimension) {
             m_data.resize(info.size);
-            m_reverse_data.resize(basis_type::start_of_degree(info.degree));
             m_dimension = info.dimension;
             m_degree = info.degree;
         }
@@ -2444,7 +2511,6 @@ public:
         auto info = basis_traits::next_resize_dimension(base_vector_type::basis, dim, m_degree);
         if (info.dimension > m_dimension) {
             m_data.resize(info.size);
-            m_reverse_data.resize(basis_type::start_of_degree(info.degree));
             m_dimension = info.dimension;
             m_degree = info.degree;
         }
@@ -2456,10 +2522,9 @@ public:
     /// Reserve to degree
     void resize_to_degree(const DEG deg)
     {
-        if (deg > m_degree) {
+        if (deg > m_degree || m_dimension == 0) {
             auto info = basis_traits::next_resize_dimension(base_vector_type::basis, 0, deg);
             m_data.resize(info.size);
-            m_reverse_data.resize(basis_type::start_of_degree(info.degree));
             m_dimension = info.dimension;
             m_degree = info.degree;
         }
@@ -2467,12 +2532,15 @@ public:
 
     DEG degree() const noexcept { return m_degree; }
     DIMN dimension() const noexcept { return m_dimension; };
+    DIMN reverse_dimension() const noexcept { return m_reverse_data.size(); }
     bool degree_equals(DEG degree) const noexcept { return m_degree == degree; }
 
     pointer as_mut_ptr() noexcept { return m_data.begin(); }
     const_pointer as_ptr() const noexcept { return m_data.begin(); }
-    const_pointer as_rptr() const noexcept { return m_reverse_data.begin(); }
-    pointer as_mut_rptr() noexcept { return m_reverse_data.begin(); }
+    const_pointer as_rptr() const noexcept { return m_reverse_data.data(); }
+    pointer as_mut_rptr() noexcept { return m_reverse_data.data(); }
+
+    std::vector<scalar_type>& reverse_data() noexcept { return m_reverse_data; }
 
 protected:
     /// Index of key and key of index
@@ -2531,7 +2599,7 @@ public:
     {
         DIMN result = 0;
         for (DIMN i = 0; i < m_dimension; ++i) {
-            result += static_cast<DIMN>(m_data[i] == Coeffs::zero);
+            result += static_cast<DIMN>(m_data[i] != Coeffs::zero);
         }
         return result;
     }
@@ -2654,10 +2722,7 @@ public:
             result.m_data.emplace(i, fn(arg.m_data[i]));
         }
 
-        const auto size = arg.m_reverse_data.size();
-        for (DIMN i = 0; i < size; ++i) {
-            result.m_reverse_data.emplace(i, fn(arg.m_reverse_data[i]));
-        }
+        result.m_reverse_data.clear();
     }
 
     template<typename Fn>
@@ -2667,10 +2732,7 @@ public:
             arg.m_data[i] = op(arg.m_data[i]);
         }
 
-        const auto size = arg.m_reverse_data.size();
-        for (DIMN i = 0; i < size; ++i) {
-            arg.m_reverse_data[i] = op(arg.m_reverse_data[i]);
-        }
+        arg.m_reverse_data.clear();
     }
 
     template<typename Fn>
@@ -2697,20 +2759,7 @@ public:
             result.m_data.emplace(i, op(Coeffs::zero, rhs.m_data[i]));
         }
 
-        const auto lhs_rsize = lhs.m_reverse_data.size();
-        const auto rhs_rsize = rhs.m_reverse_data.size();
-        const auto size_rev = std::min(lhs_rsize, rhs_rsize);
-
-        for (DIMN i = 0; i < size_rev; ++i) {
-            result.m_reverse_data.emplace(i, op(lhs.m_reverse_data[i], rhs.m_reverse_data[i]));
-        }
-
-        for (DIMN i = size_rev; i < lhs_rsize; ++i) {
-            result.m_reverse_data.emplace(i, op(lhs.m_reverse_data[i], Coeffs::zero));
-        }
-        for (DIMN i = size_rev; i < rhs_rsize; ++i) {
-            result.m_reverse_data.emplace(i, op(Coeffs::zero, rhs.m_reverse_data[i]));
-        }
+        result.m_reverse_data.clear();
     }
 
     template<typename Fn>
@@ -2720,6 +2769,10 @@ public:
             Fn op)
     {
         auto minmax = std::minmax(lhs.m_dimension, rhs.m_dimension);
+
+        const auto lhs_rsize = lhs.m_reverse_data.size();
+        const auto rhs_rsize = rhs.m_reverse_data.size();
+        const auto size_rev = std::min(lhs_rsize, rhs_rsize);
 
         lhs.reserve_to_dimension(minmax.second);
         const auto size_fwd = minmax.first;
@@ -2734,20 +2787,7 @@ public:
             lhs.m_data.emplace(i, op(Coeffs::zero, rhs.m_data[i]));
         }
 
-        const auto lhs_rsize = lhs.m_reverse_data.size();
-        const auto rhs_rsize = rhs.m_reverse_data.size();
-        const auto size_rev = std::min(lhs_rsize, rhs_rsize);
-
-        for (DIMN i = 0; i < size_rev; ++i) {
-            lhs.m_reverse_data[i] = op(lhs.m_reverse_data[i],
-                                       rhs.m_reverse_data[i]);
-        }
-        for (DIMN i = size_rev; i < lhs_rsize; ++i) {
-            lhs.m_reverse_data[i] = op(lhs.m_reverse_data[i], Coeffs::zero);
-        }
-        for (DIMN i = size_rev; i < rhs_rsize; ++i) {
-            lhs.m_reverse_data.emplace(i, op(Coeffs::zero, rhs.m_reverse_data[i]));
-        }
+        lhs.m_reverse_data.clear();
     }
 
     scalar_type NormL1() const
@@ -2823,11 +2863,24 @@ protected:
 public:
     bool operator==(const dense_vector& rhs) const
     {
-        if (m_dimension != rhs.m_dimension) {
+        auto mid_eq = equal_to_min(rhs);
+        if (!mid_eq.second) {
             return false;
         }
-        auto mid_eq = equal_to_min(rhs);
-        return mid_eq.second;
+
+        for (auto i=mid_eq.first; i<m_dimension; ++i) {
+            if (m_data[i] != Coeffs::zero) {
+                return false;
+            }
+        }
+
+        for (auto i=mid_eq.first; i<rhs.m_dimension; ++i) {
+            if (rhs.m_data[i] != Coeffs::zero) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     bool operator!=(const dense_vector& rhs) const
@@ -2853,7 +2906,7 @@ private:
     friend class boost::serialization::access;
 
     template<typename Archive>
-    void serialize(Archive& ar, const unsigned /*version*/)
+    void serialize(Archive& ar, const unsigned *//*version*//*)
     {
         ar& m_dimension;
         ar& m_degree;
@@ -2861,7 +2914,7 @@ private:
         ar& m_reverse_data;
     }
 #endif
-};
+};*/
 
 }// namespace vectors
 

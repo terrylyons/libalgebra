@@ -134,10 +134,10 @@ namespace dtl {
     hybrid_reference& operator OP(T arg)                             \
     {                                                                \
         if (m_is_dense) {                                            \
-            p_vector->DENSE::operator[](m_key) OP scalar_type(arg);  \
+            p_vector->Hybrid::DENSE::operator[](m_key) OP scalar_type(arg);  \
         }                                                            \
         else {                                                       \
-            p_vector->SPARSE::operator[](m_key) OP scalar_type(arg); \
+            p_vector->Hybrid::SPARSE::operator[](m_key) OP scalar_type(arg); \
         }                                                            \
         return *this;                                                \
     }
@@ -161,9 +161,9 @@ public:
     operator const scalar_type&() const noexcept
     {
         if (m_is_dense) {
-            return static_cast<const scalar_type&>(p_vector->DENSE::operator[](m_key));
+            return static_cast<const scalar_type&>(p_vector->Hybrid::DENSE::operator[](m_key));
         }
-        return static_cast<const scalar_type&>(p_vector->SPARSE::operator[](m_key));
+        return static_cast<const scalar_type&>(p_vector->Hybrid::SPARSE::operator[](m_key));
     }
 
     LIBALGEBRA_HYBRID_REF_BINOP(=)

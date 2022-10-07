@@ -187,7 +187,7 @@ public:
     using vec_type = typename base_type::vec_type;
 
 private:
-    dtl::dense_storage_base<value_type, allocator_type> m_base;
+    base_type m_base;
 
     static void destroy_range(pointer, pointer, std::true_type)
     {
@@ -349,8 +349,13 @@ public:
     /// Copy constructor - the new storage owns its data even if other borrows data.
     dense_storage& operator=(dense_storage const& other)
     {
-        dense_storage tmp(other);
-        this->swap(tmp);
+//        dense_storage tmp(other);
+//        this->swap(tmp);
+        if (m_base.is_owned()) {
+            destroy_range(m_base.m_data, m_base.m_data + m_base.m_size);
+        }
+        m_base = base_type(other.m_base.m_size);
+        std::uninitialized_copy(other.m_base.m_data, other.m_base.m_data+other.m_base.m_size, m_base.m_data);
         return *this;
     }
 
@@ -378,6 +383,11 @@ public:
         dense_storage result(ptr, sz);
         result.to_owned();
         return result;
+    }
+
+    operator bool() const noexcept
+    {
+        return m_base.m_size != 0;
     }
 
 private:

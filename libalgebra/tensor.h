@@ -763,15 +763,15 @@ public:
 
         if (reverse_write_ptr != nullptr && degree < base::out_deg) {
             // Write out reverse data
-            using perm = reversing_permutation<Width, tile_info::tile_letters>;
-
-            assert(((tile_width-1)*stride + (tile_width-1) + reverse_index*tile_width+start_of_degree) < tsi::degree_sizes[degree]);
-            optr = reverse_write_ptr + reverse_index * tile_width + start_of_degree;
-            for (DIMN i = 0; i < tile_width; ++i) {
-                for (DIMN j = 0; j < tile_width; ++j) {
-                    optr[i * stride + j] = tptr[perm::permute_idx(i) * tile_width + j];
-                }
-            }
+//            using perm = reversing_permutation<Width, tile_info::tile_letters>;
+//
+//            assert(((tile_width-1)*stride + (tile_width-1) + reverse_index*tile_width+start_of_degree) < tsi::degree_sizes[degree]);
+//            optr = reverse_write_ptr + reverse_index * tile_width + start_of_degree;
+//            for (DIMN i = 0; i < tile_width; ++i) {
+//                for (DIMN j = 0; j < tile_width; ++j) {
+//                    optr[i * stride + j] = tptr[perm::permute_idx(i) * tile_width + j];
+//                }
+//            }
         }
     }
 
@@ -1559,16 +1559,6 @@ class shuffle_tensor;
 
 namespace dtl {
 
-template<template<typename, typename, typename...> class BaseVector>
-class reverse_data_storage
-{
-};
-
-template<>
-class reverse_data_storage<vectors::dense_vector>
-{
-};
-
 template<typename Coeff, DEG n_letters, DEG max_degree,
          template<typename, typename, typename...> class VectorType,
          typename Derived,
@@ -1659,7 +1649,7 @@ public:
 public:
     using base::base;
 
-    //    free_tensor& operator=(const free_tensor&) = default;
+    free_tensor& operator=(const free_tensor&) = default;
 
     friend free_tensor exp(const free_tensor& arg)
     {
@@ -1736,12 +1726,13 @@ public:
         return *this;
     }
 
-    /// Computes the antipode of a free_tensor instance.
-    friend free_tensor antipode(const free_tensor& arg)
+private:
+    // Implementation of the antipode for sparse vector types.
+    free_tensor antipode_impl(vectors::dtl::access_type_sparse) const
     {
         free_tensor result;
 
-        for (auto cit = arg.begin(); cit != arg.end(); ++cit) {
+        for (auto cit = this->begin(); cit != this->end(); ++cit) {
             KEY temp_key = cit->key();
             KEY temp_key_reverse = temp_key.reverse();
             SCA temp_value = cit->value();
@@ -1761,156 +1752,52 @@ public:
         return result;
     }
 
-#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
-private:
-    friend class boost::serialization::access;
-
-    template<typename archive>
-    void serialize(archive& ar, unsigned int const /* version */)
-    {
-        ar& boost::serialization::base_object<base>(*this);
-    }
-#endif
-};
-
-template<typename Coeff, DEG n_letters, DEG max_degree,
-         typename... Args>
-class free_tensor<Coeff, n_letters, max_degree, vectors::dense_vector, Args...>
-    : public dtl::free_tensor_base<Coeff, n_letters, max_degree, vectors::dense_vector,
-                                   free_tensor<Coeff, n_letters, max_degree, vectors::dense_vector, Args...>,
-                                   Args...>
-{
-
-    using base = dtl::free_tensor_base<Coeff, n_letters, max_degree, vectors::dense_vector,
-                                       free_tensor<Coeff, n_letters, max_degree, vectors::dense_vector, Args...>, Args...>;
-
-public:
-    using base::base;
-
-    friend free_tensor exp(const free_tensor& arg)
-    {
-        // Computes the truncated exponential of arg
-        // 1 + arg + arg^2/2! + ... + arg^n/n! where n = max_degree
-        typename tensor_basis<n_letters, max_degree>::KEY kunit;
-        free_tensor result(kunit);
-        free_tensor unit(kunit);
-
-        auto& base_result = result.base_vector();
-        if (base_result.dimension() < base::basis_type::start_of_degree(max_degree + 1)) {
-            base_result.resize_to_degree(max_degree);
-        }
-
-        for (DEG i = max_degree; i >= 1; --i) {
-            result.mul_scal_div(arg, typename Coeff::Q(i));
-            result += unit;
-        }
-        return result;
-    }
-
-    /**
-     * Fused multiply exponential operation for free tensors.
-     *
-     * Computes a*exp(x) using a modified Horner's method for the case when x does
-     * not have a constant term. If the argument exp_arg has a constant term, it
-     * is ignored.
-     *
-     * For a real number x, one can expand exp(x) up to degree n as
-     *
-     *     1 + b_1 x(1 + b_2 x(1 + ... b_n x(1)) ...)
-     *
-     * where each b_i has the value 1/i. This formulae works when x is a free
-     * tensor, or indeed any element in an unital (associative) algebra. Working
-     * through the result of multiplying on the left by another element a in the
-     * above gives the expansion
-     *
-     *     a + b1 (a + b_2 (a + ... b_n (a)x) ... x)x.
-     *
-     * This is the result of a*exp(x). In a non-commutative algebra this need not
-     * be equal to exp(x)*a.
-     *
-     * @param exp_arg free_tensor (const reference) to expentiate (x).
-     * @return free_tensor containing a*exp(x)
-     */
-    free_tensor fmexp(const free_tensor& exp_arg) const
-    {
-        if (this->empty() || exp_arg.empty()) {
-            // If this is zero then the result is zero.
-            // if exp_arg is zero then exp(exp_arg) = tunit, so the result is this
-            return free_tensor(*this);
-        }
-
-        free_tensor result(*this), x(exp_arg);
-
-        if (result.degree() < max_degree) {
-            result.base_vector().resize_to_degree(max_degree);
-        }
-        x.base_vector().value(0) = typename base::scalar_type(0);
-
-        for (DEG i = max_degree; i >= 1; --i) {
-            result.mul_scal_div(x, typename free_tensor::SCALAR(i), max_degree - i + 1);
-            result += *this;
-        }
-
-        return result;
-    }
-
-    /// Inplace version of fmexp
-    free_tensor& fmexp_inplace(const free_tensor& exp_arg)
-    {
-        if (this->empty() || exp_arg.empty()) {
-            // If this is zero then the result is zero.
-            // if exp_arg is zero then exp(exp_arg) = tunit, so the result is this
-            return *this;
-        }
-        free_tensor original(*this), x(exp_arg);
-
-        if (this->degree() < max_degree) {
-            this->base_vector().resize_to_degree(max_degree);
-        }
-        x.base_vector().value(0) = typename base::scalar_type(0);
-
-        for (DEG i = max_degree; i >= 1; --i) {
-            this->mul_scal_div(x, typename free_tensor::SCALAR(i), max_degree - i + 1);
-            *this += original;
-        }
-
-        return *this;
-    }
-
-    friend free_tensor antipode(const free_tensor& arg)
+    // Implementation of the antipode for dense vector types.
+    free_tensor antipode_impl(vectors::dtl::access_type_dense) const
     {
         free_tensor result;
-        auto& base_result = result.base_vector();
-        const auto& base_arg = arg.base_vector();
 
 #ifdef LIBALGEBRA_MAX_TILE_LETTERS
         constexpr DEG CalcLetters = integer_maths::logN(static_cast<unsigned>(LIBALGEBRA_L1_CACHE_SIZE), n_letters) / 2;
         constexpr DEG BlockLetters = (CalcLetters > LIBALGEBRA_MAX_TILE_LETTERS) ? LIBALGEBRA_MAX_TILE_LETTERS : CalcLetters;
 #else
-        constexpr DEG BlockLetters = integer_maths::logN(LIBALGEBRA_L1_CACHE_SIZE / sizeof(typename base::scalar_type), n_letters) / 2;
+        constexpr DEG BlockLetters = integer_maths::logN(LIBALGEBRA_L1_CACHE_SIZE / sizeof(SCA), n_letters) / 2;
 #endif
 
-        const auto curr_degree = arg.degree();
+        const auto curr_degree = this->degree();
 
-        base_result.resize_to_degree(curr_degree);
+        vectors::dtl::vector_base_access::convert(result).resize_to_degree(curr_degree);
 
         // Get the pointers to the start of the data blob in memory.
-        const auto* src_ptr = base_arg.as_ptr();
-        auto* dst_ptr = base_result.as_mut_ptr();
+        const SCA* src_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(*this));
+        SCA* dst_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(result));
 
-        dtl::tiled_inverse_operator<n_letters, max_degree, BlockLetters, typename base::scalar_type, dtl::default_signer> t;
+        dtl::tiled_inverse_operator<n_letters, max_degree, BlockLetters, SCA, dtl::default_signer> t;
 
         t(src_ptr, dst_ptr, curr_degree);
 
         return result;
     }
 
+public:
+    /// Computes the antipode of a free_tensor instance.
+    inline friend free_tensor antipode(const free_tensor& arg)
+    {
+        // Get the trait to access the storage tag, although it now occurs to me that we already had
+        // the vector type as a template argument, so we might be able to dispatch off that instead
+        // of a tag. But the tag will do for now.
+        using trait = vectors::dtl::data_access<VectorType<BASIS, Coeff>>;
+
+        // Now use tagged dispatch to pick the correct implementation
+        return arg.antipode_impl(typename trait::tag());
+    }
+
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;
 
-    template<typename archive>
-    void serialize(archive& ar, unsigned int const /* version */)
+    template<typename Archive>
+    void serialize(Archive& ar, unsigned int const /* version */)
     {
         ar& boost::serialization::base_object<base>(*this);
     }
@@ -2009,6 +1896,7 @@ inverse(const free_tensor<Coeffs, Width, Depth, VectorType, Args...>& arg)
     z.sub_scal_div(x, a);
     // the iteration
     for (DEG i = 0; i != Depth; ++i) {
+        auto tmp = z*result;
         result = free_tensor_a_inverse + z * result;
     }
     return result;
@@ -2274,7 +2162,7 @@ class dense_tensor_iterator_item
 
     scalar_type* m_ptr;
     vector_type* p_vector;
-    DEG m_degree;
+    DEG m_degree = 0;
 
     friend class iterators::vector_iterator<dense_tensor_iterator_item>;
     friend vector_type;
@@ -2330,7 +2218,6 @@ private:
 };
 
 }// namespace dtl
-/*
 template<DEG Width, DEG Depth, typename Coeffs>
 class dense_vector<free_tensor_basis<Width, Depth>, Coeffs>
     : protected base_vector<free_tensor_basis<Width, Depth>, Coeffs>
@@ -2430,10 +2317,19 @@ public:
     {
     }
 
+    dense_vector(const dense_vector& other)
+        : m_data(other.dimension()), m_reverse_data(), m_dimension(other.m_dimension), m_degree(other.m_degree)
+    {
+        std::copy(other.m_data.begin(), other.m_data.end(), m_data.begin());
+    }
+    dense_vector(dense_vector&&) noexcept = default;
+
     explicit dense_vector(key_type key, scalar_param_type scalar = Coeffs::one)
         : m_data(), m_reverse_data(), m_dimension(0), m_degree(0)
     {
-        operator[](key) = scalar;
+        auto idx = basis_traits::key_to_index(base_vector_type::basis, key);
+        resize_to_dimension(idx+1);
+        m_data[idx] = scalar;
     }
 
     dense_vector(const_pointer begin, const_pointer end)
@@ -2441,10 +2337,13 @@ public:
     {
         resize_to_dimension(static_cast<DIMN>(end - begin));
         std::copy(begin, end, m_data.begin());
-        if (m_degree > 0) {
-            construct_reverse_data(m_degree-1);
-        }
+//        if (m_degree > 0) {
+//            construct_reverse_data(m_degree-1);
+//        }
     }
+
+    dense_vector& operator=(const dense_vector&) = default;
+    dense_vector& operator=(dense_vector&&) noexcept = default;
 
     const_reference value(DIMN index) const noexcept
     {
@@ -2453,14 +2352,15 @@ public:
 
     reference value(DIMN index) noexcept
     {
-        resize_to_dimension(index + 1);
+//        resize_to_dimension(index + 1);
         return m_data[index];
     }
 
     const_reference operator[](key_type key) const noexcept
     {
-        if (key.size() <= m_degree) {
-            return m_data[basis_type::key_to_index(key)];
+        auto idx = basis_traits::key_to_index(base_vector_type::basis, key);
+        if (idx < m_dimension) {
+            return m_data[idx];
         }
         return Coeffs::zero;
     }
@@ -2481,6 +2381,7 @@ public:
             m_dimension = info.dimension;
             m_degree = info.degree;
         }
+        assert(m_data.size() == m_dimension);
     }
 
     /// Reserve to degree
@@ -2492,6 +2393,8 @@ public:
             m_dimension = info.dimension;
             m_degree = info.degree;
         }
+        assert(m_data.size() == m_dimension);
+
     }
 
     DIMN resize_for_key(key_type key)
@@ -2502,6 +2405,7 @@ public:
             m_dimension = info.dimension;
             m_degree = info.degree;
         }
+        assert(m_data.size() == m_dimension);
         return basis_traits::key_to_index(base_vector_type::basis, key);
     }
 
@@ -2517,6 +2421,7 @@ public:
         else if (info.dimension == m_dimension) {
             m_degree = info.degree;
         }
+        assert(m_data.size() == m_dimension);
     }
 
     /// Reserve to degree
@@ -2702,12 +2607,14 @@ public:
         for (auto it = begin; it != end; ++it) {
             add_scal_prod(it->first, it->second);
         }
+//        m_reverse_data.clear();
     }
 
     template<typename Scalar>
     void add_scal_prod(key_type key, Scalar s)
     {
         operator[](key) += scalar_type(s);
+//        m_reverse_data.clear();
     }
 
     template<typename Fn>
@@ -2722,7 +2629,7 @@ public:
             result.m_data.emplace(i, fn(arg.m_data[i]));
         }
 
-        result.m_reverse_data.clear();
+//        result.m_reverse_data.clear();
     }
 
     template<typename Fn>
@@ -2732,7 +2639,7 @@ public:
             arg.m_data[i] = op(arg.m_data[i]);
         }
 
-        arg.m_reverse_data.clear();
+//        arg.m_reverse_data.clear();
     }
 
     template<typename Fn>
@@ -2748,18 +2655,20 @@ public:
 
         const auto size_fwd = minmax.first;
 
-        for (DIMN i = 0; i < size_fwd; ++i) {
+        DIMN i=0;
+        for (; i < size_fwd; ++i) {
             result.m_data.emplace(i, op(lhs.m_data[i], rhs.m_data[i]));
         }
 
-        for (DIMN i = size_fwd; i < lhs.m_dimension; ++i) {
+        for (; i < lhs.m_dimension; ++i) {
             result.m_data.emplace(i, op(lhs.m_data[i], Coeffs::zero));
         }
-        for (DIMN i = size_fwd; i < rhs.m_dimension; ++i) {
+        for (; i < rhs.m_dimension; ++i) {
             result.m_data.emplace(i, op(Coeffs::zero, rhs.m_data[i]));
         }
+        assert(i == result.m_dimension);
 
-        result.m_reverse_data.clear();
+//        result.m_reverse_data.clear();
     }
 
     template<typename Fn>
@@ -2768,26 +2677,32 @@ public:
             const dense_vector& rhs,
             Fn op)
     {
-        auto minmax = std::minmax(lhs.m_dimension, rhs.m_dimension);
+        auto old_lhs_dim = lhs.m_dimension;
+        auto minmax = std::minmax(old_lhs_dim, rhs.m_dimension);
 
         const auto lhs_rsize = lhs.m_reverse_data.size();
         const auto rhs_rsize = rhs.m_reverse_data.size();
         const auto size_rev = std::min(lhs_rsize, rhs_rsize);
 
-        lhs.reserve_to_dimension(minmax.second);
+        if (minmax.second > lhs.m_dimension) {
+            lhs.reserve_to_dimension(minmax.second);
+        }
         const auto size_fwd = minmax.first;
 
-        for (DIMN i = 0; i < size_fwd; ++i) {
+        DIMN i=0;
+
+        for (; i < size_fwd; ++i) {
             lhs.m_data[i] = op(lhs.m_data[i], rhs.m_data[i]);
         }
-        for (DIMN i = size_fwd; i < lhs.m_dimension; ++i) {
+        for (; i < old_lhs_dim; ++i) {
             lhs.m_data[i] = op(lhs.m_data[i], Coeffs::zero);
         }
-        for (DIMN i = size_fwd; i < rhs.m_dimension; ++i) {
+        for (; i < rhs.m_dimension; ++i) {
             lhs.m_data.emplace(i, op(Coeffs::zero, rhs.m_data[i]));
         }
+        assert(i == lhs.m_dimension);
 
-        lhs.m_reverse_data.clear();
+//        lhs.m_reverse_data.clear();
     }
 
     scalar_type NormL1() const
@@ -2906,7 +2821,7 @@ private:
     friend class boost::serialization::access;
 
     template<typename Archive>
-    void serialize(Archive& ar, const unsigned *//*version*//*)
+    void serialize(Archive& ar, const unsigned version)
     {
         ar& m_dimension;
         ar& m_degree;
@@ -2914,7 +2829,7 @@ private:
         ar& m_reverse_data;
     }
 #endif
-};*/
+};
 
 }// namespace vectors
 

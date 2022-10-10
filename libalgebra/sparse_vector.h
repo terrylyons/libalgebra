@@ -638,6 +638,8 @@ public:
                 auto val = func(it->second, cit->second);
                 if (val != Coeffs::zero) {
                     it->second = val;
+                } else {
+                    lhs.erase(it);
                 }
             }
         }

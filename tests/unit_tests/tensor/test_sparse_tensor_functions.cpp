@@ -13,35 +13,34 @@
 #include "../../common/helpers.h"
 
 
+namespace {
 
-
-template <typename Coeff, unsigned Width, unsigned Depth>
-struct fixture
-{
-
+template<typename Coeff, unsigned Width, unsigned Depth>
+struct fixture {
 
     typedef typename Coeff::S S;
     typedef typename Coeff::Q Q;
 
     typedef alg::free_tensor_basis<Width, Depth> TBASIS;
     typedef typename TBASIS::KEY KEY;
-    typedef alg::vectors::sparse_vector<TBASIS, Coeff, std::map<KEY, S> > VECT;
+    typedef alg::vectors::sparse_vector<TBASIS, Coeff, std::map<KEY, S>> VECT;
     typedef alg::free_tensor<Coeff, Width, Depth, alg::vectors::sparse_vector> TENSOR;
 
-
     template<class T>
-    T exp_to_depth(T x, S one) {
-        T result (one);
+    T exp_to_depth(T x, S one)
+    {
+        T result(one);
         T tone(S(1));
 
-        for (size_t i=Depth; i>=1; --i) {
+        for (size_t i = Depth; i >= 1; --i) {
             result *= (x / Q(double(i)));
             result += tone;
         }
         return result;
     }
 
-    TENSOR log_to_depth(const TENSOR& x) {
+    TENSOR log_to_depth(const TENSOR& x)
+    {
         TENSOR result;
 
         KEY kunit;
@@ -53,22 +52,21 @@ struct fixture
             xx.erase(it);
         }
 
-
         for (unsigned i = Depth; i >= 1; --i) {
 
             if (i % 2 == 0) {
                 result -= (tunit / Q(double(i)));
-            } else {
+            }
+            else {
                 result += (tunit / Q(double(i)));
             }
             result *= xx;
         }
         return result;
     }
-
 };
 
-
+}
 
 SUITE(sparse_tensor_functions_float) {
 typedef alg::coefficients::coefficient_field<float> float_field;

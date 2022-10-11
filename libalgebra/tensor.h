@@ -2191,7 +2191,7 @@ public:
     key_type key()
     {
         assert(index() < p_vector->dimension());
-        return index_to_key(index());
+        return basis_type::index_to_key(index());
     }
 
     reference value()
@@ -2230,10 +2230,31 @@ class dense_vector<free_tensor_basis<Width, Depth>, Coeffs>
 
     friend class traditional_free_tensor_multiplication<Width, Depth>;
 
+
+    class reverse_storage : public storage_type
+    {
+        bool m_valid = false;
+
+    public:
+
+        constexpr bool valid() const noexcept
+        { return m_valid; }
+
+        constexpr operator bool() const noexcept
+        { return valid() && storage_type::size() > 0; }
+
+        constexpr void validate() noexcept { m_valid = true; }
+        constexpr void invalidate() noexcept { m_valid = false; }
+
+
+    };
+
+
     storage_type m_data;
-    std::vector<typename Coeffs::S> m_reverse_data;
-    DIMN m_dimension;
-    DEG m_degree;
+//    std::vector<typename Coeffs::S> m_reverse_data;
+    reverse_storage m_reverse_data;
+    DIMN m_dimension = 0;
+    DEG m_degree = 0;
 
     using basis_traits = basis::basis_traits<free_tensor_basis<Width, Depth>>;
 
@@ -2278,6 +2299,7 @@ class dense_vector<free_tensor_basis<Width, Depth>, Coeffs>
             t(m_data.begin(), m_reverse_data.data(), degree);
             assert(*m_data.begin() == *m_reverse_data.begin());
         }
+        m_reverse_data.validate();
     }
 
 public:
@@ -2312,16 +2334,8 @@ public:
     using base_vector_type::one;
     using base_vector_type::zero;
 
-    dense_vector()
-        : m_data(), m_reverse_data(), m_dimension(0), m_degree(0)
-    {
-    }
-
-    dense_vector(const dense_vector& other)
-        : m_data(other.dimension()), m_reverse_data(), m_dimension(other.m_dimension), m_degree(other.m_degree)
-    {
-        std::copy(other.m_data.begin(), other.m_data.end(), m_data.begin());
-    }
+    dense_vector() = default;
+    dense_vector(const dense_vector&) = default;
     dense_vector(dense_vector&&) noexcept = default;
 
     explicit dense_vector(key_type key, scalar_param_type scalar = Coeffs::one)
@@ -2353,6 +2367,7 @@ public:
     reference value(DIMN index) noexcept
     {
 //        resize_to_dimension(index + 1);
+        m_reverse_data.invalidate();
         return m_data[index];
     }
 
@@ -2380,6 +2395,7 @@ public:
             m_data.reserve(info.size);
             m_dimension = info.dimension;
             m_degree = info.degree;
+            m_reverse_data.invalidate();
         }
         assert(m_data.size() == m_dimension);
     }
@@ -2392,6 +2408,7 @@ public:
             m_data.reserve(info.size);
             m_dimension = info.dimension;
             m_degree = info.degree;
+            m_reverse_data.invalidate();
         }
         assert(m_data.size() == m_dimension);
 
@@ -2404,6 +2421,7 @@ public:
             m_data.resize(info.size);
             m_dimension = info.dimension;
             m_degree = info.degree;
+            m_reverse_data.invalidate();
         }
         assert(m_data.size() == m_dimension);
         return basis_traits::key_to_index(base_vector_type::basis, key);
@@ -2417,6 +2435,7 @@ public:
             m_data.resize(info.size);
             m_dimension = info.dimension;
             m_degree = info.degree;
+            m_reverse_data.invalidate();
         }
         else if (info.dimension == m_dimension) {
             m_degree = info.degree;
@@ -2432,6 +2451,7 @@ public:
             m_data.resize(info.size);
             m_dimension = info.dimension;
             m_degree = info.degree;
+            m_reverse_data.invalidate();
         }
     }
 
@@ -2445,7 +2465,7 @@ public:
     const_pointer as_rptr() const noexcept { return m_reverse_data.data(); }
     pointer as_mut_rptr() noexcept { return m_reverse_data.data(); }
 
-    std::vector<scalar_type>& reverse_data() noexcept { return m_reverse_data; }
+    reverse_storage& reverse_data() noexcept { return m_reverse_data; }
 
 protected:
     /// Index of key and key of index
@@ -2525,18 +2545,17 @@ public:
 
     void erase(key_type key)
     {
-        auto deg = key.size();
-        if (deg < m_degree) {
-            operator[](key) = Coeffs::zero;
-        }
-        else if (deg == m_degree) {
-            m_data[basis_type::key_to_index(key)] = Coeffs::zero;
-        }
+        operator[](key) = Coeffs::zero;
     }
 
     void erase(iterator& it)
     {
         it->value() = Coeffs::zero;
+
+        if (it->index() < m_reverse_data.size() && m_reverse_data) {
+            m_reverse_data[basis_type::key_to_index(it->key().reverse())] = Coeffs::zero;
+        }
+
     }
 
     void clear()
@@ -2547,10 +2566,12 @@ public:
 
     iterator begin()
     {
+        m_reverse_data.invalidate();
         return iterator(*this, m_data.begin());
     }
     iterator end()
     {
+        m_reverse_data.invalidate();
         return iterator(*this, m_data.end());
     }
     const_iterator begin() const
@@ -2580,6 +2601,7 @@ public:
     }
     iterator find(key_type key)
     {
+        m_reverse_data.invalidate();
         auto deg = key.size();
         if (deg <= m_degree) {
             return iterator(*this, m_data.begin() + basis_type::key_to_index(key));
@@ -2595,6 +2617,7 @@ public:
     }
     iterator find_index(DIMN idx)
     {
+        m_reverse_data.invalidate();
         if (idx < m_dimension) {
             return iterator(*this, m_data.begin() + idx);
         }
@@ -2604,6 +2627,7 @@ public:
     template<typename InputIt>
     void insert(InputIt begin, InputIt end)
     {
+        m_reverse_data.invalidate();
         for (auto it = begin; it != end; ++it) {
             add_scal_prod(it->first, it->second);
         }
@@ -2613,6 +2637,7 @@ public:
     template<typename Scalar>
     void add_scal_prod(key_type key, Scalar s)
     {
+        m_reverse_data.invalidate();
         operator[](key) += scalar_type(s);
 //        m_reverse_data.clear();
     }
@@ -2628,8 +2653,13 @@ public:
         for (DIMN i = 0; i < arg.m_dimension; ++i) {
             result.m_data.emplace(i, fn(arg.m_data[i]));
         }
+        if (arg.m_reverse_data) {
+            result.m_reverse_data.reserve(arg.m_reverse_data.size());
+            for (DIMN i=0; i<arg.m_reverse_data.size(); ++i) {
+                result.m_reverse_data.emplace(i, fn(arg.m_reverse_data[i]));
+            }
+        }
 
-//        result.m_reverse_data.clear();
     }
 
     template<typename Fn>
@@ -2638,8 +2668,10 @@ public:
         for (DIMN i = 0; i < arg.m_dimension; ++i) {
             arg.m_data[i] = op(arg.m_data[i]);
         }
+        for (DIMN i=0; i<arg.m_reverse_data.size(); ++i) {
+            arg.m_reverse_data[i] = op(arg.m_reverse_data[i]);
+        }
 
-//        arg.m_reverse_data.clear();
     }
 
     template<typename Fn>
@@ -2668,7 +2700,32 @@ public:
         }
         assert(i == result.m_dimension);
 
-//        result.m_reverse_data.clear();
+        if (lhs.m_reverse_data && rhs.m_reverse_data) {
+            i = 0;
+            const auto lhs_rsize = lhs.m_reverse_data.size();
+            const auto rhs_rsize = rhs.m_reverse_data.size();
+
+            auto rminmax = std::minmax(lhs_rsize, rhs_rsize);
+
+            result.m_reverse_data.reserve(rminmax.second);
+
+            for (; i<rminmax.first; ++i) {
+                result.m_reverse_data.emplace(i, op(lhs.m_reverse_data[i],
+                                                    rhs.m_reverse_data[i]));
+            }
+            for (; i<lhs_rsize; ++i) {
+                result.m_reverse_data.emplace(i, op(lhs.m_reverse_data[i],
+                                                    Coeffs::zero));
+            }
+            for (; i<rhs_rsize; ++i) {
+                result.m_reverse_data.emplace(i, op(Coeffs::zero,
+                                                    rhs.m_reverse_data[i]));
+            }
+            result.m_reverse_data.validate();
+        } else {
+            result.m_reverse_data.invalidate();
+        }
+
     }
 
     template<typename Fn>
@@ -2702,7 +2759,31 @@ public:
         }
         assert(i == lhs.m_dimension);
 
-//        lhs.m_reverse_data.clear();
+        if (lhs.m_reverse_data && rhs.m_reverse_data) {
+
+            const auto lhs_rsize = lhs.m_reverse_data.size();
+            const auto rhs_rsize = rhs.m_reverse_data.size();
+            const auto rminmax = std::minmax(lhs_rsize, rhs_rsize);
+
+            lhs.m_reverse_data.reserve(rminmax.second);
+
+            i=0;
+            for (; i<rminmax.first; ++i) {
+                lhs.m_reverse_data[i] = op(lhs.m_reverse_data[i],
+                                           rhs.m_reverse_data[i]);
+            }
+            for (; i<lhs_rsize; ++i) {
+                lhs.m_reverse_data[i] = op(lhs.m_reverse_data[i], Coeffs::zero);
+            }
+            for (; i<rhs_rsize; ++i) {
+                lhs.m_reverse_data.emplace(i, op(Coeffs::zero, rhs.m_reverse_data[i]));
+            }
+            lhs.m_reverse_data.validate();
+        } else {
+            lhs.m_reverse_data.invalidate();
+        }
+
+
     }
 
     scalar_type NormL1() const

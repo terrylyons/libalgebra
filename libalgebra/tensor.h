@@ -652,7 +652,7 @@ public:
         }
     }
 
-/*    template<typename B>
+    template<typename B>
     tiled_free_tensor_multiplication_helper(
             dense_tensor<free_tensor_basis<Width, Depth>>& out,
             const dense_tensor<free_tensor_basis<Width, Depth>>& lhs,
@@ -663,15 +663,19 @@ public:
           right_read_tile(tile_width),
           output_tile(tile_size)
     {
-//        assert(base::out_deg == 0 || out.reverse_dimension() == tsi::degree_sizes[base::out_deg-1]);
-//        reverse_write_ptr = out.as_mut_rptr();
-//        left_reverse_read_ptr = lhs.as_rptr();
+        //        assert(base::out_deg == 0 || out.reverse_dimension() == tsi::degree_sizes[base::out_deg-1]);
+        //        reverse_write_ptr = out.as_mut_rptr();
+        //        left_reverse_read_ptr = lhs.as_rptr();
 
-
+        const auto& lreverse_data = lhs.reverse_data();
+        //        if (lreverse_data) {
+        //            left_reverse_read_ptr = lreverse_data.begin();
+        //        }
+        //        else
         if (base::lhs_deg > 0) {
             reverse_data.resize(basis_type::start_of_degree(base::lhs_deg + 1));
             dtl::tiled_inverse_operator<Width, (Depth > 0) ? Depth - 1 : 0, TileLetters, scalar_type, dtl::non_signing_signer> reverser;
-            reverser(base::out_data, reverse_data.data(), base::lhs_deg);
+            reverser(base::lhs_data, reverse_data.data(), base::lhs_deg);
             left_reverse_read_ptr = reverse_data.data();
         }
     }
@@ -686,16 +690,21 @@ public:
           right_read_tile(tile_width),
           output_tile(tile_size)
     {
-//        assert(base::out_deg == 0 || lhs.reverse_dimension() >= tsi::degree_sizes[base::out_deg-1]);
-//        reverse_write_ptr = lhs.as_mut_rptr();
-//        left_reverse_read_ptr = reverse_write_ptr;
+        //        assert(base::out_deg == 0 || lhs.reverse_dimension() >= tsi::degree_sizes[base::out_deg-1]);
+        //        reverse_write_ptr = lhs.as_mut_rptr();
+        //        left_reverse_read_ptr = reverse_write_ptr;
+        const auto& lreverse_data = lhs.reverse_data();
+        //        if (lreverse_data) {
+        //            left_reverse_read_ptr = lreverse_data.begin();
+        //        }
+        //        else
         if (base::lhs_deg > 0) {
             reverse_data.resize(basis_type::start_of_degree(base::lhs_deg + 1));
             dtl::tiled_inverse_operator<Width, (Depth > 0) ? Depth - 1 : 0, TileLetters, scalar_type, dtl::non_signing_signer> reverser;
             reverser(base::out_data, reverse_data.data(), base::lhs_deg);
             left_reverse_read_ptr = reverse_data.data();
         }
-    }*/
+    }
 
     pointer out_tile_ptr() noexcept
     {
@@ -763,15 +772,15 @@ public:
 
         if (reverse_write_ptr != nullptr && degree < base::out_deg) {
             // Write out reverse data
-//            using perm = reversing_permutation<Width, tile_info::tile_letters>;
-//
-//            assert(((tile_width-1)*stride + (tile_width-1) + reverse_index*tile_width+start_of_degree) < tsi::degree_sizes[degree]);
-//            optr = reverse_write_ptr + reverse_index * tile_width + start_of_degree;
-//            for (DIMN i = 0; i < tile_width; ++i) {
-//                for (DIMN j = 0; j < tile_width; ++j) {
-//                    optr[i * stride + j] = tptr[perm::permute_idx(i) * tile_width + j];
-//                }
-//            }
+            //            using perm = reversing_permutation<Width, tile_info::tile_letters>;
+            //
+            //            assert(((tile_width-1)*stride + (tile_width-1) + reverse_index*tile_width+start_of_degree) < tsi::degree_sizes[degree]);
+            //            optr = reverse_write_ptr + reverse_index * tile_width + start_of_degree;
+            //            for (DIMN i = 0; i < tile_width; ++i) {
+            //                for (DIMN j = 0; j < tile_width; ++j) {
+            //                    optr[i * stride + j] = tptr[perm::permute_idx(i) * tile_width + j];
+            //                }
+            //            }
         }
     }
 
@@ -876,7 +885,7 @@ protected:
     static void update_reverse_data(vectors::dense_vector<free_tensor_basis<Width, Depth>, Coeffs>& out, DEG max_degree)
     {
         if (max_degree > 0) {
-            out.construct_reverse_data(max_degree-1);
+            out.construct_reverse_data(max_degree - 1);
         }
     }
 
@@ -1069,7 +1078,7 @@ public:
         if (!lhs.empty() && !rhs.empty()) {
             helper<Coeffs> help(out, lhs, rhs, max_degree);
             fma_impl(help, op, help.out_degree());
-//            update_reverse_data(out, help.out_degree());
+            //            update_reverse_data(out, help.out_degree());
         }
     }
 
@@ -1083,7 +1092,7 @@ public:
         if (!rhs.empty()) {
             helper<Coeffs> help(lhs, rhs, max_degree);
             multiply_inplace_impl(help, op, help.out_degree());
-//            update_reverse_data(lhs, help.out_degree());
+            //            update_reverse_data(lhs, help.out_degree());
         }
         else {
             lhs.clear();
@@ -1097,12 +1106,17 @@ class tiled_free_tensor_multiplication
 {
     using base = traditional_free_tensor_multiplication<Width, Depth>;
 
+    bool debug = false;
+
     template<typename C>
     using helper_type = dtl::tiled_free_tensor_multiplication_helper<
             Width, Depth, C, TileLetters>;
 
     using tile_info = dtl::tile_details<Width, Depth, TileLetters>;
     using tsi = dtl::tensor_size_info<Width>;
+
+    static constexpr IDEG tile_letters = tile_info::tile_letters;
+    static constexpr IDIMN tile_width = tile_info::tile_width;
 
     template<typename S, typename Fn>
     LA_INLINE_ALWAYS static void impl_0bd(S* LA_RESTRICT tile,
@@ -1176,71 +1190,188 @@ class tiled_free_tensor_multiplication
         }
     }
 
-protected:
-    template<typename Coeffs, typename Fn>
-    LA_INLINE_ALWAYS void impl_common(helper_type<Coeffs>& helper,
-                                      Fn op,
-                                      IDEG out_deg,
-                                      IDIMN k,
-                                      IDIMN k_reverse,
-                                      IDEG lhs_deg_min,
-                                      IDEG lhs_deg_max) const
+    template<typename S, typename Fn>
+    LA_INLINE_ALWAYS static void impl_ulmd(S* LA_RESTRICT tile,
+                                           const S* LA_RESTRICT lhs_fwd_ptr,
+                                           const S& rhs_val,
+                                           Fn op,
+                                           IDIMN j,
+                                           IDIMN stride) noexcept
     {
-        constexpr auto tile_letters = static_cast<IDEG>(tile_info::tile_letters);
+        constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
+        for (DIMN i = 0; i < tile_width; ++i) {
+            tile[i * tile_width + j] += op(lhs_fwd_ptr[i * stride] * rhs_val);
+        }
+    }
+
+    template<typename S, typename Fn>
+    LA_INLINE_ALWAYS static void impl_ulmd_1l(S* LA_RESTRICT tile,
+                                              const S* LA_RESTRICT lhs_fwd_ptr,
+                                              const S* LA_RESTRICT rhs_fwd_ptr,
+                                              Fn op,
+                                              IDIMN lhs_stride) noexcept
+    {
         constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
 
-        auto* LA_RESTRICT tile = helper.out_tile_ptr();
-        const auto* LA_RESTRICT left_rtile = helper.left_read_tile_ptr();
-        const auto* LA_RESTRICT right_rtile = helper.right_read_tile_ptr();
-
-        //        const auto& lhs_unit = helper.left_unit();
-        //        const auto& rhs_unit = helper.right_unit();
-
-        const auto mid_deg = out_deg - 2 * tile_letters;
-
-        for (IDEG lhs_deg = lhs_deg_min; lhs_deg < std::min(tile_letters, lhs_deg_max); ++lhs_deg) {
-            const auto rhs_deg = out_deg - lhs_deg;
-
-            assert(1 <= lhs_deg && lhs_deg <= tile_letters);
-            for (IDIMN i = 0; i < tile_width; ++i) {
-                const auto split = helper.split_key(lhs_deg, i);
-                const auto& left_val = *helper.left_fwd_read(lhs_deg, split.first);
-                helper.read_right_tile(rhs_deg, helper.combine_keys(mid_deg, split.second, k));
-                impl_lb1(tile, left_val, right_rtile, op, i);
-            }
-        }
-
-        for (IDEG lhs_deg = std::max(tile_letters, lhs_deg_min);
-             lhs_deg <= std::min(out_deg - tile_letters, lhs_deg_max); ++lhs_deg) {
-            const auto rhs_deg = out_deg - lhs_deg;
-            assert(tile_letters <= lhs_deg && lhs_deg <= out_deg - tile_letters);
-            assert(tile_letters <= rhs_deg && rhs_deg <= out_deg - tile_letters);
-            const auto lhs_split = lhs_deg - tile_letters;
-            const auto rhs_split = rhs_deg - tile_letters;
-            assert(lhs_split + rhs_split == mid_deg);
-
-            const auto split = helper.split_key(rhs_split, k);
-            helper.read_left_tile(lhs_deg, helper.reverse_key(lhs_split, split.first));
-            helper.read_right_tile(rhs_deg, split.second);
-            impl_mid(tile, left_rtile, right_rtile, op);
-        }
-
-        for (IDEG lhs_deg = std::max(out_deg - tile_letters + 1, lhs_deg_min);
-             lhs_deg <= lhs_deg_max; ++lhs_deg) {
-            const auto rhs_deg = out_deg - lhs_deg;
-            assert(mid_deg < lhs_deg && lhs_deg < out_deg);
-            assert(1 <= rhs_deg && rhs_deg < tile_letters);
-            const auto split_left_letters = tile_letters - rhs_deg;
-            assert(0 < split_left_letters && split_left_letters < tile_letters);
-            assert(lhs_deg == mid_deg + split_left_letters + tile_letters);
-
+        for (IDIMN i = 0; i < tile_width; ++i) {
             for (IDIMN j = 0; j < tile_width; ++j) {
-                const auto split = helper.split_key(rhs_deg, j);
-                const auto& right_val = *helper.right_fwd_read(rhs_deg, split.second);
-                helper.read_left_tile(lhs_deg, helper.combine_keys(split_left_letters, helper.reverse_key(split_left_letters, split.first), k_reverse));
-                impl_1br(tile, left_rtile, right_val, op, j);
+                tile[i * tile_width + j] += op(lhs_fwd_ptr[i * lhs_stride] * rhs_fwd_ptr[j]);
             }
         }
+    }
+
+protected:
+    template<typename Coeffs, typename Fn>
+    LA_INLINE_ALWAYS static void
+    impl_lhs_small(helper_type<Coeffs>& helper,
+                   Fn op,
+                   IDEG out_deg,
+                   IDEG lhs_deg,
+                   IDIMN k) noexcept
+    {
+        const auto rhs_deg = out_deg - lhs_deg;
+
+        assert(1 <= lhs_deg && lhs_deg <= tile_letters);
+        for (IDIMN i = 0; i < tile_width; ++i) {
+            const auto split = helper.split_key(lhs_deg, i);
+            const auto& left_val = *helper.left_fwd_read(lhs_deg, split.first);
+            helper.read_right_tile(rhs_deg, helper.combine_keys(out_deg - 2 * tile_letters, split.second, k));
+            impl_lb1(helper.out_tile_ptr(),
+                     left_val,
+                     helper.right_read_tile_ptr(),
+                     op,
+                     i);
+        }
+    }
+
+    template<typename Coeffs, typename Fn>
+    LA_INLINE_ALWAYS static void
+    impl_mid_cases_reverse(helper_type<Coeffs>& helper,
+                           Fn op,
+                           IDEG out_deg,
+                           IDEG lhs_deg,
+                           IDIMN k) noexcept
+    {
+        const auto rhs_deg = out_deg - lhs_deg;
+        assert(tile_letters <= lhs_deg && lhs_deg <= out_deg - tile_letters);
+        assert(tile_letters <= rhs_deg && rhs_deg <= out_deg - tile_letters);
+        const auto lhs_split = lhs_deg - tile_letters;
+        const auto rhs_split = rhs_deg - tile_letters;
+        assert(lhs_split + rhs_split == out_deg - 2 * tile_letters);
+
+        const auto split = helper.split_key(rhs_split, k);
+        helper.read_left_tile(lhs_deg, helper.reverse_key(lhs_split, split.first));
+        helper.read_right_tile(rhs_deg, split.second);
+        impl_mid(helper.out_tile_ptr(),
+                 helper.left_read_tile_ptr(),
+                 helper.right_read_tile_ptr(),
+                 op);
+    }
+
+    template<typename Coeffs, typename Fn>
+    LA_INLINE_ALWAYS static void
+    impl_mid_cases_no_reverse(helper_type<Coeffs>& helper,
+                              Fn op,
+                              IDEG out_deg,
+                              IDEG lhs_deg,
+                              IDIMN k) noexcept
+    {
+        const auto rhs_deg = out_deg - lhs_deg;
+        const auto lhs_split = lhs_deg - tile_letters;
+        const auto rhs_split = rhs_deg - tile_letters;
+        assert(lhs_split + rhs_split == out_deg - 2 * tile_letters);
+
+        const auto split = helper.split_key(rhs_split, k);
+        impl_ulmd_1l(helper.out_tile_ptr(),
+                     helper.left_fwd_read(lhs_deg, split.first),
+                     helper.right_fwd_read(rhs_deg, split.second * tile_width),
+                     op,
+                     tsi::powers[lhs_split]);
+    }
+
+    template<typename Coeffs, typename Fn>
+    LA_INLINE_ALWAYS static void
+    impl_rhs_small_reverse(helper_type<Coeffs>& helper,
+                           Fn op,
+                           IDEG out_deg,
+                           IDEG lhs_deg,
+                           IDIMN k_reverse) noexcept
+    {
+        const auto rhs_deg = out_deg - lhs_deg;
+        assert(out_deg - 2 * tile_letters < lhs_deg && lhs_deg < out_deg);
+        assert(1 <= rhs_deg && rhs_deg < tile_letters);
+        const auto split_left_letters = tile_letters - rhs_deg;
+        assert(0 < split_left_letters && split_left_letters < tile_letters);
+        assert(lhs_deg == out_deg - 2 * tile_letters + split_left_letters + tile_letters);
+
+        for (IDIMN j = 0; j < tile_width; ++j) {
+            const auto split = helper.split_key(rhs_deg, j);
+            const auto& right_val = *helper.right_fwd_read(rhs_deg, split.second);
+            helper.read_left_tile(lhs_deg, helper.combine_keys(split_left_letters, helper.reverse_key(split_left_letters, split.first), k_reverse));
+            impl_1br(helper.out_tile_ptr(),
+                     helper.left_read_tile_ptr(),
+                     right_val,
+                     op,
+                     j);
+        }
+    }
+
+    template<typename Coeffs, typename Fn>
+    LA_INLINE_ALWAYS static void
+    impl_rhs_small_no_reverse(helper_type<Coeffs>& helper,
+                              Fn op,
+                              IDEG out_deg,
+                              IDEG lhs_deg,
+                              IDIMN k) noexcept
+    {
+        const auto rhs_deg = out_deg - lhs_deg;
+        const auto split_left_letters = tile_letters - rhs_deg;
+        for (IDIMN j = 0; j < tile_width; ++j) {
+            const auto split = helper.split_key(rhs_deg, j);
+            const auto& right_val = *helper.right_fwd_read(rhs_deg, split.second);
+            const auto lhs_key = helper.combine_keys(split_left_letters, k, split.first);
+
+            impl_ulmd(helper.out_tile_ptr(),
+                      helper.left_fwd_read(lhs_deg, lhs_key),
+                      right_val,
+                      op,
+                      j,
+                      tsi::powers[lhs_deg-tile_letters]);
+        }
+    }
+
+    template<typename Coeffs, typename Fn>
+    void impl_common(helper_type<Coeffs>& helper,
+                     Fn op,
+                     IDEG out_deg,
+                     IDIMN k,
+                     IDIMN k_reverse,
+                     IDEG lhs_deg_min,
+                     IDEG lhs_deg_max) const
+    {
+        const auto mid_end = out_deg - tile_letters;
+
+        for (IDEG lhs_deg = lhs_deg_min; lhs_deg <= lhs_deg_max; ++lhs_deg) {
+            if (lhs_deg < tile_letters) {
+                impl_lhs_small(helper, op, out_deg, lhs_deg, k);
+            }
+            else if (lhs_deg <= mid_end && lhs_deg < helper.lhs_degree()) {
+                impl_mid_cases_reverse(helper, op, out_deg, lhs_deg, k);
+            }
+            else if (lhs_deg <= mid_end && lhs_deg == helper.lhs_degree()) {
+                impl_mid_cases_no_reverse(helper, op, out_deg, lhs_deg, k);
+            }
+            else if (lhs_deg > mid_end && lhs_deg < helper.lhs_degree()) {
+                impl_rhs_small_reverse(helper, op, out_deg, lhs_deg, k_reverse);
+            }
+            else if (lhs_deg > mid_end){
+                impl_rhs_small_no_reverse(helper, op, out_deg, lhs_deg, k);
+            }
+            else {
+                BOOST_UNREACHABLE_RETURN();
+            }
+        }
+
 
         helper.write_tile(out_deg, k, k_reverse);
     }
@@ -1347,8 +1478,8 @@ public:
             helper_type<Coeffs> helper(out, lhs, rhs, max_degree);
             fma_impl(helper, op, helper.out_degree());
             if (helper.out_degree() > 0) {
-                auto update_deg = std::min(helper.out_degree()-1, 2*tile_info::tile_letters);
-//                base::update_reverse_data(out, update_deg);
+                auto update_deg = std::min(helper.out_degree() - 1, 2 * tile_info::tile_letters);
+                //                base::update_reverse_data(out, update_deg);
             }
         }
     }
@@ -1368,8 +1499,8 @@ public:
             helper_type<Coeffs> helper(lhs, rhs, max_degree);
             multiply_inplace_impl(helper, op, helper.out_degree());
             if (helper.out_degree() > 0) {
-                auto update_deg = std::min(helper.out_degree()-1, 2*tile_info::tile_letters);
-//                base::update_reverse_data(lhs, update_deg);
+                auto update_deg = std::min(helper.out_degree() - 1, 2 * tile_info::tile_letters);
+                //                base::update_reverse_data(lhs, update_deg);
             }
         }
         else {
@@ -1896,7 +2027,7 @@ inverse(const free_tensor<Coeffs, Width, Depth, VectorType, Args...>& arg)
     z.sub_scal_div(x, a);
     // the iteration
     for (DEG i = 0; i != Depth; ++i) {
-        auto tmp = z*result;
+        auto tmp = z * result;
         result = free_tensor_a_inverse + z * result;
     }
     return result;
@@ -2230,28 +2361,27 @@ class dense_vector<free_tensor_basis<Width, Depth>, Coeffs>
 
     friend class traditional_free_tensor_multiplication<Width, Depth>;
 
-
     class reverse_storage : public storage_type
     {
         bool m_valid = false;
 
     public:
-
         constexpr bool valid() const noexcept
-        { return m_valid; }
+        {
+            return m_valid;
+        }
 
         constexpr operator bool() const noexcept
-        { return valid() && storage_type::size() > 0; }
+        {
+            return valid() && storage_type::size() > 0;
+        }
 
         constexpr void validate() noexcept { m_valid = true; }
         constexpr void invalidate() noexcept { m_valid = false; }
-
-
     };
 
-
     storage_type m_data;
-//    std::vector<typename Coeffs::S> m_reverse_data;
+    //    std::vector<typename Coeffs::S> m_reverse_data;
     reverse_storage m_reverse_data;
     DIMN m_dimension = 0;
     DEG m_degree = 0;
@@ -2342,7 +2472,7 @@ public:
         : m_data(), m_reverse_data(), m_dimension(0), m_degree(0)
     {
         auto idx = basis_traits::key_to_index(base_vector_type::basis, key);
-        resize_to_dimension(idx+1);
+        resize_to_dimension(idx + 1);
         m_data[idx] = scalar;
     }
 
@@ -2351,9 +2481,9 @@ public:
     {
         resize_to_dimension(static_cast<DIMN>(end - begin));
         std::copy(begin, end, m_data.begin());
-//        if (m_degree > 0) {
-//            construct_reverse_data(m_degree-1);
-//        }
+        //        if (m_degree > 0) {
+        //            construct_reverse_data(m_degree-1);
+        //        }
     }
 
     dense_vector& operator=(const dense_vector&) = default;
@@ -2366,7 +2496,7 @@ public:
 
     reference value(DIMN index) noexcept
     {
-//        resize_to_dimension(index + 1);
+        //        resize_to_dimension(index + 1);
         m_reverse_data.invalidate();
         return m_data[index];
     }
@@ -2411,7 +2541,6 @@ public:
             m_reverse_data.invalidate();
         }
         assert(m_data.size() == m_dimension);
-
     }
 
     DIMN resize_for_key(key_type key)
@@ -2465,6 +2594,10 @@ public:
     const_pointer as_rptr() const noexcept { return m_reverse_data.data(); }
     pointer as_mut_rptr() noexcept { return m_reverse_data.data(); }
 
+    const reverse_storage& reverse_data() const noexcept
+    {
+        return m_reverse_data;
+    }
     reverse_storage& reverse_data() noexcept { return m_reverse_data; }
 
 protected:
@@ -2555,7 +2688,6 @@ public:
         if (it->index() < m_reverse_data.size() && m_reverse_data) {
             m_reverse_data[basis_type::key_to_index(it->key().reverse())] = Coeffs::zero;
         }
-
     }
 
     void clear()
@@ -2631,7 +2763,7 @@ public:
         for (auto it = begin; it != end; ++it) {
             add_scal_prod(it->first, it->second);
         }
-//        m_reverse_data.clear();
+        //        m_reverse_data.clear();
     }
 
     template<typename Scalar>
@@ -2639,7 +2771,7 @@ public:
     {
         m_reverse_data.invalidate();
         operator[](key) += scalar_type(s);
-//        m_reverse_data.clear();
+        //        m_reverse_data.clear();
     }
 
     template<typename Fn>
@@ -2655,11 +2787,10 @@ public:
         }
         if (arg.m_reverse_data) {
             result.m_reverse_data.reserve(arg.m_reverse_data.size());
-            for (DIMN i=0; i<arg.m_reverse_data.size(); ++i) {
+            for (DIMN i = 0; i < arg.m_reverse_data.size(); ++i) {
                 result.m_reverse_data.emplace(i, fn(arg.m_reverse_data[i]));
             }
         }
-
     }
 
     template<typename Fn>
@@ -2668,10 +2799,9 @@ public:
         for (DIMN i = 0; i < arg.m_dimension; ++i) {
             arg.m_data[i] = op(arg.m_data[i]);
         }
-        for (DIMN i=0; i<arg.m_reverse_data.size(); ++i) {
+        for (DIMN i = 0; i < arg.m_reverse_data.size(); ++i) {
             arg.m_reverse_data[i] = op(arg.m_reverse_data[i]);
         }
-
     }
 
     template<typename Fn>
@@ -2687,7 +2817,7 @@ public:
 
         const auto size_fwd = minmax.first;
 
-        DIMN i=0;
+        DIMN i = 0;
         for (; i < size_fwd; ++i) {
             result.m_data.emplace(i, op(lhs.m_data[i], rhs.m_data[i]));
         }
@@ -2709,23 +2839,20 @@ public:
 
             result.m_reverse_data.reserve(rminmax.second);
 
-            for (; i<rminmax.first; ++i) {
-                result.m_reverse_data.emplace(i, op(lhs.m_reverse_data[i],
-                                                    rhs.m_reverse_data[i]));
+            for (; i < rminmax.first; ++i) {
+                result.m_reverse_data.emplace(i, op(lhs.m_reverse_data[i], rhs.m_reverse_data[i]));
             }
-            for (; i<lhs_rsize; ++i) {
-                result.m_reverse_data.emplace(i, op(lhs.m_reverse_data[i],
-                                                    Coeffs::zero));
+            for (; i < lhs_rsize; ++i) {
+                result.m_reverse_data.emplace(i, op(lhs.m_reverse_data[i], Coeffs::zero));
             }
-            for (; i<rhs_rsize; ++i) {
-                result.m_reverse_data.emplace(i, op(Coeffs::zero,
-                                                    rhs.m_reverse_data[i]));
+            for (; i < rhs_rsize; ++i) {
+                result.m_reverse_data.emplace(i, op(Coeffs::zero, rhs.m_reverse_data[i]));
             }
             result.m_reverse_data.validate();
-        } else {
+        }
+        else {
             result.m_reverse_data.invalidate();
         }
-
     }
 
     template<typename Fn>
@@ -2746,7 +2873,7 @@ public:
         }
         const auto size_fwd = minmax.first;
 
-        DIMN i=0;
+        DIMN i = 0;
 
         for (; i < size_fwd; ++i) {
             lhs.m_data[i] = op(lhs.m_data[i], rhs.m_data[i]);
@@ -2767,23 +2894,22 @@ public:
 
             lhs.m_reverse_data.reserve(rminmax.second);
 
-            i=0;
-            for (; i<rminmax.first; ++i) {
+            i = 0;
+            for (; i < rminmax.first; ++i) {
                 lhs.m_reverse_data[i] = op(lhs.m_reverse_data[i],
                                            rhs.m_reverse_data[i]);
             }
-            for (; i<lhs_rsize; ++i) {
+            for (; i < lhs_rsize; ++i) {
                 lhs.m_reverse_data[i] = op(lhs.m_reverse_data[i], Coeffs::zero);
             }
-            for (; i<rhs_rsize; ++i) {
+            for (; i < rhs_rsize; ++i) {
                 lhs.m_reverse_data.emplace(i, op(Coeffs::zero, rhs.m_reverse_data[i]));
             }
             lhs.m_reverse_data.validate();
-        } else {
+        }
+        else {
             lhs.m_reverse_data.invalidate();
         }
-
-
     }
 
     scalar_type NormL1() const
@@ -2864,13 +2990,13 @@ public:
             return false;
         }
 
-        for (auto i=mid_eq.first; i<m_dimension; ++i) {
+        for (auto i = mid_eq.first; i < m_dimension; ++i) {
             if (m_data[i] != Coeffs::zero) {
                 return false;
             }
         }
 
-        for (auto i=mid_eq.first; i<rhs.m_dimension; ++i) {
+        for (auto i = mid_eq.first; i < rhs.m_dimension; ++i) {
             if (rhs.m_data[i] != Coeffs::zero) {
                 return false;
             }

@@ -232,12 +232,14 @@ SUITE(tensor_multiplication)
         using sparse_traditional_tensor = alg::algebra<tensor_basis, coeff_ring, traditional_multiplication, alg::vectors::sparse_vector>;
         using dense_traditional_tensor = alg::algebra<tensor_basis, coeff_ring, traditional_multiplication, alg::vectors::dense_vector>;
 
-        scalar_type construct_expected(key_type key, LET lhs_offset, LET rhs_offset) const
+        scalar_type construct_expected(key_type key, LET lhs_offset, LET rhs_offset, DEG lhs_max = depth, DEG rhs_max = depth) const
         {
             auto deg = key.size();
+            auto dmin = (deg >= rhs_max) ? deg - rhs_max : DEG(0);
+            auto dmax = std::min(deg, lhs_max);
 
             scalar_type result;
-            for (DEG i = 0; i <= deg; ++i) {
+            for (DEG i = dmin; i <= dmax; ++i) {
                 auto right(key);
                 auto left = right.split_n(i);
                 result += to_poly_key(left, lhs_offset) * to_poly_key(right, rhs_offset);
@@ -282,59 +284,79 @@ SUITE(tensor_multiplication)
         }
 
         template<typename Mul, template<typename, typename, typename...> class VT>
-        alg::algebra<tensor_basis, coeff_ring, Mul, VT> generic_tensor(LET offset = 0) const
+        alg::algebra<tensor_basis, coeff_ring, Mul, VT> generic_tensor(LET offset = 0, DEG max_degree = depth) const
         {
             alg::algebra<tensor_basis, coeff_ring, Mul, VT> result;
 
-            for (auto key : basis.iterate_keys()) {
+            for (auto key : basis.iterate_keys_to_deg(max_degree + 1)) {
                 result[key] = to_poly_key(key, offset);
             }
             return result;
         }
     };
 
-#define LA_TESTING_TENSOR_MAX_DEG_FMA(MUL, VEC, DEGREE)                                            \
-    TEST_FIXTURE(PolyMultiplicationTests, VEC##_##MUL##_fma_max_deg_##DEGREE)                      \
-    {                                                                                              \
-        using mtraits = alg::dtl::multiplication_traits<MUL##_multiplication>;                     \
-        auto lhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(1000000);      \
-        auto rhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(2000000);      \
-                                                                                                   \
-        const auto& mul = lhs.multiplication();                                                    \
-        tensor_type<MUL##_multiplication, alg::vectors::VEC##_vector> result;                      \
-                                                                                                   \
-        mtraits::multiply_and_add(mul, result, lhs, rhs, alg::mult::scalar_passthrough(), DEGREE); \
-                                                                                                   \
-        CHECK_EQUAL(basis.start_of_degree(DEGREE + 1), result.size());                             \
-        for (auto item : result) {                                                                 \
-            if (basis.degree(item.key()) < DEGREE + 1) {                                           \
-                CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value());       \
-            }                                                                                      \
-            else {                                                                                 \
-                CHECK_EQUAL(scalar_type(), item.value());                                          \
-            }                                                                                      \
-        }                                                                                          \
+#define LA_TESTING_TENSOR_MAX_DEG_FMA(MUL, VEC, DEGREE)                                              \
+    TEST_FIXTURE(PolyMultiplicationTests, VEC##_##MUL##_fma_max_deg_##DEGREE)                        \
+    {                                                                                                \
+        using mtraits = alg::dtl::multiplication_traits<MUL##_multiplication>;                       \
+        auto lhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(1000000);        \
+        auto rhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(2000000);        \
+                                                                                                     \
+        const auto& mul = lhs.multiplication();                                                      \
+        tensor_type<MUL##_multiplication, alg::vectors::VEC##_vector> result;                        \
+                                                                                                     \
+        mtraits::multiply_and_add(mul, result, lhs, rhs, alg::mult::scalar_passthrough(), DEGREE);   \
+                                                                                                     \
+        CHECK_EQUAL(basis.start_of_degree(DEGREE + 1), result.size());                               \
+        for (auto item : result) {                                                                   \
+            if (basis.degree(item.key()) < DEGREE + 1) {                                             \
+                REQUIRE CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value()); \
+            }                                                                                        \
+            else {                                                                                   \
+                REQUIRE CHECK_EQUAL(scalar_type(), item.value());                                    \
+            }                                                                                        \
+        }                                                                                            \
     }
-#define LA_TESTING_TENSOR_MAX_DEG_MUL_INPLACE(MUL, VEC, DEGREE)                               \
-    TEST_FIXTURE(PolyMultiplicationTests, VEC##_##MUL##_minplace_max_deg_##DEGREE)            \
-    {                                                                                         \
-        using mtraits = alg::dtl::multiplication_traits<MUL##_multiplication>;                \
-        auto lhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(1000000); \
-        auto rhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(2000000); \
-                                                                                              \
-        const auto& mul = lhs.multiplication();                                               \
-                                                                                              \
-        mtraits::multiply_inplace(mul, lhs, rhs, alg::mult::scalar_passthrough(), DEGREE);    \
-                                                                                              \
-        CHECK_EQUAL(3906, lhs.size());                                                        \
-        for (auto item : lhs) {                                                               \
-            if (basis.degree(item.key()) < DEGREE + 1) {                                      \
-                CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value());  \
-            }                                                                                 \
-            else {                                                                            \
-                CHECK_EQUAL(to_poly_key(item.key(), 1000000), item.value());                  \
-            }                                                                                 \
-        }                                                                                     \
+
+#define LA_TESTING_TENSOR_FMA_LOWER_DEG(MUL, VEC, DEGREE, LDEG, RDEG)                                \
+    TEST_FIXTURE(PolyMultiplicationTests, VEC##_##MUL##_fma_lhs_smaller_##LDEG##_##RDEG)             \
+    {                                                                                                \
+        using mtraits = alg::dtl::multiplication_traits<MUL##_multiplication>;                       \
+        auto lhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(1000000, LDEG);  \
+        auto rhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(2000000, RDEG);  \
+        REQUIRE CHECK_EQUAL(tensor_basis::start_of_degree(LDEG + 1), lhs.size());                            \
+        REQUIRE CHECK_EQUAL(tensor_basis::start_of_degree(RDEG + 1), rhs.size());                            \
+        const auto& mul = lhs.multiplication();                                                      \
+        tensor_type<MUL##_multiplication, alg::vectors::VEC##_vector> result;                        \
+                                                                                                     \
+        mtraits::multiply_and_add(mul, result, lhs, rhs, alg::mult::scalar_passthrough());           \
+                                                                                                     \
+        CHECK_EQUAL(basis.start_of_degree(std::min(LDEG + RDEG, DEGREE) + 1), result.size());        \
+        for (auto item : result) {                                                                   \
+            CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000, LDEG, RDEG), item.value()); \
+        }                                                                                            \
+    }
+
+#define LA_TESTING_TENSOR_MAX_DEG_MUL_INPLACE(MUL, VEC, DEGREE)                                      \
+    TEST_FIXTURE(PolyMultiplicationTests, VEC##_##MUL##_minplace_max_deg_##DEGREE)                   \
+    {                                                                                                \
+        using mtraits = alg::dtl::multiplication_traits<MUL##_multiplication>;                       \
+        auto lhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(1000000);        \
+        auto rhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(2000000);        \
+                                                                                                     \
+        const auto& mul = lhs.multiplication();                                                      \
+                                                                                                     \
+        mtraits::multiply_inplace(mul, lhs, rhs, alg::mult::scalar_passthrough(), DEGREE);           \
+                                                                                                     \
+        CHECK_EQUAL(3906, lhs.size());                                                               \
+        for (auto item : lhs) {                                                                      \
+            if (basis.degree(item.key()) < DEGREE + 1) {                                             \
+                REQUIRE CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value()); \
+            }                                                                                        \
+            else {                                                                                   \
+                REQUIRE CHECK_EQUAL(to_poly_key(item.key(), 1000000), item.value());                 \
+            }                                                                                        \
+        }                                                                                            \
     }
 
 #define LA_TESTING_TENSOR_MAX_DEG_MSD(MUL, VEC, DEGREE)                                                      \
@@ -349,7 +371,7 @@ SUITE(tensor_multiplication)
         CHECK_EQUAL(3905, lhs.size());                                                                       \
         for (auto item : lhs) {                                                                              \
             if (item.key() == key_type()) {                                                                  \
-                CHECK_EQUAL(scalar_type(), item.value());                                                    \
+                REQUIRE CHECK_EQUAL(scalar_type(), item.value());                                            \
             }                                                                                                \
             else if (basis.degree(item.key()) < DEGREE + 1) {                                                \
                 REQUIRE CHECK_EQUAL(construct_expected_rzu(item.key(), 1000000, 2000000) / 2, item.value()); \
@@ -381,7 +403,7 @@ SUITE(tensor_multiplication)
         lhs *= rhs;                                                                                       \
         REQUIRE CHECK_EQUAL(3906, lhs.size());                                                            \
         for (auto item : lhs) {                                                                           \
-            CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value());                  \
+            REQUIRE CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value());          \
         }                                                                                                 \
     }                                                                                                     \
                                                                                                           \
@@ -431,7 +453,7 @@ SUITE(tensor_multiplication)
         lhs.mul_scal_div(rhs, scalar);                                                                    \
         REQUIRE CHECK_EQUAL(3906, lhs.size());                                                            \
         for (auto item : lhs) {                                                                           \
-            CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000) / 2, item.value());              \
+            REQUIRE CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000) / 2, item.value());      \
         }                                                                                                 \
     }                                                                                                     \
                                                                                                           \
@@ -446,10 +468,10 @@ SUITE(tensor_multiplication)
         REQUIRE CHECK_EQUAL(3906, lhs.size());                                                            \
         for (auto item : lhs) {                                                                           \
             if (basis.degree(item.key()) <= 3) {                                                          \
-                CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000) / 2, item.value());          \
+                REQUIRE CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000) / 2, item.value());  \
             }                                                                                             \
             else {                                                                                        \
-                CHECK_EQUAL(to_poly_key(item.key(), 1000000), item.value());                              \
+                REQUIRE CHECK_EQUAL(to_poly_key(item.key(), 1000000), item.value());                      \
             }                                                                                             \
         }                                                                                                 \
     }                                                                                                     \
@@ -496,7 +518,10 @@ SUITE(tensor_multiplication)
     LA_TESTING_TENSOR_MAX_DEG_MSD(MUL, VEC, 1)                                                            \
     LA_TESTING_TENSOR_MAX_DEG_MSD(MUL, VEC, 2)                                                            \
     LA_TESTING_TENSOR_MAX_DEG_MSD(MUL, VEC, 3)                                                            \
-    LA_TESTING_TENSOR_MAX_DEG_MSD(MUL, VEC, 4)
+    LA_TESTING_TENSOR_MAX_DEG_MSD(MUL, VEC, 4)                                                            \
+    LA_TESTING_TENSOR_FMA_LOWER_DEG(MUL, VEC, 5, 3, 2)                                                    \
+    LA_TESTING_TENSOR_FMA_LOWER_DEG(MUL, VEC, 5, 1, 4)\
+    LA_TESTING_TENSOR_FMA_LOWER_DEG(MUL, VEC, 5, 4, 1)
 
     LA_TESTING_TENSOR_MUL_MAKE_TESTS(traditional, dense)
     LA_TESTING_TENSOR_MUL_MAKE_TESTS(tiled, dense)

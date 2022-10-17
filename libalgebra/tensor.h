@@ -613,14 +613,14 @@ private:
     const_pointer left_reverse_read_ptr = nullptr;
     pointer reverse_write_ptr = nullptr;
 
-    template <typename B>
+    template<typename B>
     static void fill_reverse_data(pointer out, const dense_tensor<B>& lhs, IDEG degree)
     {
         dtl::tiled_inverse_operator<Width, (Depth > 0) ? Depth - 1 : 0, TileLetters, scalar_type, dtl::non_signing_signer> reverser;
         reverser(lhs.as_ptr(), out, degree - 1);
     }
 
-    template <typename B>
+    template<typename B>
     void allocate_and_fill_reverse_data(const dense_tensor<B>& lhs, IDEG degree)
     {
         reverse_data.resize(basis_type::start_of_degree(DEG(degree)));
@@ -628,14 +628,13 @@ private:
         left_reverse_read_ptr = reverse_data.data();
     }
 
-    template <typename B>
+    template<typename B>
     void setup_reverse_read(const dense_tensor<B>& lhs)
     {
         if (base::lhs_deg > 0) {
             allocate_and_fill_reverse_data(lhs, base::lhs_deg);
         }
     }
-
 
     void setup_reverse_read(
             const dense_tensor<free_tensor_basis<Width, Depth>>& lhs)
@@ -645,13 +644,14 @@ private:
             if (vect_reverse_data) {
                 assert(vect_reverse_data.size() == basis_type::start_of_degree(DEG(base::lhs_deg)));
                 left_reverse_read_ptr = vect_reverse_data.begin();
-            } else {
+            }
+            else {
                 allocate_and_fill_reverse_data(lhs, base::lhs_deg);
             }
         }
     }
 
-    template <typename B>
+    template<typename B>
     void setup_reverse_write(dense_tensor<B>& out)
     {}
 
@@ -673,7 +673,7 @@ private:
         }
     }
 
-    template <typename B>
+    template<typename B>
     void setup_reverse_readwrite(dense_tensor<B>& out)
     {
         if (base::lhs_deg > 0) {
@@ -801,7 +801,7 @@ public:
 
             assert(((tile_width - 1) * stride + (tile_width - 1) + reverse_index * tile_width + start_of_degree) < tsi::degree_sizes[degree]);
             optr = reverse_write_ptr + reverse_index * tile_width + start_of_degree;
-            assert((tile_width-1)*stride + tile_width-1 + reverse_index*tile_width < basis_type::start_of_degree(base::out_deg));
+            assert((tile_width - 1) * stride + tile_width - 1 + reverse_index * tile_width < basis_type::start_of_degree(base::out_deg));
             for (DIMN i = 0; i < tile_width; ++i) {
                 for (DIMN j = 0; j < tile_width; ++j) {
                     optr[i * stride + j] = tptr[perm::permute_idx(i) * tile_width + j];
@@ -1713,48 +1713,6 @@ using shuffle_tensor_multiplication =
 template<typename Coeff, DEG n_letters, DEG max_degree, typename...>
 class shuffle_tensor;
 
-namespace dtl {
-
-template<typename Coeff, DEG n_letters, DEG max_degree,
-         template<typename, typename, typename...> class VectorType,
-         typename Derived,
-         typename... Args>
-class free_tensor_base : public algebra<
-                                 free_tensor_basis<n_letters, max_degree>,
-                                 Coeff,
-                                 free_tensor_multiplication<n_letters, max_degree>,
-                                 VectorType,
-                                 Derived,
-                                 Args...>
-{
-    using algebra_type = algebra<
-            free_tensor_basis<n_letters, max_degree>,
-            Coeff,
-            free_tensor_multiplication<n_letters, max_degree>,
-            VectorType,
-            Derived,
-            Args...>;
-
-public:
-    using basis_type = free_tensor_basis<n_letters, max_degree>;
-    using key_type = typename basis_type::KEY;
-    using scalar_type = typename Coeff::S;
-
-    // Inherit constructors
-    using algebra_type::algebra_type;
-
-    explicit free_tensor_base(typename boost::call_traits<scalar_type>::param_type s)
-        : algebra_type(key_type{}, s)
-    {}
-
-    template<typename Letter, typename Scalar>
-    explicit free_tensor_base(Letter let, Scalar sca)
-        : algebra_type(algebra_type::basis.keyofletter(LET(let)), scalar_type(sca))
-    {}
-};
-
-}// namespace dtl
-
 /**
  * @brief A specialisation of the algebra class with a free tensor basis.
  *
@@ -1771,17 +1729,33 @@ template<typename Coeff, DEG n_letters, DEG max_degree,
          template<typename, typename, typename...> class VectorType,
          typename... Args>
 class free_tensor
-    : public dtl::free_tensor_base<Coeff,
-                                   n_letters,
-                                   max_degree,
-                                   VectorType,
-                                   free_tensor<Coeff, n_letters, max_degree, VectorType, Args...>,
-                                   Args...>
+    : public algebra<
+              free_tensor_basis<n_letters, max_degree>,
+              Coeff,
+              free_tensor_multiplication<n_letters, max_degree>,
+              VectorType,
+              free_tensor<Coeff, n_letters, max_degree, VectorType, Args...>,
+              Args...>
 {
     typedef free_tensor_multiplication<n_letters, max_degree> multiplication_t;
 
-    using base = dtl::free_tensor_base<Coeff, n_letters, max_degree, VectorType,
-                                       free_tensor<Coeff, n_letters, max_degree, VectorType, Args...>, Args...>;
+    using base = algebra<
+            free_tensor_basis<n_letters, max_degree>,
+            Coeff,
+            free_tensor_multiplication<n_letters, max_degree>,
+            VectorType,
+            free_tensor,
+            Args...>;
+
+    template<template<typename, typename, typename...> class VT, typename... VArgs>
+    static void resize_for_degree(free_tensor<Coeff, n_letters, max_degree, VT, VArgs...>& arg, DEG degree)
+    {}
+
+    template<typename... VArgs>
+    static void resize_for_degree(free_tensor<Coeff, n_letters, max_degree, ::alg::vectors::dense_vector, VArgs...>& arg, DEG degree)
+    {
+        arg.base_vector().resize_to_degree(degree);
+    }
 
 public:
     /// The basis type.
@@ -1802,17 +1776,32 @@ public:
     /// Import of the constant iterator type.
     typedef typename ALG::const_iterator const_iterator;
 
+    using basis_type = free_tensor_basis<n_letters, max_degree>;
+    using key_type = typename basis_type::KEY;
+    using scalar_type = typename Coeff::S;
+
 public:
     using base::base;
 
-    free_tensor& operator=(const free_tensor&) = default;
+    explicit free_tensor(typename boost::call_traits<scalar_type>::param_type s)
+        : base(key_type{}, s)
+    {}
 
+    template<typename Letter, typename Scalar>
+    explicit free_tensor(Letter let, Scalar sca)
+        : base(base::basis.keyofletter(LET(let)), scalar_type(sca))
+    {}
+
+    /// Computes the truncated exponential of a free_tensor instance.
     friend free_tensor exp(const free_tensor& arg)
     {
         // Computes the truncated exponential of arg
         // 1 + arg + arg^2/2! + ... + arg^n/n! where n = max_degree
-        typename tensor_basis<n_letters, max_degree>::KEY kunit;
+        KEY kunit;
         free_tensor result(kunit);
+
+        resize_for_degree(result, max_degree);
+
         free_tensor unit(kunit);
         for (DEG i = max_degree; i >= 1; --i) {
             result.mul_scal_div(arg, typename Coeff::Q(i));
@@ -1850,6 +1839,8 @@ public:
         free_tensor result(*this), x(exp_arg);
         typename free_tensor::KEY kunit;
 
+        resize_for_degree(result, max_degree);
+
         auto unit_elt = x.find(kunit);
         if (unit_elt != x.end() && unit_elt->value() != typename free_tensor::SCALAR(0)) {
             x.erase(unit_elt);
@@ -1869,6 +1860,8 @@ public:
         free_tensor original(*this), x(exp_arg);
         typename free_tensor::KEY kunit;
         auto unit_elt = x.find(kunit);
+
+        resize_for_degree(*this, max_degree);
 
         if (unit_elt != x.end() && unit_elt->value() != typename free_tensor::SCALAR(0)) {
             x.erase(unit_elt);
@@ -1948,6 +1941,88 @@ public:
         return arg.antipode_impl(typename trait::tag());
     }
 
+    /// Computes the truncated logarithm of a free_tensor instance.
+    friend free_tensor log(const free_tensor& arg)
+    {
+        // Computes the truncated log of arg up to degree max_degree
+        // The coef. of the constant term (empty word in the monoid) of arg
+        // is forced to 1.
+        // log(arg) = log(1+x) = x - x^2/2 + ... + (-1)^(n+1) x^n/n.
+        // max_degree must be > 0
+
+        KEY kunit;
+        free_tensor tunit(kunit);
+        free_tensor x(arg);
+        auto it = x.find(kunit);
+        if (it != x.end()) {
+            x.erase(it);
+        }
+        free_tensor result;
+
+        for (DEG i = max_degree; i >= 1; --i) {
+            if (i % 2 == 0) {
+                result.sub_scal_div(tunit, typename Coeff::Q(i));
+            }
+            else {
+                result.add_scal_div(tunit, typename Coeff::Q(i));
+            }
+            result *= x;
+        }
+
+        return result;
+    }
+
+    /// Computes the truncated inverse of a free_tensor instance.
+    friend free_tensor
+    inverse(const free_tensor& arg)
+    {
+        // Computes the truncated inverse of arg up to degree max_degree
+        // An exception is thrown if the leading term is zero.
+        // the module assumes
+        // (a+x)^(-1) = (a(1+x/a))^(-1)
+        //  = a^(-1)(1 - x/a + x^2/a^2 + ... + (-1)^(n) x^n/a^n)
+        // = a^(-1) - x/a*[a^(-1)(1 - x/a + x^2/a^2 + ... + (-1)^(n)
+        // x^(n-1)/a^(n-1)))]. S_n = a^(-1) + z S_{n-1}; z = - x/a ; S_0 = a^(-1)
+        // max_degree must be > 0
+
+        KEY kunit;
+        scalar_type a(0);
+        free_tensor x, z(a);
+
+        auto it(arg.find(kunit));
+        if (it == arg.end()) {
+            // const term a is 0;
+            throw std::invalid_argument("divide-by-zero");
+        }
+        else {
+            a = (*it).value();
+            x = arg;
+            x.erase(kunit);
+        }
+
+        // S_n = a + z S_{ n - 1 }; z = -x / a; S_0 = a
+        //
+        //  the nonzero scalar component a of the tensor arg restored to a tensor
+        free_tensor free_tensor_a_inverse(scalar_type(1) / a), result(free_tensor_a_inverse);
+        resize_for_degree(result, max_degree);
+
+        // z := - x/a
+        z.sub_scal_div(x, a);
+        // the iteration
+        for (DEG i = 0; i != max_degree; ++i) {
+            auto tmp = z * result;
+            result = free_tensor_a_inverse + z * result;
+        }
+        return result;
+    }
+
+    /// Computes the truncated inverse of a free_tensor instance.
+    friend free_tensor
+    reflect(const free_tensor& arg)
+    {
+        return antipode(arg);
+    }
+
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;
@@ -1962,7 +2037,6 @@ private:
 
 /*
 
-/// Computes the truncated exponential of a free_tensor instance.
 template<typename Coeffs, DEG Width, DEG Depth, template<typename, typename, typename...> class VectorType, typename... Args>
 free_tensor<Coeffs, Width, Depth, VectorType, Args...>
 exp(const free_tensor<Coeffs, Width, Depth, VectorType, Args...>& arg)
@@ -1979,92 +2053,6 @@ exp(const free_tensor<Coeffs, Width, Depth, VectorType, Args...>& arg)
     return result;
 }
 */
-
-/// Computes the truncated logarithm of a free_tensor instance.
-template<typename Coeffs, DEG Width, DEG Depth, template<typename, typename, typename...> class VectorType, typename... Args>
-free_tensor<Coeffs, Width, Depth, VectorType, Args...>
-log(const free_tensor<Coeffs, Width, Depth, VectorType, Args...>& arg)
-{
-    // Computes the truncated log of arg up to degree max_degree
-    // The coef. of the constant term (empty word in the monoid) of arg
-    // is forced to 1.
-    // log(arg) = log(1+x) = x - x^2/2 + ... + (-1)^(n+1) x^n/n.
-    // max_degree must be > 0
-    using ft_type = free_tensor<Coeffs, Width, Depth, VectorType, Args...>;
-
-    typename tensor_basis<Width, Depth>::KEY kunit;
-    ft_type tunit(kunit);
-    ft_type x(arg);
-    auto it = x.find(kunit);
-    if (it != x.end()) {
-        x.erase(it);
-    }
-    ft_type result;
-
-    for (DEG i = Depth; i >= 1; --i) {
-        if (i % 2 == 0) {
-            result.sub_scal_div(tunit, typename Coeffs::Q(i));
-        }
-        else {
-            result.add_scal_div(tunit, typename Coeffs::Q(i));
-        }
-        result *= x;
-    }
-
-    return result;
-}
-
-/// Computes the truncated inverse of a free_tensor instance.
-template<typename Coeffs, DEG Width, DEG Depth, template<typename, typename, typename...> class VectorType, typename... Args>
-free_tensor<Coeffs, Width, Depth, VectorType, Args...>
-inverse(const free_tensor<Coeffs, Width, Depth, VectorType, Args...>& arg)
-{
-    // Computes the truncated inverse of arg up to degree max_degree
-    // An exception is thrown if the leading term is zero.
-    // the module assumes
-    // (a+x)^(-1) = (a(1+x/a))^(-1)
-    //  = a^(-1)(1 - x/a + x^2/a^2 + ... + (-1)^(n) x^n/a^n)
-    // = a^(-1) - x/a*[a^(-1)(1 - x/a + x^2/a^2 + ... + (-1)^(n)
-    // x^(n-1)/a^(n-1)))]. S_n = a^(-1) + z S_{n-1}; z = - x/a ; S_0 = a^(-1)
-    // max_degree must be > 0
-    using ft_type = free_tensor<Coeffs, Width, Depth, VectorType, Args...>;
-
-    typename tensor_basis<Width, Depth>::KEY kunit;
-    typename Coeffs::S a(0);
-    ft_type x, z(a);
-
-    auto it(arg.find(kunit));
-    if (it == arg.end()) {
-        // const term a is 0;
-        throw std::invalid_argument("divide-by-zero");
-    }
-    else {
-        a = (*it).value();
-        x = arg;
-        x.erase(kunit);
-    }
-
-    // S_n = a + z S_{ n - 1 }; z = -x / a; S_0 = a
-    //
-    //  the nonzero scalar component a of the tensor arg restored to a tensor
-    ft_type free_tensor_a_inverse(typename Coeffs::S(1) / a), result(free_tensor_a_inverse);
-    // z := - x/a
-    z.sub_scal_div(x, a);
-    // the iteration
-    for (DEG i = 0; i != Depth; ++i) {
-        auto tmp = z * result;
-        result = free_tensor_a_inverse + z * result;
-    }
-    return result;
-}
-
-/// Computes the truncated inverse of a free_tensor instance.
-template<typename Coeffs, DEG Width, DEG Depth, template<typename, typename, typename...> class VectorType, typename... Args>
-free_tensor<Coeffs, Width, Depth, VectorType, Args...>
-reflect(const free_tensor<Coeffs, Width, Depth, VectorType, Args...>& arg)
-{
-    return antipode(arg);
-}
 
 /**
  * @brief A specialisation of the algebra class with a shuffle tensor basis.
@@ -2443,8 +2431,6 @@ class dense_vector<free_tensor_basis<Width, Depth>, Coeffs>
 #else
         constexpr DEG BlockLetters = ::alg::integer_maths::logN(LIBALGEBRA_L1_CACHE_SIZE / sizeof(scalar_type), Width) / 2;
 #endif
-        const auto& dsizes = tsi::degree_sizes;
-
         if (degree > 0) {
             if (m_reverse_data.size() < tsi::degree_sizes[degree]) {
                 m_reverse_data.resize(tsi::degree_sizes[degree]);
@@ -2539,18 +2525,44 @@ public:
     {
         auto idx = resize_for_key(key);
         assert(key.size() <= m_degree);
+        if (key.size() < m_degree) {
+            m_reverse_data.invalidate();
+        }
         return value(idx);
     }
+
+private:
+
+
+
+    void do_reserve(::alg::basis::dtl::resize_info info)
+    {
+        m_data.reserve(info.size);
+        m_dimension = info.dimension;
+        m_degree = info.degree;
+        if (m_reverse_data && m_degree > 0) {
+            m_reverse_data.reserve(BASIS::start_of_degree(m_degree - 1));
+        }
+    }
+
+    void do_resize(::alg::basis::dtl::resize_info info)
+    {
+        m_data.resize(info.size);
+        m_dimension = info.dimension;
+        m_degree = info.degree;
+        if (m_reverse_data && m_degree > 0) {
+            m_reverse_data.resize(BASIS::start_of_degree(m_degree - 1));
+        }
+    }
+
+public:
 
     /// Reserve to dimension
     void reserve_to_dimension(const DIMN dim)
     {
         if (dim > m_dimension) {
             auto info = basis_traits::next_resize_dimension(base_vector_type::basis, dim, m_degree);
-            m_data.reserve(info.size);
-            m_dimension = info.dimension;
-            m_degree = info.degree;
-            m_reverse_data.invalidate();
+            do_reserve(info);
         }
         assert(m_data.size() == m_dimension);
     }
@@ -2560,10 +2572,7 @@ public:
     {
         if (deg > m_degree) {
             auto info = basis_traits::next_resize_dimension(base_vector_type::basis, 0, deg);
-            m_data.reserve(info.size);
-            m_dimension = info.dimension;
-            m_degree = info.degree;
-            m_reverse_data.invalidate();
+            do_reserve(info);
         }
         assert(m_data.size() == m_dimension);
     }
@@ -2572,10 +2581,7 @@ public:
     {
         auto info = basis_traits::key_resize_dimension(base_vector_type::basis, key);
         if (info.dimension > m_dimension) {
-            m_data.resize(info.size);
-            m_dimension = info.dimension;
-            m_degree = info.degree;
-            m_reverse_data.invalidate();
+            do_resize(info);
         }
         assert(m_data.size() == m_dimension);
         return basis_traits::key_to_index(base_vector_type::basis, key);
@@ -2586,10 +2592,7 @@ public:
     {
         auto info = basis_traits::next_resize_dimension(base_vector_type::basis, dim, m_degree);
         if (info.dimension > m_dimension) {
-            m_data.resize(info.size);
-            m_dimension = info.dimension;
-            m_degree = info.degree;
-            m_reverse_data.invalidate();
+            do_resize(info);
         }
         else if (info.dimension == m_dimension) {
             m_degree = info.degree;
@@ -2602,10 +2605,7 @@ public:
     {
         if (deg > m_degree || m_dimension == 0) {
             auto info = basis_traits::next_resize_dimension(base_vector_type::basis, 0, deg);
-            m_data.resize(info.size);
-            m_dimension = info.dimension;
-            m_degree = info.degree;
-            m_reverse_data.invalidate();
+            do_resize(info);
         }
     }
 
@@ -2704,6 +2704,10 @@ public:
     void erase(key_type key)
     {
         operator[](key) = Coeffs::zero;
+        if (m_reverse_data && key.size() < m_degree) {
+            const auto idx = basis.key_to_index(key.reverse());
+            m_reverse_data[idx] = Coeffs::zero;
+        }
     }
 
     void erase(iterator& it)
@@ -2794,9 +2798,11 @@ public:
     template<typename Scalar>
     void add_scal_prod(key_type key, Scalar s)
     {
-        m_reverse_data.invalidate();
         operator[](key) += scalar_type(s);
-        //        m_reverse_data.clear();
+        if (m_reverse_data && key.size() < m_degree) {
+            const auto idx = basis.key_to_index(key.reverse());
+            m_reverse_data[idx] += scalar_type(s);
+        }
     }
 
     template<typename Fn>
@@ -2891,7 +2897,6 @@ public:
 
         const auto lhs_rsize = lhs.m_reverse_data.size();
         const auto rhs_rsize = rhs.m_reverse_data.size();
-        const auto size_rev = std::min(lhs_rsize, rhs_rsize);
 
         if (minmax.second > lhs.m_dimension) {
             lhs.reserve_to_dimension(minmax.second);

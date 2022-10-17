@@ -293,6 +293,18 @@ SUITE(tensor_multiplication)
             }
             return result;
         }
+
+        alg::free_tensor<coeff_ring, width, depth, alg::vectors::dense_vector>
+        generic_d_free_tensor(LET offset = 0, DEG max_degree = depth)
+        {
+            alg::free_tensor<coeff_ring, width, depth, alg::vectors::dense_vector> result;
+
+            for (auto key : basis.iterate_keys_to_deg(max_degree+1)) {
+                result[key] = to_poly_key(key, offset);
+            }
+            return result;
+        }
+
     };
 
 #define LA_TESTING_TENSOR_MAX_DEG_FMA(MUL, VEC, DEGREE)                                              \
@@ -324,8 +336,8 @@ SUITE(tensor_multiplication)
         using mtraits = alg::dtl::multiplication_traits<MUL##_multiplication>;                       \
         auto lhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(1000000, LDEG);  \
         auto rhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(2000000, RDEG);  \
-        REQUIRE CHECK_EQUAL(tensor_basis::start_of_degree(LDEG + 1), lhs.size());                            \
-        REQUIRE CHECK_EQUAL(tensor_basis::start_of_degree(RDEG + 1), rhs.size());                            \
+        REQUIRE CHECK_EQUAL(tensor_basis::start_of_degree(LDEG + 1), lhs.size());                    \
+        REQUIRE CHECK_EQUAL(tensor_basis::start_of_degree(RDEG + 1), rhs.size());                    \
         const auto& mul = lhs.multiplication();                                                      \
         tensor_type<MUL##_multiplication, alg::vectors::VEC##_vector> result;                        \
                                                                                                      \
@@ -520,10 +532,31 @@ SUITE(tensor_multiplication)
     LA_TESTING_TENSOR_MAX_DEG_MSD(MUL, VEC, 3)                                                            \
     LA_TESTING_TENSOR_MAX_DEG_MSD(MUL, VEC, 4)                                                            \
     LA_TESTING_TENSOR_FMA_LOWER_DEG(MUL, VEC, 5, 3, 2)                                                    \
-    LA_TESTING_TENSOR_FMA_LOWER_DEG(MUL, VEC, 5, 1, 4)\
+    LA_TESTING_TENSOR_FMA_LOWER_DEG(MUL, VEC, 5, 1, 4)                                                    \
     LA_TESTING_TENSOR_FMA_LOWER_DEG(MUL, VEC, 5, 4, 1)
 
     LA_TESTING_TENSOR_MUL_MAKE_TESTS(traditional, dense)
     LA_TESTING_TENSOR_MUL_MAKE_TESTS(tiled, dense)
     LA_TESTING_TENSOR_MUL_MAKE_TESTS(tiled2, dense)
+
+    TEST_FIXTURE(PolyMultiplicationTests, test_reverse_data_dense_extern)
+    {
+        auto lhs = generic_d_free_tensor(1000000);
+        auto rhs = generic_d_free_tensor(2000000);
+
+        const auto result = lhs * rhs;
+
+        const auto& result_base = result.base_vector();
+        const auto& reverse_data = result_base.reverse_data();
+
+        CHECK(static_cast<bool>(reverse_data));
+        for (auto item : result) {
+            if (item.key().size() == depth) {
+                break;
+            }
+            auto reverse_index = tensor_basis::key_to_index(item.key().reverse());
+            REQUIRE CHECK_EQUAL(item.value(), reverse_data[reverse_index]);
+        }
+    }
+
 }

@@ -12,7 +12,6 @@
 #include "../../common/time_and_details.h"
 #include "../../common/helpers.h"
 
-namespace {
 
 template<typename Coeff, unsigned Width, unsigned Depth>
 struct fixture {
@@ -64,8 +63,6 @@ struct fixture {
         return result;
     }
 };
-
-}
 
 SUITE(hybrid_tensor_functions_float) {
 

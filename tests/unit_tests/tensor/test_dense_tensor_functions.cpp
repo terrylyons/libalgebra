@@ -13,7 +13,6 @@
 #include "../../common/helpers.h"
 
 
-namespace {
 
 template<typename Coeff, unsigned Width, unsigned Depth>
 struct fixture {
@@ -67,7 +66,6 @@ struct fixture {
     }
 };
 
-}
 
 SUITE(dense_tensor_functions_float) {
 

@@ -613,6 +613,94 @@ private:
     const_pointer left_reverse_read_ptr = nullptr;
     pointer reverse_write_ptr = nullptr;
 
+    template <typename B>
+    static void fill_reverse_data(pointer out, const dense_tensor<B>& lhs, IDEG degree)
+    {
+        dtl::tiled_inverse_operator<Width, (Depth > 0) ? Depth - 1 : 0, TileLetters, scalar_type, dtl::non_signing_signer> reverser;
+        reverser(lhs.as_ptr(), out, degree - 1);
+    }
+
+    template <typename B>
+    void allocate_and_fill_reverse_data(const dense_tensor<B>& lhs, IDEG degree)
+    {
+        reverse_data.resize(basis_type::start_of_degree(DEG(degree)));
+        fill_reverse_data(reverse_data.data(), lhs, degree);
+        left_reverse_read_ptr = reverse_data.data();
+    }
+
+    template <typename B>
+    void setup_reverse_read(const dense_tensor<B>& lhs)
+    {
+        if (base::lhs_deg > 0) {
+            allocate_and_fill_reverse_data(lhs, base::lhs_deg);
+        }
+    }
+
+
+    void setup_reverse_read(
+            const dense_tensor<free_tensor_basis<Width, Depth>>& lhs)
+    {
+        if (base::lhs_deg > 0) {
+            const auto& vect_reverse_data = lhs.reverse_data();
+            if (vect_reverse_data) {
+                assert(vect_reverse_data.size() == basis_type::start_of_degree(DEG(base::lhs_deg)));
+                left_reverse_read_ptr = vect_reverse_data.begin();
+            } else {
+                allocate_and_fill_reverse_data(lhs, base::lhs_deg);
+            }
+        }
+    }
+
+    template <typename B>
+    void setup_reverse_write(dense_tensor<B>& out)
+    {}
+
+    void setup_reverse_write_impl(dense_tensor<free_tensor_basis<Width, Depth>>& out, DEG degree)
+    {
+        auto& vect_reverse_data = out.reverse_data();
+        auto size = basis_type::start_of_degree(DEG(degree));
+        if (size > vect_reverse_data.size()) {
+            vect_reverse_data.resize(size);
+        }
+        reverse_write_ptr = vect_reverse_data.begin();
+        vect_reverse_data.validate();
+    }
+
+    void setup_reverse_write(dense_tensor<free_tensor_basis<Width, Depth>>& out)
+    {
+        if (base::out_deg > 0) {
+            setup_reverse_write_impl(out, base::out_deg);
+        }
+    }
+
+    template <typename B>
+    void setup_reverse_readwrite(dense_tensor<B>& out)
+    {
+        if (base::lhs_deg > 0) {
+            allocate_and_fill_reverse_data(out, base::lhs_deg);
+        }
+    }
+
+    void setup_reverse_readwrite(dense_tensor<free_tensor_basis<Width, Depth>>& out)
+    {
+        // if the old lhs_deg is larger than then we don't necessarily need to do
+        // any resizing, but we do need to make sure the pointers are set up
+        // correctly, and that the reverse data is valid.
+        const auto deg = std::max(base::out_deg, base::lhs_deg);
+        if (deg > 0) {
+            auto& vect_reverse_data = out.reverse_data();
+            bool was_valid = static_cast<bool>(vect_reverse_data);
+            setup_reverse_write_impl(out, deg);
+
+            // Rather than allocate a separate buffer for reverse data, we
+            // can just use the reverse data buffer on the out vector.
+            if (!was_valid && base::lhs_deg > 0) {
+                fill_reverse_data(reverse_write_ptr, out, base::lhs_deg);
+            }
+            left_reverse_read_ptr = reverse_write_ptr;
+        }
+    }
+
 public:
     using tile_info::tile_letters;
     using tile_info::tile_shift;
@@ -629,12 +717,8 @@ public:
           right_read_tile(tile_width),
           output_tile(tile_size)
     {
-        if (base::lhs_deg > 0) {
-            reverse_data.resize(basis_type::start_of_degree(base::lhs_deg + 1));
-            dtl::tiled_inverse_operator<Width, (Depth > 0) ? Depth - 1 : 0, TileLetters, scalar_type, dtl::non_signing_signer> reverser;
-            reverser(base::lhs_data, reverse_data.data(), base::lhs_deg);
-            left_reverse_read_ptr = reverse_data.data();
-        }
+        setup_reverse_read(lhs);
+        setup_reverse_write(out);
     }
 
     template<typename B1, typename B2>
@@ -644,66 +728,7 @@ public:
           right_read_tile(tile_width),
           output_tile(tile_size)
     {
-        if (base::lhs_deg > 0) {
-            reverse_data.resize(basis_type::start_of_degree(base::lhs_deg + 1));
-            dtl::tiled_inverse_operator<Width, (Depth > 0) ? Depth - 1 : 0, TileLetters, scalar_type, dtl::non_signing_signer> reverser;
-            reverser(base::out_data, reverse_data.data(), base::lhs_deg);
-            left_reverse_read_ptr = reverse_data.data();
-        }
-    }
-
-    template<typename B>
-    tiled_free_tensor_multiplication_helper(
-            dense_tensor<free_tensor_basis<Width, Depth>>& out,
-            const dense_tensor<free_tensor_basis<Width, Depth>>& lhs,
-            const dense_tensor<B>& rhs,
-            DEG max_degree)
-        : base(out, lhs, rhs, max_degree),
-          left_read_tile(tile_width),
-          right_read_tile(tile_width),
-          output_tile(tile_size)
-    {
-        //        assert(base::out_deg == 0 || out.reverse_dimension() == tsi::degree_sizes[base::out_deg-1]);
-        //        reverse_write_ptr = out.as_mut_rptr();
-        //        left_reverse_read_ptr = lhs.as_rptr();
-
-        const auto& lreverse_data = lhs.reverse_data();
-        //        if (lreverse_data) {
-        //            left_reverse_read_ptr = lreverse_data.begin();
-        //        }
-        //        else
-        if (base::lhs_deg > 0) {
-            reverse_data.resize(basis_type::start_of_degree(base::lhs_deg + 1));
-            dtl::tiled_inverse_operator<Width, (Depth > 0) ? Depth - 1 : 0, TileLetters, scalar_type, dtl::non_signing_signer> reverser;
-            reverser(base::lhs_data, reverse_data.data(), base::lhs_deg);
-            left_reverse_read_ptr = reverse_data.data();
-        }
-    }
-
-    template<typename B>
-    tiled_free_tensor_multiplication_helper(
-            dense_tensor<free_tensor_basis<Width, Depth>>& lhs,
-            const dense_tensor<B>& rhs,
-            DEG max_degree)
-        : base(lhs, rhs, max_degree),
-          left_read_tile(tile_width),
-          right_read_tile(tile_width),
-          output_tile(tile_size)
-    {
-        //        assert(base::out_deg == 0 || lhs.reverse_dimension() >= tsi::degree_sizes[base::out_deg-1]);
-        //        reverse_write_ptr = lhs.as_mut_rptr();
-        //        left_reverse_read_ptr = reverse_write_ptr;
-        const auto& lreverse_data = lhs.reverse_data();
-        //        if (lreverse_data) {
-        //            left_reverse_read_ptr = lreverse_data.begin();
-        //        }
-        //        else
-        if (base::lhs_deg > 0) {
-            reverse_data.resize(basis_type::start_of_degree(base::lhs_deg + 1));
-            dtl::tiled_inverse_operator<Width, (Depth > 0) ? Depth - 1 : 0, TileLetters, scalar_type, dtl::non_signing_signer> reverser;
-            reverser(base::out_data, reverse_data.data(), base::lhs_deg);
-            left_reverse_read_ptr = reverse_data.data();
-        }
+        setup_reverse_readwrite(lhs);
     }
 
     pointer out_tile_ptr() noexcept
@@ -770,18 +795,19 @@ public:
             }
         }
 
-        if (reverse_write_ptr != nullptr && degree < base::out_deg) {
-            // Write out reverse data
-            //            using perm = reversing_permutation<Width, tile_info::tile_letters>;
-            //
-            //            assert(((tile_width-1)*stride + (tile_width-1) + reverse_index*tile_width+start_of_degree) < tsi::degree_sizes[degree]);
-            //            optr = reverse_write_ptr + reverse_index * tile_width + start_of_degree;
-            //            for (DIMN i = 0; i < tile_width; ++i) {
-            //                for (DIMN j = 0; j < tile_width; ++j) {
-            //                    optr[i * stride + j] = tptr[perm::permute_idx(i) * tile_width + j];
-            //                }
-            //            }
-        }
+//        if (reverse_write_ptr != nullptr && degree < base::out_deg) {
+//             Write out reverse data
+//            using perm = reversing_permutation<Width, tile_info::tile_letters>;
+//
+//            assert(((tile_width - 1) * stride + (tile_width - 1) + reverse_index * tile_width + start_of_degree) < tsi::degree_sizes[degree]);
+//            optr = reverse_write_ptr + reverse_index * tile_width + start_of_degree;
+//            assert((tile_width-1)*stride + tile_width-1 + reverse_index*tile_width < basis_type::start_of_degree(base::out_deg));
+//            for (DIMN i = 0; i < tile_width; ++i) {
+//                for (DIMN j = 0; j < tile_width; ++j) {
+//                    optr[i * stride + j] = tptr[perm::permute_idx(i) * tile_width + j];
+//                }
+//            }
+//        }
     }
 
     static std::pair<IDIMN, IDIMN> split_key(IDEG split_deg, IDIMN key) noexcept
@@ -1336,7 +1362,7 @@ protected:
                       right_val,
                       op,
                       j,
-                      tsi::powers[lhs_deg-tile_letters]);
+                      tsi::powers[lhs_deg - tile_letters]);
         }
     }
 
@@ -1364,14 +1390,13 @@ protected:
             else if (lhs_deg > mid_end && lhs_deg < helper.lhs_degree()) {
                 impl_rhs_small_reverse(helper, op, out_deg, lhs_deg, k_reverse);
             }
-            else if (lhs_deg > mid_end){
+            else if (lhs_deg > mid_end) {
                 impl_rhs_small_no_reverse(helper, op, out_deg, lhs_deg, k);
             }
             else {
                 BOOST_UNREACHABLE_RETURN();
             }
         }
-
 
         helper.write_tile(out_deg, k, k_reverse);
     }
@@ -1479,7 +1504,7 @@ public:
             fma_impl(helper, op, helper.out_degree());
             if (helper.out_degree() > 0) {
                 auto update_deg = std::min(helper.out_degree() - 1, 2 * tile_info::tile_letters);
-                //                base::update_reverse_data(out, update_deg);
+                base::update_reverse_data(out, update_deg);
             }
         }
     }
@@ -1500,7 +1525,7 @@ public:
             multiply_inplace_impl(helper, op, helper.out_degree());
             if (helper.out_degree() > 0) {
                 auto update_deg = std::min(helper.out_degree() - 1, 2 * tile_info::tile_letters);
-                //                base::update_reverse_data(lhs, update_deg);
+                base::update_reverse_data(lhs, update_deg);
             }
         }
         else {
@@ -2426,7 +2451,7 @@ class dense_vector<free_tensor_basis<Width, Depth>, Coeffs>
             }
             assert(m_reverse_data.size() >= tsi::degree_sizes[degree]);
             ::alg::dtl::tiled_inverse_operator<Width, Depth, BlockLetters, scalar_type, ::alg::dtl::non_signing_signer> t;
-            t(m_data.begin(), m_reverse_data.data(), degree);
+            t(m_data.begin(), m_reverse_data.begin(), degree);
             assert(*m_data.begin() == *m_reverse_data.begin());
         }
         m_reverse_data.validate();

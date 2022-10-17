@@ -1,1 +1,0 @@
-libalgebra_test(NAME multiplication SOURCES test_multiplication.cpp)

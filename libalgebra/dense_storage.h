@@ -203,7 +203,7 @@ private:
 
     static void destroy_range(pointer start, pointer end)
     {
-        std::is_trivially_default_constructible<S> tag;
+        std::is_trivially_destructible<S> tag;
         destroy_range(start, end, tag);
     }
 

@@ -415,12 +415,7 @@ public:
             for (auto word = key_start; word != key_end; word = BASIS::nextkey(word), ++word_idx) {
                 auto rword_index = BASIS::key_to_index(word.reverse());
 
-                if (length % 2 == 0) {
-                    process_tile(src_p, dst_p, word_idx - istart, rword_index - istart, length, signer);
-                }
-                else {
-                    process_tile(src_p, dst_p, word_idx - istart, rword_index - istart, length, signer);
-                }
+                process_tile(src_p, dst_p, word_idx - istart, rword_index - istart, length, signer);
             }
         }
     }
@@ -616,8 +611,9 @@ private:
     template<typename B>
     static void fill_reverse_data(pointer out, const dense_tensor<B>& lhs, IDEG degree)
     {
+        assert(0 < degree && DEG(degree) <= Depth);
         dtl::tiled_inverse_operator<Width, (Depth > 0) ? Depth - 1 : 0, TileLetters, scalar_type, dtl::non_signing_signer> reverser;
-        reverser(lhs.as_ptr(), out, degree - 1);
+        reverser(lhs.as_ptr(), out, DEG(degree-1));
     }
 
     template<typename B>
@@ -804,7 +800,7 @@ public:
             assert((tile_width - 1) * stride + tile_width - 1 + reverse_index * tile_width < basis_type::start_of_degree(base::out_deg));
             for (DIMN i = 0; i < tile_width; ++i) {
                 for (DIMN j = 0; j < tile_width; ++j) {
-                    optr[i * stride + j] = tptr[perm::permute_idx(i) * tile_width + j];
+                    optr[i * stride + j] = tptr[j * tile_width + perm::permute_idx(i)];
                 }
             }
         }
@@ -910,9 +906,7 @@ protected:
     template<typename Coeffs>
     static void update_reverse_data(vectors::dense_vector<free_tensor_basis<Width, Depth>, Coeffs>& out, DEG max_degree)
     {
-        if (max_degree > 0) {
-            out.construct_reverse_data(max_degree - 1);
-        }
+        out.construct_reverse_data(max_degree);
     }
 
 private:
@@ -2896,7 +2890,6 @@ public:
         auto minmax = std::minmax(old_lhs_dim, rhs.m_dimension);
 
         const auto lhs_rsize = lhs.m_reverse_data.size();
-        const auto rhs_rsize = rhs.m_reverse_data.size();
 
         if (minmax.second > lhs.m_dimension) {
             lhs.reserve_to_dimension(minmax.second);

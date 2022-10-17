@@ -795,19 +795,19 @@ public:
             }
         }
 
-//        if (reverse_write_ptr != nullptr && degree < base::out_deg) {
-//             Write out reverse data
-//            using perm = reversing_permutation<Width, tile_info::tile_letters>;
-//
-//            assert(((tile_width - 1) * stride + (tile_width - 1) + reverse_index * tile_width + start_of_degree) < tsi::degree_sizes[degree]);
-//            optr = reverse_write_ptr + reverse_index * tile_width + start_of_degree;
-//            assert((tile_width-1)*stride + tile_width-1 + reverse_index*tile_width < basis_type::start_of_degree(base::out_deg));
-//            for (DIMN i = 0; i < tile_width; ++i) {
-//                for (DIMN j = 0; j < tile_width; ++j) {
-//                    optr[i * stride + j] = tptr[perm::permute_idx(i) * tile_width + j];
-//                }
-//            }
-//        }
+        if (reverse_write_ptr != nullptr && degree < base::out_deg) {
+            // Write out reverse data
+            using perm = reversing_permutation<Width, tile_info::tile_letters>;
+
+            assert(((tile_width - 1) * stride + (tile_width - 1) + reverse_index * tile_width + start_of_degree) < tsi::degree_sizes[degree]);
+            optr = reverse_write_ptr + reverse_index * tile_width + start_of_degree;
+            assert((tile_width-1)*stride + tile_width-1 + reverse_index*tile_width < basis_type::start_of_degree(base::out_deg));
+            for (DIMN i = 0; i < tile_width; ++i) {
+                for (DIMN j = 0; j < tile_width; ++j) {
+                    optr[i * stride + j] = tptr[perm::permute_idx(i) * tile_width + j];
+                }
+            }
+        }
     }
 
     static std::pair<IDIMN, IDIMN> split_key(IDEG split_deg, IDIMN key) noexcept
@@ -1104,7 +1104,7 @@ public:
         if (!lhs.empty() && !rhs.empty()) {
             helper<Coeffs> help(out, lhs, rhs, max_degree);
             fma_impl(help, op, help.out_degree());
-            //            update_reverse_data(out, help.out_degree());
+            update_reverse_data(out, help.out_degree());
         }
     }
 
@@ -1118,7 +1118,7 @@ public:
         if (!rhs.empty()) {
             helper<Coeffs> help(lhs, rhs, max_degree);
             multiply_inplace_impl(help, op, help.out_degree());
-            //            update_reverse_data(lhs, help.out_degree());
+            update_reverse_data(lhs, help.out_degree());
         }
         else {
             lhs.clear();

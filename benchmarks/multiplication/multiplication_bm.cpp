@@ -194,9 +194,6 @@ template<unsigned Width, unsigned Depth>
 class UniformRealDenseFixture : public ::benchmark::Fixture {
 public:
 
-    static constexpr unsigned width = Width;
-    static constexpr unsigned depth = Depth;
-
     typedef alg::free_tensor<float_field, Width, Depth, alg::vectors::dense_vector> TENSOR;
     typedef alg::lie<float_field, Width, Depth, alg::vectors::dense_vector> LIE;
 
@@ -226,10 +223,14 @@ public:
 
 BENCHMARK_TEMPLATE_DEFINE_F(UniformRealDenseFixture, TraditionalMultiplication, 4, 4)(benchmark::State& state) { // benchmark::State.range(0), benchmark::State.range(1))(benchmark::State& state) {
 
+    std::cout << "First argument=" << state.range(0) << std::endl;
+    std::cout << "Second argument=" << state.range(1) << std::endl;
+
+    DEG width = state.range(0);
+    DEG depth = state.range(1);
+
     auto lhs = rvgt(rngt);
     auto rhs = rvgt(rngt);
-
-    const DEG TileLetters = 1;        // TODO: implement properly
 
     for (auto _ : state) {
         auto result = lhs*rhs;
@@ -238,13 +239,16 @@ BENCHMARK_TEMPLATE_DEFINE_F(UniformRealDenseFixture, TraditionalMultiplication, 
     }
 
     //state.SetBytesProcessed(state.iterations()*2 * sizeof(double) * playground::tensor_alg_size(W, D));
-    state.SetBytesProcessed(state.iterations()*2 * sizeof(double) * 341); // TODO: Fix 341, tensor alg size??
+    state.SetBytesProcessed(state.iterations()*2 * sizeof(double) * dtl::tensor_size_info<4>::degree_sizes[4] );
 
     //state.counters["blob size"] = sizeof(double) * playground::tensor_alg_size(W, D);
-    state.counters["blob size"] = sizeof(double) * 341; // TODO: Fix 341, tensor alg size??
+    state.counters["blob size"] = sizeof(double) * dtl::tensor_size_info<4>::degree_sizes[4];
 }
 
 BENCHMARK_TEMPLATE_DEFINE_F(UniformRealDenseFixture, TiledMultiplication, 4, 4)(benchmark::State& state) {
+
+    std::cout << "First argument=" << state.range(0) << std::endl;
+    std::cout << "Second argument=" << state.range(1) << std::endl;
 
     auto lhs = rvgt(rngt);
     auto rhs = rvgt(rngt);
@@ -265,7 +269,7 @@ BENCHMARK_TEMPLATE_DEFINE_F(UniformRealDenseFixture, TiledMultiplication, 4, 4)(
     }
 
     //state.SetBytesProcessed(state.iterations()*2 * sizeof(double) * playground::tensor_alg_size(W, D));
-    state.SetBytesProcessed(state.iterations()*2 * sizeof(double) * 341); // TODO: Fix 341, tensor alg size??
+    state.SetBytesProcessed(state.iterations()*2 * sizeof(double) * dtl::tensor_size_info<4>::degree_sizes[4]);
 
     //state.counters["block_letters"] = tiled_inverse.block_letters;
 //    state.counters["TileLetters"] = TileLetters;
@@ -274,22 +278,22 @@ BENCHMARK_TEMPLATE_DEFINE_F(UniformRealDenseFixture, TiledMultiplication, 4, 4)(
 //    state.counters["TileLetters size"] = TileLetters * sizeof(double);
 
     //state.counters["blob size"] = sizeof(double) * playground::tensor_alg_size(W, D);
-    state.counters["blob size"] = sizeof(double) * 341; // TODO: Fix 341, tensor alg size??
+    state.counters["blob size"] = sizeof(double) * dtl::tensor_size_info<4>::degree_sizes[4];
 }
 
 static void CustomArguments(benchmark::internal::Benchmark* b) {
     // define I, J
 //    for (auto i : I)
-    for (int i = 5; i <= 10; i++)
+    for (int i = 4; i <= 5; i++)
     {
 //        for (auto j : J)
-    for (int j = 5; j <= 10; j++)
+    for (int j = 4; j <= 5; j++)
             b->Args({i, j});
     }
 }
 
-BENCHMARK_REGISTER_F(UniformRealDenseFixture, TraditionalMultiplication);//->Apply(CustomArguments);
+BENCHMARK_REGISTER_F(UniformRealDenseFixture, TraditionalMultiplication)->Apply(CustomArguments);
 
-BENCHMARK_REGISTER_F(UniformRealDenseFixture, TiledMultiplication);//->Apply(CustomArguments);
+BENCHMARK_REGISTER_F(UniformRealDenseFixture, TiledMultiplication)->Apply(CustomArguments);
 
 BENCHMARK_MAIN();

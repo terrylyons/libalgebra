@@ -190,8 +190,41 @@ public:
 
 };
 
+template<unsigned Width, unsigned Depth>
+class RandomFloatDenseFixture : public ::benchmark::Fixture {
+public:
 
-BENCHMARK_TEMPLATE_DEFINE_F(RandomRationalDenseFixture, TraditionalMultiplication, 4, 4)(benchmark::State& state) { // benchmark::State.range(0), benchmark::State.range(1))(benchmark::State& state) {
+    static constexpr unsigned width = Width;
+    static constexpr unsigned depth = Depth;
+
+    typedef alg::free_tensor<float_field, Width, Depth, alg::vectors::dense_vector> TENSOR;
+    typedef alg::lie<float_field, Width, Depth, alg::vectors::dense_vector> LIE;
+
+    using float_dist = std::uniform_real_distribution<float_field::S>;
+    using rvg_t = la_testing::random_vector_generator<TENSOR, float_dist>;
+    using rvg_l = la_testing::random_vector_generator<LIE, float_dist>;
+
+    const TENSOR tunit;
+    const TENSOR tzero;
+
+    std::mt19937 rngt;
+    rvg_t rvgt;
+
+    std::mt19937 rngl;
+    rvg_l rvgl;
+
+    typedef typename TENSOR::KEY KEY;
+
+    RandomFloatDenseFixture() : tunit(KEY()), tzero(),
+                                   rngt(std::random_device()()), rvgt(-1, 1),
+                                   rngl(std::random_device()()), rvgl(-1, 1)
+
+    {}
+
+};
+
+
+BENCHMARK_TEMPLATE_DEFINE_F(RandomFloatDenseFixture, TraditionalMultiplication, 4, 4)(benchmark::State& state) { // benchmark::State.range(0), benchmark::State.range(1))(benchmark::State& state) {
 
     auto lhs = rvgt(rngt);
     auto rhs = rvgt(rngt);
@@ -203,9 +236,15 @@ BENCHMARK_TEMPLATE_DEFINE_F(RandomRationalDenseFixture, TraditionalMultiplicatio
         benchmark::DoNotOptimize(result);
         benchmark::ClobberMemory();
     }
+
+    //state.SetBytesProcessed(state.iterations()*2 * sizeof(double) * playground::tensor_alg_size(W, D));
+    state.SetBytesProcessed(state.iterations()*2 * sizeof(double) * 341); // TODO: Fix 341, tensor alg size??
+
+    //state.counters["blob size"] = sizeof(double) * playground::tensor_alg_size(W, D);
+    state.counters["blob size"] = sizeof(double) * 341; // TODO: Fix 341, tensor alg size??
 }
 
-BENCHMARK_TEMPLATE_DEFINE_F(RandomRationalDenseFixture, TiledMultiplication, 4, 4)(benchmark::State& state) {
+BENCHMARK_TEMPLATE_DEFINE_F(RandomFloatDenseFixture, TiledMultiplication, 4, 4)(benchmark::State& state) {
 
     auto lhs = rvgt(rngt);
     auto rhs = rvgt(rngt);
@@ -217,13 +256,25 @@ BENCHMARK_TEMPLATE_DEFINE_F(RandomRationalDenseFixture, TiledMultiplication, 4, 
 
     const DEG TileLetters = 1;        // TODO: implement properly
 
-    dtl::GilesMultiplier<rational_field , 4, 4, TileLetters> helper(result, lhs, rhs);
+    dtl::GilesMultiplier<float_field , 4, 4, TileLetters> helper(result, lhs, rhs);
 
     for (auto _ : state) {
         tiled_fma<1>(result, lhs, rhs, mult::scalar_passthrough());
         benchmark::DoNotOptimize(result);
         benchmark::ClobberMemory();
     }
+
+    //state.SetBytesProcessed(state.iterations()*2 * sizeof(double) * playground::tensor_alg_size(W, D));
+    state.SetBytesProcessed(state.iterations()*2 * sizeof(double) * 341); // TODO: Fix 341, tensor alg size??
+
+    //state.counters["block_letters"] = tiled_inverse.block_letters;
+//    state.counters["TileLetters"] = TileLetters;
+
+    //state.counters["block_size"] = tiled_inverse.block_size * sizeof(double);
+//    state.counters["TileLetters size"] = TileLetters * sizeof(double);
+
+    //state.counters["blob size"] = sizeof(double) * playground::tensor_alg_size(W, D);
+    state.counters["blob size"] = sizeof(double) * 341; // TODO: Fix 341, tensor alg size??
 }
 
 static void CustomArguments(benchmark::internal::Benchmark* b) {
@@ -237,8 +288,8 @@ static void CustomArguments(benchmark::internal::Benchmark* b) {
     }
 }
 
-BENCHMARK_REGISTER_F(RandomRationalDenseFixture, TraditionalMultiplication);//->Apply(CustomArguments);
+BENCHMARK_REGISTER_F(RandomFloatDenseFixture, TraditionalMultiplication);//->Apply(CustomArguments);
 
-BENCHMARK_REGISTER_F(RandomRationalDenseFixture, TiledMultiplication);//->Apply(CustomArguments);
+BENCHMARK_REGISTER_F(RandomFloatDenseFixture, TiledMultiplication);//->Apply(CustomArguments);
 
 BENCHMARK_MAIN();

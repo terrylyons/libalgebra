@@ -158,7 +158,7 @@ void tiled_fma(dense_ft_vec_t<Coeffs, Width, Depth>& out,
 
 
 template<unsigned Width, unsigned Depth>
-class RandomRationalDenseFixture : public ::benchmark::Fixture {
+class UniformRationalDenseFixture : public ::benchmark::Fixture {
 public:
 
     static constexpr unsigned width = Width;
@@ -182,7 +182,7 @@ public:
 
     typedef typename TENSOR::KEY KEY;
 
-    RandomRationalDenseFixture() : tunit(KEY()), tzero(),
+    UniformRationalDenseFixture() : tunit(KEY()), tzero(),
                                    rngt(std::random_device()()), rvgt(-1, 1),
                                    rngl(std::random_device()()), rvgl(-1, 1)
 
@@ -191,7 +191,7 @@ public:
 };
 
 template<unsigned Width, unsigned Depth>
-class RandomFloatDenseFixture : public ::benchmark::Fixture {
+class UniformRealDenseFixture : public ::benchmark::Fixture {
 public:
 
     static constexpr unsigned width = Width;
@@ -215,7 +215,7 @@ public:
 
     typedef typename TENSOR::KEY KEY;
 
-    RandomFloatDenseFixture() : tunit(KEY()), tzero(),
+    UniformRealDenseFixture() : tunit(KEY()), tzero(),
                                    rngt(std::random_device()()), rvgt(-1, 1),
                                    rngl(std::random_device()()), rvgl(-1, 1)
 
@@ -224,7 +224,7 @@ public:
 };
 
 
-BENCHMARK_TEMPLATE_DEFINE_F(RandomFloatDenseFixture, TraditionalMultiplication, 4, 4)(benchmark::State& state) { // benchmark::State.range(0), benchmark::State.range(1))(benchmark::State& state) {
+BENCHMARK_TEMPLATE_DEFINE_F(UniformRealDenseFixture, TraditionalMultiplication, 4, 4)(benchmark::State& state) { // benchmark::State.range(0), benchmark::State.range(1))(benchmark::State& state) {
 
     auto lhs = rvgt(rngt);
     auto rhs = rvgt(rngt);
@@ -244,7 +244,7 @@ BENCHMARK_TEMPLATE_DEFINE_F(RandomFloatDenseFixture, TraditionalMultiplication, 
     state.counters["blob size"] = sizeof(double) * 341; // TODO: Fix 341, tensor alg size??
 }
 
-BENCHMARK_TEMPLATE_DEFINE_F(RandomFloatDenseFixture, TiledMultiplication, 4, 4)(benchmark::State& state) {
+BENCHMARK_TEMPLATE_DEFINE_F(UniformRealDenseFixture, TiledMultiplication, 4, 4)(benchmark::State& state) {
 
     auto lhs = rvgt(rngt);
     auto rhs = rvgt(rngt);
@@ -288,8 +288,8 @@ static void CustomArguments(benchmark::internal::Benchmark* b) {
     }
 }
 
-BENCHMARK_REGISTER_F(RandomFloatDenseFixture, TraditionalMultiplication);//->Apply(CustomArguments);
+BENCHMARK_REGISTER_F(UniformRealDenseFixture, TraditionalMultiplication);//->Apply(CustomArguments);
 
-BENCHMARK_REGISTER_F(RandomFloatDenseFixture, TiledMultiplication);//->Apply(CustomArguments);
+BENCHMARK_REGISTER_F(UniformRealDenseFixture, TiledMultiplication);//->Apply(CustomArguments);
 
 BENCHMARK_MAIN();

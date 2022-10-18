@@ -2417,6 +2417,7 @@ class dense_vector<free_tensor_basis<Width, Depth>, Coeffs>
         return result;
     }
 
+public:
     void construct_reverse_data(DEG degree)
     {
 #ifdef LIBALGEBRA_MAX_TILE_LETTERS
@@ -2437,7 +2438,7 @@ class dense_vector<free_tensor_basis<Width, Depth>, Coeffs>
         m_reverse_data.validate();
     }
 
-public:
+
     using basis_type = free_tensor_basis<Width, Depth>;
     using key_type = typename basis_type::KEY;
     using coefficient_ring = Coeffs;

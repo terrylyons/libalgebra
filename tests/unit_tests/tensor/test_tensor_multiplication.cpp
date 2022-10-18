@@ -559,4 +559,68 @@ SUITE(tensor_multiplication)
         }
     }
 
+    TEST_FIXTURE(PolyMultiplicationTests, test_reverse_data_dense_extern_with_reverse)
+    {
+        auto lhs = generic_d_free_tensor(1000000);
+        auto rhs = generic_d_free_tensor(2000000);
+
+        lhs.base_vector().construct_reverse_data(depth-1);
+
+        const auto result = lhs * rhs;
+
+        const auto& result_base = result.base_vector();
+        const auto& reverse_data = result_base.reverse_data();
+
+        CHECK(static_cast<bool>(reverse_data));
+        for (auto item : result) {
+            if (item.key().size() == depth) {
+                break;
+            }
+            auto reverse_index = tensor_basis::key_to_index(item.key().reverse());
+            REQUIRE CHECK_EQUAL(item.value(), reverse_data[reverse_index]);
+        }
+    }
+
+    TEST_FIXTURE(PolyMultiplicationTests, test_reverse_data_dense_inplace)
+    {
+        auto lhs = generic_d_free_tensor(1000000);
+        auto rhs = generic_d_free_tensor(2000000);
+
+        lhs *= rhs;
+
+        const auto& result_base = lhs.base_vector();
+        const auto& reverse_data = result_base.reverse_data();
+
+        CHECK(static_cast<bool>(reverse_data));
+        for (auto item : lhs) {
+            if (item.key().size() == depth) {
+                break;
+            }
+            auto reverse_index = tensor_basis::key_to_index(item.key().reverse());
+            REQUIRE CHECK_EQUAL(item.value(), reverse_data[reverse_index]);
+        }
+    }
+
+    TEST_FIXTURE(PolyMultiplicationTests, test_reverse_data_dense_inplace_with_reverse)
+    {
+        auto lhs = generic_d_free_tensor(1000000);
+        auto rhs = generic_d_free_tensor(2000000);
+
+        lhs.base_vector().construct_reverse_data(depth-1);
+
+        lhs *= rhs;
+
+        const auto& result_base = lhs.base_vector();
+        const auto& reverse_data = result_base.reverse_data();
+
+        CHECK(static_cast<bool>(reverse_data));
+        for (auto item : lhs) {
+            if (item.key().size() == depth) {
+                break;
+            }
+            auto reverse_index = tensor_basis::key_to_index(item.key().reverse());
+            REQUIRE CHECK_EQUAL(item.value(), reverse_data[reverse_index]);
+        }
+    }
+
 }

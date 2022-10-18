@@ -191,7 +191,7 @@ public:
 };
 
 
-BENCHMARK_TEMPLATE_DEFINE_F(RandomRationalDenseFixture, TraditionalMultiplication, benchmark::State.range(0), benchmark::State.range(1))(benchmark::State& state) {
+BENCHMARK_TEMPLATE_DEFINE_F(RandomRationalDenseFixture, TraditionalMultiplication, 4, 4)(benchmark::State& state) { // benchmark::State.range(0), benchmark::State.range(1))(benchmark::State& state) {
 
     auto lhs = rvgt(rngt);
     auto rhs = rvgt(rngt);
@@ -237,7 +237,7 @@ static void CustomArguments(benchmark::internal::Benchmark* b) {
     }
 }
 
-BENCHMARK_REGISTER_F(RandomRationalDenseFixture, TraditionalMultiplication)->Apply(CustomArguments);
+BENCHMARK_REGISTER_F(RandomRationalDenseFixture, TraditionalMultiplication);//->Apply(CustomArguments);
 
 BENCHMARK_REGISTER_F(RandomRationalDenseFixture, TiledMultiplication);//->Apply(CustomArguments);
 

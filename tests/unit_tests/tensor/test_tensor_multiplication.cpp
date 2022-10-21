@@ -207,9 +207,10 @@ SUITE(tensor_multiplication)
 
 #undef ADD_KEY
 
+    template <DEG Width, DEG Depth>
     struct PolyMultiplicationTests {
-        static constexpr DEG width = 5;
-        static constexpr DEG depth = 5;
+        static constexpr DEG width = Width;
+        static constexpr DEG depth = Depth;
 
         using coeff_ring = alg::coefficients::rational_poly_ring;
         using rational_type = typename coeff_ring::Q;
@@ -307,8 +308,10 @@ SUITE(tensor_multiplication)
 
     };
 
+    using PolyMultiplicationTests55 = PolyMultiplicationTests<5, 5>;
+
 #define LA_TESTING_TENSOR_MAX_DEG_FMA(MUL, VEC, DEGREE)                                              \
-    TEST_FIXTURE(PolyMultiplicationTests, VEC##_##MUL##_fma_max_deg_##DEGREE)                        \
+    TEST_FIXTURE(PolyMultiplicationTests55, VEC##_##MUL##_fma_max_deg_##DEGREE)                        \
     {                                                                                                \
         using mtraits = alg::dtl::multiplication_traits<MUL##_multiplication>;                       \
         auto lhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(1000000);        \
@@ -331,7 +334,7 @@ SUITE(tensor_multiplication)
     }
 
 #define LA_TESTING_TENSOR_FMA_LOWER_DEG(MUL, VEC, DEGREE, LDEG, RDEG)                                \
-    TEST_FIXTURE(PolyMultiplicationTests, VEC##_##MUL##_fma_lhs_smaller_##LDEG##_##RDEG)             \
+    TEST_FIXTURE(PolyMultiplicationTests55, VEC##_##MUL##_fma_lhs_smaller_##LDEG##_##RDEG)             \
     {                                                                                                \
         using mtraits = alg::dtl::multiplication_traits<MUL##_multiplication>;                       \
         auto lhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(1000000, LDEG);  \
@@ -350,7 +353,7 @@ SUITE(tensor_multiplication)
     }
 
 #define LA_TESTING_TENSOR_MAX_DEG_MUL_INPLACE(MUL, VEC, DEGREE)                                      \
-    TEST_FIXTURE(PolyMultiplicationTests, VEC##_##MUL##_minplace_max_deg_##DEGREE)                   \
+    TEST_FIXTURE(PolyMultiplicationTests55, VEC##_##MUL##_minplace_max_deg_##DEGREE)                   \
     {                                                                                                \
         using mtraits = alg::dtl::multiplication_traits<MUL##_multiplication>;                       \
         auto lhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(1000000);        \
@@ -372,7 +375,7 @@ SUITE(tensor_multiplication)
     }
 
 #define LA_TESTING_TENSOR_MAX_DEG_MSD(MUL, VEC, DEGREE)                                                      \
-    TEST_FIXTURE(PolyMultiplicationTests, VEC##_##MUL##_msd_max_deg_rzu_##DEGREE)                            \
+    TEST_FIXTURE(PolyMultiplicationTests55, VEC##_##MUL##_msd_max_deg_rzu_##DEGREE)                            \
     {                                                                                                        \
         auto lhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(1000000);                \
         auto rhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(2000000);                \
@@ -395,7 +398,7 @@ SUITE(tensor_multiplication)
     }
 
 #define LA_TESTING_TENSOR_MUL_MAKE_TESTS(MUL, VEC)                                                        \
-    TEST_FIXTURE(PolyMultiplicationTests, VEC##_##MUL##_fma)                                              \
+    TEST_FIXTURE(PolyMultiplicationTests55, VEC##_##MUL##_fma)                                              \
     {                                                                                                     \
         auto lhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(1000000);             \
         auto rhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(2000000);             \
@@ -407,7 +410,7 @@ SUITE(tensor_multiplication)
         }                                                                                                 \
     }                                                                                                     \
                                                                                                           \
-    TEST_FIXTURE(PolyMultiplicationTests, VEC##_##MUL##_inplace_mul)                                      \
+    TEST_FIXTURE(PolyMultiplicationTests55, VEC##_##MUL##_inplace_mul)                                      \
     {                                                                                                     \
         auto lhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(1000000);             \
         auto rhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(2000000);             \
@@ -419,7 +422,7 @@ SUITE(tensor_multiplication)
         }                                                                                                 \
     }                                                                                                     \
                                                                                                           \
-    TEST_FIXTURE(PolyMultiplicationTests, VEC##_##MUL##_inplace_mul_rhs_zero_unit)                        \
+    TEST_FIXTURE(PolyMultiplicationTests55, VEC##_##MUL##_inplace_mul_rhs_zero_unit)                        \
     {                                                                                                     \
         auto lhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(1000000);             \
         auto rhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(2000000);             \
@@ -437,7 +440,7 @@ SUITE(tensor_multiplication)
         }                                                                                                 \
     }                                                                                                     \
                                                                                                           \
-    TEST_FIXTURE(PolyMultiplicationTests, VEC##_##MUL##_inplace_mul_lhs_zero_unit)                        \
+    TEST_FIXTURE(PolyMultiplicationTests55, VEC##_##MUL##_inplace_mul_lhs_zero_unit)                        \
     {                                                                                                     \
         auto lhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(1000000);             \
         auto rhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(2000000);             \
@@ -455,7 +458,7 @@ SUITE(tensor_multiplication)
         }                                                                                                 \
     }                                                                                                     \
                                                                                                           \
-    TEST_FIXTURE(PolyMultiplicationTests, VEC##_##MUL##_mul_scal_div)                                     \
+    TEST_FIXTURE(PolyMultiplicationTests55, VEC##_##MUL##_mul_scal_div)                                     \
     {                                                                                                     \
         auto lhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(1000000);             \
         auto rhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(2000000);             \
@@ -469,7 +472,7 @@ SUITE(tensor_multiplication)
         }                                                                                                 \
     }                                                                                                     \
                                                                                                           \
-    TEST_FIXTURE(PolyMultiplicationTests, VEC##_##MUL##_mul_scal_div_max_deg)                             \
+    TEST_FIXTURE(PolyMultiplicationTests55, VEC##_##MUL##_mul_scal_div_max_deg)                             \
     {                                                                                                     \
         auto lhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(1000000);             \
         auto rhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(2000000);             \
@@ -488,7 +491,7 @@ SUITE(tensor_multiplication)
         }                                                                                                 \
     }                                                                                                     \
                                                                                                           \
-    TEST_FIXTURE(PolyMultiplicationTests, VEC##_##MUL##_exp_test)                                         \
+    TEST_FIXTURE(PolyMultiplicationTests55, VEC##_##MUL##_exp_test)                                         \
     {                                                                                                     \
         auto arg = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>();                    \
         arg[key_type()] = scalar_type();                                                                  \
@@ -539,7 +542,7 @@ SUITE(tensor_multiplication)
     LA_TESTING_TENSOR_MUL_MAKE_TESTS(tiled, dense)
     LA_TESTING_TENSOR_MUL_MAKE_TESTS(tiled2, dense)
 
-    TEST_FIXTURE(PolyMultiplicationTests, test_reverse_data_dense_extern)
+    TEST_FIXTURE(PolyMultiplicationTests55, test_reverse_data_dense_extern)
     {
         auto lhs = generic_d_free_tensor(1000000);
         auto rhs = generic_d_free_tensor(2000000);
@@ -559,7 +562,7 @@ SUITE(tensor_multiplication)
         }
     }
 
-    TEST_FIXTURE(PolyMultiplicationTests, test_reverse_data_dense_extern_with_reverse)
+    TEST_FIXTURE(PolyMultiplicationTests55, test_reverse_data_dense_extern_with_reverse)
     {
         auto lhs = generic_d_free_tensor(1000000);
         auto rhs = generic_d_free_tensor(2000000);
@@ -581,7 +584,7 @@ SUITE(tensor_multiplication)
         }
     }
 
-    TEST_FIXTURE(PolyMultiplicationTests, test_reverse_data_dense_inplace)
+    TEST_FIXTURE(PolyMultiplicationTests55, test_reverse_data_dense_inplace)
     {
         auto lhs = generic_d_free_tensor(1000000);
         auto rhs = generic_d_free_tensor(2000000);
@@ -601,7 +604,7 @@ SUITE(tensor_multiplication)
         }
     }
 
-    TEST_FIXTURE(PolyMultiplicationTests, test_reverse_data_dense_inplace_with_reverse)
+    TEST_FIXTURE(PolyMultiplicationTests55, test_reverse_data_dense_inplace_with_reverse)
     {
         auto lhs = generic_d_free_tensor(1000000);
         auto rhs = generic_d_free_tensor(2000000);
@@ -620,6 +623,27 @@ SUITE(tensor_multiplication)
             }
             auto reverse_index = tensor_basis::key_to_index(item.key().reverse());
             REQUIRE CHECK_EQUAL(item.value(), reverse_data[reverse_index]);
+        }
+    }
+
+    using PolyMultiplicationTests1282 = PolyMultiplicationTests<128, 2>;
+
+    TEST_FIXTURE(PolyMultiplicationTests1282, test_dense_mul_large_width)
+    {
+        auto lhs = generic_d_free_tensor(1000000);
+        auto rhs = generic_d_free_tensor(2000000);
+
+        using mul_type = alg::tiled_free_tensor_multiplication<width, depth, -2>;
+
+        mul_type mul;
+        tensor_type<mul_type, alg::vectors::dense_vector> result;
+        alg::dtl::multiplication_traits<mul_type>::
+                multiply_and_add(mul, result, lhs, rhs);
+
+
+        REQUIRE CHECK_EQUAL(1 + width*(1 + width), result.size());
+        for (auto item : result) {
+            REQUIRE CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value());
         }
     }
 

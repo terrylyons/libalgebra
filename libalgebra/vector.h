@@ -5,6 +5,8 @@
 #ifndef LIBALGEBRA_VECTOR_H
 #define LIBALGEBRA_VECTOR_H
 
+#include "implementation_types.h"
+
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 #include <boost/serialization/serialization.hpp>
 #endif

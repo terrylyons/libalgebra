@@ -20,7 +20,7 @@ Version 3. (See accompanying file License.txt)
 
 
 // the unit test framework
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 // Local frameworks
 #include "brown_path_increments.h"

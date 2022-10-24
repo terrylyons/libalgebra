@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 #include <libalgebra/libalgebra.h>
 

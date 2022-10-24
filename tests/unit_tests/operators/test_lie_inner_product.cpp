@@ -6,7 +6,7 @@
 #include <libalgebra/libalgebra.h>
 #include <libalgebra/lie_inner_product.h>
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 SUITE(lie_inner_product_tests)
 {

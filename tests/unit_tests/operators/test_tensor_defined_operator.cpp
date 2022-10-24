@@ -8,7 +8,7 @@
 #include <libalgebra/operators.h>
 #include <libalgebra/tensor_operator.h>
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 SUITE(tensor_defined_operator)
 {

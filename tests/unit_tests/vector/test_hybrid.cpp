@@ -5,7 +5,7 @@
 
 #include <map>
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 #include "../../common/simple_basis.h"
 #include "../../common/time_and_details.h"

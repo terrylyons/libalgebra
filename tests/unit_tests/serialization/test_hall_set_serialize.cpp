@@ -2,7 +2,7 @@
 // Created by sam on 28/10/2021.
 //
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 #include <libalgebra/hall_set.h>
 
 #include <fstream>

@@ -2,7 +2,7 @@
 // Created by sam on 02/02/2021.
 //
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 #include "reporter.h"
 
 int main()

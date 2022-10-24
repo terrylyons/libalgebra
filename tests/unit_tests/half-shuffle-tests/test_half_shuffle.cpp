@@ -2,7 +2,7 @@
 // Created by user on 08/06/22.
 //
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 #include <numeric>
 #include <set>
 #include <type_traits>

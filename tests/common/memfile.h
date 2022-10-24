@@ -12,7 +12,7 @@
 // the unit test framework
 #include "compat.h"
 #include "helpers.h"
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 #include <libalgebra/libalgebra.h>
 
 #include <libalgebra/basis.h>

@@ -2,7 +2,7 @@
 // Created by sam on 04/02/2021.
 //
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 #include <libalgebra/alg_types.h>
 #include <libalgebra/libalgebra.h>
@@ -629,6 +629,27 @@ SUITE(tensor_multiplication)
     using PolyMultiplicationTests1282 = PolyMultiplicationTests<128, 2>;
 
     TEST_FIXTURE(PolyMultiplicationTests1282, test_dense_mul_large_width)
+    {
+        auto lhs = generic_d_free_tensor(1000000);
+        auto rhs = generic_d_free_tensor(2000000);
+
+        using mul_type = alg::tiled_free_tensor_multiplication<width, depth, -2>;
+
+        mul_type mul;
+        tensor_type<mul_type, alg::vectors::dense_vector> result;
+        alg::dtl::multiplication_traits<mul_type>::
+                multiply_and_add(mul, result, lhs, rhs);
+
+
+        REQUIRE CHECK_EQUAL(1 + width*(1 + width), result.size());
+        for (auto item : result) {
+            REQUIRE CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value());
+        }
+    }
+
+
+    using PolyMultiplicationTests1252 = PolyMultiplicationTests<125, 2>;
+    TEST_FIXTURE(PolyMultiplicationTests1252, test_dense_mul_large_width_unequal_tiles)
     {
         auto lhs = generic_d_free_tensor(1000000);
         auto rhs = generic_d_free_tensor(2000000);

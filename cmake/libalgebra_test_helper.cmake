@@ -34,7 +34,7 @@ function(libalgebra_test)
             LINKER_LANGUAGE CXX)
 
     target_link_libraries(${_lib_name} PUBLIC
-            UnitTest++
+            UnitTest++::UnitTest++
             Libalgebra::Libalgebra
             la_unittests::utilities
             "${LA_TESTS_DEPS}"

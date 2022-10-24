@@ -3,7 +3,7 @@
 //
 
 #include "libalgebra/polynomial_coefficients.h"
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 #include <libalgebra/implementation_types.h>
 
 using namespace alg;

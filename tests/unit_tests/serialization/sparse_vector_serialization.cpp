@@ -1,7 +1,7 @@
 //
 // Created by sam on 26/10/2021.
 //
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 #include <libalgebra/coefficients.h>
 #include <libalgebra/rational_coefficients.h>
 #include <libalgebra/libalgebra.h>

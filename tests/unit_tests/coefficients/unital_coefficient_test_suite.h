@@ -5,7 +5,7 @@
 #ifndef LIBALGEBRA_UNITAL_COEFFICIENT_TEST_SUITE_H
 #define LIBALGEBRA_UNITAL_COEFFICIENT_TEST_SUITE_H
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 #include <libalgebra/coefficients.h>
 #include <libalgebra/libalgebra.h>
 #include <multi_test.h>

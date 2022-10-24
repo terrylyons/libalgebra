@@ -2,7 +2,7 @@
 //
 
   // test.cpp
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 // file:///C:/Program%20Files/dev/unittest-cpp-1.4-v90-v140/unittest-cpp-1.4/UnitTest++/docs/UnitTest++.html
 //TEST(FailSpectacularly)
 //{

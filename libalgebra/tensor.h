@@ -111,43 +111,14 @@ struct tensor_tile_letters_helper<Width, TargetSize, false>
     static constexpr IDEG num_letters = -((log_target % 2 == 0) ? log_target/2 : 1 + log_target/2);
 };
 
-
-template <typename S, DEG Width, IDEG TileLetters, bool IsWide=(TileLetters<0)>
-struct LA_ALIGNAS(LA_CACHELINE_BYTES) read_tile
+template <typename S, DIMN Size>
+struct LA_ALIGNAS(LA_CACHELINE_BYTES) data_tile
 {
-    static constexpr DIMN size = ::alg::integer_maths::power(Width, TileLetters);
-
+    static_assert(Size > 0, "size must be non-zero");
+    static constexpr DIMN size = Size;
     S data[size] = {};
 };
 
-template <typename S, DEG Width, IDEG TileLetters>
-struct LA_ALIGNAS(LA_CACHELINE_BYTES) read_tile<S, Width, TileLetters, true>
-{
-    static_assert(Width >= ::alg::integer_maths::power(DIMN(2), -TileLetters),
-                  "Width must be at least 2^(-TileLetters) when using divided read tiles");
-    static constexpr DIMN size = DIMN(Width)/::alg::integer_maths::power(DIMN(2), -TileLetters);
-
-    S data[size] = {};
-};
-
-template <typename S, DEG Width, IDEG TileLetters, bool IsWide=(TileLetters<0)>
-struct LA_ALIGNAS(LA_CACHELINE_BYTES) write_tile
-{
-    static constexpr DIMN size = ::alg::integer_maths::power(Width, 2*TileLetters);
-
-     S data[size] = {};
-};
-
-template <typename S, DEG Width, IDEG TileLetters>
-struct LA_ALIGNAS(LA_CACHELINE_BYTES) write_tile<S, Width, TileLetters, true>
-{
-    static_assert(Width >= ::alg::integer_maths::power(DIMN(2), -TileLetters),
-                  "Width must be at least 2^(-TileLetters) when using divided write tiles");
-    static constexpr DIMN side_size = DIMN(Width)/::alg::integer_maths::power(DIMN(2), -TileLetters);
-    static constexpr DIMN size = side_size*side_size;
-
-    S data[size] = {};
-};
 
 
 template<DEG Width, DEG Depth, IDEG TileLetters = 0>
@@ -460,11 +431,11 @@ private:
     using basis_type = tensor_basis<Width, Depth>;
 
 //    std::vector<scalar_type> left_read_tile;
-    dtl::read_tile<scalar_type, Width, TileLetters> left_read_tile;
+    dtl::data_tile<scalar_type, tile_info::tile_width> left_read_tile;
 //    std::vector<scalar_type> right_read_tile;
-    dtl::read_tile<scalar_type, Width, TileLetters> right_read_tile;
+    dtl::data_tile<scalar_type, tile_info::tile_width> right_read_tile;
 //    std::vector<scalar_type> output_tile;
-    dtl::write_tile<scalar_type, Width, TileLetters> output_tile;
+    dtl::data_tile<scalar_type, tile_info::tile_size> output_tile;
     std::vector<scalar_type> reverse_data;
     const_pointer left_reverse_read_ptr = nullptr;
     pointer reverse_write_ptr = nullptr;
@@ -566,12 +537,13 @@ private:
                 + (subtile_i*tsi::powers[degree-tile_info::tile_letters]+subtile_j)*tile_info::tile_width;
     }
 
+public:
     static bool boundary_subtile(IDIMN index) noexcept
     {
-        return (tile_info::num_subtiles != 1) && (index == tile_info::num_subtiles-1);
+        return (tile_info::num_subtiles != 1) && (Width % tile_width !=0)  && (DIMN(index) == tile_info::num_subtiles-1);
     }
 
-public:
+
     using tile_info::tile_letters;
     using tile_info::tile_shift;
     using tile_info::tile_size;
@@ -611,12 +583,24 @@ public:
     void read_left_tile(IDEG degree, IDIMN index, IDIMN subtile_i=0) noexcept
     {
         const auto* ptr_begin = left_reverse_read_ptr + pointer_offset(degree, index, 0, subtile_i);
-        std::copy(ptr_begin, ptr_begin + tile_width, left_read_tile.data);
+        if (boundary_subtile(subtile_i)) {
+            const auto mid = Width % tile_width;
+            std::copy(ptr_begin, ptr_begin + mid, left_read_tile.data);
+            std::fill(left_read_tile.data+mid, left_read_tile.data+tile_width, Coeffs::zero);
+        } else {
+            std::copy(ptr_begin, ptr_begin + tile_width, left_read_tile.data);
+        }
     }
     void read_right_tile(IDEG degree, IDIMN index, IDIMN subtile_j=0) noexcept
     {
         const auto* ptr_begin = base::rhs_data + pointer_offset(degree, index, 0, subtile_j);
-        std::copy(ptr_begin, ptr_begin + tile_width, right_read_tile.data);
+        if (boundary_subtile(subtile_j)) {
+            const auto mid = Width % tile_width;
+            std::copy(ptr_begin, ptr_begin + mid, right_read_tile.data);
+            std::fill(right_read_tile.data+mid, right_read_tile.data+tile_width, Coeffs::zero);
+        } else {
+            std::copy(ptr_begin, ptr_begin + tile_width, right_read_tile.data);
+        }
     }
 
     void reset_tile(IDEG degree, IDIMN index, IDIMN /*reverse_index*/, IDIMN subtile_i=0, IDIMN subtile_j=0) noexcept
@@ -628,8 +612,11 @@ public:
             const_pointer optr = base::out_data
                     + pointer_offset(degree, index, subtile_i, subtile_j);
             pointer tptr = output_tile.data;
-            for (DIMN i = 0; i < tile_width; ++i) {
-                for (DIMN j = 0; j < tile_width; ++j) {
+
+            const auto ibound = boundary_subtile(subtile_i) ? Width % tile_width : tile_width;
+            const auto jbound = boundary_subtile(subtile_j) ? Width % tile_width : tile_width;
+            for (DIMN i = 0; i < ibound; ++i) {
+                for (DIMN j = 0; j < jbound; ++j) {
                     tptr[i * tile_width + j] = optr[i * stride + j];
                 }
             }
@@ -649,8 +636,10 @@ public:
         const_pointer tptr = output_tile.data;
         auto stride = tsi::powers[degree - tile_letters];
 
-        for (DIMN i = 0; i < tile_width; ++i) {
-            for (DIMN j = 0; j < tile_width; ++j) {
+        const auto ibound = boundary_subtile(subtile_i) ? Width % tile_width : tile_width;
+        const auto jbound = boundary_subtile(subtile_j) ? Width % tile_width : tile_width;
+        for (DIMN i = 0; i < ibound; ++i) {
+            for (DIMN j = 0; j < jbound; ++j) {
                 optr[i * stride + j] = tptr[i * tile_width + j];
             }
         }
@@ -662,8 +651,8 @@ public:
             assert(((tile_width - 1) * stride + (tile_width - 1) + reverse_index * tile_width + start_of_degree) < tsi::degree_sizes[degree]);
             optr = reverse_write_ptr + pointer_offset(degree, reverse_index, subtile_j, subtile_i);
 
-            for (DIMN i = 0; i < tile_width; ++i) {
-                for (DIMN j = 0; j < tile_width; ++j) {
+            for (DIMN i = 0; i < ibound; ++i) {
+                for (DIMN j = 0; j < jbound; ++j) {
                     optr[i * stride + j] = tptr[perm::permute_idx(j) * tile_width + perm::permute_idx(i)];
                 }
             }
@@ -694,13 +683,18 @@ public:
         return result;
     }
 
-    const_pointer left_fwd_read_ptr(IDEG degree, IDIMN index, IDIMN subtile_i) const noexcept
+    const_pointer left_fwd_read_ptr(IDEG degree, IDIMN index, IDIMN subtile_i, IDIMN subtile_j=0) const noexcept
     {
-        return base::left_fwd_read(degree, index * tile_info::tile_stride + subtile_i*tile_info::tile_width);
+        return base::left_fwd_read(degree, index * tile_info::tile_stride
+                                           + subtile_i*tile_info::tile_width*tsi::powers[degree-tile_letters]
+                                           + subtile_j*tile_info::tile_width);
     }
-    const_pointer right_fwd_read_ptr(IDEG degree, IDIMN index, IDIMN subtile_j) const noexcept
+    const_pointer right_fwd_read_ptr(IDEG degree, IDIMN index, IDIMN subtile_j, IDIMN subtile_i=0) const noexcept
     {
-        return base::right_fwd_read(degree, index * tile_info::tile_stride + subtile_j*tile_info::tile_width);
+        return base::right_fwd_read(degree, index * tile_info::tile_stride
+                                            + subtile_j*tile_info::tile_width
+                                            + subtile_i*tile_info::tile_width*tsi::powers[degree-tile_letters]
+                                    );
     }
 };
 
@@ -991,11 +985,13 @@ class tiled_free_tensor_multiplication
                                           const S& lhs_unit,
                                           const S* LA_RESTRICT rhs_ptr,
                                           IDIMN stride,
+                                          IDIMN ibound,
+                                          IDIMN jbound,
                                           Fn op) noexcept
     {
         constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
-        for (IDIMN i = 0; i < tile_width; ++i) {
-            for (IDIMN j = 0; j < tile_width; ++j) {
+        for (IDIMN i = 0; i < ibound; ++i) {
+            for (IDIMN j = 0; j < jbound; ++j) {
                 tile[i * tile_width + j] += op(lhs_unit * rhs_ptr[i * stride + j]);
             }
         }
@@ -1006,11 +1002,13 @@ class tiled_free_tensor_multiplication
                                           const S* LA_RESTRICT lhs_ptr,
                                           const S& rhs_unit,
                                           IDIMN stride,
+                                          IDIMN ibound,
+                                          IDIMN jbound,
                                           Fn op) noexcept
     {
         constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
-        for (IDIMN i = 0; i < tile_width; ++i) {
-            for (IDIMN j = 0; j < tile_width; ++j) {
+        for (IDIMN i = 0; i < ibound; ++i) {
+            for (IDIMN j = 0; j < jbound; ++j) {
                 tile[i * tile_width + j] += op(lhs_ptr[i * stride + j] * rhs_unit);
             }
         }
@@ -1064,14 +1062,13 @@ class tiled_free_tensor_multiplication
                                            const S& rhs_val,
                                            Fn op,
                                            IDIMN j,
-                                           IDIMN subtile_i,
+                                           IDIMN ibound,
                                            IDIMN stride) noexcept
     {
         constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
 
-        const auto ibound = (tile_info::num_subtiles > 1 && subtile_i == tile_info::num_subtiles-1) ? Width % tile_width : tile_width;
-        for (DIMN i=0; i<ibound; ++i ){
-            tile[i * tile_width + j] += op(lhs_fwd_ptr[(subtile_i*tile_width + i) * stride] * rhs_val);
+        for (IDIMN i=0; i<ibound; ++i ){
+            tile[i * tile_width + j] += op(lhs_fwd_ptr[i * stride] * rhs_val);
         }
     }
 
@@ -1081,17 +1078,14 @@ class tiled_free_tensor_multiplication
                                               const S* LA_RESTRICT rhs_fwd_ptr,
                                               Fn op,
                                               IDIMN lhs_stride,
-                                              IDIMN subtile_i,
-                                              IDIMN subtile_j) noexcept
+                                              IDIMN ibound,
+                                              IDIMN jbound) noexcept
     {
         constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
 
-        const auto ibound = (tile_info::num_subtiles > 1 && subtile_i == tile_info::num_subtiles-1) ? Width % tile_width : tile_width;
-        const auto jbound = (tile_info::num_subtiles > 1 && subtile_j == tile_info::num_subtiles-1) ? Width % tile_width : tile_width;
-
         for (IDIMN i = 0; i < ibound; ++i) {
             for (IDIMN j = 0; j < jbound; ++j) {
-                tile[i * tile_width + j] += op(lhs_fwd_ptr[(subtile_i*tile_width+i) * lhs_stride] * rhs_fwd_ptr[subtile_j*tile_width + j]);
+                tile[i * tile_width + j] += op(lhs_fwd_ptr[i * lhs_stride] * rhs_fwd_ptr[j]);
             }
         }
     }
@@ -1109,8 +1103,7 @@ protected:
     {
         const auto rhs_deg = out_deg - lhs_deg;
 
-        const auto ibound = (tile_info::num_subtiles > 1 && subtile_i == tile_info::num_subtiles - 1)
-                ? Width % tile_width : tile_width;
+        const auto ibound = helper.boundary_subtile(subtile_i) ? Width % tile_width : tile_width;
 
         assert(1 <= lhs_deg && lhs_deg <= tile_letters);
         for (IDIMN i = 0; i < ibound; ++i) {
@@ -1169,12 +1162,15 @@ protected:
         assert(lhs_split + rhs_split == out_deg - 2 * tile_letters);
 
         const auto split = helper.split_key(rhs_split, k);
+        const auto lhs_stride = tsi::powers[lhs_split];
         impl_ulmd_1l(helper.out_tile_ptr(),
-                     helper.left_fwd_read(lhs_deg, split.first),
-                     helper.right_fwd_read(rhs_deg, split.second * tile_width),
+                     helper.left_fwd_read(lhs_deg, split.first + subtile_i*tile_width*lhs_stride),
+                     helper.right_fwd_read_ptr(rhs_deg, split.second, subtile_j),
                      op,
-                     tsi::powers[lhs_split],
-                     subtile_i, subtile_j);
+                     lhs_stride,
+                     helper.boundary_subtile(subtile_i) ? Width % tile_width : tile_width,
+                     helper.boundary_subtile(subtile_j) ? Width % tile_width : tile_width
+                     );
     }
 
     template<typename Coeffs, typename Fn>
@@ -1220,18 +1216,19 @@ protected:
     {
         const auto rhs_deg = out_deg - lhs_deg;
         const auto split_left_letters = tile_letters - rhs_deg;
+        const auto lhs_stride = tsi::powers[lhs_deg - tile_letters];
         for (IDIMN j = 0; j < tile_width; ++j) {
             const auto split = helper.split_key(rhs_deg, subtile_j*tile_width+j);
             const auto& right_val = *helper.right_fwd_read(rhs_deg, split.second);
             const auto lhs_key = helper.combine_keys(split_left_letters, k, split.first);
 
             impl_ulmd(helper.out_tile_ptr(),
-                      helper.left_fwd_read(lhs_deg, lhs_key),
+                      helper.left_fwd_read(lhs_deg, lhs_key + subtile_i*tile_width*lhs_stride),
                       right_val,
                       op,
                       j,
-                      subtile_i,
-                      tsi::powers[lhs_deg - tile_letters]
+                      helper.boundary_subtile(subtile_i) ? Width % tile_width : tile_width,
+                      lhs_stride
                       );
         }
     }
@@ -1256,18 +1253,20 @@ protected:
                 auto k_reverse = helper.reverse_key(mid_deg, k);
 
                 for (IDIMN subtile_i=0; subtile_i<num_subtiles; ++subtile_i) {
+                    const auto ibound = helper.boundary_subtile(subtile_i) ? Width % tile_width : tile_width;
                     for (IDIMN subtile_j=0; subtile_j<num_subtiles; ++subtile_j) {
+                        const auto jbound = helper.boundary_subtile(subtile_j) ? Width % tile_width : tile_width;
 
                         helper.reset_tile(out_deg, k, k_reverse, subtile_i, subtile_j);
 
                         const auto& lhs_unit = helper.left_unit();
                         if (out_deg <= rhs_max_deg && lhs_unit != Coeffs::zero) {
-                            impl_0bd(helper.out_tile_ptr(), lhs_unit, helper.right_fwd_read_ptr(out_deg, k, subtile_j), stride, op);
+                            impl_0bd(helper.out_tile_ptr(), lhs_unit, helper.right_fwd_read_ptr(out_deg, k, subtile_j, subtile_i), stride, ibound, jbound, op);
                         }
 
                         const auto& rhs_unit = helper.right_unit();
                         if (out_deg <= old_lhs_deg && rhs_unit != Coeffs::zero) {
-                            impl_db0(helper.out_tile_ptr(), helper.left_fwd_read_ptr(out_deg, k, subtile_i), rhs_unit, stride, op);
+                            impl_db0(helper.out_tile_ptr(), helper.left_fwd_read_ptr(out_deg, k, subtile_i, subtile_j), rhs_unit, stride, ibound, jbound, op);
                         }
 
                         for (IDEG lhs_deg = lhs_deg_min; lhs_deg <= lhs_deg_max; ++lhs_deg) {
@@ -1287,7 +1286,7 @@ protected:
                                 impl_rhs_small_no_reverse(helper, op, out_deg, lhs_deg, k, subtile_i, subtile_j);
                             }
                             else {
-                                BOOST_UNREACHABLE_RETURN();
+                                BOOST_UNREACHABLE_RETURN()
                             }
                         }
 
@@ -2318,12 +2317,6 @@ class dense_vector<free_tensor_basis<Width, Depth>, Coeffs>
 public:
     void construct_reverse_data(DEG degree)
     {
-#ifdef LIBALGEBRA_MAX_TILE_LETTERS
-        constexpr DEG CalcLetters = integer_maths::logN(static_cast<unsigned>(LIBALGEBRA_L1_CACHE_SIZE), n_letters) / 2;
-        constexpr DEG BlockLetters = (CalcLetters > LIBALGEBRA_MAX_TILE_LETTERS) ? LIBALGEBRA_MAX_TILE_LETTERS : CalcLetters;
-#else
-        constexpr DEG BlockLetters = ::alg::integer_maths::logN(LIBALGEBRA_L1_CACHE_SIZE / sizeof(scalar_type), Width) / 2;
-#endif
         if (degree > 0) {
             if (m_reverse_data.size() < tsi::degree_sizes[degree]) {
                 m_reverse_data.resize(tsi::degree_sizes[degree]);

@@ -219,7 +219,7 @@ SUITE(tensor_multiplication)
         using poly_basis = alg::poly_basis;
         using poly_key = typename poly_basis::KEY;
 
-        using tensor_basis = alg::tensor_basis<width, depth>;
+        using tensor_basis = alg::free_tensor_basis<width, depth>;
         using traditional_multiplication = alg::traditional_free_tensor_multiplication<width, depth>;
         using tiled_multiplication = alg::tiled_free_tensor_multiplication<width, depth>;
         using tiled2_multiplication = alg::tiled_free_tensor_multiplication<width, depth, 2>;
@@ -275,9 +275,17 @@ SUITE(tensor_multiplication)
 
         scalar_type to_poly_key(key_type key, LET offset) const
         {
+            constexpr LET digits_per_letter = alg::integer_maths::logN(LET(width), LET(10)) + 1;
+            constexpr LET letter_offset = alg::power(LET(10), digits_per_letter);
+
+            auto offset_digits = alg::integer_maths::logN(LET(offset), LET(10)) + LET(1);
+            if (offset_digits <= depth*digits_per_letter) {
+                offset *= alg::power(LET(10), depth*digits_per_letter - offset_digits+1);
+            }
+
             LET count = 0;
             while (key.size() > 0) {
-                count *= 10;
+                count *= letter_offset;
                 count += key.FirstLetter();
                 key = key.rparent();
             }
@@ -626,9 +634,9 @@ SUITE(tensor_multiplication)
         }
     }
 
-    using PolyMultiplicationTests1282 = PolyMultiplicationTests<128, 2>;
+    using PolyMultiplicationTests1283 = PolyMultiplicationTests<128, 3>;
 
-    TEST_FIXTURE(PolyMultiplicationTests1282, test_dense_mul_large_width)
+    TEST_FIXTURE(PolyMultiplicationTests1283, test_dense_mul_large_width)
     {
         auto lhs = generic_d_free_tensor(1000000);
         auto rhs = generic_d_free_tensor(2000000);
@@ -641,15 +649,15 @@ SUITE(tensor_multiplication)
                 multiply_and_add(mul, result, lhs, rhs);
 
 
-        REQUIRE CHECK_EQUAL(1 + width*(1 + width), result.size());
+        CHECK_EQUAL(1 + width*(1 + width*(1+width)), result.size());
         for (auto item : result) {
             REQUIRE CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value());
         }
     }
 
 
-    using PolyMultiplicationTests1252 = PolyMultiplicationTests<125, 2>;
-    TEST_FIXTURE(PolyMultiplicationTests1252, test_dense_mul_large_width_unequal_tiles)
+    using PolyMultiplicationTests1253 = PolyMultiplicationTests<125, 3>;
+    TEST_FIXTURE(PolyMultiplicationTests1253, test_dense_mul_large_width_unequal_tiles)
     {
         auto lhs = generic_d_free_tensor(1000000);
         auto rhs = generic_d_free_tensor(2000000);
@@ -662,7 +670,7 @@ SUITE(tensor_multiplication)
                 multiply_and_add(mul, result, lhs, rhs);
 
 
-        REQUIRE CHECK_EQUAL(1 + width*(1 + width), result.size());
+        CHECK_EQUAL(1 + width*(1 + width*(1+width)), result.size());
         for (auto item : result) {
             REQUIRE CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value());
         }

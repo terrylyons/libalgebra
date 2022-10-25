@@ -979,22 +979,28 @@ class tiled_free_tensor_multiplication
     using helper_type = dtl::tiled_free_tensor_multiplication_helper<
             Width, Depth, C, TileLetters==0 ? LA_DEFAULT_TILE_PARAM(Width, typename C::S) : TileLetters>;
 
-    using tile_info = dtl::tile_details<Width, Depth, TileLetters>;
     using tsi = dtl::tensor_size_info<Width>;
 
-    static constexpr IDEG tile_letters = tile_info::tile_letters;
-    static constexpr IDIMN tile_width = tile_info::tile_width;
+    template <typename C>
+    using pointer = typename C::S* LA_RESTRICT;
 
-    template<typename S, typename Fn>
-    LA_INLINE_ALWAYS static void impl_0bd(S* LA_RESTRICT tile,
-                                          const S& lhs_unit,
-                                          const S* LA_RESTRICT rhs_ptr,
+    template <typename C>
+    using const_pointer = const typename C::S* LA_RESTRICT;
+
+    template <typename C>
+    using const_reference = const typename C::S&;
+
+
+    template<typename C, typename Fn>
+    LA_INLINE_ALWAYS static void impl_0bd(pointer<C> tile,
+                                          const_reference<C> lhs_unit,
+                                          const_pointer<C> rhs_ptr,
                                           IDIMN stride,
                                           IDIMN ibound,
                                           IDIMN jbound,
                                           Fn op) noexcept
     {
-        constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
+        constexpr auto tile_width = helper_type<C>::tile_width;
         for (IDIMN i = 0; i < ibound; ++i) {
             for (IDIMN j = 0; j < jbound; ++j) {
                 tile[i * tile_width + j] += op(lhs_unit * rhs_ptr[i * stride + j]);
@@ -1002,16 +1008,16 @@ class tiled_free_tensor_multiplication
         }
     }
 
-    template<typename S, typename Fn>
-    LA_INLINE_ALWAYS static void impl_db0(S* LA_RESTRICT tile,
-                                          const S* LA_RESTRICT lhs_ptr,
-                                          const S& rhs_unit,
+    template<typename C, typename Fn>
+    LA_INLINE_ALWAYS static void impl_db0(pointer<C> tile,
+                                          const_pointer<C> lhs_ptr,
+                                          const_reference<C> rhs_unit,
                                           IDIMN stride,
                                           IDIMN ibound,
                                           IDIMN jbound,
                                           Fn op) noexcept
     {
-        constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
+        constexpr auto tile_width = helper_type<C>::tile_width;
         for (IDIMN i = 0; i < ibound; ++i) {
             for (IDIMN j = 0; j < jbound; ++j) {
                 tile[i * tile_width + j] += op(lhs_ptr[i * stride + j] * rhs_unit);
@@ -1019,14 +1025,14 @@ class tiled_free_tensor_multiplication
         }
     }
 
-    template<typename S, typename Fn>
-    LA_INLINE_ALWAYS static void impl_mid(S* LA_RESTRICT tile,
-                                          const S* LA_RESTRICT lhs_tile,
-                                          const S* LA_RESTRICT rhs_tile,
+    template<typename C, typename Fn>
+    LA_INLINE_ALWAYS static void impl_mid(pointer<C> tile,
+                                          const_pointer<C> lhs_tile,
+                                          const_pointer<C> rhs_tile,
                                           Fn op) noexcept
     {
-        using perm = dtl::reversing_permutation<Width, tile_info::tile_letters>;
-        constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
+        using perm = dtl::reversing_permutation<Width, helper_type<C>::tile_letters>;
+        constexpr auto tile_width = helper_type<C>::tile_width;
         for (IDIMN i = 0; i < tile_width; ++i) {
             for (IDIMN j = 0; j < tile_width; ++j) {
                 tile[perm::permute_idx(i) * tile_width + j] += op(lhs_tile[i] * rhs_tile[j]);
@@ -1034,60 +1040,58 @@ class tiled_free_tensor_multiplication
         }
     }
 
-    template<typename S, typename Fn>
-    LA_INLINE_ALWAYS static void impl_lb1(S* LA_RESTRICT tile,
-                                          const S& lhs_val,
-                                          const S* LA_RESTRICT rhs_tile,
+    template<typename C, typename Fn>
+    LA_INLINE_ALWAYS static void impl_lb1(pointer<C> tile,
+                                          const_reference<C> lhs_val,
+                                          const_pointer<C> rhs_tile,
                                           Fn op,
                                           IDIMN i) noexcept
     {
-        constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
+        constexpr auto tile_width = helper_type<C>::tile_width;
         for (IDIMN j = 0; j < tile_width; ++j) {
             tile[i * tile_width + j] += op(lhs_val * rhs_tile[j]);
         }
     }
 
-    template<typename S, typename Fn>
-    LA_INLINE_ALWAYS static void impl_1br(S* LA_RESTRICT tile,
-                                          const S* LA_RESTRICT lhs_tile,
-                                          const S& rhs_val,
+    template<typename C, typename Fn>
+    LA_INLINE_ALWAYS static void impl_1br(pointer<C> tile,
+                                          const_pointer<C> lhs_tile,
+                                          const_reference<C> rhs_val,
                                           Fn op,
                                           IDIMN j) noexcept
     {
-        using perm = dtl::reversing_permutation<Width, tile_info::tile_letters>;
-        constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
+        using perm = dtl::reversing_permutation<Width, helper_type<C>::tile_letters>;
+        constexpr auto tile_width = helper_type<C>::tile_width;
         for (IDIMN i = 0; i < tile_width; ++i) {
             tile[perm::permute_idx(i) * tile_width + j] += op(lhs_tile[i] * rhs_val);
         }
     }
 
-    template<typename S, typename Fn>
-    LA_INLINE_ALWAYS static void impl_ulmd(S* LA_RESTRICT tile,
-                                           const S* LA_RESTRICT lhs_fwd_ptr,
-                                           const S& rhs_val,
+    template<typename C, typename Fn>
+    LA_INLINE_ALWAYS static void impl_ulmd(pointer<C> tile,
+                                           const_pointer<C> lhs_fwd_ptr,
+                                           const_reference<C> rhs_val,
                                            Fn op,
                                            IDIMN j,
                                            IDIMN ibound,
                                            IDIMN stride) noexcept
     {
-        constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
-
+        constexpr auto tile_width = helper_type<C>::tile_width;
         for (IDIMN i=0; i<ibound; ++i ){
             tile[i * tile_width + j] += op(lhs_fwd_ptr[i * stride] * rhs_val);
         }
     }
 
-    template<typename S, typename Fn>
-    LA_INLINE_ALWAYS static void impl_ulmd_1l(S* LA_RESTRICT tile,
-                                              const S* LA_RESTRICT lhs_fwd_ptr,
-                                              const S* LA_RESTRICT rhs_fwd_ptr,
+    template<typename C, typename Fn>
+    LA_INLINE_ALWAYS static void impl_ulmd_1l(pointer<C> tile,
+                                              const_pointer<C> lhs_fwd_ptr,
+                                              const_pointer<C> rhs_fwd_ptr,
                                               Fn op,
                                               IDIMN lhs_stride,
                                               IDIMN ibound,
                                               IDIMN jbound) noexcept
     {
-        constexpr auto tile_width = static_cast<IDIMN>(tile_info::tile_width);
-
+        constexpr auto tile_width = helper_type<C>::tile_width;
         for (IDIMN i = 0; i < ibound; ++i) {
             for (IDIMN j = 0; j < jbound; ++j) {
                 tile[i * tile_width + j] += op(lhs_fwd_ptr[i * lhs_stride] * rhs_fwd_ptr[j]);
@@ -1107,6 +1111,8 @@ protected:
                    IDIMN subtile_j) noexcept
     {
         const auto rhs_deg = out_deg - lhs_deg;
+        constexpr auto tile_width = helper_type<Coeffs>::tile_width;
+        constexpr auto tile_letters = helper_type<Coeffs>::tile_letters;
 
         const auto ibound = helper.boundary_subtile(subtile_i) ? Width % tile_width : tile_width;
 
@@ -1117,7 +1123,7 @@ protected:
             helper.read_right_tile(rhs_deg,
                                    helper.combine_keys(out_deg - 2 * tile_letters, split.second, k),
                                    subtile_j);
-            impl_lb1(helper.out_tile_ptr(),
+            impl_lb1<Coeffs>(helper.out_tile_ptr(),
                      left_val,
                      helper.right_read_tile_ptr(),
                      op,
@@ -1135,6 +1141,9 @@ protected:
                            IDIMN subtile_i,
                            IDIMN subtile_j) noexcept
     {
+        constexpr auto tile_width = helper_type<Coeffs>::tile_width;
+        constexpr auto tile_letters = helper_type<Coeffs>::tile_letters;
+
         const auto rhs_deg = out_deg - lhs_deg;
         assert(tile_letters <= lhs_deg && lhs_deg <= out_deg - tile_letters);
         assert(tile_letters <= rhs_deg && rhs_deg <= out_deg - tile_letters);
@@ -1145,7 +1154,7 @@ protected:
         const auto split = helper.split_key(rhs_split, k);
         helper.read_left_tile(lhs_deg, helper.reverse_key(lhs_split, split.first), subtile_i);
         helper.read_right_tile(rhs_deg, split.second, subtile_j);
-        impl_mid(helper.out_tile_ptr(),
+        impl_mid<Coeffs>(helper.out_tile_ptr(),
                  helper.left_read_tile_ptr(),
                  helper.right_read_tile_ptr(),
                  op);
@@ -1161,6 +1170,9 @@ protected:
                               IDIMN subtile_i,
                               IDIMN subtile_j) noexcept
     {
+        constexpr auto tile_width = helper_type<Coeffs>::tile_width;
+        constexpr auto tile_letters = helper_type<Coeffs>::tile_letters;
+
         const auto rhs_deg = out_deg - lhs_deg;
         const auto lhs_split = lhs_deg - tile_letters;
         const auto rhs_split = rhs_deg - tile_letters;
@@ -1168,7 +1180,7 @@ protected:
 
         const auto split = helper.split_key(rhs_split, k);
         const auto lhs_stride = tsi::powers[lhs_split];
-        impl_ulmd_1l(helper.out_tile_ptr(),
+        impl_ulmd_1l<Coeffs>(helper.out_tile_ptr(),
                      helper.left_fwd_read(lhs_deg, split.first + subtile_i*tile_width*lhs_stride),
                      helper.right_fwd_read_ptr(rhs_deg, split.second, subtile_j),
                      op,
@@ -1188,6 +1200,9 @@ protected:
                            IDIMN subtile_i,
                            IDIMN subtile_j) noexcept
     {
+        constexpr auto tile_width = helper_type<Coeffs>::tile_width;
+        constexpr auto tile_letters = helper_type<Coeffs>::tile_letters;
+
         const auto rhs_deg = out_deg - lhs_deg;
         assert(out_deg - 2 * tile_letters < lhs_deg && lhs_deg < out_deg);
         assert(1 <= rhs_deg && rhs_deg < tile_letters);
@@ -1201,7 +1216,7 @@ protected:
             helper.read_left_tile(lhs_deg,
                                   helper.combine_keys(split_left_letters, helper.reverse_key(split_left_letters, split.first), k_reverse),
                                   subtile_i);
-            impl_1br(helper.out_tile_ptr(),
+            impl_1br<Coeffs>(helper.out_tile_ptr(),
                      helper.left_read_tile_ptr(),
                      right_val,
                      op,
@@ -1219,6 +1234,9 @@ protected:
                               IDIMN subtile_i,
                               IDIMN subtile_j) noexcept
     {
+        constexpr auto tile_width = helper_type<Coeffs>::tile_width;
+        constexpr auto tile_letters = helper_type<Coeffs>::tile_letters;
+
         const auto rhs_deg = out_deg - lhs_deg;
         const auto split_left_letters = tile_letters - rhs_deg;
         const auto lhs_stride = tsi::powers[lhs_deg - tile_letters];
@@ -1227,7 +1245,7 @@ protected:
             const auto& right_val = *helper.right_fwd_read(rhs_deg, split.second);
             const auto lhs_key = helper.combine_keys(split_left_letters, k, split.first);
 
-            impl_ulmd(helper.out_tile_ptr(),
+            impl_ulmd<Coeffs>(helper.out_tile_ptr(),
                       helper.left_fwd_read(lhs_deg, lhs_key + subtile_i*tile_width*lhs_stride),
                       right_val,
                       op,
@@ -1241,10 +1259,13 @@ protected:
     template<typename Coeffs, typename Fn>
     void impl_common(helper_type<Coeffs>& helper, Fn op) const
     {
+        constexpr auto tile_width = helper_type<Coeffs>::tile_width;
+        constexpr auto tile_letters = helper_type<Coeffs>::tile_letters;
+        constexpr auto num_subtiles = helper_type<Coeffs>::num_subtiles;
+
         const auto max_degree = helper.out_degree();
         const auto old_lhs_deg = helper.lhs_degree();
         const auto rhs_max_deg = helper.rhs_degree();
-        const auto num_subtiles = static_cast<IDIMN>(tile_info::num_subtiles);
 
         for (IDEG out_deg = max_degree; out_deg > 2 * tile_letters; --out_deg) {
             const auto mid_deg= out_deg - 2*tile_letters;
@@ -1266,12 +1287,12 @@ protected:
 
                         const auto& lhs_unit = helper.left_unit();
                         if (out_deg <= rhs_max_deg && lhs_unit != Coeffs::zero) {
-                            impl_0bd(helper.out_tile_ptr(), lhs_unit, helper.right_fwd_read_ptr(out_deg, k, subtile_j, subtile_i), stride, ibound, jbound, op);
+                            impl_0bd<Coeffs>(helper.out_tile_ptr(), lhs_unit, helper.right_fwd_read_ptr(out_deg, k, subtile_j, subtile_i), stride, ibound, jbound, op);
                         }
 
                         const auto& rhs_unit = helper.right_unit();
                         if (out_deg <= old_lhs_deg && rhs_unit != Coeffs::zero) {
-                            impl_db0(helper.out_tile_ptr(), helper.left_fwd_read_ptr(out_deg, k, subtile_i, subtile_j), rhs_unit, stride, ibound, jbound, op);
+                            impl_db0<Coeffs>(helper.out_tile_ptr(), helper.left_fwd_read_ptr(out_deg, k, subtile_i, subtile_j), rhs_unit, stride, ibound, jbound, op);
                         }
 
                         for (IDEG lhs_deg = lhs_deg_min; lhs_deg <= lhs_deg_max; ++lhs_deg) {
@@ -1306,14 +1327,14 @@ protected:
     void fma_impl(helper_type<Coeffs>& helper, Fn op, DEG max_degree) const
     {
         impl_common(helper, op);
-        base::fma_impl(helper, op, std::min(max_degree, DEG(2 * tile_info::tile_letters)));
+        base::fma_impl(helper, op, std::min(max_degree, DEG(2 * helper_type<Coeffs>::tile_letters)));
     }
 
     template<typename Coeffs, typename Fn>
     void multiply_inplace_impl(helper_type<Coeffs>& helper, Fn op, DEG max_degree) const
     {
         impl_common(helper, op);
-        base::multiply_inplace_impl(helper, op, std::min(IDEG(max_degree), 2 * tile_info::tile_letters));
+        base::multiply_inplace_impl(helper, op, std::min(IDEG(max_degree), 2 * helper_type<Coeffs>::tile_letters));
     }
 
 public:
@@ -1330,7 +1351,7 @@ public:
              DEG max_degree,
              OriginalVectors& orig) const
     {
-        if (max_degree <= 2 * tile_info::tile_letters) {
+        if (max_degree <= 2 * helper_type<Coeffs>::tile_letters) {
             base::fma(out, lhs, rhs, op, max_degree, orig);
             return;
         }
@@ -1339,7 +1360,7 @@ public:
             helper_type<Coeffs> helper(out, lhs, rhs, max_degree);
             fma_impl(helper, op, helper.out_degree());
             if (helper.out_degree() > 0) {
-                auto update_deg = std::min(helper.out_degree() - 1, 2 * tile_info::tile_letters);
+                auto update_deg = std::min(helper.out_degree() - 1, 2 * helper_type<Coeffs>::tile_letters);
                 base::update_reverse_data(out, update_deg);
             }
         }
@@ -1351,7 +1372,7 @@ public:
                           Fn op, DEG max_degree, OriginalVectors& orig) const
     {
         //        std::cout << "BEFORE " << lhs << '\n';
-        if (max_degree <= 2 * tile_info::tile_letters) {
+        if (max_degree <= 2 * helper_type<Coeffs>::tile_letters) {
             base::multiply_inplace(lhs, rhs, op, max_degree, orig);
             return;
         }
@@ -1360,7 +1381,7 @@ public:
             helper_type<Coeffs> helper(lhs, rhs, max_degree);
             multiply_inplace_impl(helper, op, helper.out_degree());
             if (helper.out_degree() > 0) {
-                auto update_deg = std::min(helper.out_degree() - 1, 2 * tile_info::tile_letters);
+                auto update_deg = std::min(helper.out_degree() - 1, 2 * helper_type<Coeffs>::tile_letters);
                 base::update_reverse_data(lhs, update_deg);
             }
         }

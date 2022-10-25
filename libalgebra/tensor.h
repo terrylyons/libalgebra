@@ -46,6 +46,11 @@ Version 3. (See accompanying file License.txt)
 #define LIBALGEBRA_L1_CACHE_SIZE 32768// 32KB should be fairly standard
 #endif
 
+
+
+#define LA_DEFAULT_TILE_PARAM(WIDTH, SCALAR) ::alg::dtl::tensor_tile_letters_helper<WIDTH, LIBALGEBRA_L1_CACHE_SIZE/(2*sizeof(SCALAR))>::num_letters
+
+
 namespace alg {
 
 namespace dtl {
@@ -138,7 +143,7 @@ struct tile_details {
 
 
 template<DEG Width, DEG MaxDepth, typename Scalar, typename Signer,
-         IDEG TileLetters=tensor_tile_letters_helper<Width, LIBALGEBRA_L1_CACHE_SIZE/(2*sizeof(Scalar))>::num_letters>
+         IDEG TileLetters=LA_DEFAULT_TILE_PARAM(Width, Scalar)>
 class tiled_inverse_operator
 {
     typedef Scalar SCA;
@@ -408,7 +413,7 @@ public:
 };
 
 
-template<DEG Width, DEG Depth, typename Coeffs, IDEG TileLetters = 1>
+template<DEG Width, DEG Depth, typename Coeffs, IDEG TileLetters>
 class tiled_free_tensor_multiplication_helper
     : public free_tensor_multiplication_helper<Width, Depth, Coeffs>,
       public tile_details<Width, Depth, TileLetters>
@@ -962,7 +967,7 @@ public:
     }
 };
 
-template<DEG Width, DEG Depth, IDEG TileLetters = 1>
+template<DEG Width, DEG Depth, IDEG TileLetters=0>
 class tiled_free_tensor_multiplication
     : public traditional_free_tensor_multiplication<Width, Depth>
 {
@@ -972,7 +977,7 @@ class tiled_free_tensor_multiplication
 
     template<typename C>
     using helper_type = dtl::tiled_free_tensor_multiplication_helper<
-            Width, Depth, C, TileLetters>;
+            Width, Depth, C, TileLetters==0 ? LA_DEFAULT_TILE_PARAM(Width, typename C::S) : TileLetters>;
 
     using tile_info = dtl::tile_details<Width, Depth, TileLetters>;
     using tsi = dtl::tensor_size_info<Width>;
@@ -1430,7 +1435,7 @@ public:
 //using free_tensor_multiplication = traditional_free_tensor_multiplication<Width, Depth>;
 
 template<DEG Width, DEG Depth>
-using free_tensor_multiplication = tiled_free_tensor_multiplication<Width, Depth, 1>;
+using free_tensor_multiplication = tiled_free_tensor_multiplication<Width, Depth>;
 
 template<DEG Width, DEG Depth>
 class left_half_shuffle_multiplier

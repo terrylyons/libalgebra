@@ -1305,35 +1305,6 @@ protected:
     template<typename Coeffs, typename Fn>
     void fma_impl(helper_type<Coeffs>& helper, Fn op, DEG max_degree) const
     {
-//        constexpr auto tile_letters = static_cast<IDEG>(tile_info::tile_letters);
-//
-//        auto* LA_RESTRICT tile = helper.out_tile_ptr();
-//
-//        for (IDEG out_deg = static_cast<IDEG>(max_degree); out_deg > 2 * tile_letters; --out_deg) {
-//            const auto mid_deg = out_deg - 2 * tile_letters;
-//            const auto stride = static_cast<IDIMN>(tsi::powers[out_deg - tile_letters]);
-//
-//            auto lhs_deg_min = std::max(IDEG(1), out_deg - helper.rhs_degree());
-//            auto lhs_deg_max = std::min(out_deg - 1, helper.lhs_degree());
-//
-//            for (IDIMN k = 0; k < static_cast<IDIMN>(tsi::powers[mid_deg]); ++k) {
-//                auto k_reverse = helper.reverse_key(mid_deg, k);
-//
-//                helper.reset_tile(out_deg, k, k_reverse);
-//
-//                const auto& lhs_unit = helper.left_unit();
-//                if (helper.rhs_degree() >= out_deg && lhs_unit != Coeffs::zero) {
-//                    impl_0bd(tile, lhs_unit, helper.right_fwd_read_ptr(out_deg, k), stride, op);
-//                }
-//
-//                const auto& rhs_unit = helper.right_unit();
-//                if (helper.lhs_degree() >= out_deg && rhs_unit != Coeffs::zero) {
-//                    impl_db0(tile, helper.left_fwd_read_ptr(out_deg, k), rhs_unit, stride, op);
-//                }
-//
-//            }
-//        }
-
         impl_common(helper, op);
         base::fma_impl(helper, op, std::min(max_degree, DEG(2 * tile_info::tile_letters)));
     }
@@ -1341,37 +1312,6 @@ protected:
     template<typename Coeffs, typename Fn>
     void multiply_inplace_impl(helper_type<Coeffs>& helper, Fn op, DEG max_degree) const
     {
-//        constexpr auto tile_letters = static_cast<IDEG>(tile_info::tile_letters);
-//
-//        auto* LA_RESTRICT tile = helper.out_tile_ptr();
-//
-//        const auto& lhs_unit = helper.left_unit();
-//        const auto& rhs_unit = helper.right_unit();
-//
-//        const auto old_lhs_deg = helper.lhs_degree();
-//        const auto rhs_max_deg = helper.rhs_degree();
-//
-//        for (IDEG out_deg = static_cast<IDEG>(max_degree); out_deg > 2 * tile_letters; --out_deg) {
-//            const auto mid_deg = out_deg - 2 * tile_letters;
-//            const auto stride = static_cast<IDIMN>(tsi::powers[out_deg - tile_letters]);
-//
-//            auto lhs_deg_min = std::max(IDEG(1), out_deg - rhs_max_deg);
-//            auto lhs_deg_max = std::min(out_deg - 1, old_lhs_deg);
-//
-//            for (IDIMN k = 0; k < static_cast<IDIMN>(tsi::powers[mid_deg]); ++k) {
-//                auto k_reverse = helper.reverse_key(mid_deg, k);
-//
-//                helper.reset_tile(out_deg, k, k_reverse);
-//                if (out_deg <= old_lhs_deg && rhs_unit != Coeffs::zero) {
-//                    impl_db0(tile, helper.left_fwd_read_ptr(out_deg, k), rhs_unit, stride, op);
-//                }
-//
-//                if (out_deg <= rhs_max_deg && lhs_unit != Coeffs::zero) {
-//                    impl_0bd(tile, lhs_unit, helper.right_fwd_read_ptr(out_deg, k), stride, op);
-//                }
-//            }
-//        }
-
         impl_common(helper, op);
         base::multiply_inplace_impl(helper, op, std::min(IDEG(max_degree), 2 * tile_info::tile_letters));
     }

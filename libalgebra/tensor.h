@@ -33,6 +33,7 @@ Version 3. (See accompanying file License.txt)
 #include "tensor_basis.h"
 #include "detail/integer_maths.h"
 #include "detail/reversing_permutation.h"
+#include "detail/level_walkers.h"
 
 #define LA_RESTRICT __restrict
 #define LA_INLINE_ALWAYS __attribute__((always_inline))
@@ -145,13 +146,13 @@ struct tile_details {
 template <DEG Width, DEG Depth, typename Coeffs, IDEG TileLetters>
 class central_tile_helper : public tile_details<Width, Depth, TileLetters>
 {
+public:
     using scalar_type = typename Coeffs::S;
     using pointer = scalar_type*;
     using const_pointer = const scalar_type*;
     using size_type = std::size_t;
     using index_type = std::ptrdiff_t;
-
-public:
+    using degree_type = IDEG;
     using tile_info = tile_details<Width, Depth, TileLetters>;
     using tsi = tensor_size_info<Width>;
 
@@ -172,7 +173,24 @@ public:
         return (tile_info::num_subtiles != 1) && (Width % tile_width != 0) && (DIMN(index) == tile_info::num_subtiles - 1);
     }
 
-    void read_tile(const_pointer in_p, index_type lhs_stride, index_type ibound, index_type jbound) noexcept
+    static index_type subtile_bound(index_type subtile) noexcept
+    {
+        return (boundary_subtile(subtile) ? Width % tile_width : tile_width);
+    }
+
+    static IDIMN reverse_key(IDEG degree, IDIMN index) noexcept
+    {
+        IDIMN result = 0;
+        for (auto i = 0; i < degree; ++i) {
+            result *= Width;
+            result += (index % Width);
+            index /= Width;
+        }
+        return result;
+    }
+
+protected:
+    void read_tile_impl(const_pointer in_p, index_type lhs_stride, index_type ibound, index_type jbound) noexcept
     {
         for (index_type i=0; i<ibound; ++i) {
             for (index_type j=0; j<jbound; ++j) {
@@ -181,7 +199,7 @@ public:
         }
     }
 
-    void write_tile(pointer out_p, index_type lhs_stride, index_type ibound, index_type jbound) noexcept
+    void write_tile_impl(pointer out_p, index_type lhs_stride, index_type ibound, index_type jbound) const noexcept
     {
         for (index_type i=0; i<ibound; ++i) {
             for (index_type j=0; j<jbound; ++j) {
@@ -190,7 +208,7 @@ public:
         }
     }
 
-    void write_tile_reverse(pointer out_p, index_type lhs_stride, index_type ibound, index_type jbound) noexcept
+    void write_tile_reverse_impl(pointer out_p, index_type lhs_stride, index_type ibound, index_type jbound) const noexcept
     {
         using perm = reversing_permutation<Width, tile_info::tile_letters>;
         for (index_type i=0; i<ibound; ++i) {
@@ -200,23 +218,150 @@ public:
         }
     }
 
+public:
     pointer tile_ptr() noexcept
     { return static_cast<pointer>(tile.data); }
     const_pointer tile_ptr() const noexcept
     { return static_cast<const_pointer>(tile.data); }
 
+    void read_tile(const_pointer src_p,
+                   degree_type degree,
+                   index_type index,
+                   index_type subtile_i=0,
+                   index_type subtile_j=0) noexcept
+    {
+        const auto stride = tsi::powers[degree-tile_info::tile_letters];
+        const_pointer in_p = src_p + pointer_offset(degree, index, subtile_i, subtile_j);
+        read_tile_impl(in_p, stride, subtile_bound(subtile_i), subtile_bound(subtile_j));
+    }
+
+    void write_tile(pointer dst_p,
+                    degree_type degree,
+                    index_type index,
+                    index_type subtile_i=0,
+                    index_type subtile_j=0) const noexcept
+    {
+        const auto stride = tsi::powers[degree-tile_info::tile_letters];
+        pointer out_p = dst_p + pointer_offset(degree, index, subtile_i, subtile_j);
+        write_tile_impl(out_p, stride, subtile_bound(subtile_i), subtile_bound(subtile_j));
+    }
+
+    void write_tile_reverse(pointer dst_p,
+                            degree_type degree,
+                            index_type index,
+                            index_type subtile_i=0,
+                            index_type subtile_j=0) const noexcept
+    {
+        const auto stride = tsi::powers[degree-tile_info::tile_letters];
+        pointer out_p = dst_p + pointer_offset(degree, index, subtile_j, subtile_i);
+        write_tile_reverse_impl(out_p, stride, subtile_bound(subtile_i), subtile_bound(subtile_j));
+    }
+
+    void reset_tile() noexcept
+    {
+        std::fill(tile.data, tile.data + tile_info::tile_size, Coeffs::zero);
+    }
+
+
+};
+
+template <DEG Width, DEG Depth, typename Coeffs, IDEG TileLetters>
+class tiled_antipode_helper : public central_tile_helper<Width, Depth, Coeffs, TileLetters>
+{
+    using base = central_tile_helper<Width, Depth, Coeffs, TileLetters>;
+    using tile_info = tile_details<Width, Depth, TileLetters>;
+public:
+    using typename base::pointer;
+    using typename base::const_pointer;
+
+private:
+    const_pointer src_ptr;
+    const_pointer src_reverse_ptr = nullptr;
+    pointer dst_ptr;
+    pointer dst_reverse_ptr = nullptr;
+
+    template <typename B>
+    using dense_tensor = ::alg::vectors::dense_vector<B, Coeffs>;
+
+    using dense_free_tensor = ::alg::vectors::dense_vector<free_tensor_basis<Width, Depth>, Coeffs>;
+
+public:
+
+    using tile_info::tile_letters;
+    using tile_info::tile_width;
+    using tile_info::tile_size;
+    using base::num_subtiles;
+    using base::pointer_offset;
+    using base::boundary_subtile;
+    using base::subtile_bound;
+    using base::tile_ptr;
+
+    void read_tile(IDEG degree, IDIMN index, IDIMN subtile_i, IDIMN subtile_j)
+    {
+        base::read_tile(src_ptr, degree, index, subtile_i, subtile_j);
+    }
+    void write_tile(IDEG degree, IDIMN index, IDIMN subtile_i, IDIMN subtile_j) const
+    {
+        base::write_tile(dst_ptr, degree, index, subtile_i, subtile_j);
+    }
+
+    const_pointer reverse_src_ptr() const noexcept { return src_reverse_ptr; }
+    pointer reverse_dst_ptr() const noexcept { return dst_reverse_ptr; }
+
+    tiled_antipode_helper(pointer dst_p, const_pointer src_p)
+            : src_ptr(src_p), dst_ptr(dst_p), src_reverse_ptr(nullptr), dst_reverse_ptr(nullptr)
+    {}
+
+    template <typename B>
+    tiled_antipode_helper(dense_tensor<B>& result, const dense_tensor<B>& arg)
+    {
+        src_ptr = nullptr;
+        dst_ptr = nullptr;
+    }
+
+    tiled_antipode_helper(dense_free_tensor& result, const dense_free_tensor& arg)
+    {
+        src_ptr = nullptr;
+        dst_ptr = nullptr;
+    }
+
 };
 
 
-template<DEG Width, DEG MaxDepth, typename Scalar, typename Signer,
-         IDEG TileLetters=LA_DEFAULT_TILE_PARAM(Width, Scalar)>
+template<DEG Width, DEG MaxDepth, typename Coeffs, typename Signer,
+         IDEG TileLetters=LA_DEFAULT_TILE_PARAM(Width, typename Coeffs::S)>
 class tiled_inverse_operator
 {
-    typedef Scalar SCA;
+    using scalar_type = typename Coeffs::S;
 
     using BASIS = free_tensor_basis<Width, MaxDepth>;
     using tsi = dtl::tensor_size_info<Width>;
     using tile_info = tile_details<Width, MaxDepth, TileLetters>;
+
+    template <typename C>
+    using helper_type = tiled_antipode_helper<Width, MaxDepth, C, TileLetters>;
+
+    template <DEG Degree>
+    struct untiled_compute
+    {
+        template <typename S>
+        static void eval(S* LA_RESTRICT dst_ptr, const S* LA_RESTRICT src_ptr, DEG current_degree)
+        {
+            if (current_degree >= Degree) {
+                using perm = dtl::reversing_permutation<Width, Degree>;
+
+                constexpr DIMN bound = ::alg::integer_maths::power(DIMN(Width), Degree);
+                Signer signer(Degree);
+
+                constexpr DIMN offset = (Degree == 0) ? 0 : sum_powers(DIMN(Width), Degree - 1);
+                scalar_type* LA_RESTRICT out_ptr = dst_ptr + offset;
+                const scalar_type* LA_RESTRICT in_ptr = src_ptr + offset;
+                for (DIMN i = 0; i < bound; ++i) {
+                    out_ptr[perm::permute_idx(i)] = signer(in_ptr[i]);
+                }
+            }
+        }
+    };
 
 public:
     static constexpr DEG block_letters = tile_info::tile_letters;
@@ -226,71 +371,54 @@ public:
     static constexpr unsigned max_middle_word_length = MaxDepth - 2 * block_letters;
     //        static constexpr size_type middle_word_count = tensor_alg_size(max_middle_word_length);
 
-    template<DEG Level, DEG MaxLevel>
-    struct recursive_untiled_compute {
-        using permutation_t = reversing_permutation<Width, Level>;
-        //            using signer_t = signing_operator<Level % 2>;
-        using next_t = recursive_untiled_compute<Level + 1, MaxLevel>;
-        static constexpr size_t level_size = power(Width, Level);
+    static void untiled_cases(scalar_type* LA_RESTRICT dst_ptr, const scalar_type* LA_RESTRICT src_ptr, DEG current_degree) noexcept
+    {
+        dtl::increasing_level_walker<untiled_compute, 2*tile_info::tile_letters>::eval(dst_ptr, src_ptr, current_degree);
+    }
 
-        /*
-             * Everything here is supposed to fit in cache, so we really don't need to worry
-             * about locality etc when manipulating arrays. This should be very fast.
-             */
-        void operator()(const SCA* __restrict src_ptr, SCA* __restrict dst_ptr, DEG curr_deg) const noexcept
-        {
-            assert(curr_deg >= Level);
-            // Copy from src to test and adjust sign.
-            //                signer_t signer;
-            Signer signer(Level);
-            for (size_t i = 0; i < level_size; ++i) {
-                dst_ptr[i] = signer(src_ptr[i]);
-            }
+    static void sign_and_permute(scalar_type* LA_RESTRICT tile, Signer& signer) noexcept
+    {
+        for (DIMN i=0; i<tile_info::tile_size; ++i) {
+            tile[i] = signer(tile[i]);
+        }
 
-            // Operate on the pointer as if it were a tile of size Width^Level
-            permutation_t permutation;
-            permutation(dst_ptr);
-
-            // Recurse down to the next level.
-            if (curr_deg > Level) {
-                next_t next;
-                next(src_ptr + level_size, dst_ptr + level_size, curr_deg);
+        using perm = reversing_permutation<Width, 2*block_letters>;
+        for (DIMN i=0; i<tile_info::tile_size; ++i) {
+            auto j = perm::permute_idx(i);
+            if (j > i) {
+                std::swap(tile[j], tile[i]);
             }
         }
-    };
+    }
 
-    template<DEG MaxLevel>
-    struct recursive_untiled_compute<MaxLevel, MaxLevel> {
-        // So the code doesn't change too much, set Level = MaxLevel
-        static constexpr DEG Level = MaxLevel;
-        using permutation_t = reversing_permutation<Width, Level>;
-        //            using signer_t = signing_operator<Level % 2>;
-        static constexpr size_t level_size = power(Width, Level);
+    static void permute_level_tiled(helper_type<Coeffs>& helper, DEG out_deg) noexcept
+    {
+        const auto mid_deg = out_deg - 2 * tile_info::tile_letters;
+        Signer signer(out_deg);
 
-        /*
-             * Everything here is supposed to fit in cache, so we really don't need to worry
-             * about locality etc when manipulating arrays. This should be very fast.
-             */
-        void operator()(const SCA* __restrict src_ptr, SCA* __restrict dst_ptr, DEG) const noexcept
-        {
-            // Copy from src to test and adjust sign.
-            //                signer_t signer;
-            Signer signer(Level);
-            for (size_t i = 0; i < level_size; ++i) {
-                dst_ptr[i] = signer(src_ptr[i]);
+        for (IDIMN middle_index = 0; middle_index < tsi::powers[mid_deg]; ++middle_index) {
+            const auto reverse_middle_index = helper.reverse_key(mid_deg, middle_index);
+
+            for (IDIMN subtile_i = 0; subtile_i < tile_info::num_subtiles; ++subtile_i) {
+                for (IDIMN subtile_j = 0; subtile_j < tile_info::num_subtiles; ++subtile_j) {
+                    helper.read_tile(out_deg, middle_index, subtile_i, subtile_j);
+                    sign_and_permute(helper.tile_ptr(), signer);
+                    helper.write_tile(out_deg, reverse_middle_index, subtile_i, subtile_j);
+                }
             }
-
-            // Operate on the pointer as if it were a tile of size Width^Level
-            permutation_t permutation;
-            permutation(dst_ptr);
-
-            // No more recursing!
         }
-    };
+    }
 
-    recursive_untiled_compute<0U, 2 * block_letters> recurse;
 
-    void operator()(const SCA* src_ptr, SCA* dst_ptr, const DEG curr_degree) const noexcept
+    static void tile_cases(helper_type<Coeffs>& helper, DEG current_degree) noexcept
+    {
+        for (DEG out_deg=2*tile_info::tile_letters+1; out_deg <= current_degree; ++out_deg) {
+            permute_level_tiled(helper, out_deg);
+        }
+    }
+
+
+    void operator()(const scalar_type* src_ptr, scalar_type* dst_ptr, const DEG curr_degree) const noexcept
     {
 
         if (src_ptr == nullptr)// if pointer to source is null
@@ -301,78 +429,14 @@ public:
             return;
         }
 
-        recurse(src_ptr, dst_ptr, curr_degree);
-
-        for (unsigned int length = 1; length <= max_middle_word_length && length + 2 * block_letters <= curr_degree; ++length) {
-            auto istart = BASIS::start_of_degree(length);
-            auto iend = BASIS::start_of_degree(length + 1);
-
-            Signer signer(length);
-            auto src_dst_offset = BASIS::start_of_degree(length + 2 * block_letters);
-
-            auto src_p = src_ptr + src_dst_offset;
-            auto dst_p = dst_ptr + src_dst_offset;
-
-            auto key_start = BASIS::index_to_key(istart);
-            auto key_end = BASIS::index_to_key(iend);
-
-            auto word_idx = istart;
-
-            //#pragma omp parallel for
-            for (auto word = key_start; word != key_end; word = BASIS::nextkey(word), ++word_idx) {
-                auto rword_index = BASIS::key_to_index(word.reverse());
-
-                process_tile(src_p, dst_p, word_idx - istart, rword_index - istart, length, signer);
-            }
+        untiled_cases(dst_ptr, src_ptr, curr_degree);
+        if (curr_degree > 2*tile_info::tile_letters) {
+            helper_type<Coeffs> helper(dst_ptr, src_ptr);
+            tile_cases(helper, curr_degree);
         }
+
     }
 
-private:
-    static void read_tile(const SCA* __restrict data_ptr, SCA* __restrict tile_ptr, DIMN stride)
-    {
-        for (size_t row = 0; row < block_width; ++row) {
-            auto row_offset = row * stride;
-            for (size_t col = 0; col < block_width; ++col) {
-                *(tile_ptr++) = data_ptr[row_offset + col];
-            }
-        }
-    }
-
-    static void sign_tile(SCA tile[block_size], Signer signer) noexcept
-    {
-        for (size_t i = 0; i < block_size; ++i) {
-            tile[i] = signer(tile[i]);// tile[i] = op(tile[i]);
-        }
-    }
-
-    static void write_tile(SCA* __restrict tile_ptr, SCA* __restrict data_ptr, DIMN stride)
-    {
-        for (size_t row = 0; row < block_width; ++row) {
-            auto row_offset = row * stride;
-
-            for (size_t col = 0; col < block_width; ++col) {
-                data_ptr[row_offset + col] = *(tile_ptr++);
-            }
-        }
-    }
-
-    void process_tile(
-            const SCA* input_data,
-            SCA* output_data,
-            size_t word_index,
-            size_t rword_index,
-            DEG degree,
-            Signer signer) const
-    {
-        SCA tile[block_size];
-        auto stride = tsi::powers[degree + block_letters];
-        assert((block_width - 1) * stride + word_index * block_stride + (block_width - 1) < tsi::powers[degree + 2 *block_letters]);
-        read_tile(input_data + word_index * block_stride, tile, stride);
-        reversing_permutation<Width, 2 * block_letters> permutation;
-        permutation(tile);
-        sign_tile(tile, signer);
-        write_tile(tile, output_data + rword_index * block_stride, stride);
-    }
 };
 
 template<DEG Width, DEG Depth, typename Coeffs>
@@ -515,7 +579,7 @@ private:
     static void fill_reverse_data(pointer out, const dense_tensor<B>& lhs, IDEG degree)
     {
         assert(0 < degree && DEG(degree) <= Depth);
-        dtl::tiled_inverse_operator<Width, (Depth > 0) ? Depth - 1 : 0, scalar_type, dtl::non_signing_signer, TileLetters> reverser;
+        dtl::tiled_inverse_operator<Width, (Depth > 0) ? Depth - 1 : 0, Coeffs, dtl::non_signing_signer, TileLetters> reverser;
         reverser(lhs.as_ptr(), out, DEG(degree-1));
     }
 
@@ -604,6 +668,7 @@ public:
 
     using base_helper::boundary_subtile;
     using base_helper::pointer_offset;
+    using base_helper::reverse_key;
 
     using tile_info::tile_letters;
     using tile_info::tile_shift;
@@ -669,23 +734,10 @@ public:
         if (base::lhs_data != nullptr) {
             assert(0 <= degree && degree <= static_cast<IDEG>(Depth));
             assert(index < static_cast<IDEG>(tsi::powers[degree - 2 * tile_letters]));
-            const auto stride = tsi::powers[degree - tile_letters];
-            const_pointer optr = base::out_data
-                    + pointer_offset(degree, index, subtile_i, subtile_j);
-            pointer tptr = base_helper::tile_ptr();
-
-            const auto ibound = boundary_subtile(subtile_i) ? Width % tile_width : tile_width;
-            const auto jbound = boundary_subtile(subtile_j) ? Width % tile_width : tile_width;
-            for (DIMN i = 0; i < ibound; ++i) {
-                for (DIMN j = 0; j < jbound; ++j) {
-                    tptr[i * tile_width + j] = optr[i * stride + j];
-                }
-            }
+            base_helper::read_tile(base::out_data, degree, index, subtile_i, subtile_j);
         }
         else {
-            std::fill(base_helper::tile_ptr(),
-                      base_helper::tile_ptr() + base_helper::tile_size,
-                      Coeffs::zero);
+            base_helper::reset_tile();
         }
     }
 
@@ -694,32 +746,11 @@ public:
         assert(0 <= degree && degree <= static_cast<IDEG>(Depth));
         assert(index <= static_cast<IDIMN>(tsi::powers[degree - 2 * tile_letters]));
         assert(reverse_index <= static_cast<IDIMN>(tsi::powers[degree - 2 * tile_letters]));
-        const auto start_of_degree = basis_type::start_of_degree(degree);
-        pointer optr = base::out_data + pointer_offset(degree, index, subtile_i, subtile_j);
-        const_pointer tptr = base_helper::tile_ptr();
-        auto stride = tsi::powers[degree - tile_letters];
-
-        const auto ibound = boundary_subtile(subtile_i) ? Width % tile_width : tile_width;
-        const auto jbound = boundary_subtile(subtile_j) ? Width % tile_width : tile_width;
-        for (DIMN i = 0; i < ibound; ++i) {
-            for (DIMN j = 0; j < jbound; ++j) {
-                optr[i * stride + j] = tptr[i * tile_width + j];
-            }
-        }
+        base_helper::write_tile(base::out_data, degree, index, subtile_i, subtile_j);
 
         if (reverse_write_ptr != nullptr && degree < base::out_deg) {
             // Write out reverse data
-            using perm = reversing_permutation<Width, tile_info::tile_letters>;
-
-            assert(((tile_width - 1) * stride + (tile_width - 1) + reverse_index * tile_width + start_of_degree) < tsi::degree_sizes[degree]);
-            optr = reverse_write_ptr + pointer_offset(degree, reverse_index, subtile_j, subtile_i);
-
-            for (DIMN i = 0; i < ibound; ++i) {
-                for (DIMN j = 0; j < jbound; ++j) {
-                    optr[i * stride + j] = tptr[perm::permute_idx(j) * tile_width + perm::permute_idx(i)];
-                }
-            }
-
+            base_helper::write_tile_reverse(reverse_write_ptr, degree, reverse_index, subtile_i, subtile_j);
         }
     }
 
@@ -733,17 +764,6 @@ public:
     {
         const auto shift = static_cast<IDIMN>(tsi::powers[right_deg]);
         return left * shift + right;
-    }
-
-    static IDIMN reverse_key(IDEG degree, IDIMN index) noexcept
-    {
-        IDIMN result = 0;
-        for (auto i = 0; i < degree; ++i) {
-            result *= Width;
-            result += (index % Width);
-            index /= Width;
-        }
-        return result;
     }
 
     const_pointer left_fwd_read_ptr(IDEG degree, IDIMN index, IDIMN subtile_i, IDIMN subtile_j=0) const noexcept
@@ -1828,7 +1848,7 @@ private:
         const SCA* src_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(*this));
         SCA* dst_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(result));
 
-        dtl::tiled_inverse_operator<n_letters, max_degree, SCA, dtl::default_signer> t;
+        dtl::tiled_inverse_operator<n_letters, max_degree, Coeff, dtl::default_signer> t;
 
         t(src_ptr, dst_ptr, curr_degree);
 
@@ -2338,7 +2358,7 @@ public:
                 m_reverse_data.resize(tsi::degree_sizes[degree]);
             }
             assert(m_reverse_data.size() >= tsi::degree_sizes[degree]);
-            ::alg::dtl::tiled_inverse_operator<Width, Depth, scalar_type, ::alg::dtl::non_signing_signer> t;
+            ::alg::dtl::tiled_inverse_operator<Width, Depth, Coeffs, ::alg::dtl::non_signing_signer> t;
             t(m_data.begin(), m_reverse_data.begin(), degree);
             assert(*m_data.begin() == *m_reverse_data.begin());
         }

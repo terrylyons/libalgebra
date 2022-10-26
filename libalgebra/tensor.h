@@ -142,6 +142,72 @@ struct tile_details {
 };
 
 
+template <DEG Width, DEG Depth, typename Coeffs, IDEG TileLetters>
+class central_tile_helper : public tile_details<Width, Depth, TileLetters>
+{
+    using scalar_type = typename Coeffs::S;
+    using pointer = scalar_type*;
+    using const_pointer = const scalar_type*;
+    using size_type = std::size_t;
+    using index_type = std::ptrdiff_t;
+
+public:
+    using tile_info = tile_details<Width, Depth, TileLetters>;
+    using tsi = tensor_size_info<Width>;
+
+private:
+    static constexpr index_type tile_width = static_cast<index_type>(tile_info::tile_width);
+    data_tile<scalar_type, tile_info::tile_size> tile;
+
+public:
+    constexpr static IDIMN pointer_offset(IDEG degree, IDIMN index_word, IDIMN subtile_i, IDIMN subtile_j) noexcept
+    {
+        return (degree == 0) ? 0 : tsi::degree_sizes[degree-1]
+                + index_word * tile_info::tile_stride
+                + (subtile_i * tsi::powers[degree - tile_info::tile_letters] + subtile_j) * tile_info::tile_width;
+    }
+
+    static bool boundary_subtile(IDIMN index) noexcept
+    {
+        return (tile_info::num_subtiles != 1) && (Width % tile_width != 0) && (DIMN(index) == tile_info::num_subtiles - 1);
+    }
+
+    void read_tile(const_pointer in_p, index_type lhs_stride, index_type ibound, index_type jbound) noexcept
+    {
+        for (index_type i=0; i<ibound; ++i) {
+            for (index_type j=0; j<jbound; ++j) {
+                tile.data[i*tile_width+j] = in_p[i*lhs_stride+j];
+            }
+        }
+    }
+
+    void write_tile(pointer out_p, index_type lhs_stride, index_type ibound, index_type jbound) noexcept
+    {
+        for (index_type i=0; i<ibound; ++i) {
+            for (index_type j=0; j<jbound; ++j) {
+                out_p[i*lhs_stride + j] = tile.data[i*tile_width + j];
+            }
+        }
+    }
+
+    void write_tile_reverse(pointer out_p, index_type lhs_stride, index_type ibound, index_type jbound) noexcept
+    {
+        using perm = reversing_permutation<Width, tile_info::tile_letters>;
+        for (index_type i=0; i<ibound; ++i) {
+            for (index_type j=0; j<jbound; ++j) {
+                out_p[i*lhs_stride+j] = tile.data[perm::permute_idx(j)*tile_width + perm::permute_idx(i)];
+            }
+        }
+    }
+
+    pointer tile_ptr() noexcept
+    { return static_cast<pointer>(tile.data); }
+    const_pointer tile_ptr() const noexcept
+    { return static_cast<const_pointer>(tile.data); }
+
+};
+
+
 template<DEG Width, DEG MaxDepth, typename Scalar, typename Signer,
          IDEG TileLetters=LA_DEFAULT_TILE_PARAM(Width, Scalar)>
 class tiled_inverse_operator
@@ -416,10 +482,11 @@ public:
 template<DEG Width, DEG Depth, typename Coeffs, IDEG TileLetters>
 class tiled_free_tensor_multiplication_helper
     : public free_tensor_multiplication_helper<Width, Depth, Coeffs>,
-      public tile_details<Width, Depth, TileLetters>
+      public central_tile_helper<Width, Depth, Coeffs, TileLetters>
 {
     using base = free_tensor_multiplication_helper<Width, Depth, Coeffs>;
     using tile_info = tile_details<Width, Depth, TileLetters>;
+    using base_helper = central_tile_helper<Width, Depth, Coeffs, TileLetters>;
     using tsi = tensor_size_info<Width>;
 
 public:
@@ -440,7 +507,6 @@ private:
 //    std::vector<scalar_type> right_read_tile;
     dtl::data_tile<scalar_type, tile_info::tile_width> right_read_tile;
 //    std::vector<scalar_type> output_tile;
-    dtl::data_tile<scalar_type, tile_info::tile_size> output_tile;
     std::vector<scalar_type> reverse_data;
     const_pointer left_reverse_read_ptr = nullptr;
     pointer reverse_write_ptr = nullptr;
@@ -534,20 +600,10 @@ private:
         }
     }
 
-
-    constexpr static IDIMN pointer_offset(IDEG degree, IDIMN index_word, IDIMN subtile_i, IDIMN subtile_j) noexcept
-    {
-        return basis_type::start_of_degree(degree)
-                + index_word*tile_info::tile_stride
-                + (subtile_i*tsi::powers[degree-tile_info::tile_letters]+subtile_j)*tile_info::tile_width;
-    }
-
 public:
-    static bool boundary_subtile(IDIMN index) noexcept
-    {
-        return (tile_info::num_subtiles != 1) && (Width % tile_width !=0)  && (DIMN(index) == tile_info::num_subtiles-1);
-    }
 
+    using base_helper::boundary_subtile;
+    using base_helper::pointer_offset;
 
     using tile_info::tile_letters;
     using tile_info::tile_shift;
@@ -574,7 +630,7 @@ public:
 
     pointer out_tile_ptr() noexcept
     {
-        return output_tile.data;
+        return base_helper::tile_ptr();
     }
     const_pointer left_read_tile_ptr() const noexcept
     {
@@ -616,7 +672,7 @@ public:
             const auto stride = tsi::powers[degree - tile_letters];
             const_pointer optr = base::out_data
                     + pointer_offset(degree, index, subtile_i, subtile_j);
-            pointer tptr = output_tile.data;
+            pointer tptr = base_helper::tile_ptr();
 
             const auto ibound = boundary_subtile(subtile_i) ? Width % tile_width : tile_width;
             const auto jbound = boundary_subtile(subtile_j) ? Width % tile_width : tile_width;
@@ -627,7 +683,9 @@ public:
             }
         }
         else {
-            std::fill(output_tile.data, output_tile.data + output_tile.size, Coeffs::zero);
+            std::fill(base_helper::tile_ptr(),
+                      base_helper::tile_ptr() + base_helper::tile_size,
+                      Coeffs::zero);
         }
     }
 
@@ -638,7 +696,7 @@ public:
         assert(reverse_index <= static_cast<IDIMN>(tsi::powers[degree - 2 * tile_letters]));
         const auto start_of_degree = basis_type::start_of_degree(degree);
         pointer optr = base::out_data + pointer_offset(degree, index, subtile_i, subtile_j);
-        const_pointer tptr = output_tile.data;
+        const_pointer tptr = base_helper::tile_ptr();
         auto stride = tsi::powers[degree - tile_letters];
 
         const auto ibound = boundary_subtile(subtile_i) ? Width % tile_width : tile_width;

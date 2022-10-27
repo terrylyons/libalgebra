@@ -352,7 +352,7 @@ class tiled_inverse_operator
                 constexpr DIMN bound = ::alg::integer_maths::power(DIMN(Width), Degree);
                 Signer signer(Degree);
 
-                constexpr DIMN offset = (Degree == 0) ? 0 : sum_powers(DIMN(Width), Degree - 1);
+                constexpr DIMN offset = (Degree == 0) ? 0 : integer_maths::sum_powers(DIMN(Width), Degree - 1);
                 scalar_type* LA_RESTRICT out_ptr = dst_ptr + offset;
                 const scalar_type* LA_RESTRICT in_ptr = src_ptr + offset;
                 for (DIMN i = 0; i < bound; ++i) {

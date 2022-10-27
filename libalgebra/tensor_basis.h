@@ -39,7 +39,7 @@ struct tensor_size_info {
 
     template<DIMN Depth>
     struct helper {
-        static constexpr DIMN value = (power(NoLetters, Depth + 1) - 1) / (NoLetters - 1);
+        static constexpr DIMN value = integer_maths::sum_powers(NoLetters, Depth);
     };
 
     template<DIMN D>

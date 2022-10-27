@@ -130,16 +130,16 @@ struct LA_ALIGNAS(LA_CACHELINE_BYTES) data_tile
 template<DEG Width, DEG Depth, IDEG TileLetters = 0>
 struct tile_details {
     static constexpr IDEG tile_letters = (TileLetters > 0) ? TileLetters : 1;
-    static constexpr DIMN tile_width = (TileLetters >= 0)
-                                       ? integer_maths::power(Width, tile_letters)
-                                       : Width / integer_maths::power(DIMN(2), -TileLetters);
-    static constexpr DIMN num_subtiles = (TileLetters >= 0)
-                                         ? 1 : (integer_maths::power(DIMN(2), -TileLetters)
-                    + (Width % integer_maths::power(DIMN(2), -TileLetters)==0 ? 0 : 1));
+    static constexpr IDIMN tile_width = (TileLetters >= 0)
+                                       ? integer_maths::power(IDIMN(Width), tile_letters)
+                                       : IDIMN(Width) / integer_maths::power(IDIMN(2), -TileLetters);
+    static constexpr IDIMN num_subtiles = (TileLetters >= 0)
+                                         ? 1 : (integer_maths::power(IDIMN(2), -TileLetters)
+                    + (Width % integer_maths::power(IDIMN(2), -TileLetters)==0 ? 0 : 1));
 
-    static constexpr DIMN tile_stride = (TileLetters >= 0) ? tile_width : Width;
-    static constexpr DIMN tile_size = tile_width * tile_width;
-    static constexpr DIMN tile_shift = integer_maths::power(Width, tile_letters - 1);
+    static constexpr IDIMN tile_stride = (TileLetters >= 0) ? tile_width : Width;
+    static constexpr IDIMN tile_size = tile_width * tile_width;
+    static constexpr IDIMN tile_shift = integer_maths::power(Width, tile_letters - 1);
 };
 
 
@@ -309,20 +309,20 @@ public:
     pointer reverse_dst_ptr() const noexcept { return dst_reverse_ptr; }
 
     tiled_antipode_helper(pointer dst_p, const_pointer src_p)
-            : src_ptr(src_p), dst_ptr(dst_p), src_reverse_ptr(nullptr), dst_reverse_ptr(nullptr)
+            : src_ptr(src_p), dst_ptr(dst_p)
     {}
 
     template <typename B>
     tiled_antipode_helper(dense_tensor<B>& result, const dense_tensor<B>& arg)
     {
-        src_ptr = nullptr;
-        dst_ptr = nullptr;
+        src_ptr = arg.as_ptr();
+        dst_ptr = result.as_mut_ptr();
     }
 
     tiled_antipode_helper(dense_free_tensor& result, const dense_free_tensor& arg)
     {
-        src_ptr = nullptr;
-        dst_ptr = nullptr;
+        src_ptr = arg.as_ptr();
+        dst_ptr = result.as_mut_ptr();
     }
 
 };
@@ -338,13 +338,12 @@ class tiled_inverse_operator
     using tsi = dtl::tensor_size_info<Width>;
     using tile_info = tile_details<Width, MaxDepth, TileLetters>;
 
-    template <typename C>
+    template<typename C>
     using helper_type = tiled_antipode_helper<Width, MaxDepth, C, TileLetters>;
 
-    template <DEG Degree>
-    struct untiled_compute
-    {
-        template <typename S>
+    template<DEG Degree>
+    struct untiled_compute {
+        template<typename S>
         static void eval(S* LA_RESTRICT dst_ptr, const S* LA_RESTRICT src_ptr, DEG current_degree)
         {
             if (current_degree >= Degree) {
@@ -363,6 +362,11 @@ class tiled_inverse_operator
         }
     };
 
+    template<typename C>
+    using pointer = typename C::S*;
+    template<typename C>
+    using const_pointer = const typename C::S*;
+
 public:
     static constexpr DEG block_letters = tile_info::tile_letters;
     static constexpr size_t block_width = tile_info::tile_width;
@@ -373,17 +377,17 @@ public:
 
     static void untiled_cases(scalar_type* LA_RESTRICT dst_ptr, const scalar_type* LA_RESTRICT src_ptr, DEG current_degree) noexcept
     {
-        dtl::increasing_level_walker<untiled_compute, 2*tile_info::tile_letters>::eval(dst_ptr, src_ptr, current_degree);
+        dtl::increasing_level_walker<untiled_compute, 2 * tile_info::tile_letters>::eval(dst_ptr, src_ptr, current_degree);
     }
 
     static void sign_and_permute(scalar_type* LA_RESTRICT tile, Signer& signer) noexcept
     {
-        for (DIMN i=0; i<tile_info::tile_size; ++i) {
+        for (DIMN i = 0; i < tile_info::tile_size; ++i) {
             tile[i] = signer(tile[i]);
         }
 
-        using perm = reversing_permutation<Width, 2*block_letters>;
-        for (DIMN i=0; i<tile_info::tile_size; ++i) {
+        using perm = reversing_permutation<Width, 2 * block_letters>;
+        for (DIMN i = 0; i < tile_info::tile_size; ++i) {
             auto j = perm::permute_idx(i);
             if (j > i) {
                 std::swap(tile[j], tile[i]);
@@ -396,7 +400,7 @@ public:
         const auto mid_deg = out_deg - 2 * tile_info::tile_letters;
         Signer signer(out_deg);
 
-        for (IDIMN middle_index = 0; middle_index < tsi::powers[mid_deg]; ++middle_index) {
+        for (IDIMN middle_index = 0; middle_index < IDIMN(tsi::powers[mid_deg]); ++middle_index) {
             const auto reverse_middle_index = helper.reverse_key(mid_deg, middle_index);
 
             for (IDIMN subtile_i = 0; subtile_i < tile_info::num_subtiles; ++subtile_i) {
@@ -409,14 +413,12 @@ public:
         }
     }
 
-
     static void tile_cases(helper_type<Coeffs>& helper, DEG current_degree) noexcept
     {
-        for (DEG out_deg=2*tile_info::tile_letters+1; out_deg <= current_degree; ++out_deg) {
+        for (DEG out_deg = 2 * tile_info::tile_letters + 1; out_deg <= current_degree; ++out_deg) {
             permute_level_tiled(helper, out_deg);
         }
     }
-
 
     void operator()(const scalar_type* src_ptr, scalar_type* dst_ptr, const DEG curr_degree) const noexcept
     {
@@ -430,11 +432,61 @@ public:
         }
 
         untiled_cases(dst_ptr, src_ptr, curr_degree);
-        if (curr_degree > 2*tile_info::tile_letters) {
+        if (curr_degree > 2 * tile_info::tile_letters) {
             helper_type<Coeffs> helper(dst_ptr, src_ptr);
             tile_cases(helper, curr_degree);
         }
+    }
 
+    template<typename C = Coeffs>
+    static void apply_pointers(const_pointer<C> src_ptr, pointer<C> dst_ptr, DEG max_degree)
+    {
+        if (src_ptr == nullptr)// if pointer to source is null
+        {
+            return;
+        }
+        if (dst_ptr == nullptr) {
+            return;
+        }
+
+        untiled_cases(dst_ptr, src_ptr, max_degree);
+        if (max_degree > 2 * tile_info::tile_letters) {
+            helper_type<Coeffs> helper(dst_ptr, src_ptr);
+            tile_cases(helper, max_degree);
+        }
+    }
+
+    template<typename Vector>
+    static void apply(const Vector& src, Vector& result, DEG max_degree = MaxDepth)
+    {
+        using ring = typename Vector::coefficient_ring;
+        for (auto item : src) {
+            auto key = item.key();
+            auto deg = key.size();
+            if (max_degree == MaxDepth && deg <= max_degree) {
+                if (key.size() % 2 == 0) {
+                    result[key.reverse()] = item.value();
+                }
+                else {
+                    result[key.reverse()] = ring::uminus(item.value());
+                }
+            }
+        }
+    }
+
+    template<typename B, typename C>
+    static void apply(const vectors::dense_vector<B, C>& src, vectors::dense_vector<B, C>& dst, DEG max_depth=MaxDepth)
+    {
+        if (src.dimension() == 0) {
+            return;
+        }
+        assert(max_depth <= MaxDepth);
+        dst.resize_to_degree(std::min(src.degree(), max_depth));
+        untiled_cases(dst.as_mut_ptr(), src.as_ptr(), std::min(src.degree(), max_depth));
+        if (max_depth > 2*helper_type<C>::tile_letters) {
+            helper_type<C> helper(dst, src);
+            tile_cases(helper, std::min(src.degree(), max_depth));
+        }
     }
 
 };
@@ -1862,10 +1914,13 @@ public:
         // Get the trait to access the storage tag, although it now occurs to me that we already had
         // the vector type as a template argument, so we might be able to dispatch off that instead
         // of a tag. But the tag will do for now.
-        using trait = vectors::dtl::data_access<VectorType<BASIS, Coeff>>;
 
         // Now use tagged dispatch to pick the correct implementation
-        return arg.antipode_impl(typename trait::tag());
+        free_tensor result;
+        dtl::tiled_inverse_operator<n_letters, max_degree, Coeff, dtl::default_signer>
+                ::apply(arg.base_vector(), result.base_vector());
+
+        return result;
     }
 
     /// Computes the truncated logarithm of a free_tensor instance.

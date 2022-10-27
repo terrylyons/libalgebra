@@ -369,11 +369,6 @@ class tiled_inverse_operator
 
 public:
     static constexpr DEG block_letters = tile_info::tile_letters;
-    static constexpr size_t block_width = tile_info::tile_width;
-    static constexpr DIMN block_stride = tile_info::tile_stride;
-    static constexpr size_t block_size = tile_info::tile_size;
-    static constexpr unsigned max_middle_word_length = MaxDepth - 2 * block_letters;
-    //        static constexpr size_type middle_word_count = tensor_alg_size(max_middle_word_length);
 
     static void untiled_cases(scalar_type* LA_RESTRICT dst_ptr, const scalar_type* LA_RESTRICT src_ptr, DEG current_degree) noexcept
     {
@@ -562,7 +557,6 @@ public:
         out_data = left.as_mut_ptr();
     }
 
-    IDEG old_out_degree() const noexcept { return old_out_deg; }
     IDEG lhs_degree() const noexcept { return lhs_deg; }
     IDEG rhs_degree() const noexcept { return rhs_deg; }
     IDEG out_degree() const noexcept { return out_deg; }
@@ -1271,7 +1265,6 @@ protected:
                            IDIMN subtile_i,
                            IDIMN subtile_j) noexcept
     {
-        constexpr auto tile_width = helper_type<Coeffs>::tile_width;
         constexpr auto tile_letters = helper_type<Coeffs>::tile_letters;
 
         const auto rhs_deg = out_deg - lhs_deg;
@@ -1861,53 +1854,6 @@ public:
 
         return *this;
     }
-
-private:
-    // Implementation of the antipode for sparse vector types.
-    free_tensor antipode_impl(vectors::dtl::access_type_sparse) const
-    {
-        free_tensor result;
-
-        for (auto cit = this->begin(); cit != this->end(); ++cit) {
-            KEY temp_key = cit->key();
-            KEY temp_key_reverse = temp_key.reverse();
-            SCA temp_value = cit->value();
-
-            int sign;
-
-            if (temp_key.size() % 2 == 0) {
-                sign = 1;
-            }
-            else {
-                sign = -1;
-            }
-
-            result.add_scal_prod(temp_key_reverse, sign * temp_value);
-        }
-
-        return result;
-    }
-
-    // Implementation of the antipode for dense vector types.
-    free_tensor antipode_impl(vectors::dtl::access_type_dense) const
-    {
-        free_tensor result;
-        const auto curr_degree = this->degree();
-
-        vectors::dtl::vector_base_access::convert(result).resize_to_degree(curr_degree);
-
-        // Get the pointers to the start of the data blob in memory.
-        const SCA* src_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(*this));
-        SCA* dst_ptr = vectors::dtl::data_access<VectorType<BASIS, Coeff>>::range_begin(vectors::dtl::vector_base_access::convert(result));
-
-        dtl::tiled_inverse_operator<n_letters, max_degree, Coeff, dtl::default_signer> t;
-
-        t(src_ptr, dst_ptr, curr_degree);
-
-        return result;
-    }
-
-public:
     /// Computes the antipode of a free_tensor instance.
     inline friend free_tensor antipode(const free_tensor& arg)
     {

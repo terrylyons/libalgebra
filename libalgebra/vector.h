@@ -5,6 +5,8 @@
 #ifndef LIBALGEBRA_VECTOR_H
 #define LIBALGEBRA_VECTOR_H
 
+#include "implementation_types.h"
+
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 #include <boost/serialization/serialization.hpp>
 #endif
@@ -41,12 +43,11 @@ public:
         return arg;
     }
 
-
-//    template<typename B, typename C, template<typename, typename, typename...> class Vector, typename... Args>
-//    static const Vector<B, C, Args...>& convert(const Vector<B, C, Args...>& arg)
-//    {
-//        return arg;
-//    }
+    //    template<typename B, typename C, template<typename, typename, typename...> class Vector, typename... Args>
+    //    static const Vector<B, C, Args...>& convert(const Vector<B, C, Args...>& arg)
+    //    {
+    //        return arg;
+    //    }
 
     template<typename Basis, typename Coeffs, template<typename, typename, typename...> class Vector, typename... Args>
     static const Vector<Basis, Coeffs, Args...>& convert(const vector<Basis, Coeffs, Vector, Args...>& arg)
@@ -105,6 +106,8 @@ public:
 public:
     // Pull through function definitions from the underlying vector
     using UnderlyingVectorType::begin;
+    using UnderlyingVectorType::cbegin;
+    using UnderlyingVectorType::cend;
     using UnderlyingVectorType::end;
     using UnderlyingVectorType::erase;
     using UnderlyingVectorType::find;
@@ -183,6 +186,15 @@ public:
     {
         typename vector<BASIS, F, V>::const_iterator cit;
         for (cit(other.begin()); cit != other.end(); ++cit) {
+            operator[](cit->key()) = cit->value();
+        }
+    }
+
+    template<typename B>
+    explicit vector(const vector<B, Coeffs, VectorImpl>& arg)
+        : UnderlyingVectorType()
+    {
+        for (auto cit = arg.begin(); cit != arg.end(); ++cit) {
             operator[](cit->key()) = cit->value();
         }
     }
@@ -268,7 +280,10 @@ public:
      */
     vector& add_scal_prod(const vector& rhs, const SCALAR& s)
     {
-        UnderlyingVectorType::add_scal_prod(rhs, s);
+        auto op = [s](const SCALAR& l, const SCALAR& r) {
+            return Coeffs::template add(l, Coeffs::template mul(r, s));
+        };
+        UnderlyingVectorType::apply_inplace_flat_binary_op(*this, rhs, op);
         return *this;
     }
 
@@ -283,7 +298,7 @@ public:
      */
     vector& sub_scal_prod(const KEY& rhs, const SCALAR& s)
     {
-        UnderlyingVectorType::sub_scal_prod(rhs, s);
+        UnderlyingVectorType::add_scal_prod(rhs, Coeffs::uminus(s));
         return *this;
     }
 
@@ -298,7 +313,10 @@ public:
      */
     vector& sub_scal_prod(const vector& rhs, const SCALAR& s)
     {
-        UnderlyingVectorType::sub_scal_prod(rhs, s);
+        auto op = [s](const SCALAR& l, const SCALAR& r) {
+            return Coeffs::template sub(l, Coeffs::template mul(r, s));
+        };
+        UnderlyingVectorType::apply_inplace_flat_binary_op(*this, rhs, op);
         return *this;
     }
 
@@ -313,7 +331,7 @@ public:
      */
     vector& add_scal_div(const KEY& rhs, const RATIONAL& s)
     {
-        UnderlyingVectorType::add_scal_div(rhs, s);
+        UnderlyingVectorType::add_scal_prod(rhs, Coeffs::div(Coeffs::one, s));
         return *this;
     }
 
@@ -328,7 +346,10 @@ public:
      */
     vector& add_scal_div(const vector& rhs, const RATIONAL& s)
     {
-        UnderlyingVectorType::add_scal_div(rhs, s);
+        auto op = [s](const SCALAR& l, const SCALAR& r) {
+            return Coeffs::template add(l, Coeffs::template div(r, s));
+        };
+        UnderlyingVectorType::apply_inplace_flat_binary_op(*this, rhs, op);
         return *this;
     }
 
@@ -343,7 +364,7 @@ public:
      */
     vector& sub_scal_div(const KEY& rhs, const RATIONAL& s)
     {
-        UnderlyingVectorType::sub_scal_div(rhs, s);
+        UnderlyingVectorType::add_scal_prod(rhs, Coeffs::div(Coeffs::mone, s));
         return *this;
     }
 
@@ -358,7 +379,10 @@ public:
      */
     vector& sub_scal_div(const vector& rhs, const RATIONAL& s)
     {
-        UnderlyingVectorType::sub_scal_div(rhs, s);
+        auto op = [s](const SCALAR& l, const SCALAR& r) {
+            return Coeffs::template sub(l, Coeffs::template div(r, s));
+        };
+        UnderlyingVectorType::apply_inplace_flat_binary_op(*this, rhs, op);
         return *this;
     }
 
@@ -381,8 +405,9 @@ public:
     {
         using VectorType = V<Basis, Coeffs>;
         typename VectorType::const_iterator cit;
+        const auto m = Coeffs::uminus(s);
         for (cit = rhs.begin(); cit != rhs.end(); ++cit) {
-            UnderlyingVectorType::sub_scal_prod(cit->key(), cit->value() * s);
+            UnderlyingVectorType::add_scal_prod(cit->key(), cit->value() * m);
         }
         return *this;
     }
@@ -403,8 +428,9 @@ public:
     {
         using VectorType = V<Basis, Coeffs>;
         typename VectorType::const_iterator cit;
+        const auto m = Coeffs::div(Coeffs::mone, s);
         for (cit = rhs.begin(); cit != rhs.end(); ++cit) {
-            UnderlyingVectorType::sub_scal_prod(cit->key(), cit->value() / s);
+            UnderlyingVectorType::add_scal_prod(cit->key(), cit->value() * m);
         }
         return *this;
     }
@@ -478,208 +504,8 @@ private:
     }
 
 public:
-    // Apply transform methods
-
-    /**
-     * @brief Buffered apply transform with separate transforms
-     *
-     * Apply transform to paired vectors using a buffer. Apply using different
-     * transforms for by-index or by-key chosen by the under data source.
-     *
-     * @tparam KeyTransform Key transform type
-     * @tparam IndexTransform Index transform type
-     * @param result Buffer in which to place the result
-     * @param rhs Right hand side buffer
-     * @param key_transform Transform to apply by keys (sparse elements)
-     * @param index_transform Transform to apply by index (dense elements)
-     */
-    template<typename KeyTransform, typename IndexTransform>
-    void
-    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
-                                    IndexTransform index_transform) const
-    {
-        buffered_apply_binary_transform(result, rhs, key_transform, index_transform, UnderlyingVectorType::degree_tag);
-    }
-
-    /// Buffered apply transform with only key transform
-    template<typename KeyTransform>
-    void buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform) const
-    {
-        buffered_apply_binary_transform(result, rhs, key_transform, UnderlyingVectorType::degree_tag);
-    }
-
-    /**
-     * @brief Unbuffered apply transform with separate transforms
-     *
-     * Apply transform to paired vectors using a buffer. Apply using different
-     * transforms for by-index or by-key chosen by the under data source.
-     *
-     * @tparam KeyTransform Key transform type
-     * @tparam IndexTransform Index transform type
-     * @param rhs Right hand side buffer
-     * @param key_transform Transform to apply by keys (sparse elements)
-     * @param index_transform Transform to apply by index (dense elements)
-     */
-    template<typename KeyTransform, typename IndexTransform>
-    void
-    unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform, IndexTransform index_transform)
-    {
-        unbuffered_apply_binary_transform(rhs, key_transform, index_transform, UnderlyingVectorType::degree_tag);
-    }
-
-    /// Buffered apply transform with only key transform
-    template<typename KeyTransform>
-    void unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform)
-    {
-        unbuffered_apply_binary_transform(rhs, key_transform, UnderlyingVectorType::degree_tag);
-    }
-
-    /**
-     * @brief Buffered apply transform with separate transforms up to max degree
-     *
-     * @tparam KeyTransform Key transform type
-     * @tparam IndexTransform Index transform type
-     * @param result Buffer in which to place the result
-     * @param rhs Right hand side buffer
-     * @param key_transform Transform to apply by keys (sparse elements)
-     * @param index_transform Transform to apply by index (dense elements)
-     * @param max_depth Maximum depth to compute the result
-     */
-    template<typename KeyTransform, typename IndexTransform>
-    void
-    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
-                                    IndexTransform index_transform, const DEG max_depth) const
-    {
-        UnderlyingVectorType::triangular_buffered_apply_transform(result, rhs, key_transform, index_transform,
-                                                                  max_depth);
-    }
-
-    /**
-     * @brief Unbuffered apply transform with separate transforms up to max degree
-     *
-     * @tparam KeyTransform Key transform type
-     * @tparam IndexTransform Index transform type
-     * @param rhs Right hand side buffer
-     * @param key_transform Transform to apply by keys (sparse elements)
-     * @param index_transform Transform to apply by index (dense elements)
-     * @param max_depth Maximum depth to compute the result
-     */
-    template<typename KeyTransform, typename IndexTransform>
-    void
-    unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform, IndexTransform index_transform,
-                                      const DEG max_depth)
-    {
-        UnderlyingVectorType::triangular_unbuffered_apply_binary_transform(rhs, key_transform, index_transform,
-                                                                           max_depth);
-    }
-
-    /// Buffered apply transform with only key transform up to max degree
-    template<typename KeyTransform>
-    void
-    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
-                                    const DEG max_depth) const
-    {
-        UnderlyingVectorType::triangular_buffered_apply_binary_transform(result, rhs, key_transform, max_depth);
-    }
-
-
-private:
-    template<typename KeyTransform>
-    void
-    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
-                                    alg::basis::without_degree) const
-    {
-        UnderlyingVectorType::square_buffered_apply_binary_transform(result, rhs, key_transform);
-    }
-
-    template<DEG D, typename KeyTransform>
-    void
-    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
-                                    alg::basis::with_degree<D>) const
-    {
-        UnderlyingVectorType::triangular_buffered_apply_binary_transform(result, rhs, key_transform, D);
-    }
-
-    template<typename KeyTransform, typename IndexTransform>
-    void
-    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
-                                    IndexTransform index_transform, alg::basis::without_degree) const
-    {
-        UnderlyingVectorType::square_buffered_apply_binary_transform(result, rhs, key_transform, index_transform);
-    }
-
-    template<DEG D, typename KeyTransform, typename IndexTransform>
-    void
-    buffered_apply_binary_transform(vector& result, const vector& rhs, KeyTransform key_transform,
-                                    IndexTransform index_transform, alg::basis::with_degree<D>) const
-    {
-        UnderlyingVectorType::triangular_buffered_apply_binary_transform(result, rhs, key_transform, index_transform,
-                                                                         D);
-    }
-
-    template<typename KeyTransform>
-    void unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform, alg::basis::without_degree)
-    {
-        vector result;
-        UnderlyingVectorType::square_buffered_apply_binary_transform(result, rhs, key_transform);
-        swap(result);
-    }
-
-    template<DEG D, typename KeyTransform>
-    void unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform, alg::basis::with_degree<D>)
-    {
-        vector result;
-        UnderlyingVectorType::triangular_buffered_apply_binary_transform(result, rhs, key_transform, D);
-        swap(result);
-    }
-
-    template<typename KeyTransform, typename IndexTransform>
-    void
-    unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform, IndexTransform index_transform,
-                                      alg::basis::without_degree)
-    {
-        vector result;
-        UnderlyingVectorType::square_buffered_apply_binary_transform(result, rhs, key_transform, index_transform);
-        swap(result);
-    }
-
-    template<DEG D, typename KeyTransform, typename IndexTransform>
-    void
-    unbuffered_apply_binary_transform(const vector& rhs, KeyTransform key_transform, IndexTransform index_transform,
-                                      alg::basis::with_degree<D>)
-    {
-        UnderlyingVectorType::triangular_unbuffered_apply_binary_transform(rhs, key_transform, index_transform, D);
-    }
-
-public:
-    // Methods for operator implementation
-
-    /// Apply a transform inplace to the vector with buffering
-    template<typename Transform>
-    void buffered_apply_unary_transform(vector& result, Transform transform) const
-    {
-        buffered_apply_unary_transform_impl(result, transform, UnderlyingVectorType::degree_tag);
-    }
-
-private:
-    template<DEG D, typename Transform>
-    void buffered_apply_unary_transform_impl(vector& result, Transform transform, alg::basis::with_degree<D>) const
-    {
-        UnderlyingVectorType::buffered_apply_unary_transform(result, transform, D);
-    }
-
-    template<typename Transform>
-    void buffered_apply_unary_transform_impl(vector& result, Transform transform, alg::basis::without_degree) const
-    {
-        UnderlyingVectorType::buffered_apply_unary_transform(result, transform);
-    }
-
-
-public:
-
-    template <typename Vector>
-    friend typename
-    std::enable_if<std::is_base_of<vector, Vector>::value, Vector>::type
+    template<typename Vector>
+    friend typename std::enable_if<std::is_base_of<vector, Vector>::value, Vector>::type
     operator-(const Vector& arg)
     {
         Vector result;
@@ -687,63 +513,57 @@ public:
         return result;
     }
 
-    template <typename Vector, typename Scalar>
+    template<typename Vector, typename Scalar>
     friend
-    typename std::enable_if<
-            std::is_base_of<vector, Vector>::value &&
-                    std::is_constructible<SCALAR, const Scalar&>::value,
-            Vector>::type
-    operator*(const Vector& arg, const Scalar& scal)
+            typename std::enable_if<
+                    std::is_base_of<vector, Vector>::value && std::is_constructible<SCALAR, const Scalar&>::value,
+                    Vector>::type
+            operator*(const Vector& arg, const Scalar& scal)
     {
         Vector result;
         SCALAR s(scal);
         UnderlyingVectorType::apply_unary_operation(result, arg,
-                                                    [=](const SCALAR& a) { return Coeffs::mul(a, s); }
-        );
+                                                    [=](const SCALAR& a) { return Coeffs::mul(a, s); });
         return result;
     }
 
-    template <typename Vector>
+    template<typename Vector>
     friend
-    typename std::enable_if<
-            std::is_base_of<vector, Vector>::value,
-            Vector>::type
-    operator*(const Vector& arg, const SCALAR& scal)
+            typename std::enable_if<
+                    std::is_base_of<vector, Vector>::value,
+                    Vector>::type
+            operator*(const Vector& arg, const SCALAR& scal)
     {
         Vector result;
         UnderlyingVectorType::apply_unary_operation(result, arg,
-                                                    [=](const SCALAR& a) { return Coeffs::mul(a, scal); }
-        );
+                                                    [=](const SCALAR& a) { return Coeffs::mul(a, scal); });
         return result;
     }
 
-    template <typename Vector, typename Scalar>
+    template<typename Vector, typename Scalar>
     friend
-    typename std::enable_if<
-            std::is_base_of<vector, Vector>::value &&
-            std::is_constructible<SCALAR, const Scalar&>::value,
-            Vector>::type
-    operator*(const Scalar& scal, const Vector& arg)
+            typename std::enable_if<
+                    std::is_base_of<vector, Vector>::value && std::is_constructible<SCALAR, const Scalar&>::value,
+                    Vector>::type
+            operator*(const Scalar& scal, const Vector& arg)
     {
         Vector result;
         SCALAR s(scal);
         UnderlyingVectorType::apply_unary_operation(result, arg,
-                    [=](const SCALAR& a) { return Coeffs::mul(s, a); }
-                );
+                                                    [=](const SCALAR& a) { return Coeffs::mul(s, a); });
         return result;
     }
 
-    template <typename Vector>
+    template<typename Vector>
     friend
-    typename std::enable_if<
-            std::is_base_of<vector, Vector>::value,
-            Vector>::type
-    operator*(const SCALAR& scal, const Vector& arg)
+            typename std::enable_if<
+                    std::is_base_of<vector, Vector>::value,
+                    Vector>::type
+            operator*(const SCALAR& scal, const Vector& arg)
     {
         Vector result;
         UnderlyingVectorType::apply_unary_operation(result, arg,
-                    [=](const SCALAR& a) { return Coeffs::mul(scal, a); }
-                );
+                                                    [=](const SCALAR& a) { return Coeffs::mul(scal, a); });
         return result;
     }
 
@@ -762,10 +582,10 @@ public:
 
     template<typename Vector1, typename Vector2>
     friend
-    typename std::enable_if<
-            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
-            Vector1>::type
-    operator+(const Vector1& lhs, const Vector2& rhs)
+            typename std::enable_if<
+                    std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
+                    Vector1>::type
+            operator+(const Vector1& lhs, const Vector2& rhs)
     {
         Vector1 result;
         UnderlyingVectorType::apply_flat_binary_operation(
@@ -773,8 +593,8 @@ public:
         return result;
     }
 
-    template <typename Vector,
-             template <typename, typename, typename...> class OtherVType,
+    template<typename Vector,
+             template<typename, typename, typename...> class OtherVType,
              typename... OtherArgs>
     friend typename std::enable_if<
             std::is_base_of<vector, Vector>::value,
@@ -790,10 +610,10 @@ public:
 
     template<typename Vector1, typename Vector2>
     friend
-    typename std::enable_if<
-            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
-            Vector1>::type
-    operator-(const Vector1& lhs, const Vector2& rhs)
+            typename std::enable_if<
+                    std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
+                    Vector1>::type
+            operator-(const Vector1& lhs, const Vector2& rhs)
     {
         Vector1 result;
         UnderlyingVectorType::apply_flat_binary_operation(
@@ -801,8 +621,8 @@ public:
         return result;
     }
 
-    template <typename Vector,
-             template <typename, typename, typename...> class OtherVType,
+    template<typename Vector,
+             template<typename, typename, typename...> class OtherVType,
              typename... OtherArgs>
     friend typename std::enable_if<
             std::is_base_of<vector, Vector>::value,
@@ -840,18 +660,17 @@ public:
         return arg;
     }
 
-    template <typename Vector1, typename Vector2>
+    template<typename Vector1, typename Vector2>
     friend typename std::enable_if<
-            std::is_base_of<vector, Vector1>::value &&
-            std::is_base_of<vector, Vector2>::value,
+            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
             Vector1>::type&
     operator+=(Vector1& lhs, const Vector2& rhs)
     {
-        UnderlyingVectorType::apply_inplace_flat_binary_op(lhs, rhs, Coeffs::template add<>);
+        UnderlyingVectorType::apply_inplace_flat_binary_op(lhs, rhs, std::plus<>());
         return lhs;
     }
 
-    template <typename Vector, template <typename, typename, typename...> class OtherVType, typename... OtherArgs>
+    template<typename Vector, template<typename, typename, typename...> class OtherVType, typename... OtherArgs>
     friend typename std::enable_if<std::is_base_of<vector, Vector>::value, Vector>::type&
     operator+=(Vector& lhs, const vector<Basis, Coeffs, OtherVType, OtherArgs...>& rhs)
     {
@@ -861,10 +680,9 @@ public:
         return lhs;
     }
 
-    template <typename Vector1, typename Vector2>
+    template<typename Vector1, typename Vector2>
     friend typename std::enable_if<
-            std::is_base_of<vector, Vector1>::value &&
-            std::is_base_of<vector, Vector2>::value,
+            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
             Vector1>::type&
     operator-=(Vector1& lhs, const Vector2& rhs)
     {
@@ -872,7 +690,7 @@ public:
         return lhs;
     }
 
-    template <typename Vector, template<typename, typename, typename...> class OtherVType, typename... OtherArgs>
+    template<typename Vector, template<typename, typename, typename...> class OtherVType, typename... OtherArgs>
     friend typename std::enable_if<std::is_base_of<vector, Vector>::value, Vector>::type&
     operator-=(Vector& lhs, const vector<Basis, Coeffs, OtherVType, OtherArgs...>& rhs)
     {
@@ -882,7 +700,6 @@ public:
         return lhs;
     }
 
-
     /*
      * Ordering operators are interesting because not all coefficient rings
      * are necessarily ordered. To make sure things are only defined when
@@ -891,36 +708,33 @@ public:
      * until proper support is added to the coefficient trait.
      */
 
-    template <typename Vector1, typename Vector2, typename Order=std::less<SCALAR>>
+    template<typename Vector1, typename Vector2, typename Order = std::less<SCALAR>>
     friend typename std::enable_if<
-            std::is_base_of<vector, Vector1>::value &&
-            std::is_base_of<vector, Vector2>::value,
+            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
             Vector1>::type
     operator|(const Vector1& lhs, const Vector2& rhs)
     {
         Vector1 result;
         Order cmp;
         UnderlyingVectorType::apply_flat_binary_operation(
-                result, lhs, rhs, [=](const SCALAR& l, const SCALAR& r)
-                { return std::max(l, r, cmp); });
+                result, lhs, rhs, [=](const SCALAR& l, const SCALAR& r) { return std::max(l, r, cmp); });
         return result;
     }
 
-    template <typename Vector1, typename Vector2, typename Order=std::less<SCALAR>>
+    template<typename Vector1, typename Vector2, typename Order = std::less<SCALAR>>
     friend typename std::enable_if<
-            std::is_base_of<vector, Vector1>::value &&
-            std::is_base_of<vector, Vector2>::value,
+            std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
             Vector1>::type
     operator&(const Vector1& lhs, const Vector2& rhs)
     {
         Vector1 result;
         Order cmp;
         UnderlyingVectorType::apply_flat_binary_operation(result, lhs, rhs,
-                  [=](const SCALAR& l, const SCALAR& r) { return std::min(l, r, cmp); });
+                                                          [=](const SCALAR& l, const SCALAR& r) { return std::min(l, r, cmp); });
         return result;
     }
 
-    template <typename Vector1, typename Vector2, typename Order=std::less<SCALAR>>
+    template<typename Vector1, typename Vector2, typename Order = std::less<SCALAR>>
     friend typename std::enable_if<
             std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
             Vector1>::type
@@ -928,11 +742,11 @@ public:
     {
         Order cmp;
         UnderlyingVectorType::apply_inplace_flat_binary_op(lhs, rhs,
-                           [=](const SCALAR& l, const SCALAR& r) { return std::max(l ,r, cmp); });
+                                                           [=](const SCALAR& l, const SCALAR& r) { return std::max(l, r, cmp); });
         return lhs;
     }
 
-    template <typename Vector1, typename Vector2, typename Order=std::less<SCALAR>>
+    template<typename Vector1, typename Vector2, typename Order = std::less<SCALAR>>
     friend typename std::enable_if<
             std::is_base_of<vector, Vector1>::value && std::is_base_of<vector, Vector2>::value,
             Vector1>::type
@@ -940,7 +754,7 @@ public:
     {
         Order cmp;
         UnderlyingVectorType::apply_inplace_flat_binary_op(lhs, rhs,
-                           [=](const SCALAR& l, const SCALAR& r) { return std::min(l ,r, cmp); });
+                                                           [=](const SCALAR& l, const SCALAR& r) { return std::min(l, r, cmp); });
         return lhs;
     }
 };
@@ -949,25 +763,19 @@ public:
 
 namespace utils {
 
-
 template<typename T>
 struct is_vector_type {
 private:
-
-    template <typename B, typename C, template <typename, typename, typename...> class Type, typename... Args>
+    template<typename B, typename C, template<typename, typename, typename...> class Type, typename... Args>
     static std::true_type check(vectors::vector<B, C, Type, Args...>&);
 
     static std::false_type check(...);
 
 public:
-
     static constexpr bool value = decltype(check(std::declval<T>()))::value;
-
 };
 
-
-} // namespace utils
-
+}// namespace utils
 
 }// namespace alg
 #endif// LIBALGEBRA_VECTOR_H

@@ -20,7 +20,7 @@ Version 3. (See accompanying file License.txt)
 
 
 // the unit test framework
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 // Local frameworks
 #include "brown_path_increments.h"
@@ -81,7 +81,7 @@ TEST_FIXTURE(pathsetup5560, long_multiplication)
     typename std::vector<LIE>::const_iterator end = increments.end();
 	TENSOR sig = signature(begin, end);
 	for (typename std::vector<LIE>::const_iterator i = begin; i != end; i++) {
-	    CHECK_VEC_CLOSE(sig, signature(begin, i) * signature(i, end), 2.0e-15);
+	    CHECK_VEC_CLOSE(sig, signature(begin, i) * signature(i, end), 2.5e-15);
 		//TENSOR err = sig - signature(begin, i) * signature(i, end);
 		//for (auto k : err) {
 		//	CHECK_CLOSE(k.second, 0., 2.0e-15);

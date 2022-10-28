@@ -14,6 +14,8 @@ Version 3. (See accompanying file License.txt)
 #ifndef monomial_basisH_SEEN
 #define monomial_basisH_SEEN
 
+#include "basis.h"
+
 namespace alg {
 
 /// Implements an interface for the set of words of a finite number of letters.
@@ -216,16 +218,23 @@ public:
 namespace vectors {
 namespace dtl {
 
-template <DEG Width, DEG Depth>
-struct sparse_vector_default_map<free_monomial_basis<Width, Depth>>
-{
-    template <typename S>
+template<DEG Width, DEG Depth>
+struct sparse_vector_default_map<free_monomial_basis<Width, Depth>> {
+    template<typename S>
     using type = std::map<typename free_monomial_basis<Width, Depth>::KEY, S>;
 };
 
-}
-}
+}// namespace dtl
+}// namespace vectors
 
+namespace basis {
+
+template<DEG Width, DEG Depth1, DEG Depth2>
+struct related_to<monomial_basis<Width, Depth1>, monomial_basis<Width, Depth2>>
+    : std::true_type {
+};
+
+}// namespace basis
 
 }// namespace alg
 // Include once wrapper

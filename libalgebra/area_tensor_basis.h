@@ -17,7 +17,7 @@ special key used for the embedding of letters (words of length one).
 */
 template<DEG n_letters, DEG max_degree>
 class area_tensor_basis : public alg::tensor_basis<n_letters, max_degree>,
-                          public alg::basis_traits<With_Degree, n_letters,
+                          public alg::base_basis<With_Degree, n_letters,
                                                    max_degree>
 {
 public:

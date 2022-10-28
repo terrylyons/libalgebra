@@ -7,7 +7,7 @@
 #include <vector>
 #include <map>
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 #include <libalgebra/libalgebra.h>
 #include <libalgebra/alg_types.h>

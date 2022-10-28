@@ -24,8 +24,8 @@ Version 3. (See accompanying file License.txt)
 #include <utility>
 #include <vector>
 
-#include "detail/order_trait.h"
 #include "base_vector.h"
+#include "detail/order_trait.h"
 #include "iterators.h"
 
 namespace alg {
@@ -37,11 +37,9 @@ struct sparse_vector_default_map {
     template<typename S>
     using type = std::unordered_map<typename B::KEY, S>;
 };
-} // namespace dtl
-
+}// namespace dtl
 
 /// A class to store and manipulate sparse vectors.
-
 
 // Unordered and Ordered forms
 //  sparse_vector is by default ordered (unless the UNORDERED macro is defined)
@@ -79,8 +77,7 @@ struct sparse_vector_default_map {
  * @tparam Coeffs Coefficient field
  * @tparam MapType The underlying map type in which the data is stored.
  */
-template<typename Basis, typename Coeffs, typename MapType = typename dtl::sparse_vector_default_map<Basis>::template
-        type<typename Coeffs::S>>
+template<typename Basis, typename Coeffs, typename MapType = typename dtl::sparse_vector_default_map<Basis>::template type<typename Coeffs::S>>
 class sparse_vector : /*private*/ MapType, protected base_vector<Basis, Coeffs>
 {
     typedef MapType MAP;
@@ -471,8 +468,7 @@ public:
     }
 
 public:
-
-    template <typename F>
+    template<typename F>
     static void apply_unary_operation(
             sparse_vector& result,
             const sparse_vector& arg,
@@ -483,7 +479,7 @@ public:
         }
     }
 
-    template <typename F>
+    template<typename F>
     static void apply_inplace_unary_op(
             sparse_vector& arg,
             F&& func)
@@ -494,8 +490,7 @@ public:
     }
 
 private:
-
-    template <typename LIT, typename RIT, typename F>
+    template<typename LIT, typename RIT, typename F>
     static void sorted_bin_op(sparse_vector& result,
                               LIT lbegin, LIT lend,
                               RIT rbegin, RIT rend,
@@ -521,10 +516,12 @@ private:
                 insert_f(lhs_key, lit->second, rit->second);
                 ++lit;
                 ++rit;
-            } else if (ordering(lhs_key, rhs_key)) {
+            }
+            else if (ordering(lhs_key, rhs_key)) {
                 insert_f(lhs_key, lit->second, Coeffs::zero);
                 ++lit;
-            } else {
+            }
+            else {
                 insert_f(rhs_key, Coeffs::zero, rit->second);
                 ++rit;
             }
@@ -539,10 +536,9 @@ private:
             auto& key = rit->first;
             insert_f(key, Coeffs::zero, rit->second);
         }
-
     }
 
-    template <typename F, typename O>
+    template<typename F, typename O>
     static void apply_flat_binary_op_impl(sparse_vector& result,
                                           const sparse_vector& lhs,
                                           const sparse_vector& rhs,
@@ -569,14 +565,13 @@ private:
                       std::forward<F>(func));
     }
 
-    template <typename F>
+    template<typename F>
     static void apply_flat_binary_op_impl(
             sparse_vector& result,
             sparse_vector& lhs,
             sparse_vector& rhs,
             F&& func,
-            alg::basis::unordered
-            )
+            alg::basis::unordered)
     {
         std::vector<KEY> unseen;
         unseen.reserve(rhs.size());
@@ -597,7 +592,8 @@ private:
             if (it != end) {
                 unseen.erase(unseen.find(item.key()));
                 insert_f(item.key(), item.value(), it->value());
-            } else {
+            }
+            else {
                 insert_f(item.key(), item.value(), Coeffs::zero);
             }
         }
@@ -608,37 +604,46 @@ private:
     }
 
 public:
-
-    template <typename F>
+    template<typename F>
     static void apply_flat_binary_operation(
             sparse_vector& result,
             const sparse_vector& lhs,
             const sparse_vector& rhs,
-            F&& func
-            )
+            F&& func)
     {
-        if (utils::is_ordered<MapType>::value) {
-            sorted_bin_op(result, lhs.map_begin(), lhs.map_end(), rhs.map_begin(), rhs.map_end(), std::forward<F>(func));
-        } else {
-            typename basis::basis_traits<Basis>::ordering_tag otag;
-            apply_flat_binary_op_impl(result, lhs, rhs, std::forward<F>(func), otag);
-        }
+        result = lhs;
+        apply_inplace_flat_binary_op(result, rhs, std::forward<F>(func));
     }
 
-
 public:
-    template <typename F>
+    template<typename F>
     static void apply_inplace_flat_binary_op(
             sparse_vector& lhs,
             const sparse_vector& rhs,
-            F&& func
-            )
+            F&& func)
     {
-        sparse_vector tmp;
-        apply_flat_binary_operation(tmp, lhs, rhs, std::forward<F>(func));
-        lhs.swap(tmp);
-    }
+        if (rhs.empty()) {
+            return;
+        }
 
+        for (auto cit = rhs.map_begin(); cit != rhs.map_end(); ++cit) {
+            auto it = lhs.map_find(cit->first);
+            if (it == lhs.map_end()) {
+                auto val = func(Coeffs::zero, cit->second);
+                if (val != Coeffs::zero) {
+                    lhs[cit->first] = val;
+                }
+            }
+            else {
+                auto val = func(it->second, cit->second);
+                if (val != Coeffs::zero) {
+                    it->second = val;
+                } else {
+                    lhs.erase(it);
+                }
+            }
+        }
+    }
 
     /// Returns an instance of the additive inverse of the instance.
     inline sparse_vector operator-() const
@@ -1333,183 +1338,6 @@ protected:
         }
     }
 
-public:
-    // Transform methods
-    /**
-     * @brief Apply a buffered binary transform using only key transform up to max depth
-     *
-     * This is applied to the vector using the degree optimisation.
-     *
-     * @tparam Vector Result vector type
-     * @tparam KeyTransform Key transform type
-     * @param result Vector in which to place the result
-     * @param rhs right hand side buffer
-     * @param key_transform transform to apply
-     * @param max_depth maximum depth of elements to compute
-     */
-    template<typename Vector, typename KeyTransform>
-    void
-    triangular_buffered_apply_binary_transform(Vector& result, const sparse_vector& rhs, KeyTransform key_transform,
-                                               const DEG /* max_depth*/) const
-    {
-        // Unused parameter max_depth?
-        //DEG max_degree = std::min(max_depth, degree_tag.max_degree);
-        DEG max_degree = degree_tag.max_degree;
-
-        // create buffers to avoid unnecessary calls to MAP inside loop
-        std::vector<std::pair<KEY, SCALAR>> buffer;
-        std::vector<typename std::vector<std::pair<KEY, SCALAR>>::const_iterator> iterators;
-        separate_by_degree(buffer, rhs, max_degree, iterators);
-
-        typename std::vector<std::pair<KEY, SCALAR>>::const_iterator j;
-        const_iterator i(begin()), iEnd(end());
-        DEG rhdegree;
-        for (; i != iEnd; ++i) {
-            const KEY& k = i->key();
-            rhdegree = max_degree - basis.degree(k);
-            typename std::vector<std::pair<KEY, SCALAR>>::const_iterator& jEnd = iterators[rhdegree];
-            for (j = buffer.begin(); j != jEnd; ++j) {
-                key_transform(result, k, i->value(), j->first, j->second);
-            }
-        }
-    }
-
-    /**
-     * @brief Apply a buffered binary transform with separate transforms up to max depth
-     *
-     * This is applied to the vector using the degree optimisation.
-     *
-     * @tparam Vector Result vector type
-     * @tparam KeyTransform Key transform type
-     * @tparam IndexTransform Index transform type
-     * @param result Vector in which to place the result
-     * @param rhs Right hand side buffer
-     * @param key_transform transform to apply by keys (sparse elements)
-     * @param index_transform transform to apply by index (dense elements)
-     * @param max_depth Maximum depth to compute
-     */
-    template<typename Vector, typename KeyTransform, typename IndexTransform>
-    void
-    triangular_buffered_apply_binary_transform(Vector& result, const sparse_vector& rhs, KeyTransform key_transform,
-                                               IndexTransform /* index_transform */, const DEG max_depth) const
-    {
-        triangular_buffered_apply_binary_transform(result, rhs, key_transform, max_depth);
-    }
-
-    /**
-     * @brief Apply buffered binary transform with no degree optimisation
-     * @tparam Vector Output vector type
-     * @tparam KeyTransform Key transform type
-     * @param result buffer in which to place result
-     * @param rhs Right hand side buffer
-     * @param key_transform Transform to apply by key (sparse)
-     */
-    template<typename Vector, typename KeyTransform>
-    void
-    square_buffered_apply_binary_transform(Vector& result, const sparse_vector& rhs, KeyTransform key_transform) const
-    {
-        // create buffer to avoid unnecessary calls to MAP inside loop
-        std::vector<std::pair<KEY, SCALAR>> buffer(rhs.map_begin(), rhs.map_end());
-        const_iterator i;
-
-        // DEPTH1 == 0
-        typename std::vector<std::pair<KEY, SCALAR>>::const_iterator j;
-        for (i = begin(); i != end(); ++i) {
-            for (j = buffer.begin(); j != buffer.end(); ++j) {
-                key_transform(result, i->key(), i->value(), j->first, j->second);
-            }
-        }
-    }
-
-    /**
-     * @brief Apply an unbuffered binary transform with separate transforms
-     * @tparam KeyTransform Key transform type
-     * @tparam IndexTransform Index transform type
-     * @param rhs Right hand side buffer
-     * @param key_transform transform to apply by key (sparse)
-     * @param index_transform transform to apply by index (dense)
-     * @param max_depth Maximum depth of elements to compute
-     */
-    template<typename KeyTransform, typename IndexTransform>
-    void
-    triangular_unbuffered_apply_binary_transform(const sparse_vector& rhs, KeyTransform key_transform,
-                                                 IndexTransform index_transform, const DEG max_depth)
-    {
-        sparse_vector result;
-        triangular_buffered_apply_binary_transform(result, rhs, key_transform, index_transform, max_depth);
-        swap(result);
-    }
-
-    /**
-     * @brief Apply an unbuffered binary transform using only key transform
-     *
-     * @tparam KeyTransform Key transform type
-     * @param rhs Right hand side buffer
-     * @param key_transform Key transform
-     * @param max_depth maximum depth of elements to compute
-     */
-    template<typename KeyTransform>
-    void
-    triangular_unbuffered_apply_binary_transform(const sparse_vector& rhs, KeyTransform key_transform,
-                                                 const DEG max_depth)
-    {
-        sparse_vector result;
-        triangular_buffered_apply_binary_transform(result, rhs, key_transform, max_depth);
-        swap(result);
-    }
-
-    /**
-     * @brief Apply buffered binary transform with separate transforms and no degree optimisation
-     * @tparam Vector Output vector type
-     * @tparam KeyTransform Key transform type
-     * @tparam IndexTransform Index transform type
-     * @param result buffer in which to place result
-     * @param rhs right hand side buffer
-     * @param index_transform transform to apply by index (dense)
-     */
-    template<typename Vector, typename KeyTransform, typename IndexTransform>
-    void
-    square_buffered_apply_binary_transform(Vector& result, const sparse_vector& rhs, KeyTransform key_transform,
-                                           IndexTransform /* index_transform */) const
-    {
-        square_buffered_apply_binary_transform(result, rhs, key_transform);
-    }
-
-public:
-    /**
-     * @brief  Apply a transform inplace with buffering
-     * @tparam Transform Transform type
-     * @param result buffer in which to place result (temporarily)
-     * @param transform transform to apply
-     * @param max_deg Maximum degree
-     */
-    template<typename Transform>
-    void buffered_apply_unary_transform(sparse_vector& result, Transform transform, const DEG max_deg) const
-    {
-        if (empty()) {
-            return;
-        }
-
-        typename Transform::key_transform kt(transform.get_key_transform());
-        kt(result, *this, max_deg);
-    }
-
-    /**
-     * @brief  Apply a transform inplace with buffering
-     * @tparam Transform Transform type
-     * @param result buffer in which to place result (temporarily)
-     * @param transform transform to apply
-     */
-    template<typename Transform>
-    void buffered_apply_unary_transform(sparse_vector& result, Transform transform) const
-    {
-        if (empty()) {
-            return;
-        }
-
-        typename Transform::key_transform kt(transform.get_key_transform());
-        kt(result, *this);
-    }
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;
@@ -1549,8 +1377,6 @@ struct data_access_base<sparse_vector<Basis, Coeffs, Map>> {
     {
         return vect.map_end();
     }
-
-
 };
 
 }// namespace dtl

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED  ON)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (WIN32)
     ## better remove this and add it to the command line as machine specific
@@ -36,27 +36,14 @@ if (LA_TESTING_INCLUDE_INTEGRATION)
 endif ()
 
 add_subdirectory(unit_tests)
-add_executable(all_tests EXCLUDE_FROM_ALL)
+add_executable(all_tests common/run_tests.cpp)
+
+message(STATUS "${LIBALGEBRA_TEST_SUITE_LIBS}")
+
 target_link_libraries(all_tests PRIVATE
-        la_unittests::main
-        la_unittests::algebra_tests
-        la_unittests::lie_tests
-        la_unittests::tensor_tests
-        la_unittests::utils_tests
-        la_unittests::vector_tests
-        la_unittests::hall_set_tests
-        la_unittests::serialization_tests
-        la_unittests::shuffle_tensor_tests
-        la_unittests::operators_tests
-        la_unittests::antipode_tests
-        la_unittests::half_shuffle_tests
+        la_unittests::utilities
+        ${LIBALGEBRA_TEST_SUITE_LIBS}
         )
 
-if (LA_TESTING_INCLUDE_INTEGRATION)
 
-    target_link_libraries(all_tests PRIVATE
-            la_unittests::integration_tests
-            la_unittests::signature_tests
-            )
-
-endif ()
+add_test(NAME "All_tests" COMMAND all_tests)

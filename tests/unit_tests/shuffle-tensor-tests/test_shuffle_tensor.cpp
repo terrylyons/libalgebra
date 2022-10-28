@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 #include <libalgebra/libalgebra.h>
 
@@ -180,7 +180,7 @@ SUITE(shuffle_tensor)
 
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
         alg::mult::scalar_passthrough my_scalar_passthrough;
-        mtraits::multiply_and_add_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough);
+        mtraits::multiply_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough);
 
         CHECK_EQUAL(expected, lhs);
 
@@ -200,7 +200,7 @@ SUITE(shuffle_tensor)
 
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
         alg::mult::scalar_passthrough my_scalar_passthrough;
-        mtraits::multiply_and_add_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough, 5);
+        mtraits::multiply_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough, 5);
 
         CHECK_EQUAL(expected, lhs);
 
@@ -322,7 +322,7 @@ SUITE(shuffle_tensor)
 
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
         alg::mult::scalar_passthrough my_scalar_passthrough;
-        mtraits::multiply_and_add_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough);
+        mtraits::multiply_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough);
 
         CHECK_EQUAL(expected, lhs);
 
@@ -342,7 +342,7 @@ SUITE(shuffle_tensor)
 
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
         alg::mult::scalar_passthrough my_scalar_passthrough;
-        mtraits::multiply_and_add_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough, 5);
+        mtraits::multiply_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough, 5);
 
         CHECK_EQUAL(expected, lhs);
 
@@ -466,7 +466,7 @@ SUITE(shuffle_tensor)
 
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
         alg::mult::scalar_passthrough my_scalar_passthrough;
-        mtraits::multiply_and_add_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough);
+        mtraits::multiply_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough);
 
         CHECK_EQUAL(expected, lhs);
 
@@ -486,7 +486,7 @@ SUITE(shuffle_tensor)
 
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
         alg::mult::scalar_passthrough my_scalar_passthrough;
-        mtraits::multiply_and_add_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough, 5);
+        mtraits::multiply_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough, 5);
 
         CHECK_EQUAL(expected, lhs);
 
@@ -635,7 +635,7 @@ SUITE(shuffle_tensor)
 
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
         alg::mult::scalar_passthrough my_scalar_passthrough;
-        mtraits::multiply_and_add_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough);
+        mtraits::multiply_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough);
 
         CHECK_EQUAL(expected, lhs);
 
@@ -659,7 +659,7 @@ SUITE(shuffle_tensor)
 
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
         alg::mult::scalar_passthrough my_scalar_passthrough;
-        mtraits::multiply_and_add_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough, 5);
+        mtraits::multiply_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough, 5);
 
         CHECK_EQUAL(expected, lhs);
 
@@ -844,7 +844,7 @@ SUITE(shuffle_tensor)
 
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
         alg::mult::scalar_passthrough my_scalar_passthrough;
-        mtraits::multiply_and_add_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough);
+        mtraits::multiply_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough);
 
         CHECK_EQUAL(expected, lhs);
 
@@ -874,7 +874,7 @@ SUITE(shuffle_tensor)
 
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
         alg::mult::scalar_passthrough my_scalar_passthrough;
-        mtraits::multiply_and_add_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough, 5);
+        mtraits::multiply_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough, 5);
 
         CHECK_EQUAL(expected, lhs);
 
@@ -1069,7 +1069,7 @@ SUITE(shuffle_tensor)
 
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
         alg::mult::scalar_passthrough my_scalar_passthrough;
-        mtraits::multiply_and_add_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough);
+        mtraits::multiply_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough);
 
         CHECK_EQUAL(expected, lhs);
 
@@ -1100,7 +1100,7 @@ SUITE(shuffle_tensor)
 
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
         alg::mult::scalar_passthrough my_scalar_passthrough;
-        mtraits::multiply_and_add_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough, 5);
+        mtraits::multiply_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough, 5);
 
         CHECK_EQUAL(expected, lhs);
 
@@ -1292,7 +1292,7 @@ SUITE(shuffle_tensor)
 
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
         alg::mult::scalar_passthrough my_scalar_passthrough;
-        mtraits::multiply_and_add_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough);
+        mtraits::multiply_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough);
 
         CHECK_EQUAL(expected, lhs);
 
@@ -1323,7 +1323,7 @@ SUITE(shuffle_tensor)
 
         SHUFFLE_TENSOR_MULTIPLICATION my_shuffle_tensor_product;
         alg::mult::scalar_passthrough my_scalar_passthrough;
-        mtraits::multiply_and_add_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough, 5);
+        mtraits::multiply_inplace(my_shuffle_tensor_product, lhs, rhs, my_scalar_passthrough, 5);
 
         CHECK_EQUAL(expected, lhs);
 

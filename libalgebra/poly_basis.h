@@ -14,6 +14,14 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_POLYBASISH_SEEN
 #define DJC_COROPA_LIBALGEBRA_POLYBASISH_SEEN
 
+#include "basis.h"
+#include "implementation_types.h"
+#include "vectors.h"
+
+#include <iosfwd>
+#include <map>
+#include <boost/container/flat_map.hpp>
+
 namespace alg {
 
 /// A polynomial basis class.
@@ -35,7 +43,7 @@ class poly_basis
 public:
     typedef alg::LET LET;
     /// A key is a map from letters to degrees (i.e. a monomial of letters).
-    typedef std::map<LET, DEG> KEY;
+    typedef boost::container::flat_map<LET, DEG> KEY;
     /// A default key corresponds to the monomial of degree 0.
     const KEY empty_key;
     /// The rationals.
@@ -67,19 +75,13 @@ public:
             if (it->second > 0) {
                 typename std::map<LET, typename Coeff::SCA>::const_iterator iit;
                 iit = values.find(it->first);
-                try {
-                    if (iit != values.end()) {
-                        for (DEG j = 1; j <= it->second; ++j) {
-                            Coeff::mul_inplace(result, iit->second);
-                        }
-                    }
-                    else {
-                        throw "not all variables have values!";
+                if (iit != values.end()) {
+                    for (DEG j = 1; j <= it->second; ++j) {
+                        Coeff::mul_inplace(result, iit->second);
                     }
                 }
-                catch (char* str) {
-                    std::cerr << "Exception raised: " << str << '\n';
-                    abort();
+                else {
+                    throw std::invalid_argument("not all variables have values!");
                 }
             }
         }
@@ -167,12 +169,11 @@ struct vector_type_selector<poly_basis, Coeff> {
     typedef sparse_vector<BASIS, Coeff, std::map<typename BASIS::KEY, typename Coeff::S, typename BASIS::KEY_LESS>> type;
 };
 
-template <typename Coeff>
-struct template_vector_type_selector<poly_basis, Coeff>
-{
+template<typename Coeff>
+struct template_vector_type_selector<poly_basis, Coeff> {
     typedef poly_basis BASIS;
-    template <typename B, typename C>
-    using type = sparse_vector<B, C, std::map<typename B::KEY, typename C::S, typename B::KEY_LESS> >;
+    template<typename B, typename C>
+    using type = sparse_vector<B, C, std::map<typename B::KEY, typename C::S, typename B::KEY_LESS>>;
 };
 
 }// namespace vectors

@@ -5,13 +5,12 @@
 #ifndef LIBALGEBRA_HYBRID_VECTOR_H
 #define LIBALGEBRA_HYBRID_VECTOR_H
 
-
 #include <algorithm>
 #include <numeric>
 
-#include "detail/order_trait.h"
 #include "base_vector.h"
 #include "dense_vector.h"
+#include "detail/order_trait.h"
 #include "sparse_vector.h"
 
 #define DEFINE_FUSED_OP(NAME, ST, OP1, OP2)                            \
@@ -98,7 +97,8 @@ public:
         DIMN dense_dim(vect.dense_dimension());
         DIMN sparse_dim(vect.sparse_size());
 
-        DIMN next_dense_size(vect.next_resize_size());
+        auto info = basis::basis_traits<typename Vector::BASIS>::next_resize_dimension(vect.basis, dense_dim + 1, vect.dense_degree());
+        DIMN next_dense_size(info.dimension);
         assert(next_dense_size <= vect.max_dense_dimension());
         assert(dense_dim <= vect.max_dense_dimension());
 
@@ -126,6 +126,56 @@ private:
 };
 
 }// namespace policy
+
+namespace dtl {
+
+#define LIBALGEBRA_HYBRID_REF_BINOP(OP)                              \
+    template<typename T>                                             \
+    hybrid_reference& operator OP(T arg)                             \
+    {                                                                \
+        if (m_is_dense) {                                            \
+            p_vector->Hybrid::DENSE::operator[](m_key) OP scalar_type(arg);  \
+        }                                                            \
+        else {                                                       \
+            p_vector->Hybrid::SPARSE::operator[](m_key) OP scalar_type(arg); \
+        }                                                            \
+        return *this;                                                \
+    }
+
+template<typename Hybrid>
+class hybrid_reference
+{
+    using key_type = typename Hybrid::KEY;
+
+    Hybrid* p_vector;
+    const key_type& m_key;
+    bool m_is_dense;
+
+public:
+    using scalar_type = typename Hybrid::SCALAR;
+
+    explicit hybrid_reference(Hybrid* vector, const key_type& key, bool is_dense)
+        : p_vector(vector), m_key(key), m_is_dense(is_dense)
+    {}
+
+    operator const scalar_type&() const noexcept
+    {
+        if (m_is_dense) {
+            return static_cast<const scalar_type&>(p_vector->Hybrid::DENSE::operator[](m_key));
+        }
+        return static_cast<const scalar_type&>(p_vector->Hybrid::SPARSE::operator[](m_key));
+    }
+
+    LIBALGEBRA_HYBRID_REF_BINOP(=)
+    LIBALGEBRA_HYBRID_REF_BINOP(+=)
+    LIBALGEBRA_HYBRID_REF_BINOP(-=)
+    LIBALGEBRA_HYBRID_REF_BINOP(*=)
+    LIBALGEBRA_HYBRID_REF_BINOP(/=)
+    LIBALGEBRA_HYBRID_REF_BINOP(&=)
+    LIBALGEBRA_HYBRID_REF_BINOP(|=)
+};
+
+}// namespace dtl
 
 /**
  * @brief Hybrid between a dense vector and a sparse vector.
@@ -158,6 +208,7 @@ class hybrid_vector : public dense_vector<Basis, Coeffs>, public sparse_vector<B
 
     friend struct tools::size_control;
     friend class dtl::data_access_base<hybrid_vector>;
+    friend class dtl::hybrid_reference<hybrid_vector>;
 
 private:
     // The resize manager is responsible for dictating when the
@@ -177,6 +228,8 @@ public:
     typedef typename Coeffs::Q RATIONAL;
 
     typedef typename dtl::requires_order<Basis>::key_ordering key_ordering;
+
+    using reference = dtl::hybrid_reference<hybrid_vector>;
 
 public:
     // Static variables from base_Vec (via DENSE)
@@ -336,7 +389,7 @@ private:
 
         typename std::vector<std::pair<DIMN, SCALAR>>::const_iterator cit;
         for (cit = buffer.begin(); cit != buffer.end(); ++cit) {
-            dense_value(cit->first) += cit->second;
+            DENSE::value(cit->first) += cit->second;
         }
     }
 
@@ -440,9 +493,6 @@ public:
     {
         return SPARSE::empty();
     }
-
-    using DENSE::next_resize_size;
-
 
     // Sparse part and dense part access
 
@@ -882,15 +932,10 @@ public:
     }
 
     /// Get reference to coefficient of key
-    SCALAR& operator[](const KEY& key)
+    reference operator[](const KEY& key)
     {
-        DIMN idx;
-        if ((idx = key_to_index(key)) < DENSE::dimension()) {
-            return DENSE::value(idx);
-        }
-        else {
-            return SPARSE::operator[](key);
-        }
+        DIMN idx = key_to_index(key);
+        return reference(this, key, idx < dense_dimension());
     }
 
     /// Get a reference to the coefficient of the key using index
@@ -915,11 +960,11 @@ public:
         }
     }
 
-    /// Get reference to an element from the dense part at index
-    SCALAR& dense_value(const DIMN idx)
-    {
-        return DENSE::value(idx);
-    }
+    //    /// Get reference to an element from the dense part at index
+    //    SCALAR& dense_value(const DIMN idx)
+    //    {
+    //        return DENSE::value(idx);
+    //    }
 
     /// Get a const reference to an element from the dense part at index
     const SCALAR& dense_value(const DIMN idx) const
@@ -1040,48 +1085,41 @@ public:
         return !operator==(other);
     }
 
-
-
 public:
-
-    template <typename F>
+    template<typename F>
     static void apply_unary_operation(
             hybrid_vector& result,
             const hybrid_vector& arg,
-            F&& func
-            )
+            F&& func)
     {
         DENSE::apply_unary_operation(result, arg, func);
         SPARSE::apply_unary_operation(result, arg, func);
     }
 
-    template <typename F>
+    template<typename F>
     static void apply_inplace_unary_op(hybrid_vector& arg, F&& func)
     {
         DENSE::apply_inplace_unary_op(arg, func);
         SPARSE::apply_inplace_unary_op(arg, func);
     }
 
-
-    template <typename F>
+    template<typename F>
     static void apply_flat_binary_operation(
             hybrid_vector& result,
             const hybrid_vector& lhs,
             const hybrid_vector& rhs,
-            F&& func
-            )
+            F&& func)
     {
         DENSE::apply_flat_binary_operation(result, lhs, rhs, func);
         SPARSE::apply_flat_binary_operation(result, lhs, rhs, func);
         result.incorporate_sparse();
     }
 
-    template <typename F>
+    template<typename F>
     static void apply_inplace_flat_binary_op(
             hybrid_vector& lhs,
             const hybrid_vector& rhs,
-            F&& func
-            )
+            F&& func)
     {
         DENSE::apply_inplace_flat_binary_op(lhs, rhs, func);
         SPARSE::apply_inplace_flat_binary_op(lhs, rhs, func);
@@ -1270,292 +1308,6 @@ public:
         return ord(lhs.first, rhs.first);
     }
 
-private:
-    template<typename Vector, typename KeyTransform>
-    void
-    triangular_binary_transform_mixed_cases(Vector& result, const hybrid_vector& rhs, KeyTransform key_transform,
-                                            const DEG max_depth) const
-    {
-        /*
-         * At this stage there are three remaining cases:
-         *   - dense * sparse;
-         *   - sparse * dense;
-         *   - sparse * sparse;
-         * If both sparse parts are empty, there is nothing further to do,
-         * so we can return. Otherwise, we should separate the rhs by degree
-         * to avoid map lookups in a tight loop, and then proceed with the
-         * multiplication as usual.
-         */
-        if (sparse_empty() && rhs.sparse_empty()) {
-            return;
-        }
-
-        std::vector<std::pair<KEY, SCALAR>> buffer;
-        std::vector<typename std::vector<std::pair<KEY, SCALAR>>::const_iterator> iterators;
-        SPARSE::separate_by_degree(buffer, rhs, degree_tag.max_degree, iterators);
-
-        // Do the dense * sparse first
-        typename std::vector<std::pair<KEY, SCALAR>>::const_iterator cit, buf_begin(buffer.begin());
-
-        DEG rh_max_deg;
-        if (dense_dimension() != 0) {
-            for (DEG lhs_deg = 0; lhs_deg <= std::min(dense_degree(), degree_tag.max_degree); ++lhs_deg) {
-                rh_max_deg = degree_tag.max_degree - lhs_deg;
-                for (DIMN i = DENSE::start_of_degree(lhs_deg); i < DENSE::start_of_degree(lhs_deg + 1); ++i) {
-                    for (cit = buf_begin; cit != iterators[rh_max_deg]; ++cit) {
-                        key_transform(result, index_to_key(i), DENSE::value(i), cit->first, cit->second);
-                    }
-                }
-            }
-        }
-
-        // Now do sparse * dense and sparse * sparse in one step.
-        DEG lhs_deg;
-        for (typename SPARSE::const_iterator it(SPARSE::begin()); it != SPARSE::end(); ++it) {
-            lhs_deg = basis.degree(it->key());
-            assert(lhs_deg <= max_depth);
-            rh_max_deg = degree_tag.max_degree - lhs_deg;
-
-            if (rhs.dense_dimension() != 0) {
-                for (DEG rhs_deg = 0; rhs_deg <= std::min(rh_max_deg, rhs.dense_degree()); ++rhs_deg) {
-                    for (DIMN j = DENSE::start_of_degree(rhs_deg); j < DENSE::start_of_degree(rhs_deg + 1); ++j) {
-                        key_transform(result, it->key(), it->value(), index_to_key(j), rhs.dense_value(j));
-                    }
-                }
-            }
-
-            for (cit = buf_begin; cit != iterators[rh_max_deg]; ++cit) {
-                key_transform(result, it->key(), it->value(), cit->first, cit->second);
-            }
-        }
-
-        dtl::vector_base_access::convert(result).maybe_resize();
-    }
-
-    template<typename Vector, typename KeyTransform>
-    void square_binary_transform_mixed_case(Vector& result, const hybrid_vector& rhs, KeyTransform key_transform) const
-    {
-        /*
-         * At this stage there are three remaining cases:
-         *   - dense * sparse;
-         *   - sparse * dense;
-         *   - sparse * sparse;
-         * If both sparse parts are empty, there is nothing further to do,
-         * so we can return. Otherwise, we should separate the rhs by degree
-         * to avoid map lookups in a tight loop, and then proceed with the
-         * multiplication as usual.
-         */
-        if (sparse_empty() && rhs.sparse_empty()) {
-            return;
-        }
-        std::vector<std::pair<KEY, SCALAR>> buffer;
-        rhs.fill_buffer(buffer, utils::is_ordered<SparseMap>());
-
-        typename std::vector<std::pair<KEY, SCALAR>>::const_iterator cit, buf_begin(buffer.begin()), buf_end(buffer.end());
-
-        // First deal with the dense * sparse case
-        for (DIMN i = 0; i < dense_dimension(); ++i) {
-            for (cit = buf_begin; cit != buf_end; ++cit) {
-                key_transform(result, index_to_key(i), dense_value(i), cit->first, cit->second);
-            }
-        }
-
-        // Now deal with sparse * dense and sparse * sparse together
-        for (typename SPARSE::const_iterator it(SPARSE::begin()); it != SPARSE::end(); ++it) {
-            for (DIMN j = 0; j < rhs.dense_dimension(); ++j) {
-                key_transform(result, it->key(), it->value(), index_to_key(j), rhs.dense_value(j));
-            }
-
-            for (cit = buf_begin; cit != buf_end; ++cit) {
-                key_transform(result, it->key(), it->value(), cit->first, cit->second);
-            }
-        }
-
-        dtl::vector_base_access::convert(result).maybe_resize();
-    }
-
-public:
-    // Transform methods
-
-    /**
-     * @brief Apply a buffered binary transform using only key transform up to max depth
-     *
-     * This is applied to the vector using the degree optimisation.
-     *
-     * @tparam Vector Result vector type
-     * @tparam KeyTransform Key transform type
-     * @param result Vector in which to place the result
-     * @param rhs right hand side buffer
-     * @param key_transform transform to apply
-     * @param max_depth maximum depth of elements to compute
-     */
-    template<typename Vector, typename KeyTransform>
-    void
-    triangular_buffered_apply_binary_transform(Vector& result, const hybrid_vector& rhs, KeyTransform key_transform,
-                                               const DEG max_depth) const
-    {
-
-        if (dense_dimension() != 0 && rhs.dense_dimension() != 0) {
-            DEG max_degree = std::min(max_depth, dense_degree() + rhs.dense_degree());
-            dtl::vector_base_access::convert(result).resize_dense_to_degree(max_degree);
-            DENSE::triangular_buffered_apply_binary_transform(result, rhs, key_transform, max_degree);
-        }
-
-        triangular_binary_transform_mixed_cases(result, rhs, key_transform, max_depth);
-    }
-
-    /**
-     * @brief Apply a buffered binary transform with separate transforms up to max depth
-     *
-     * This is applied to the vector using the degree optimisation.
-     *
-     * @tparam Vector Result vector type
-     * @tparam KeyTransform Key transform type
-     * @tparam IndexTransform Index transform type
-     * @param result Vector in which to place the result
-     * @param rhs Right hand side buffer
-     * @param key_transform transform to apply by keys (sparse elements)
-     * @param index_transform transform to apply by index (dense elements)
-     * @param max_depth Maximum depth to compute
-     */
-    template<typename Vector, typename KeyTransform, typename IndexTransform>
-    void
-    triangular_buffered_apply_binary_transform(Vector& result, const hybrid_vector& rhs, KeyTransform key_transform,
-                                               IndexTransform index_transform, const DEG max_depth) const
-    {
-
-        if (dense_dimension() != 0 && rhs.dense_dimension() != 0) {
-            // The dense part will be resized to accommodate the max_dense_degree
-            DEG max_dense_degree = std::min(max_depth, dense_degree() + rhs.dense_degree());
-            dtl::vector_base_access::convert(result).resize_dense_to_degree(max_dense_degree);
-            DENSE::triangular_buffered_apply_binary_transform(result, rhs, key_transform, index_transform,
-                                                              max_dense_degree);
-        }
-
-        triangular_binary_transform_mixed_cases(result, rhs, key_transform, max_depth);
-    }
-
-    /**
-     * @brief Apply an unbuffered binary transform with separate transforms
-     * @tparam KeyTransform Key transform type
-     * @tparam IndexTransform Index transform type
-     * @param rhs Right hand side buffer
-     * @param key_transform transform to apply by key (sparse)
-     * @param index_transform transform to apply by index (dense)
-     * @param max_depth Maximum depth of elements to compute
-     */
-    template<typename KeyTransform, typename IndexTransform>
-    void
-    triangular_unbuffered_apply_binary_transform(const hybrid_vector& rhs, KeyTransform key_transform,
-                                                 IndexTransform index_transform, const DEG max_depth)
-    {
-        hybrid_vector result;
-        triangular_buffered_apply_binary_transform(result, rhs, key_transform, index_transform, max_depth);
-        swap(result);
-    }
-
-    /**
-     * @brief Apply an unbuffered binary transform using only key transform
-     *
-     * @tparam KeyTransform Key transform type
-     * @param rhs Right hand side buffer
-     * @param key_transform Key transform
-     * @param max_depth maximum depth of elements to compute
-     */
-    template<typename KeyTransform>
-    void
-    triangular_unbuffered_apply_binary_transform(const hybrid_vector& rhs, KeyTransform key_transform,
-                                                 const DEG max_depth)
-    {
-        hybrid_vector result;
-        triangular_buffered_apply_binary_transform(result, rhs, key_transform, max_depth);
-        swap(result);
-    }
-
-    /**
-     * @brief Apply buffered binary transform with no degree optimisation
-     * @tparam Vector Output vector type
-     * @tparam KeyTransform Key transform type
-     * @param result buffer in which to place result
-     * @param rhs Right hand side buffer
-     * @param key_transform Transform to apply by key (sparse)
-     */
-    template<typename Vector, typename KeyTransform>
-    void
-    square_buffered_apply_binary_transform(Vector& result, const hybrid_vector& rhs, KeyTransform key_transform) const
-    {
-        if (dense_dimension() != 0 && rhs.dense_dimension() != 0) {
-            DIMN new_size = std::max(dense_dimension(), rhs.dense_dimension());
-            dtl::vector_base_access::convert(result).resize_dense_to_dimension(new_size);
-            DENSE::square_buffered_apply_binary_transform(result, rhs, key_transform);
-        }
-
-        square_binary_transform_mixed_case(result, rhs, key_transform);
-    }
-
-    /**
-     * @brief Apply buffered binary transform with separate transforms and no degree optimisation
-     * @tparam Vector Output vector type
-     * @tparam KeyTransform Key transform type
-     * @tparam IndexTransform Index transform type
-     * @param result buffer in which to place result
-     * @param rhs right hand side buffer
-     * @param index_transform transform to apply by index (dense)
-     */
-    template<typename Vector, typename KeyTransform, typename IndexTransform>
-    void
-    square_buffered_apply_binary_transform(Vector& result, const hybrid_vector& rhs, KeyTransform key_transform,
-                                           IndexTransform index_transform) const
-    {
-        if (dense_dimension() != 0 && rhs.dense_dimension() != 0) {
-            DIMN new_size = std::max(dense_dimension(), rhs.dense_dimension());
-            dtl::vector_base_access::convert(result).resize_dense_to_dimension(new_size);
-            DENSE::square_buffered_apply_binary_transform(result, rhs, key_transform, index_transform);
-        }
-
-        square_binary_transform_mixed_case(result, rhs, key_transform);
-    }
-
-public:
-    /**
-     * @brief  Apply a transform inplace with buffering
-     * @tparam Transform Transform type
-     * @param result buffer in which to place result (temporarily)
-     * @param transform transform to apply
-     * @param max_deg Maximum degree
-     */
-    template<typename Transform>
-    void buffered_apply_unary_transform(hybrid_vector& result, Transform transform, const DEG max_deg) const
-    {
-        if (dense_dimension() != 0) {
-            result.resize_dense_to_dimension(transform.dense_resize(dense_dimension()));
-            DENSE::buffered_apply_unary_transform(result, transform, max_deg);
-        }
-
-        SPARSE::buffered_apply_unary_transform(result, transform, max_deg);
-        result.maybe_resize();
-    }
-
-    /**
-     * @brief  Apply a transform inplace with buffering
-     * @tparam Transform Transform type
-     * @param result buffer in which to place result (temporarily)
-     * @param transform transform to apply
-     */
-    template<typename Transform>
-    void buffered_apply_unary_transform(hybrid_vector& result, Transform transform) const
-    {
-        if (dense_dimension() == 0 && sparse_empty()) {
-            return;
-        }
-
-        if (dense_dimension() != 0) {
-            result.resize_dense_to_dimension(transform.dense_resize(dense_dimension()));
-            DENSE::buffered_apply_unary_transform(result, transform);
-        }
-        SPARSE::buffered_apply_unary_transform(result, transform);
-        result.maybe_resize();
-    }
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
     friend class boost::serialization::access;

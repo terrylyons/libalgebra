@@ -6,7 +6,7 @@
 #include <libalgebra/functionals.h>
 #include <libalgebra/operators.h>
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 #include <libalgebra/alg_types.h>
 
 SUITE(operator_composition)

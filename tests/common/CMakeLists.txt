@@ -19,7 +19,7 @@ target_include_directories(libalgebra_tests_utilities PUBLIC "${CMAKE_CURRENT_LI
 
 target_link_libraries(libalgebra_tests_utilities PUBLIC
         Libalgebra::Libalgebra
-        UnitTest++
+        UnitTest++::UnitTest++
         Boost::boost
         Boost::filesystem
         Boost::iostreams

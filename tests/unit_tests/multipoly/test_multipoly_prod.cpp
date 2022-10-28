@@ -2,7 +2,7 @@
 // Created by user on 11/05/22.
 //
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 #include <libalgebra/libalgebra.h>
 #include <libalgebra/alg_types.h>
 

@@ -57,6 +57,13 @@ constexpr BaseInt logN(ArgInt arg, BaseInt base) noexcept
     return (arg < base) ? 0 : logN(arg / static_cast<ArgInt>(base), base) + 1;
 }
 
+template<typename Int, typename PowerInt>
+constexpr Int sum_powers(Int base, PowerInt max_power) noexcept
+{
+    return (max_power == 0) ? Int(1) : (max_power == 1) ? Int(1) + base
+                                                        : Int(1) + base * sum_powers(base, max_power - 1);
+}
+
 }// namespace integer_maths
 
 template<typename Int>

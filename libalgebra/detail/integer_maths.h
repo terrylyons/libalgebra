@@ -107,6 +107,14 @@ constexpr Int power(Int base, PowerInt exponent) noexcept
 }
 
 
+template <typename Int, typename PowerInt>
+constexpr Int sum_powers(Int base, PowerInt max_power) noexcept
+{
+    return (max_power == 0) ? 1 : (max_power == 1) ? 1 + base : 1 + base*sum_powers(base, max_power-1);
+}
+
+
+
 }// namespace alg
 
 #endif// LIBALGEBRAUNITTESTS_INTEGER_MATHS_H

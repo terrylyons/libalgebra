@@ -13,8 +13,8 @@ Version 3. (See accompanying file License.txt)
 
 #include "libalgebra/libalgebra.h"
 
-#include "coefficients/rational_coefficients.h"
-#include "libalgebra/coefficients/coefficients.h"
+#include "rational_coefficients.h"
+#include "coefficients.h"
 
 enum coefficient_t
 {

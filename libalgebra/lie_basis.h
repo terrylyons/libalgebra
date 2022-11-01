@@ -14,10 +14,10 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_LIEBASISH_SEEN
 #define DJC_COROPA_LIBALGEBRA_LIEBASISH_SEEN
 
+#include "basis.h"
 #include "constpower.h"
-#include "libalgebra/basis/basis.h"
-#include "utils/integer_maths.h"
-#include <libalgebra/basis/key_iterators.h>
+#include "detail/integer_maths.h"
+#include "key_iterators.h"
 
 namespace alg {
 
@@ -483,6 +483,15 @@ public:
         return basis::key_range<lie_basis>{*this, begin(), (end <= start_of_degree(max_degree + 1)) ? end : KEY(0)};
     }
 };
+
+namespace basis {
+
+template<DEG Width, DEG Depth1, DEG Depth2>
+struct related_to<lie_basis<Width, Depth1>, lie_basis<Width, Depth2>>
+    : std::true_type {
+};
+
+}// namespace basis
 
 }// namespace alg
 

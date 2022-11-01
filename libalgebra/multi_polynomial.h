@@ -13,121 +13,44 @@ Version 3. (See accompanying file License.txt)
 #ifndef multi_polynomialH_SEEN
 #define multi_polynomialH_SEEN
 
+#include "algebra.h"
+#include "monomial_basis.h"
+
 namespace alg {
 
-template<typename Coeff>
-class multipoly_multiplication
+template <DEG Width, DEG Depth>
+class multipoly_multiplier : multiplier_base<multipoly_multiplier<Width, Depth>,
+        free_monomial_basis<Width, Depth>>
 {
-
-    typedef typename Coeff::SCA scalar_t;
-
-    /// The concatenation product of two basis elements.
-    /**
-    Returns the multi_polynomial obtained by the concatenation product of two keys
-    viewed as words of letters. The result is a unidimensional multi_polynomial
-    with a unique key (the concatenation of k1 and k2) associated to the +1
-    scalar. The already computed products are not stored or remembered.
-    */
-    template<typename MultiPoly>
-    static MultiPoly prod(typename MultiPoly::KEY const& k1, typename MultiPoly::KEY const& k2)
-    {
-
-//        typedef typename MultiPoly::BASIS basis_t;
-        typedef typename MultiPoly::KEY key_t;
-        using trait = basis::basis_traits<typename MultiPoly::BASIS>;
-        static constexpr DEG max_degree = trait::degree_tag::max_degree;
-
-        MultiPoly result;
-        if ((max_degree == 0) || (k1.size() + k2.size() <= max_degree)) {
-            key_t concat(k1);
-            for (typename key_t::size_type i = 0; i < k2.size(); ++i) {
-                concat.push_back(k2[i]);
-            }
-            result[concat] = Coeff::one;
-        }
-        return result;
-    }
-
-
-    template<typename MultiPoly, typename Transform>
-    class key_operator
-    {
-        Transform m_transform;
-
-    public:
-#if __cplusplus >= 201103UL
-
-        template<typename... Args>
-        explicit key_operator(Args&&... args)
-            : m_transform(std::forward<Args>(args)...)
-        {}
-
-#else
-        template<typename Arg>
-        explicit key_operator(Arg arg) : m_transform(arg)
-        {}
-#endif
-
-        template<typename Vector>
-        void
-        operator()(Vector& result, typename Vector::KEY const& lhs_key, scalar_t const& lhs_val,
-                   typename Vector::KEY const& rhs_key, scalar_t const& rhs_val)
-        {
-            result.add_scal_prod(prod<MultiPoly>(lhs_key, rhs_key), m_transform(Coeff::mul(lhs_val, rhs_val)));
-        }
-    };
-
+    using base = multiplier_base<multipoly_multiplier<Width, Depth>,
+            free_monomial_basis<Width, Depth>>;
+    friend base;
 
 public:
-    template<typename Algebra, typename Operator>
-    Algebra& multiply_and_add(Algebra& result, Algebra const& lhs, Algebra const& rhs, Operator op) const
+    using basis_type = free_monomial_basis<Width, Depth>;
+    using key_type = typename basis_type::KEY;
+    using result_type = typename base::inner_result_type;
+    using typename base::argument_type;
+
+    result_type operator()(argument_type lhs, argument_type rhs) const
     {
-        key_operator<Algebra, Operator> kt(op);
-        lhs.buffered_apply_binary_transform(result, rhs, kt);
+        result_type result;
+        if (Depth == 0 || lhs.size() + rhs.size() <= Depth) {
+            key_type concat(lhs);
+            for (const auto& ritem : rhs) {
+                concat.push_back(ritem);
+            }
+            result.emplace_back(concat, 1);
+        }
         return result;
     }
 
-    template<typename Algebra, typename Operator>
-    Algebra&
-    multiply_and_add(Algebra& result, Algebra const& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
-    {
-        key_operator<Algebra, Operator> kt(op);
-        lhs.buffered_apply_binary_transform(result, rhs, kt, max_depth);
-        return result;
-    }
 
-    template<typename Algebra, typename Operator>
-    Algebra multiply(Algebra const& lhs, Algebra const& rhs, Operator op) const
-    {
-        Algebra result;
-        multiply_and_add(result, lhs, rhs, op);
-        return result;
-    }
-
-    template<typename Algebra, typename Operator>
-    Algebra multiply(Algebra const& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
-    {
-        Algebra result;
-        multiply_and_add(result, lhs, rhs, op, max_depth);
-        return result;
-    }
-
-    template<typename Algebra, typename Operator>
-    Algebra& multiply_inplace(Algebra& lhs, Algebra const& rhs, Operator op) const
-    {
-        key_operator<Algebra, Operator> kt(op);
-        lhs.unbuffered_apply_binary_transform(rhs, kt);
-        return lhs;
-    }
-
-    template<typename Algebra, typename Operator>
-    Algebra& multiply_inplace(Algebra& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
-    {
-        key_operator<Algebra, Operator> kt(op);
-        lhs.unbuffered_apply_binary_transform(rhs, kt, max_depth);
-        return lhs;
-    }
 };
+
+template <DEG Width, DEG Depth>
+using multipoly_multiplication = base_multiplication<multipoly_multiplier<Width, Depth>>;
+
 
 /// A specialisation of the algebra class with a free tensor basis.
 /**
@@ -145,11 +68,11 @@ template<typename Coeff, DEG n_letters, DEG max_degree,
          typename... Args>
 class multi_polynomial : public algebra<
                                  free_monomial_basis<n_letters, max_degree>,
-                                 Coeff, multipoly_multiplication<Coeff>,
+                                 Coeff, multipoly_multiplication<n_letters, max_degree>,
                                  VectorType, Args...>
 {
 
-    typedef multipoly_multiplication<Coeff> multiplication_t;
+    typedef multipoly_multiplication<n_letters, max_degree> multiplication_t;
 
 public:
     /// The basis type.

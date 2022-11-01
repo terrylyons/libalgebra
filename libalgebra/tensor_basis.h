@@ -14,11 +14,16 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_TENSORBASISH_SEEN
 #define DJC_COROPA_LIBALGEBRA_TENSORBASISH_SEEN
 
-#include "_tensor_basis.h"
-#include "basis_traits.h"
+#include "implementation_types.h"
+
 #include <cmath>
-#include <libalgebra/basis/key_iterators.h>
 #include <limits>
+
+#include "_tensor_basis.h"
+#include "base_basis.h"
+#include "basis.h"
+#include "detail/meta.h"
+#include "key_iterators.h"
 
 namespace alg {
 
@@ -34,11 +39,19 @@ struct tensor_size_info {
 
     template<DIMN Depth>
     struct helper {
-        static constexpr DIMN value = (power(NoLetters, Depth + 1) - 1) / (NoLetters - 1);
+        static constexpr DIMN value = integer_maths::sum_powers(NoLetters, Depth);
+    };
+
+    template<DIMN D>
+    struct power_helper {
+        static constexpr DIMN value = power(NoLetters, D);
     };
 
     using holder = typename alg::utils::generate_array<max_depth + 1, helper>::result;
+    using power_holder = typename alg::utils::generate_array<max_depth, power_helper>::result;
+    using degree_sizes_t = std::array<DIMN, max_depth + 2>;
 
+    static const std::array<DIMN, max_depth + 1> powers;
     static const std::array<DIMN, max_depth + 2> degree_sizes;
 };
 
@@ -47,6 +60,9 @@ const std::array<DIMN,
                  tensor_size_info<N>::max_depth
                          + 2>
         tensor_size_info<N>::degree_sizes = tensor_size_info<N>::holder::data;
+
+template<DEG Width>
+const std::array<DIMN, tensor_size_info<Width>::max_depth + 1> tensor_size_info<Width>::powers = tensor_size_info<Width>::power_holder::data;
 
 }// namespace dtl
 
@@ -220,6 +236,14 @@ public:
         return basis::key_range<tensor_basis>(*this);
     }
 
+    basis::key_range<tensor_basis> iterate_keys_to_deg(DEG mdeg) const noexcept
+    {
+        if (mdeg > max_degree) {
+            return iterate_keys();
+        }
+        return basis::key_range<tensor_basis>(*this, KEY(), index_to_key(start_of_degree(mdeg)));
+    }
+
     basis::key_range<tensor_basis> iterate_keys(const KEY& begin, const KEY& end) const noexcept
     {
         return basis::key_range<tensor_basis>{*this, begin, end};
@@ -304,8 +328,8 @@ public:
             return KEY(LET(idx));
         }
 
-        static boost::recursive_mutex access;
-        boost::lock_guard<boost::recursive_mutex> lock(access);
+//        static boost::recursive_mutex access;
+//        boost::lock_guard<boost::recursive_mutex> lock(access);
         // static const std::vector<KEY> __cache = _key_of_index_cache();
         // assert(idx < __cache.size());
         // return __cache[idx];
@@ -318,13 +342,13 @@ public:
         //    return it->second;
         //}
 
-        std::map<DIMN, KEY> cache;
-
-        KEY& rv = cache[idx];
-
-        if (rv.size() > 0) {
-            return rv;
-        }
+//        std::map<DIMN, KEY> cache;
+//
+//        KEY& rv = cache[idx];
+//
+//        if (rv.size() > 0) {
+//            return rv;
+//        }
 
         DIMN i = idx;
 
@@ -337,7 +361,7 @@ public:
             i /= n_letters;
         }
 
-        return rv = val.reverse();
+        return /*rv =*/ val.reverse();
     }
 
     static DIMN start_of_degree(const DEG deg)
@@ -369,7 +393,7 @@ public:
 */
 template<DEG n_letters, DEG max_degree>
 class free_tensor_basis : public tensor_basis<n_letters, max_degree>,
-                          public basis_traits<With_Degree, n_letters, max_degree>
+                          public base_basis<With_Degree, n_letters, max_degree>
 {
 public:
     /// The tensor_basis type.
@@ -480,7 +504,7 @@ struct vector_type_selector<free_tensor_basis<n_letters, max_depth>, Field> {
 */
 template<DEG n_letters, DEG max_degree>
 class shuffle_tensor_basis : public tensor_basis<n_letters, max_degree>,
-                             public basis_traits<With_Degree, n_letters, max_degree>
+                             public base_basis<With_Degree, n_letters, max_degree>
 {
 public:
     /// The tensor_basis type.
@@ -517,6 +541,45 @@ struct vector_type_selector<shuffle_tensor_basis<n_letters, max_depth>, Field> {
 };
 
 }// namespace vectors
+
+namespace basis {
+
+template<DEG Width, DEG Depth1, DEG Depth2>
+struct related_to<tensor_basis<Width, Depth1>, tensor_basis<Width, Depth2>>
+    : std::true_type {
+};
+
+template<DEG Width, DEG Depth1, DEG Depth2>
+struct related_to<free_tensor_basis<Width, Depth1>, free_tensor_basis<Width, Depth2>>
+    : std::true_type {
+};
+
+template<DEG Width, DEG Depth1, DEG Depth2>
+struct related_to<shuffle_tensor_basis<Width, Depth1>, shuffle_tensor_basis<Width, Depth2>>
+    : std::true_type {
+};
+
+template<DEG Width, DEG Depth1, DEG Depth2>
+struct related_to<free_tensor_basis<Width, Depth1>, tensor_basis<Width, Depth2>>
+    : std::true_type {
+};
+
+template<DEG Width, DEG Depth1, DEG Depth2>
+struct related_to<tensor_basis<Width, Depth1>, free_tensor_basis<Width, Depth2>>
+    : std::true_type {
+};
+
+template<DEG Width, DEG Depth1, DEG Depth2>
+struct related_to<shuffle_tensor_basis<Width, Depth1>, tensor_basis<Width, Depth2>>
+    : std::true_type {
+};
+
+template<DEG Width, DEG Depth1, DEG Depth2>
+struct related_to<tensor_basis<Width, Depth1>, shuffle_tensor_basis<Width, Depth2>>
+    : std::true_type {
+};
+
+}// namespace basis
 
 }// namespace alg
 // Include once wrapper

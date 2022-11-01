@@ -5,23 +5,25 @@
 #ifndef LIBALGEBRA_VECTORS_H
 #define LIBALGEBRA_VECTORS_H
 
-#define __DECLARE_BINARY_OPERATOR(T1, NEWOP, OLDOP, T2) \
-    T1 operator NEWOP(const T2& rhs) const              \
-    {                                                   \
-        T1 result(*this);                               \
-        return result OLDOP rhs;                        \
-    }
-
-#define __DECLARE_UNARY_OPERATOR(NEWT, NEWOP, OLDOP, OLDT) \
-    NEWT operator NEWOP(void) const { return OLDT::operator OLDOP(); }
-
-#include "libalgebra/vectors/dense_vector.h"
-#include "libalgebra/vectors/hybrid_vector.h"
-#include "libalgebra/vectors/sparse_vector.h"
-#include "libalgebra/vectors/vector.h"
+#include "basis.h"
+#include "dense_vector.h"
+#include "hybrid_vector.h"
+#include "sparse_vector.h"
+#include "vector.h"
 
 namespace alg {
 namespace vectors {
+
+template <typename Vector>
+struct vector_traits
+{
+    using basis_type = typename Vector::BASIS;
+    using basis_traits = basis::basis_traits<basis_type>;
+
+    template <typename Basis>
+    using is_compatible = basis::related_to<basis_type, Basis>;
+};
+
 template<typename Basis, typename Coeffs>
 struct vector_type_selector {
     typedef sparse_vector<Basis, Coeffs> sparse_vec;
@@ -48,7 +50,5 @@ struct template_vector_type_selector
 }// namespace vectors
 }// namespace alg
 
-#undef __DECLARE_UNARY_OPERATOR
-#undef __DECLARE_BINARY_OPERATOR
 
 #endif// LIBALGEBRA_VECTORS_H

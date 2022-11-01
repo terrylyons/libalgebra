@@ -4,11 +4,11 @@
 
 #include <libalgebra/alg_types.h>
 #include <libalgebra/libalgebra.h>
-#include <libalgebra/operators/functionals.h>
-#include <libalgebra/operators/operators.h>
-#include <libalgebra/operators/tensor_operator.h>
+#include <libalgebra/functionals.h>
+#include <libalgebra/operators.h>
+#include <libalgebra/tensor_operator.h>
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 SUITE(tensor_defined_operator)
 {

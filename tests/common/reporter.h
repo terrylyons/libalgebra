@@ -6,7 +6,7 @@
 #define LIBALGEBRAUNITTESTS_REPORTER_H
 #include <iostream>
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 class reporter : public UnitTest::TestReporter
 {

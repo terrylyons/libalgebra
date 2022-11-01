@@ -100,10 +100,19 @@ struct dense_storage_base {
     /// Move assignment
     dense_storage_base& operator=(dense_storage_base&& other) noexcept
     {
-        std::swap(m_alloc, other.m_alloc);
-        std::swap(m_data, other.m_data);
-        std::swap(m_type, other.m_type);
-        std::swap(m_size, other.m_size);
+        if (this != &other) {
+            if (m_type == owned) {
+                alloc_traits::deallocate(m_alloc, m_data, m_size);
+            }
+            m_alloc = std::move(other.m_alloc);
+            m_data = other.m_data;
+            m_type = other.m_type;
+            m_size = other.m_size;
+
+            other.m_data = nullptr;
+            other.m_size = 0;
+        }
+
         return *this;
     }
 
@@ -178,7 +187,7 @@ public:
     using vec_type = typename base_type::vec_type;
 
 private:
-    dtl::dense_storage_base<value_type, allocator_type> m_base;
+    base_type m_base;
 
     static void destroy_range(pointer, pointer, std::true_type)
     {
@@ -194,7 +203,7 @@ private:
 
     static void destroy_range(pointer start, pointer end)
     {
-        std::is_trivially_default_constructible<S> tag;
+        std::is_trivially_destructible<S> tag;
         destroy_range(start, end, tag);
     }
 
@@ -340,13 +349,18 @@ public:
     /// Copy constructor - the new storage owns its data even if other borrows data.
     dense_storage& operator=(dense_storage const& other)
     {
-        dense_storage tmp(other);
-        this->swap(tmp);
+//        dense_storage tmp(other);
+//        this->swap(tmp);
+        if (m_base.is_owned()) {
+            destroy_range(m_base.m_data, m_base.m_data + m_base.m_size);
+        }
+        m_base = base_type(other.m_base.m_size);
+        std::uninitialized_copy(other.m_base.m_data, other.m_base.m_data+other.m_base.m_size, m_base.m_data);
         return *this;
     }
 
     /// Move constructor
-    dense_storage& operator=(dense_storage&& other)
+    dense_storage& operator=(dense_storage&& other) noexcept
     {
         if (m_base.is_owned()) {
             destroy_range(m_base.m_data, m_base.m_data + m_base.m_size);
@@ -369,6 +383,11 @@ public:
         dense_storage result(ptr, sz);
         result.to_owned();
         return result;
+    }
+
+    operator bool() const noexcept
+    {
+        return m_base.m_size != 0;
     }
 
 private:
@@ -842,6 +861,7 @@ private:
         ar >> sz;
         m_base = base_type(sz);
         if (sz > 0) {
+            assert(m_base.m_data != nullptr);
             fill_range_default_construct(m_base.m_data, m_base.m_data + m_base.m_size);
             ar >> boost::serialization::make_array(m_base.m_data, m_base.m_size);
         }

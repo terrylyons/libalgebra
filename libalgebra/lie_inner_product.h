@@ -5,19 +5,18 @@
 #ifndef LIBALGEBRA_LIE_INNER_PRODUCT_H
 #define LIBALGEBRA_LIE_INNER_PRODUCT_H
 
-#include <libalgebra/coefficients/coefficients.h>
-#include <libalgebra/coefficients/rational_coefficients.h>
-#include <libalgebra/implementation_types.h>
-#include <libalgebra/lie.h>
-#include <libalgebra/lie_basis.h>
-#include <libalgebra/operators/multi_linear_operators.h>
-#include <libalgebra/tensor.h>
-#include <libalgebra/utils.h>
-#include <libalgebra/vectors/vectors.h>
+#include "implementation_types.h"
 
 #include <map>
 #include <mutex>
 #include <utility>
+
+#include "vectors.h"
+#include "rational_coefficients.h"
+#include "lie.h"
+#include "tensor.h"
+#include "utils.h"
+
 
 namespace alg {
 namespace operators {

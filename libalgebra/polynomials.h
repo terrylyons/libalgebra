@@ -13,113 +13,41 @@ Version 3. (See accompanying file License.txt)
 // Include once wrapper
 #ifndef DJC_COROPA_LIBALGEBRA_POLYNOMIALSH_SEEN
 #define DJC_COROPA_LIBALGEBRA_POLYNOMIALSH_SEEN
+
+#include "algebra.h"
+#include "poly_basis.h"
+
+
 namespace alg {
 
-template<typename Coeff>
-class poly_multiplication
+
+class poly_multiplier : public multiplier_base<poly_multiplier, poly_basis>
 {
-
-    typedef typename Coeff::SCA scalar_t;
-
-protected:
-    /// Multiplication of two monomials, outputted as a monomial
-    template<typename Key>
-    static Key prod2(Key const& k1, Key const& k2)
-    {
-        Key k(k1);
-        typename Key::const_iterator it;
-        for (it = k2.begin(); it != k2.end(); ++it) {
-            k[it->first] += it->second;
-        }
-        return k;
-    }
-
-private:
-    /// Returns the polynomial corresponding to the product of two keys
-    /// (monomials).
-    /**
-    For polynomials, this product is unidimensional, i.e. it
-    is a key since the product of two monomials (keys) is a monomial
-    (key) again. To satisfy the condtions of algebra, the output is
-    in the form of a polynomial.
-    */
-    template<typename Poly>
-    static Poly prod(typename Poly::KEY const& k1, typename Poly::KEY const& k2)
-    {
-        Poly result;
-        result[prod2(k1, k2)] = Coeff::one;
-        return result;
-    }
-
-    template<typename Transform, typename Poly>
-    class key_operator
-    {
-        Transform m_transform;
-
-    public:
-        key_operator(Transform t)
-            : m_transform(t)
-        {}
-
-        template<typename Vector>
-        void
-        operator()(Vector& result, typename Vector::KEY const& lhs_key, scalar_t const& lhs_val,
-                   typename Vector::KEY const& rhs_key, scalar_t const& rhs_val)
-        {
-            result.add_scal_prod(prod<Poly>(lhs_key, rhs_key), m_transform(Coeff::mul(lhs_val, rhs_val)));
-        }
-    };
+    using base = multiplier_base<poly_multiplier, poly_basis>;
+    friend base;
 
 public:
-    template<typename Algebra, typename Operator>
-    Algebra& multiply_and_add(Algebra& result, Algebra const& lhs, Algebra const& rhs, Operator op) const
+    using basis_type = poly_basis;
+    using key_type = typename poly_basis::KEY;
+    using typename base::pair_type;
+    using result_type = typename base::inner_result_type;
+    using typename base::argument_type;
+
+
+    result_type operator()(argument_type lhs, argument_type rhs) const
     {
-        key_operator<Operator, Algebra> kt(op);
-        lhs.buffered_apply_binary_transform(result, rhs, kt);
-        return result;
+        key_type result(lhs);
+        for (const auto& item : rhs) {
+            result[item.first] += item.second;
+        }
+        return {{result, 1}};
     }
 
-    template<typename Algebra, typename Operator>
-    Algebra&
-    multiply_and_add(Algebra& result, Algebra const& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
-    {
-        key_operator<Operator, Algebra> kt(op);
-        lhs.buffered_apply_binary_transform(result, rhs, kt, max_depth);
-        return result;
-    }
-
-    template<typename Algebra, typename Operator>
-    Algebra multiply(Algebra const& lhs, Algebra const& rhs, Operator op) const
-    {
-        Algebra result;
-        multiply_and_add(result, lhs, rhs, op);
-        return result;
-    }
-
-    template<typename Algebra, typename Operator>
-    Algebra multiply(Algebra const& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
-    {
-        Algebra result;
-        multiply_and_add(result, lhs, rhs, op, max_depth);
-        return result;
-    }
-
-    template<typename Algebra, typename Operator>
-    Algebra& multiply_inplace(Algebra& lhs, Algebra const& rhs, Operator op) const
-    {
-        key_operator<Operator, Algebra> kt(op);
-        lhs.unbuffered_apply_binary_transform(rhs, kt);
-        return lhs;
-    }
-
-    template<typename Algebra, typename Operator>
-    Algebra& multiply_inplace(Algebra& lhs, Algebra const& rhs, Operator op, DEG const max_depth) const
-    {
-        key_operator<Operator, Algebra> kt(op);
-        lhs.unbuffered_apply_binary_transform(rhs, kt, max_depth);
-        return lhs;
-    }
 };
+
+
+using poly_multiplication = base_multiplication<poly_multiplier>;
+
 
 /// A specialisation of the algebra class with a commutative monomial product.
 /**
@@ -135,9 +63,9 @@ public:
    commutative product.
  */
 template<typename Coeff, typename...>
-class poly : public algebra<poly_basis, Coeff, poly_multiplication<Coeff>>
+class poly : public algebra<poly_basis, Coeff, poly_multiplication>
 {
-    typedef poly_multiplication<Coeff> multiplication_t;
+    typedef poly_multiplication multiplication_t;
 public:
     typedef typename Coeff::S SCA;
     typedef typename Coeff::Q RAT;
@@ -282,12 +210,12 @@ public:
 
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:
-
     friend class boost::serialization::access;
 
-    template <typename Archive>
-    void serialize(Archive &ar, unsigned int const /* version */) {
-        ar & boost::serialization::base_object<ALG>(*this);
+    template<typename Archive>
+    void serialize(Archive& ar, unsigned int const /* version */)
+    {
+        ar& boost::serialization::base_object<ALG>(*this);
     }
 
 #endif

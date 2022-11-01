@@ -4,21 +4,21 @@
 
 #ifndef LIBALGEBRA_TESTS_UNIT_TESTS_HALF_SHUFFLE_TESTS_HALF_SHUFFLE_FIXTURE_H_
 #define LIBALGEBRA_TESTS_UNIT_TESTS_HALF_SHUFFLE_TESTS_HALF_SHUFFLE_FIXTURE_H_
-#include <libalgebra/libalgebra.h>
 #include <libalgebra/alg_types.h>
-#include <libalgebra/implementation_types.h>
-#include <libalgebra/half_shuffle_tensor_basis.h>
-#include <libalgebra/half_shuffle_tensor_multiplication.h>
+#include <libalgebra/alternative_multiplications.h>
 #include <libalgebra/area_tensor_basis.h>
 #include <libalgebra/area_tensor_multiplication.h>
-#include <libalgebra/alternative_multiplications.h>
+#include <libalgebra/half_shuffle_tensor_basis.h>
+#include <libalgebra/half_shuffle_tensor_multiplication.h>
+#include <libalgebra/implementation_types.h>
+#include <libalgebra/libalgebra.h>
 
-
-#include <boost/range/iterator_range.hpp>
 #include <boost/range/algorithm.hpp>
 #include <boost/range/iterator.hpp>
-#include <set>
+#include <boost/range/iterator_range.hpp>
+#include <list>
 #include <random>
+#include <set>
 
 template<size_t D, size_t W, coefficient_t F = Rational, vector_t VectorType = Hybrid>
 struct HalfShuffleFixture : public alg_types<D, W, F, VectorType> {
@@ -32,8 +32,8 @@ struct HalfShuffleFixture : public alg_types<D, W, F, VectorType> {
     typedef typename alg::lie<typename ALG_TYPES::COEFF, ALG_TYPES::ALPHABET_SIZE, 1> MDEGREE;
     typedef typename ALG_TYPES::TENSOR TENSOR;
     typedef typename ALG_TYPES::SHUFFLE_TENSOR SHUFFLE_TENSOR;
-    typedef typename alg::half_shuffle_tensor<typename ALG_TYPES::COEFF, ALG_TYPES::ALPHABET_SIZE, ALG_TYPES::DEPTH> HALF_SHUFFLE_TENSOR;
-    typedef typename alg::area_tensor<typename ALG_TYPES::COEFF, ALG_TYPES::ALPHABET_SIZE, ALG_TYPES::DEPTH> AREA_TENSOR;
+    typedef typename alg::half_shuffle_tensor<typename ALG_TYPES::COEFF, ALG_TYPES::ALPHABET_SIZE, ALG_TYPES::DEPTH, alg::vectors::sparse_vector> HALF_SHUFFLE_TENSOR;
+    typedef typename alg::area_tensor<typename ALG_TYPES::COEFF, ALG_TYPES::ALPHABET_SIZE, ALG_TYPES::DEPTH, alg::vectors::sparse_vector> AREA_TENSOR;
     typedef typename alg::free_tensor<typename ALG_TYPES::COEFF, ALG_TYPES::ALPHABET_SIZE, ALG_TYPES::DEPTH> FREE_TENSOR;
 
     //template <typename Tensor>
@@ -74,11 +74,11 @@ struct HalfShuffleFixture : public alg_types<D, W, F, VectorType> {
     // it is important that these are static
     // so they can be used in classes defined
     // within classes. However this syntax only works from 2017
-    inline static LBASIS& lbasis = LIE::basis;
-    inline static LBASIS& hall_set = lbasis;
-    inline static BASIS& basis = TENSOR::basis;
-    inline static SBASIS& sbasis = SHUFFLE_TENSOR::basis;
-    inline static HSBASIS& hsbasis = HALF_SHUFFLE_TENSOR::basis;
+    LBASIS& lbasis = LIE::basis;
+    LBASIS& hall_set = lbasis;
+    BASIS& basis = TENSOR::basis;
+    SBASIS& sbasis = SHUFFLE_TENSOR::basis;
+    HSBASIS& hsbasis = HALF_SHUFFLE_TENSOR::basis;
 
     //static bool letter(LKEY arg) noexcept
     //{
@@ -513,24 +513,22 @@ struct HalfShuffleFixture : public alg_types<D, W, F, VectorType> {
         return expansion;
     }
 
-    template <typename Tensor>
+    template<typename Tensor>
     Tensor diff_shuffle_half_shuffle(const Tensor& lhs, const Tensor& rhs)
     {
-        return ((alg::shuffle_multiply(lhs, rhs)
-                 - Tensor(lhs[basis.begin()] * rhs[basis.begin()]))
-                - ((alg::half_shuffle_multiply(lhs, rhs))
-                   + (alg::half_shuffle_multiply(rhs, lhs))));
+        auto left = alg::shuffle_multiply(lhs, rhs);
+        auto right = Tensor(lhs[KEY()]*rhs[KEY()]) + ((alg::half_shuffle_multiply(lhs, rhs))
+                   + (alg::half_shuffle_multiply(rhs, lhs)));
+
+        return left - right;
     }
 
-    template <typename Tensor>
+    template<typename Tensor>
     Tensor diff_area_shuffle(const Tensor& lhs, const Tensor& rhs)
     {
         return ((alg::shuffle_multiply(lhs, rhs) + alg::area_multiply(lhs, rhs))
                 - alg::half_shuffle_multiply(rhs, lhs) * S(2));
     }
-
-
-
 
 private:
 public:

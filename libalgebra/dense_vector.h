@@ -8,12 +8,12 @@
 #include <utility>
 #include <vector>
 
-#include "libalgebra/basis/basis.h"
-#include "libalgebra/utils/meta.h"
-#include "libalgebra/vectors/base_vector.h"
-#include "libalgebra/vectors/dense_storage.h"
-#include "libalgebra/vectors/iterators.h"
-#include "libalgebra/vectors/vector.h"
+#include "basis.h"
+#include "detail/meta.h"
+#include "base_vector.h"
+#include "dense_storage.h"
+#include "iterators.h"
+#include "vector.h"
 
 namespace alg {
 namespace vectors {
@@ -46,7 +46,8 @@ class dense_vector : protected base_vector<Basis, Coeffs>, dtl::requires_order<B
 
     friend class dtl::data_access_base<dense_vector>;
 
-private:
+    using basis_traits = basis::basis_traits<Basis>;
+
     // Data members
     STORAGE m_data;
     DIMN m_dimension;
@@ -61,6 +62,12 @@ public:
     typedef typename COEFFS::Q RATIONAL;
 
     typedef typename dtl::requires_order<Basis>::key_ordering key_ordering;
+
+    using pointer = typename STORAGE::pointer;
+    using const_pointer = typename STORAGE::const_pointer;
+    using reference = typename STORAGE::reference;
+    using const_reference = typename STORAGE::const_reference;
+    using coefficient_ring = Coeffs;
 
 public:
     // static variables defined in base_vector
@@ -92,11 +99,10 @@ public:
     explicit dense_vector(const KEY& k, const SCALAR& s = one)
         : m_data(), m_dimension(0), m_degree(0)
     {
-        DIMN idx = resize_for_key(k, degree_tag);
+        DIMN idx = resize_for_key(k);
         assert(m_dimension == m_data.size());
         assert(m_data.size() > idx);
         m_data[idx] = s;
-        set_degree(degree_tag);
     }
 
     /**
@@ -109,12 +115,7 @@ public:
           m_dimension(m_data.size()),
           m_degree(0)
     {
-        if (m_data.size() != adjust_dimension(m_data.size(), degree_tag)) {
-            resize_to_dimension(m_data.size());
-        }
-        else {
-            set_degree(degree_tag);
-        }
+        resize_to_dimension(m_data.size());
     }
 
     /**
@@ -133,12 +134,7 @@ public:
           m_dimension(0),
           m_degree(0)
     {
-        if (m_data.size() != adjust_dimension(m_data.size(), degree_tag)) {
-            resize_to_dimension(m_data.size());
-        }
-        else {
-            set_degree(degree_tag);
-        }
+        resize_to_dimension(m_data.size());
     }
 
     /**
@@ -165,60 +161,11 @@ public:
     dense_vector& operator=(const dense_vector& other) = default;
     dense_vector& operator=(dense_vector&& other) noexcept = default;
 
-private:
-    template<DEG D>
-    DIMN resize_for_key(const KEY& key, alg::basis::with_degree<D>)
-    {
-        DEG d = basis.degree(key);
-        if (m_degree == 0 || m_degree < d) {
-            resize_to_degree(d);
-        }
-        return key_to_index(key);
-    }
 
-    DIMN resize_for_key(const KEY& key, alg::basis::without_degree)
-    {
-        DIMN idx = key_to_index(key);
-        if (m_data.size() == 0 || m_data.size() <= idx) {
-            resize_to_dimension(idx + 1);
-        }
-        return idx;
-    }
+    pointer as_mut_ptr() noexcept { return m_data.begin(); }
+    const_pointer as_ptr() const noexcept { return m_data.begin(); }
 
-    template<DEG D>
-    DIMN adjust_dimension(const DIMN dim, alg::basis::with_degree<D>) const
-    {
-        if (dim >= max_dimension(degree_tag)) {
-            return max_dimension(degree_tag);
-        }
 
-        DEG d = index_to_degree(dim);
-        if (dim == start_of_degree(d)) {
-            return dim;
-        }
-        assert(d <= D);
-        return start_of_degree(d + 1);
-    }
-
-    DIMN adjust_dimension(const DIMN dim, alg::basis::without_degree) const
-    {
-        return std::min(max_dimension(degree_tag), dim);
-    }
-
-    template<DEG D>
-    void set_degree(alg::basis::with_degree<D>)
-    {
-        if (dimension() == 0) {
-            m_degree = 0;
-        }
-        else {
-            m_degree = index_to_degree(dimension() - 1);
-        }
-        assert(m_degree <= D);
-    }
-
-    void set_degree(alg::basis::without_degree)
-    {}
 
 public:
     // resizing methods
@@ -226,52 +173,64 @@ public:
     /// Reserve to dimension
     void reserve_to_dimension(const DIMN dim)
     {
-        if (dim > size()) {
-            auto adjusted = adjust_dimension(dim, degree_tag);
-            m_data.reserve(adjusted);
-            m_dimension = adjusted;
-            set_degree(degree_tag);
+        if (dim > m_dimension) {
+            auto info = basis_traits::next_resize_dimension(basis, dim, m_degree);
+            m_data.reserve(info.size);
+            m_dimension = info.dimension;
+            m_degree = info.degree;
         }
-
     }
 
     /// Reserve to degree
     void reserve_to_degree(const DEG deg)
     {
-        DEG target_deg = std::min(degree_tag.max_degree, deg);
-        DIMN target_dim = start_of_degree(target_deg + 1);
-        m_data.reserve(target_dim);
-        m_dimension = target_dim;
-        m_degree = target_deg;
+        if (deg > m_degree) {
+            auto info = basis_traits::next_resize_dimension(basis, 0, deg);
+            m_data.reserve(info.size);
+            m_dimension = info.dimension;
+            m_degree = info.degree;
+        }
+    }
+
+    DIMN resize_for_key(const KEY& key)
+    {
+        auto info = basis_traits::key_resize_dimension(basis, key);
+        if (info.dimension > m_dimension) {
+            m_data.resize(info.size);
+            m_dimension = info.dimension;
+            m_degree = info.degree;
+        }
+        return basis_traits::key_to_index(basis, key);
     }
 
     /// Resize to dimension
-    void resize_to_dimension(const DIMN dim)
+    void resize_to_dimension(DIMN dim)
     {
-        DIMN new_dim = adjust_dimension(dim, degree_tag);
-        assert(new_dim <= max_dimension(degree_tag));
-        m_data.resize(new_dim, zero);
-        m_dimension = new_dim;
-        set_degree(degree_tag);
+        auto info = basis_traits::next_resize_dimension(basis, dim, m_degree);
+        if (info.dimension > m_dimension) {
+            m_data.resize(info.size);
+            m_dimension = info.dimension;
+            m_degree = info.degree;
+        } else if (info.dimension == m_dimension) {
+            m_degree = info.degree;
+        }
     }
 
     /// Reserve to degree
-    void resize_to_degree(const DEG deg)
+    void resize_to_degree(DEG deg)
     {
-        DEG target_deg = std::min(degree_tag.max_degree, deg);
-        DIMN dim = start_of_degree(target_deg + 1);
-        m_data.resize(dim, zero);
-        m_dimension = dim;
-        m_degree = target_deg;
-    }
-
-    /// Get the next valid size of a vector
-    DIMN next_resize_size() const
-    {
-        return adjust_dimension(dimension() + 1, degree_tag);
+        if (deg > m_degree || m_dimension == 0) {
+            auto size = basis_traits::size(basis, deg);
+            m_data.resize(size);
+            m_dimension = size;
+            m_degree = deg;
+        }
     }
 
 public:
+
+
+
     class iterator_item
     {
         friend class iterators::vector_iterator<iterator_item>;
@@ -309,12 +268,15 @@ public:
     private:
         bool compare_iterators(const iterator_item& other) const
         {
-            return (m_iterator == other.m_iterator);
+            return (m_iterator >= other.m_iterator);
         }
 
         void advance()
         {
-            ++m_iterator;
+            const auto end = m_vector->m_data.end();
+            do {
+                ++m_iterator;
+            } while (m_iterator != end && *m_iterator == Coeffs::zero);
         }
 
     public:
@@ -362,12 +324,15 @@ public:
     private:
         bool compare_iterators(const const_iterator_item& other) const
         {
-            return (m_iterator == other.m_iterator);
+            return (m_iterator >= other.m_iterator);
         }
 
         void advance()
         {
-            ++m_iterator;
+            const auto end = m_vector->m_data.end();
+            do {
+                ++m_iterator;
+            } while (m_iterator != end && *m_iterator == Coeffs::zero);
         }
 
     public:
@@ -1214,325 +1179,6 @@ public:
         return os;
     }
 
-public:
-    // Transform methods
-
-    /**
-     * @brief Apply a buffered binary transform using only key transform up to max depth
-     *
-     * This is applied to the vector using the degree optimisation.
-     *
-     * @tparam Vector Result vector type
-     * @tparam KeyTransform Key transform type
-     * @param result Vector in which to place the result
-     * @param rhs right hand side buffer
-     * @param key_transform transform to apply
-     * @param max_depth maximum depth of elements to compute
-     */
-    template<typename Vector, typename KeyTransform>
-    void
-    triangular_buffered_apply_binary_transform(Vector& result, const dense_vector& rhs, KeyTransform key_transform,
-                                               const DEG max_depth) const
-    {
-        if (empty() || rhs.empty()) {
-            return;
-        }
-
-        const IDEG max_degree = static_cast<IDEG>(std::min(max_depth, m_degree + rhs.m_degree));
-        dense_vector& d_result = dtl::vector_base_access::convert(result);
-        d_result.resize_to_degree(static_cast<DEG>(max_degree));
-
-        IDEG lhs_deg_min, lhs_deg_max, rhs_deg;
-
-        for (IDEG out_deg = max_degree; out_deg >= 0; --out_deg) {
-            lhs_deg_min = std::max(IDEG(0), out_deg - static_cast<IDEG>(rhs.m_degree));
-            lhs_deg_max = std::min(out_deg, static_cast<IDEG>(m_degree));
-            for (IDEG lhs_deg = lhs_deg_max; lhs_deg >= lhs_deg_min; --lhs_deg) {
-                rhs_deg = out_deg - lhs_deg;
-
-                assert(start_of_degree(lhs_deg + 1) <= m_data.size());
-                assert(start_of_degree(rhs_deg + 1) <= rhs.m_data.size());
-                assert(d_result.m_data.size() >= start_of_degree(out_deg + 1));
-
-                for (DIMN i = start_of_degree(lhs_deg); i < start_of_degree(lhs_deg + 1); ++i) {
-                    for (DIMN j = start_of_degree(rhs_deg); j < start_of_degree(rhs_deg + 1); ++j) {
-                        if (m_data[i] != zero && rhs.m_data[j] != zero) {
-                            key_transform(result, index_to_key(i), m_data[i], index_to_key(j), rhs.m_data[j]);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * @brief Apply a buffered binary transform with separate transforms up to max depth
-     *
-     * This is applied to the vector using the degree optimisation.
-     *
-     * @tparam Vector Result vector type
-     * @tparam KeyTransform Key transform type
-     * @tparam IndexTransform Index transform type
-     * @param result Vector in which to place the result
-     * @param rhs Right hand side buffer
-     * @param key_transform transform to apply by keys (sparse elements)
-     * @param index_transform transform to apply by index (dense elements)
-     * @param max_depth Maximum depth to compute
-     */
-    template<typename Vector, typename KeyTransform, typename IndexTransform>
-    void
-    triangular_buffered_apply_binary_transform(Vector& result, const dense_vector& rhs, KeyTransform,
-                                               IndexTransform index_transform, const DEG max_depth) const
-    {
-        if (empty() || rhs.empty()) {
-            return;
-        }
-
-        dense_vector& d_result = dtl::vector_base_access::convert(result);
-
-        const DEG max_degree = std::min(max_depth, m_degree + rhs.m_degree);
-        d_result.resize_to_degree(max_degree);
-
-        assert(d_result.m_data.size() == start_of_degree(max_degree + 1));
-
-        IDEG lhs_deg_min, lhs_deg_max, rhs_deg;
-
-        for (IDEG out_deg = max_degree; out_deg >= 0; --out_deg) {
-            lhs_deg_min = std::max(IDEG(0), out_deg - static_cast<IDEG>(rhs.degree()));
-            lhs_deg_max = std::min(out_deg, static_cast<IDEG>(degree()));
-            for (IDEG lhs_deg = lhs_deg_max; lhs_deg >= lhs_deg_min; --lhs_deg) {
-                rhs_deg = out_deg - lhs_deg;
-
-                DIMN lh_deg_start = start_of_degree(static_cast<DEG>(lhs_deg));
-                DIMN rh_deg_start = start_of_degree(static_cast<DEG>(rhs_deg));
-
-                assert(start_of_degree(static_cast<DEG>(lhs_deg + 1)) <= m_data.size());
-                assert(start_of_degree(static_cast<DEG>(rhs_deg + 1)) <= rhs.m_data.size());
-                assert(d_result.m_data.size() >= start_of_degree(static_cast<DEG>(out_deg + 1)));
-
-                index_transform(
-                        &d_result.m_data[start_of_degree(static_cast<DEG>(out_deg))],
-                        &m_data[lh_deg_start],
-                        &rhs.m_data[rh_deg_start],
-                        start_of_degree(static_cast<DEG>(lhs_deg + 1)) - lh_deg_start,
-                        start_of_degree(static_cast<DEG>(rhs_deg + 1)) - rh_deg_start);
-            }
-        }
-    }
-
-    /**
-     * @brief Apply an unbuffered binary transform using only key transform
-     *
-     * @tparam KeyTransform Key transform type
-     * @param rhs Right hand side buffer
-     * @param key_transform Key transform
-     * @param max_depth maximum depth of elements to compute
-     */
-    template<typename KeyTransform>
-    void
-    triangular_unbuffered_apply_binary_transform(const dense_vector& rhs, KeyTransform key_transform,
-                                                 const DEG max_depth)
-    {
-        dense_vector result;
-        triangular_buffered_apply_binary_transform(result, rhs, key_transform, max_depth);
-        swap(result);
-    }
-
-    /**
-     * @brief Apply an unbuffered binary transform with separate transforms
-     * @tparam KeyTransform Key transform type
-     * @tparam IndexTransform Index transform type
-     * @param rhs Right hand side buffer
-     * @param key_transform transform to apply by key (sparse)
-     * @param index_transform transform to apply by index (dense)
-     * @param max_depth Maximum depth of elements to compute
-     */
-    template<typename KeyTransform, typename IndexTransform>
-    void
-    triangular_unbuffered_apply_binary_transform(const dense_vector& rhs, KeyTransform key_transform,
-                                                 IndexTransform index_transform, const DEG max_depth)
-    {
-        if (dimension() == 0 || rhs.dimension() == 0) {
-            clear();
-            return;
-        }
-        /*
-         * Ok, there are some details to work through here.
-         *
-         * If the basis admits a degree 0, then it must have exactly one
-         * dimension, otherwise the modified degree must be visited several times,
-         * which obviously won't work. If this single element is 0 or if the basis
-         * does not admit a degree 0, then we don't need to touch it at all,
-         * which might lead to some speed improvements.
-         *
-         */
-
-        const DIMN degree_difference_1_0 = start_of_degree(1) - start_of_degree(0);
-
-        if (degree_difference_1_0 > 1) {
-            // If degree 0 has more than 1 dimension, we have to use buffering.
-            // I don't expect this happens (ever). Except perhaps some contrived
-            // test examples.
-            dense_vector result;
-            triangular_buffered_apply_binary_transform(result, rhs, key_transform, index_transform, max_depth);
-            swap(result);
-            return;
-        }
-
-        const IDEG old_lhs_deg = static_cast<IDEG>(degree());
-        const DEG max_degree = std::min(max_depth, m_degree + rhs.m_degree);
-
-        if (max_degree > m_degree) {
-            //resize_to_degree(max_degree);
-            reserve_to_degree(max_degree);
-        }
-        assert(m_data.size() >= start_of_degree(max_degree + 1));
-
-        if (max_degree == DEG(0)) {
-            index_transform(
-                    &m_data[start_of_degree(0)],
-                    &m_data[start_of_degree(0)],
-                    &rhs.m_data[start_of_degree(0)],
-                    degree_difference_1_0,
-                    degree_difference_1_0,
-                    true);
-            return;
-        }
-
-        IDEG lhs_deg_min, lhs_deg_max, rhs_deg, offset = 0;
-        bool assign, default_assign = true;
-
-        if (degree_difference_1_0 == 1 && rhs.m_data[0] == zero) {
-            offset = 1;
-        }
-
-        const IDEG max_rhs_deg = static_cast<IDEG>(rhs.degree());
-
-        for (IDEG out_deg = static_cast<IDEG>(max_degree); out_deg >= 1; --out_deg) {
-            lhs_deg_min = std::max(IDEG(0), out_deg - max_rhs_deg);
-            assign = (out_deg > old_lhs_deg) || default_assign;
-            lhs_deg_max = std::min(out_deg - offset, old_lhs_deg);
-
-            for (IDEG lhs_deg = lhs_deg_max; lhs_deg >= lhs_deg_min; --lhs_deg) {
-                rhs_deg = out_deg - lhs_deg;
-                DIMN lh_deg_start = start_of_degree(static_cast<DEG>(lhs_deg));
-                DIMN rh_deg_start = start_of_degree(static_cast<DEG>(rhs_deg));
-
-                assert(start_of_degree(static_cast<DEG>(lhs_deg + 1)) <= m_data.size());
-                assert(start_of_degree(static_cast<DEG>(rhs_deg + 1)) <= rhs.m_data.size());
-                assert(m_data.size() >= start_of_degree(static_cast<DEG>(out_deg + 1)));
-
-                index_transform(
-                        &m_data[start_of_degree(static_cast<DEG>(out_deg))],
-                        &m_data[lh_deg_start],
-                        &rhs.m_data[rh_deg_start],
-                        start_of_degree(static_cast<DEG>(lhs_deg + 1)) - lh_deg_start,
-                        start_of_degree(static_cast<DEG>(rhs_deg + 1)) - rh_deg_start,
-                        assign);
-
-                assign = false;
-            }
-        }
-
-        if (degree_difference_1_0 == 1) {
-            index_transform(
-                    &m_data[0], &m_data[0], &rhs.m_data[0], DIMN(1), DIMN(1), true);
-        }
-    }
-
-    /**
-     * @brief Apply buffered binary transform with no degree optimisation
-     * @tparam Vector Output vector type
-     * @tparam KeyTransform Key transform type
-     * @param result buffer in which to place result
-     * @param rhs Right hand side buffer
-     * @param key_transform Transform to apply by key (sparse)
-     */
-    template<typename Vector, typename KeyTransform>
-    void
-    square_buffered_apply_binary_transform(Vector& result, const dense_vector& rhs, KeyTransform key_transform) const
-    {
-        if (empty() || rhs.empty()) {
-            return;
-        }
-
-        dense_vector& d_result = dtl::vector_base_access::convert(result);
-        d_result.resize_to_dimension(std::max(dimension(), rhs.dimension()));
-
-        assert(d_result.m_data.size() >= std::max(dimension(), rhs.dimension()));
-
-        for (DIMN i = 0; i < dimension(); ++i) {
-            for (DIMN j = 0; j < rhs.dimension(); ++j) {
-                key_transform(result, index_to_key(i), m_data[i], index_to_key(j), rhs.m_data[j]);
-            }
-        }
-    }
-
-    /**
-     * @brief Apply buffered binary transform with separate transforms and no degree optimisation
-     * @tparam Vector Output vector type
-     * @tparam KeyTransform Key transform type
-     * @tparam IndexTransform Index transform type
-     * @param result buffer in which to place result
-     * @param rhs right hand side buffer
-     * @param index_transform transform to apply by index (dense)
-     */
-    template<typename Vector, typename KeyTransform, typename IndexTransform>
-    void
-    square_buffered_apply_binary_transform(Vector& result, const dense_vector& rhs, KeyTransform /*key_transform*/,
-                                           IndexTransform index_transform) const
-    {
-        if (empty() || rhs.empty()) {
-            return;
-        }
-
-        dense_vector& d_result = dtl::vector_base_access::convert(result);
-        d_result.resize_to_dimension(std::max(dimension(), rhs.dimension()));
-
-        assert(d_result.m_data.size() >= std::max(dimension(), rhs.dimension()));
-
-        index_transform(&d_result.m_data[0], &m_data[0], &rhs.m_data[0], dimension(), rhs.m_dimension);
-    }
-
-public:
-    /**
-     * @brief  Apply a transform inplace with buffering
-     * @tparam Transform Transform type
-     * @param result buffer in which to place result (temporarily)
-     * @param transform transform to apply
-     * @param max_deg Maximum degree
-     */
-    template<typename Transform>
-    void buffered_apply_unary_transform(dense_vector& result, Transform transform, const DEG max_deg) const
-    {
-        if (empty()) {
-            return;
-        }
-
-        result.resize_to_dimension(transform.dense_resize(dimension()));
-        typename Transform::index_transform it(transform.get_index_transform());
-
-        it(&result.m_data[0], result.dimension(), &m_data[0], dimension(), max_deg);
-    }
-
-    /**
-     * @brief  Apply a transform inplace with buffering
-     * @tparam Transform Transform type
-     * @param result buffer in which to place result (temporarily)
-     * @param transform transform to apply
-     */
-    template<typename Transform>
-    void buffered_apply_unary_transform(dense_vector& result, Transform transform) const
-    {
-        if (empty()) {
-            return;
-        }
-
-        result.resize_to_dimension(transform.dense_resize(dimension()));
-        typename Transform::index_transform it(transform.get_index_transform());
-
-        it(&result.m_data[0], result.dimension(), &m_data[0], dimension());
-    }
 
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
 private:

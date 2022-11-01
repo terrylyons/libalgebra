@@ -176,8 +176,8 @@ TEST_FIXTURE(Fixture, test_iterator_long_vector) {
     std::vector<float> out;
     out.reserve(9);
 
-    typename TVECT::iterator it;
-    for (it =vect.begin(); it!=vect.end(); ++it) {
+
+    for (auto it =vect.cbegin(); it!=vect.cend(); ++it) {
         if (it->value() != TVECT::zero) {
             out.push_back(static_cast<float>(it->value()));
         }

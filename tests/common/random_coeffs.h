@@ -5,10 +5,9 @@
 #ifndef LIBALGEBRA_RANDOM_COEFFS_H
 #define LIBALGEBRA_RANDOM_COEFFS_H
 
-#include <libalgebra/coefficients/coefficients.h>
 #include <libalgebra/libalgebra.h>
-#include <libalgebra/utils/is_vector_trait.h>
-#include <libalgebra/utils/meta.h>
+#include <libalgebra/coefficients.h>
+#include <libalgebra/detail/meta.h>
 
 #include <boost/random.hpp>
 #include <random>

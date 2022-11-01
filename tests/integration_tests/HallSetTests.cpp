@@ -14,7 +14,7 @@ std::ostream& operator<<(std::ostream& os, std::pair<LET, LET> k);
 
 // the unit test framework
 #include "../common/time_and_details.h"
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 #include "../common/compat.h"
 

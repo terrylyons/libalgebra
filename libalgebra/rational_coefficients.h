@@ -7,7 +7,8 @@
 
 #ifndef LIBALGEBRA_NO_GMP
 #ifdef LIBALGEBRA_ENABLE_SERIALIZATION
-#include "gmp_ser.h"
+#include "coefficients/gmp_ser.h"
+
 #endif
 #include <boost/multiprecision/gmp.hpp>
 #else

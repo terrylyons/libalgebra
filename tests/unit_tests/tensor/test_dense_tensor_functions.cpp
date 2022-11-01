@@ -4,7 +4,7 @@
 
 #include <vector>
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 #include <libalgebra/libalgebra.h>
 #include <libalgebra/alg_types.h>
@@ -14,10 +14,8 @@
 
 
 
-
-template <typename Coeff, unsigned Width, unsigned Depth>
-struct fixture
-{
+template<typename Coeff, unsigned Width, unsigned Depth>
+struct fixture {
 
     typedef typename Coeff::S S;
     typedef typename Coeff::Q Q;
@@ -29,18 +27,20 @@ struct fixture
     typedef typename TBASIS::KEY KEY;
 
     template<class T>
-    T exp_to_depth(T x, S one) {
-        T result (one);
+    T exp_to_depth(T x, S one)
+    {
+        T result(one);
         T tone(S(1));
 
-        for (size_t i=Depth; i>=1; --i) {
+        for (size_t i = Depth; i >= 1; --i) {
             result *= (x / Q(i));
             result += tone;
         }
         return result;
     }
 
-    TENSOR log_to_depth(const TENSOR& x) {
+    TENSOR log_to_depth(const TENSOR& x)
+    {
         TENSOR result;
 
         KEY kunit;
@@ -52,21 +52,19 @@ struct fixture
             xx.erase(it);
         }
 
-
         for (unsigned i = Depth; i >= 1; --i) {
 
             if (i % 2 == 0) {
                 result -= (tunit / Q(i));
-            } else {
+            }
+            else {
                 result += (tunit / Q(i));
             }
             result *= xx;
         }
         return result;
     }
-
 };
-
 
 
 SUITE(dense_tensor_functions_float) {

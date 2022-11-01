@@ -5,7 +5,7 @@
 #ifndef LIBALGEBRA_STANDARD_COEFFICIENT_TEST_SUITE_H
 #define LIBALGEBRA_STANDARD_COEFFICIENT_TEST_SUITE_H
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 #include <multi_test.h>
 #include <random_coeffs.h>
 

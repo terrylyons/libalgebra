@@ -145,9 +145,3 @@
 
         CHECK_EQUAL(lhs*exp(rhs), lhs.fmexp(rhs));
     }
-
-
-
-
-
-

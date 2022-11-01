@@ -45,14 +45,14 @@ class maps
     typedef algebra<
             TBASIS,
             Coeff,
-            free_tensor_multiplication<Coeff>,
+            free_tensor_multiplication<n_letters, max_degree>,
             vectors::sparse_vector
     > sparse_tensor_t;
 
     using dense_lie1_t = algebra<
             lie_basis<n_letters, 1>,
             Coeff,
-            lie_multiplication<Coeff>,
+            lie_multiplication<n_letters, max_degree>,
             vectors::dense_vector
     >;
 

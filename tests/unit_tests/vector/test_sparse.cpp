@@ -5,7 +5,7 @@
 
 #include <map>
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 #include "../../common/simple_basis.h"
 #include "../../common/time_and_details.h"
@@ -35,7 +35,7 @@ SUITE(sparse_vector) {
 #include "vector_iterator_suite.h"
 #include "vector_properties_suite.h"
 #include "vector_norm_suite.h"
-#include "vector_binary_transform_suite.h"
+//#include "vector_binary_transform_suite.h"
 
 }
 

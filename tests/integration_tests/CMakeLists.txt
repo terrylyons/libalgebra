@@ -1,6 +1,6 @@
 
-
-add_library(Libalgebra_tests_integration_tests OBJECT EXCLUDE_FROM_ALL
+libalgebra_test(NAME integration
+        SOURCES
         alg_framework.h
         brown_path_increments.h
         log2ceil.h
@@ -18,16 +18,3 @@ add_library(Libalgebra_tests_integration_tests OBJECT EXCLUDE_FROM_ALL
         TreeBufferHelper.cpp
         x64sigs.cpp
         )
-
-
-target_link_libraries(Libalgebra_tests_integration_tests PUBLIC
-        la_unittests::utilities
-        Libalgebra::Libalgebra
-        )
-add_library(la_unittests::integration_tests ALIAS Libalgebra_tests_integration_tests)
-
-add_executable(integration_tests_exe)
-target_link_libraries(integration_tests_exe PRIVATE la_unittests::main Libalgebra_tests_integration_tests)
-
-add_test(NAME integration_tests COMMAND integration_tests_exe)
-add_subdirectory(signature_tests)

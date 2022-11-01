@@ -2,7 +2,7 @@
 // Created by sam on 02/02/2021.
 //
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 #include <libalgebra/libalgebra.h>
 #include <libalgebra/alg_types.h>
@@ -113,9 +113,6 @@ SUITE(test_tensor_functions) {
         TENSOR tunit ( TENSOR::VECT::one );
         TENSOR no_unit (LET(1), S(1));
         TENSOR ten = tunit + no_unit;
-
-        std:: cout << ten << '\n' << no_unit << '\n'
-                    << log(ten) << '\n' << log(no_unit) << '\n';
 
         CHECK_EQUAL(log(ten), log(no_unit));
     }

@@ -2,10 +2,10 @@
 // Created by sam on 06/08/2021.
 //
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 
-#include <libalgebra/vectors/dense_storage.h>
+#include <libalgebra/dense_storage.h>
 
 #include "../../common/rng.h"
 

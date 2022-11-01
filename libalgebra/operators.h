@@ -5,11 +5,12 @@
 #ifndef LIBALGEBRA_OPERATORS_H
 #define LIBALGEBRA_OPERATORS_H
 
-#include <libalgebra/operators/composition_operator.h>
-#include <libalgebra/operators/scalar_multiply_operator.h>
-#include <libalgebra/operators/sum_operator.h>
 #include <type_traits>
 #include <utility>
+
+#include "composition_operator.h"
+#include "scalar_multiply_operator.h"
+#include "sum_operator.h"
 
 namespace alg {
 namespace operators {
@@ -138,7 +139,7 @@ using right_multiplication_operator = linear_operator<
 }// namespace operators
 }// namespace alg
 
-#include <libalgebra/operators/free_extension.h>
-#include <libalgebra/operators/tensor_operator.h>
+#include "free_extension.h"
+#include "tensor_operator.h"
 
 #endif//LIBALGEBRA_OPERATORS_H

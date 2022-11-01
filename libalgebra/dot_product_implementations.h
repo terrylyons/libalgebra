@@ -5,7 +5,7 @@
 #ifndef LIBALGEBRA_DOT_PRODUCT_IMPLEMENTATIONS_H
 #define LIBALGEBRA_DOT_PRODUCT_IMPLEMENTATIONS_H
 
-#include <libalgebra/vectors/vectors.h>
+#include <libalgebra/vectors.h>
 
 namespace alg {
 namespace operators {

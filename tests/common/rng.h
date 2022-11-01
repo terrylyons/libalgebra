@@ -6,9 +6,10 @@
 #define LIBALGEBRAUNITTESTS_RNG_H
 
 #include <boost/random.hpp>
-#include <libalgebra/coefficients/rational_coefficients.h>
 #include <limits>
 #include <random>
+
+#include <libalgebra/rational_coefficients.h>
 
 #if __cplusplus >= 201103L
 

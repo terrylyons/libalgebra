@@ -249,13 +249,13 @@ public:
         typedef KEY key_type;
         typedef SCALAR& value_type;
 
-        key_type key()
+        key_type key() const
         {
             assert(index() < m_vector->m_data.size());
             return index_to_key(index());
         }
 
-        value_type value()
+        value_type value() const
         {
             assert(index() < m_vector->m_data.size());
             return *m_iterator;
@@ -305,13 +305,13 @@ public:
         typedef KEY key_type;
         typedef const SCALAR& value_type;
 
-        key_type key()
+        key_type key() const
         {
             assert(index() < m_vector->m_data.size());
             return index_to_key(index());
         }
 
-        value_type value()
+        value_type value() const
         {
             assert(index() < m_vector->m_data.size());
             return *m_iterator;

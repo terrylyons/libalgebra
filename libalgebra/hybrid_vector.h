@@ -556,7 +556,7 @@ public:
                       vect.sparse_part().begin())
         {}
 
-        key_type key()
+        key_type key() const
         {
             if (m_dense_iterator != m_dense_end) {
                 return m_dense_iterator->key();
@@ -566,7 +566,7 @@ public:
             }
         }
 
-        value_type value()
+        value_type value() const
         {
             if (m_dense_iterator != m_dense_end) {
                 return m_dense_iterator->value();
@@ -663,7 +663,7 @@ public:
             assert(vect.sparse_empty() || m_sparse_begin != vect.sparse_part().end());
         }
 
-        key_type key()
+        key_type key() const
         {
             if (is_dense()) {
                 return m_dense_iterator->key();
@@ -673,7 +673,7 @@ public:
             }
         }
 
-        value_type value()
+        value_type value() const
         {
             if (is_dense()) {
                 return m_dense_iterator->value();

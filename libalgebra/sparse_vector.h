@@ -140,12 +140,12 @@ public:
             : m_iterator(it)
         {}
 
-        key_type key()
+        key_type key() const
         {
             return m_iterator->first;
         }
 
-        value_type value()
+        value_type value() const
         {
             return m_iterator->second;
         }
@@ -206,12 +206,12 @@ public:
         }
     */
 
-        key_type key()
+        key_type key() const
         {
             return m_iterator->first;
         }
 
-        value_type value()
+        value_type value() const
         {
             return m_iterator->second;
         }

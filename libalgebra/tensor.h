@@ -2193,13 +2193,13 @@ public:
         return static_cast<DIMN>(m_ptr - p_vector->as_ptr());
     }
 
-    key_type key()
+    key_type key() const
     {
         assert(index() < p_vector->dimension());
         return basis_type::index_to_key(index());
     }
 
-    reference value()
+    reference value() const
     {
         return *m_ptr;
     }
@@ -2260,13 +2260,13 @@ public:
         return static_cast<DIMN>(m_ptr - p_vector->as_mut_ptr());
     }
 
-    key_type key()
+    key_type key() const
     {
         assert(index() < p_vector->dimension());
         return basis_type::index_to_key(index());
     }
 
-    reference value()
+    reference value() const
     {
         return *m_ptr;
     }

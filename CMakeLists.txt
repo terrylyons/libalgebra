@@ -219,8 +219,8 @@ endif ()
 
 if (LIBALGEBRA_TESTING)
     # Set the C++ standard to c++11 required, so we get better linting in IDEs
-    set(CMAKE_CXX_STANDARD 11)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+#    set(CMAKE_CXX_STANDARD 11)
+#    set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
     enable_testing()
     add_subdirectory(tests)

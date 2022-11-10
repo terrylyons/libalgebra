@@ -58,7 +58,7 @@ static void BM_tiled_multiplication(benchmark::State& state) {
 
     typedef alg::free_tensor<float_field, Width, Depth, alg::vectors::dense_vector> TENSOR;
     typedef alg::lie<float_field, Width, Depth, alg::vectors::dense_vector> LIE;
-    
+
     using rvg_t = la_testing::random_vector_generator<TENSOR, float_dist>;
     using rvg_l = la_testing::random_vector_generator<LIE, float_dist>;
 
@@ -112,19 +112,19 @@ BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 6, 3);
 BENCHMARK_TEMPLATE(BM_traditional_multiplication, 4, 7);
 BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 7, 1);
 BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 7, 2);
-//BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 7, 3); SIGSEGV
+BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 7, 3);
 
 BENCHMARK_TEMPLATE(BM_traditional_multiplication, 4, 8);
 BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 8, 1);
 BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 8, 2);
-//BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 8, 3); SIGSEGV
+BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 8, 3);
 
 BENCHMARK_TEMPLATE(BM_traditional_multiplication, 4, 9);
 BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 9, 1);
 BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 9, 2);
-//BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 9, 3); SIGSEGV
+BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 9, 3);
 
 BENCHMARK_TEMPLATE(BM_traditional_multiplication, 4, 10);
 BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 10, 1);
 BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 10, 2);
-//BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 10, 3); SIGSEGV
+BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 10, 3);

@@ -1242,7 +1242,7 @@ protected:
 
         assert(1 <= lhs_deg && lhs_deg <= tile_letters);
         for (IDIMN i = 0; i < ibound; ++i) {
-            const auto split = helper.split_key(lhs_deg, subtile_i*tile_width + i);
+            const auto split = helper.split_key(tile_letters - lhs_deg, subtile_i*tile_width + i);
             const auto& left_val = *helper.left_fwd_read(lhs_deg, split.first);
             helper.read_right_tile(rhs_deg,
                                    helper.combine_keys(out_deg - 2 * tile_letters, split.second, k),

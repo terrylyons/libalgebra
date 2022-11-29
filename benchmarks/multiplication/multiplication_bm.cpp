@@ -19,22 +19,15 @@ static void BM_traditional_multiplication(benchmark::State& state)
     typedef alg::free_tensor<float_field, Width, Depth, alg::vectors::dense_vector> TENSOR;
     typedef alg::lie<float_field, Width, Depth, alg::vectors::dense_vector> LIE;
 
-    using rvg_t = la_testing::random_vector_generator<TENSOR, float_dist>;
-    using rvg_l = la_testing::random_vector_generator<LIE, float_dist>;
-
-    const TENSOR tunit;
-    const TENSOR tzero;
-
-    std::mt19937 rngt;
-    rvg_t rvgt;
-
-    std::mt19937 rngl;
-    rvg_l rvgl;
-
     typedef typename TENSOR::KEY KEY;
 
-    auto lhs = rvgt(rngt);
-    auto rhs = rvgt(rngt);
+    TENSOR lhs, rhs;
+    lhs.base_vector().resize_to_degree(Depth);
+    rhs.base_vector().resize_to_degree(Depth);
+
+    KEY kunit;
+    lhs[kunit] = 0.983453f;
+    rhs[kunit] = 1.0023524f;
 
     using mul_t = traditional_free_tensor_multiplication<Width, Depth>;
     using traits = dtl::multiplication_traits<mul_t>;
@@ -64,22 +57,15 @@ static void BM_tiled_multiplication(benchmark::State& state)
     typedef alg::free_tensor<float_field, Width, Depth, alg::vectors::dense_vector> TENSOR;
     typedef alg::lie<float_field, Width, Depth, alg::vectors::dense_vector> LIE;
 
-    using rvg_t = la_testing::random_vector_generator<TENSOR, float_dist>;
-    using rvg_l = la_testing::random_vector_generator<LIE, float_dist>;
-
-    const TENSOR tunit;
-    const TENSOR tzero;
-
-    std::mt19937 rngt;
-    rvg_t rvgt;
-
-    std::mt19937 rngl;
-    rvg_l rvgl;
-
     typedef typename TENSOR::KEY KEY;
 
-    auto lhs = rvgt(rngt);
-    auto rhs = rvgt(rngt);
+    TENSOR lhs, rhs;
+    lhs.base_vector().resize_to_degree(Depth);
+    rhs.base_vector().resize_to_degree(Depth);
+
+    KEY kunit;
+    lhs[kunit] = 0.983453f;
+    rhs[kunit] = 1.0023524f;
 
     using mul_t = tiled_free_tensor_multiplication<Width, Depth, TileLetters>;
     using traits = dtl::multiplication_traits<mul_t>;

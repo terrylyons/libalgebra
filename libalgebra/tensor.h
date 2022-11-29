@@ -1155,8 +1155,10 @@ class tiled_free_tensor_multiplication
     {
         constexpr auto tile_width = helper_type<C>::tile_width;
         for (IDIMN i = 0; i < ibound; ++i) {
+            pointer<C> tptr = tile + i * tile_width;
+            const_pointer<C> sptr = rhs_ptr + i * stride;
             for (IDIMN j = 0; j < jbound; ++j) {
-                tile[i * tile_width + j] += op(lhs_unit * rhs_ptr[i * stride + j]);
+                tptr[j] += op(lhs_unit * sptr[j]);
             }
         }
     }
@@ -1172,8 +1174,10 @@ class tiled_free_tensor_multiplication
     {
         constexpr auto tile_width = helper_type<C>::tile_width;
         for (IDIMN i = 0; i < ibound; ++i) {
+            pointer<C> tptr = tile + i * tile_width;
+            const_pointer<C> sptr = lhs_ptr + i * stride;
             for (IDIMN j = 0; j < jbound; ++j) {
-                tile[i * tile_width + j] += op(lhs_ptr[i * stride + j] * rhs_unit);
+                tptr[j] += op(sptr[j] * rhs_unit);
             }
         }
     }
@@ -1187,8 +1191,9 @@ class tiled_free_tensor_multiplication
     {
         constexpr auto tile_width = helper_type<C>::tile_width;
         for (IDIMN i = 0; i < tile_width; ++i) {
+            pointer<C> tptr = tile + i * tile_width;
             for (IDIMN j = 0; j < tile_width; ++j) {
-                tile[i * tile_width + j] += op(lhs_tile[perm[i]] * rhs_tile[j]);
+                tptr[j] += op(lhs_tile[perm[i]] * rhs_tile[j]);
             }
         }
     }
@@ -1201,8 +1206,9 @@ class tiled_free_tensor_multiplication
                                           IDIMN i) noexcept
     {
         constexpr auto tile_width = helper_type<C>::tile_width;
+        pointer<C> tptr = tile + i * tile_width;
         for (IDIMN j = 0; j < tile_width; ++j) {
-            tile[i * tile_width + j] += op(lhs_val * rhs_tile[j]);
+            tptr[j] += op(lhs_val * rhs_tile[j]);
         }
     }
 
@@ -1246,8 +1252,9 @@ class tiled_free_tensor_multiplication
     {
         constexpr auto tile_width = helper_type<C>::tile_width;
         for (IDIMN i = 0; i < ibound; ++i) {
+            pointer<C> tptr = tile + i * tile_width;
             for (IDIMN j = 0; j < jbound; ++j) {
-                tile[i * tile_width + j] += op(lhs_fwd_ptr[i * lhs_stride] * rhs_fwd_ptr[j]);
+                tptr[j] += op(lhs_fwd_ptr[i * lhs_stride] * rhs_fwd_ptr[j]);
             }
         }
     }

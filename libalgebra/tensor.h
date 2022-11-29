@@ -19,6 +19,8 @@ Version 3. (See accompanying file License.txt)
 #include <algorithm>
 #include <unordered_set>
 
+#include <boost/align/aligned_alloc.hpp>
+#include <boost/align/aligned_allocator.hpp>
 #include <boost/call_traits.hpp>
 #include <boost/container/small_vector.hpp>
 #include <boost/functional/hash.hpp>
@@ -107,10 +109,26 @@ struct tensor_tile_letters_helper<Width, TargetSize, false> {
 };
 
 template<typename S, DIMN Size>
-struct LA_ALIGNAS(LA_CACHELINE_BYTES) data_tile {
+struct data_tile {
     static_assert(Size > 0, "size must be non-zero");
     static constexpr DIMN size = Size;
-    S data[size] = {};
+    S* data;
+
+    data_tile()
+    {
+        data = static_cast<S*>(boost::alignment::aligned_alloc(LA_CACHELINE_BYTES, Size * sizeof(S)));
+        if (!std::is_trivially_default_constructible<S>::value) {
+            auto* ptr = data;
+            for (DIMN i = 0; i < Size; ++i, ++ptr) {
+                ::new (ptr) S();
+            }
+        }
+    }
+
+    ~data_tile()
+    {
+        boost::alignment::aligned_free(data);
+    }
 };
 
 template<DEG Width, DEG Depth, IDEG TileLetters = 0>
@@ -202,7 +220,25 @@ protected:
         }
     }
 
+private:
+    static std::vector<int, boost::alignment::aligned_allocator<int, LA_CACHELINE_BYTES>> setup_reverser()
+    {
+        using perm = reversing_permutation<Width, tile_info::tile_letters>;
+        std::vector<int, boost::alignment::aligned_allocator<int, LA_CACHELINE_BYTES>> result;
+        result.reserve(tile_width);
+        for (DIMN i = 0; i < tile_width; ++i) {
+            result.push_back((int)perm::permute_idx(i));
+        }
+        return result;
+    }
+
 public:
+    static const int* reverser()
+    {
+        static const auto reverse = setup_reverser();
+        return reverse.data();
+    }
+
     pointer tile_ptr() noexcept
     {
         return static_cast<pointer>(tile.data);
@@ -696,6 +732,7 @@ public:
     using base_helper::boundary_subtile;
     using base_helper::pointer_offset;
     using base_helper::reverse_key;
+    using base_helper::reverser;
 
     using tile_info::tile_letters;
     using tile_info::tile_shift;
@@ -1145,13 +1182,13 @@ class tiled_free_tensor_multiplication
     LA_INLINE_ALWAYS static void impl_mid(pointer<C> tile,
                                           const_pointer<C> lhs_tile,
                                           const_pointer<C> rhs_tile,
+                                          const int* perm,
                                           Fn op) noexcept
     {
-        using perm = dtl::reversing_permutation<Width, helper_type<C>::tile_letters>;
         constexpr auto tile_width = helper_type<C>::tile_width;
         for (IDIMN i = 0; i < tile_width; ++i) {
             for (IDIMN j = 0; j < tile_width; ++j) {
-                tile[perm::permute_idx(i) * tile_width + j] += op(lhs_tile[i] * rhs_tile[j]);
+                tile[i * tile_width + j] += op(lhs_tile[perm[i]] * rhs_tile[j]);
             }
         }
     }
@@ -1173,13 +1210,13 @@ class tiled_free_tensor_multiplication
     LA_INLINE_ALWAYS static void impl_1br(pointer<C> tile,
                                           const_pointer<C> lhs_tile,
                                           const_reference<C> rhs_val,
+                                          const int* perm,
                                           Fn op,
                                           IDIMN j) noexcept
     {
-        using perm = dtl::reversing_permutation<Width, helper_type<C>::tile_letters>;
         constexpr auto tile_width = helper_type<C>::tile_width;
         for (IDIMN i = 0; i < tile_width; ++i) {
-            tile[perm::permute_idx(i) * tile_width + j] += op(lhs_tile[i] * rhs_val);
+            tile[i * tile_width + j] += op(lhs_tile[perm[i]] * rhs_val);
         }
     }
 
@@ -1272,6 +1309,7 @@ protected:
         impl_mid<Coeffs>(helper.out_tile_ptr(),
                          helper.left_read_tile_ptr(),
                          helper.right_read_tile_ptr(),
+                         helper.reverser(),
                          op);
     }
 
@@ -1332,8 +1370,9 @@ protected:
                                   subtile_i);
             impl_1br<Coeffs>(helper.out_tile_ptr(),
                              helper.left_read_tile_ptr(),
-                             right_val,
+                             right_val, helper.reverser(),
                              op,
+
                              j);
         }
     }
@@ -1428,7 +1467,7 @@ protected:
                             else if (lhs_deg <= mid_end && lhs_deg < old_lhs_deg) {
                                 helper.read_left_tile(left_reads[lhs_deg]);
                                 helper.read_right_tile(right_reads[out_deg - lhs_deg]);
-                                impl_mid<Coeffs>(helper.out_tile_ptr(), helper.left_read_tile_ptr(), helper.right_read_tile_ptr(), op);
+                                impl_mid<Coeffs>(helper.out_tile_ptr(), helper.left_read_tile_ptr(), helper.right_read_tile_ptr(), helper.reverser(), op);
                                 //                                impl_mid_cases_reverse(helper, op, out_deg, lhs_deg, k, subtile_i, subtile_j);
                             }
                             else if (lhs_deg <= mid_end && lhs_deg == old_lhs_deg) {

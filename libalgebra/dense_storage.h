@@ -236,7 +236,9 @@ public:
     dense_storage(dense_storage const& other)
         : m_base{other.size()}
     {
-        std::uninitialized_copy(other.begin(), other.end(), m_base.m_data);
+        if (other.size() > 0) {
+            std::uninitialized_copy(other.begin(), other.end(), m_base.m_data);
+        }
     }
 
     /**
@@ -349,13 +351,13 @@ public:
     /// Copy constructor - the new storage owns its data even if other borrows data.
     dense_storage& operator=(dense_storage const& other)
     {
-//        dense_storage tmp(other);
-//        this->swap(tmp);
+        //        dense_storage tmp(other);
+        //        this->swap(tmp);
         if (m_base.is_owned()) {
             destroy_range(m_base.m_data, m_base.m_data + m_base.m_size);
         }
         m_base = base_type(other.m_base.m_size);
-        std::uninitialized_copy(other.m_base.m_data, other.m_base.m_data+other.m_base.m_size, m_base.m_data);
+        std::uninitialized_copy(other.m_base.m_data, other.m_base.m_data + other.m_base.m_size, m_base.m_data);
         return *this;
     }
 
@@ -812,13 +814,11 @@ public:
         m_base = std::move(new_base);
     }
 
-    template <typename... Args>
+    template<typename... Args>
     reference emplace(size_type i, Args&&... args) noexcept(noexcept(value_type(args...)))
     {
         return m_base.emplace(i, std::forward<Args>(args)...);
     }
-
-
 
 public:
     /// Equality operator

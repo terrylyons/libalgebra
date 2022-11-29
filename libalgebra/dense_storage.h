@@ -221,7 +221,7 @@ public:
      * @param size Size of buffer to allocate
      */
     explicit dense_storage(size_type size = 0)
-        : m_base{size}
+        : m_base(size)
     {
         fill_range_default_construct(m_base.m_data, m_base.m_data + m_base.m_size);
     }
@@ -234,9 +234,10 @@ public:
      * @param other Storage to copy data from
      */
     dense_storage(dense_storage const& other)
-        : m_base{other.size()}
+        : m_base(other.size())
     {
         if (other.size() > 0) {
+            assert(other.begin() != nullptr && other.end() != nullptr);
             std::uninitialized_copy(other.begin(), other.end(), m_base.m_data);
         }
     }
@@ -413,7 +414,9 @@ private:
         base_type new_base(alloc_size);
         size_type mid = std::min(alloc_size, size());
 
-        std::uninitialized_copy(m_base.m_data, m_base.m_data + mid, new_base.m_data);
+        if (mid > 0) {
+            std::uninitialized_copy(m_base.m_data, m_base.m_data + mid, new_base.m_data);
+        }
         if (alloc_size > mid) {
             maybe_fill(new_base.m_data + mid, new_base.m_data + new_base.m_size, value_type());
         }

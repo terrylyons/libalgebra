@@ -23,6 +23,7 @@ RUN apt-get update \
       libgmp-dev \
       wget \
       gdb \
+      rsync \
   && apt-get clean
 
 ARG CMAKE_INSTALLER=cmake-3.21.4-linux-x86_64.sh

@@ -3,7 +3,7 @@
 #include "categorical_path.h"
 
 // the unit test framework
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 // a timer class
 #include "../common/time_and_details.h"

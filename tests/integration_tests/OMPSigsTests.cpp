@@ -3,7 +3,7 @@
 #include "alg_framework.h"
 
 // the unit test framework
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 #include "../common/time_and_details.h"
 
 // omp

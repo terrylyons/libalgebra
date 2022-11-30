@@ -5,7 +5,7 @@
 #include "standard_coefficient_test_suite.h"
 #include "unital_coefficient_test_suite.h"
 #include <boost/multiprecision/cpp_bin_float.hpp>
-#include <libalgebra/coefficients/coefficients.h>
+#include <libalgebra/coefficients.h>
 
 namespace mp = boost::multiprecision;
 

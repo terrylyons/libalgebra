@@ -2,12 +2,12 @@
 // Created by sam on 27/01/2022.
 //
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 #include <libalgebra/alg_types.h>
 #include <libalgebra/libalgebra.h>
-#include <libalgebra/operators/free_extension.h>
-#include <libalgebra/operators/operators.h>
+#include <libalgebra/free_extension.h>
+#include <libalgebra/operators.h>
 
 template<typename Coeffs, unsigned Width, unsigned Depth>
 struct key_function {

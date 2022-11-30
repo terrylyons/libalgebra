@@ -2,9 +2,9 @@
 // Created by sam on 28/10/2021.
 //
 
-#include <UnitTest++/UnitTest++.h>
-#include <libalgebra/coefficients/coefficients.h>
-#include <libalgebra/coefficients/rational_coefficients.h>
+#include <UnitTest++.h>
+#include <libalgebra/coefficients.h>
+#include <libalgebra/rational_coefficients.h>
 #include <libalgebra/libalgebra.h>
 
 #include "../../common/random_vector_generator.h"

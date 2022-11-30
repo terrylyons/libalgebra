@@ -8,11 +8,11 @@
 #include <iterator>
 #include <utility>
 
-#include <libalgebra/utils/meta.h>
-#include <libalgebra/vectors/iterators.h>
-
 #include <boost/type_traits.hpp>
 #include <boost/mpl/logical.hpp>
+
+#include <libalgebra/detail/meta.h>
+#include <libalgebra/iterators.h>
 
 
 

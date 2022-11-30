@@ -5,7 +5,7 @@
 #ifndef LIBALGEBRA_BASIS_ITERATION_SUITE_H
 #define LIBALGEBRA_BASIS_ITERATION_SUITE_H
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 #include <multi_test.h>
 #include <string>

@@ -5,7 +5,7 @@
 #ifndef LIBALGEBRA_MULTI_TEST_H
 #define LIBALGEBRA_MULTI_TEST_H
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 #include <memory>
 #include <string>
 #include <vector>

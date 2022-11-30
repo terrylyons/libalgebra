@@ -2,9 +2,9 @@
 // Created by sam on 23/02/2022.
 //
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 #include <libalgebra/alg_types.h>
-#include <libalgebra/vectors/vector.h>
+#include <libalgebra/vector.h>
 
 #include <vector>
 

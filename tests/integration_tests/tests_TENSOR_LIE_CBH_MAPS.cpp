@@ -22,7 +22,7 @@ Version 3. (See accompanying file License.txt)
 
 
 // the unit test framework
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 // a debugging tool - SHOW(X) outputs variable name X and its content to a stream (e.g. cout) 
 #include "SHOW.h"

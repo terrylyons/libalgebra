@@ -5,8 +5,8 @@
 #ifndef LIBALGEBRA_BASE_VECTOR_H
 #define LIBALGEBRA_BASE_VECTOR_H
 
-#include "libalgebra/basis/basis.h"
-#include <libalgebra/coefficients/coefficients.h>
+#include "libalgebra/basis.h"
+#include "libalgebra/coefficients.h"
 
 #include <type_traits>
 

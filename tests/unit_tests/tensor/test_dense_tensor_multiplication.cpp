@@ -4,7 +4,7 @@
 
 #include "../../common/rng.h"
 
-#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++.h>
 
 #include <libalgebra/libalgebra.h>
 #include <libalgebra/alg_types.h>
@@ -27,7 +27,7 @@ SUITE (dense_tensor_multiplication) {
 
         typedef alg::vectors::dense_vector<TBASIS, field> DENSE;
         typedef alg::algebra<TBASIS, field,
-            alg::free_tensor_multiplication<field>,
+            alg::free_tensor_multiplication<5, 5>,
         alg::vectors::dense_vector> TENSOR;
         typedef typename TENSOR::SCALAR SCALAR;
 

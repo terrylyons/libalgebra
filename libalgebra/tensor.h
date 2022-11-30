@@ -1337,7 +1337,7 @@ protected:
             const auto split = helper.split_key(rhs_deg, subtile_j*tile_width+j);
             const auto& right_val = *helper.right_fwd_read(rhs_deg, split.second);
             helper.read_left_tile(lhs_deg,
-                                  helper.combine_keys(split_left_letters, helper.reverse_key(split_left_letters, split.first), k_reverse),
+                                  helper.combine_keys(out_deg - 2*tile_letters, helper.reverse_key(split_left_letters, split.first), k_reverse),
                                   subtile_i);
             impl_1br<Coeffs>(helper.out_tile_ptr(),
                      helper.left_read_tile_ptr(),

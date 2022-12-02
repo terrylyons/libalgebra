@@ -607,9 +607,10 @@ public:
         setup_levels();
     }
 
-    IDEG lhs_degree() const noexcept { return lhs_deg; }
-    IDEG rhs_degree() const noexcept { return rhs_deg; }
-    IDEG out_degree() const noexcept { return out_deg; }
+    constexpr IDEG lhs_degree() const noexcept { return lhs_deg; }
+    constexpr IDEG rhs_degree() const noexcept { return rhs_deg; }
+    constexpr IDEG out_degree() const noexcept { return out_deg; }
+    constexpr bool is_inplace() const noexcept { return lhs_data == nullptr; }
 
     reference out_unit() noexcept { return *m_out_levels[0]; }
     const_reference left_unit() const noexcept { return *m_lhs_levels[0]; }
@@ -1167,7 +1168,7 @@ public:
         DEG max_degree,
         OriginalVectors&) const
     {
-        if (!lhs.empty() && !rhs.empty()) {
+        if (lhs.dimension() == 0 && rhs.dimension() != 0) {
             helper<Coeffs> help(out, lhs, rhs, max_degree);
             fma_impl(help, op, help.out_degree());
             update_reverse_data(out, help.out_degree());
@@ -1181,7 +1182,7 @@ public:
                      Fn op,
                      DEG max_degree, OriginalVectors&) const
     {
-        if (!rhs.empty()) {
+        if (rhs.dimension() != 0) {
             helper<Coeffs> help(lhs, rhs, max_degree);
             multiply_inplace_impl(help, op, help.out_degree());
             update_reverse_data(lhs, help.out_degree());
@@ -1237,6 +1238,7 @@ private:
     LA_INLINE_ALWAYS static void
     linear_fwd_zipped_mul_inplace(
             pointer<C> out_p,
+            const_pointer<C> lsrc,
             const_pointer<C> rsrc,
             const_reference<C> lunit,
             const_reference<C> runit,
@@ -1244,7 +1246,43 @@ private:
             Fn op) noexcept
     {
         for (index_type i = 0; i < bound; ++i) {
-            out_p[i] = op(out_p[i] * runit) + op(lunit * rsrc[i]);
+            out_p[i] = op(lsrc[i] * runit) + op(lunit * rsrc[i]);
+        }
+    }
+
+    template <typename C, typename Fn>
+    LA_INLINE_ALWAYS static void
+    linear_fwd_mul_inplace_left(pointer<C> optr, const_pointer<C> lptr, const_reference<C> runit, index_type bound, Fn op) noexcept
+    {
+        for (index_type i=0; i<bound; ++i) {
+            optr[i] = op(lptr[i]*runit);
+        }
+    }
+
+    template <typename C, typename Fn>
+    LA_INLINE_ALWAYS static void
+    linear_fwd_mul_left(pointer<C> optr, const_pointer<C> lptr, const_reference<C> runit, index_type bound, Fn op) noexcept
+    {
+        for (index_type i=0; i<bound; ++i) {
+            optr[i] += op(lptr[i]*runit);
+        }
+    }
+
+    template <typename C, typename Fn>
+    LA_INLINE_ALWAYS static void
+    linear_fwd_mul_inplace_right(pointer<C> optr, const_pointer<C> rptr, const_reference<C> lunit, index_type bound, Fn op) noexcept
+    {
+        for (index_type i=0; i<bound; ++i) {
+            optr[i] = op(lunit * rptr[i]);
+        }
+    }
+
+    template <typename C, typename Fn>
+    LA_INLINE_ALWAYS static void
+    linear_fwd_mul_right(pointer<C> optr, const_pointer<C> rptr, const_reference<C> lunit, index_type bound, Fn op) noexcept
+    {
+        for (index_type i=0; i<bound; ++i) {
+            optr[i] += op(lunit * rptr[i]);
         }
     }
 
@@ -1358,8 +1396,110 @@ private:
     }
 
 protected:
+
+    template <typename C, typename Fn>
+    static void impl_outer_cases_zip(helper_type<C>& helper, Fn op) noexcept
+    {
+        constexpr auto tile_width = helper_type<C>::tile_width;
+        const auto out_deg = helper.out_degree();
+        const_pointer<C> lptr = helper.left_read_tile_ptr();
+        const_pointer<C> rptr = helper.right_read_tile_ptr();
+        pointer<C> optr = helper.fwd_write(out_deg);
+        const_pointer<C> rsrc = helper.right_fwd_read(out_deg);
+
+        const_reference<C> lunit = helper.left_unit();
+        const_reference<C> runit = helper.right_unit();
+
+        const auto bound = helper.num_subtiles*tsi::powers[out_deg-helper.tile_letters];
+
+        if (helper.is_inplace()) {
+            for (index_type i=0; i<bound; ++i, rsrc+=tile_width, optr+=tile_width) {
+                helper.read_right_tile(rsrc);
+                helper.read_left_tile(optr);
+                linear_fwd_zipped_mul_inplace<C>(optr, lptr, rptr, lunit, runit, tile_width, op);
+            }
+        } else {
+            const_pointer<C> lsrc = helper.left_fwd_read(out_deg);
+
+            for (index_type i=0; i<bound; ++i, lsrc+=tile_width, rsrc+=tile_width, optr+=tile_width) {
+                helper.read_left_tile(lsrc);
+                helper.read_right_tile(rsrc);
+                linear_fwd_zipped_mul<C>(optr, lptr, rptr, lunit, runit, tile_width, op);
+            }
+        }
+    }
+
+    template <typename C, typename Fn>
+    static void impl_outer_left_only(helper_type<C>& helper, Fn op)
+    {
+        constexpr auto tile_width = helper_type<C>::tile_width;
+        const auto out_deg = helper.out_degree();
+        const_pointer<C> lptr = helper.left_read_tile_ptr();
+        const_reference<C> runit = helper.right_unit();
+        pointer<C> optr = helper.fwd_write(out_deg);
+
+        const auto bound = helper.num_subtiles * tsi::powers[out_deg - helper.tile_letters];
+
+        if (helper.is_inplace()) {
+            for (index_type i=0; i<bound; ++i, optr+=tile_width) {
+                helper.read_left_tile(optr);
+                linear_fwd_mul_inplace_left<C>(optr, lptr, runit, tile_width, op);
+            }
+        } else {
+            const_pointer<C> lsrc = helper.left_fwd_read(out_deg);
+
+            for (index_type i=0; i<bound; ++i, lsrc+=tile_width, optr+=tile_width) {
+                helper.read_left_tile(lsrc);
+                linear_fwd_mul_left<C>(optr, lptr, runit, tile_width, op);
+            }
+        }
+    }
+
+    template <typename C, typename Fn>
+    static void impl_outer_right_only(helper_type<C>& helper, Fn op)
+    {
+        constexpr auto tile_width = helper_type<C>::tile_width;
+        const auto out_deg = helper.out_degree();
+        const_pointer<C> rptr = helper.right_read_tile_ptr();
+        const_reference<C> lunit = helper.left_unit();
+        pointer<C> optr = helper.fwd_write(out_deg);
+
+        const auto bound = helper.num_subtiles * tsi::powers[out_deg - helper.tile_letters];
+
+        if (helper.is_inplace()) {
+            for (index_type i=0; i<bound; ++i, optr+=tile_width) {
+                helper.read_right_tile(optr);
+                linear_fwd_mul_inplace_left<C>(optr, rptr, lunit, tile_width, op);
+            }
+        } else {
+            const_pointer<C> rsrc = helper.right_fwd_read(out_deg);
+
+            for (index_type i=0; i<bound; ++i, rsrc+=tile_width, optr+=tile_width) {
+                helper.read_right_tile(rsrc);
+                linear_fwd_mul_left<C>(optr, rptr, lunit, tile_width, op);
+            }
+        }
+    }
+
+    template <typename C, typename Fn>
+    static void impl_outer_cases(helper_type<C>& helper, Fn op) noexcept
+    {
+        bool left_valid = helper.lhs_degree() >= helper.out_degree()
+                && helper.left_unit() != C::zero;
+        bool right_valid = helper.rhs_degree() >= helper.out_degree()
+                && helper.right_unit() != C::zero;
+
+        if (left_valid && right_valid) {
+            impl_outer_cases_zip(helper, op);
+        } else if (left_valid) {
+            impl_outer_left_only(helper, op);
+        } else {
+            impl_outer_right_only(helper, op);
+        }
+    }
+
     template<typename Coeffs, typename Fn>
-    LA_INLINE_ALWAYS static void
+    static void
     impl_lhs_small(helper_type<Coeffs>& helper,
                    Fn op,
                    IDEG out_deg,
@@ -1390,7 +1530,7 @@ protected:
     }
 
     template<typename Coeffs, typename Fn>
-    LA_INLINE_ALWAYS static void
+    static void
     impl_mid_cases_reverse(helper_type<Coeffs>& helper,
                            Fn op,
                            IDEG out_deg,
@@ -1419,7 +1559,7 @@ protected:
     }
 
     template<typename Coeffs, typename Fn>
-    LA_INLINE_ALWAYS static void
+    static void
     impl_mid_cases_no_reverse(helper_type<Coeffs>& helper,
                               Fn op,
                               IDEG out_deg,
@@ -1448,7 +1588,7 @@ protected:
     }
 
     template<typename Coeffs, typename Fn>
-    LA_INLINE_ALWAYS static void
+    static void
     impl_rhs_small_reverse(helper_type<Coeffs>& helper,
                            Fn op,
                            IDEG out_deg,
@@ -1483,7 +1623,7 @@ protected:
     }
 
     template<typename Coeffs, typename Fn>
-    LA_INLINE_ALWAYS static void
+    static void
     impl_rhs_small_no_reverse(helper_type<Coeffs>& helper,
                               Fn op,
                               IDEG out_deg,
@@ -1530,6 +1670,8 @@ protected:
         left_reads[0] = helper.left_fwd_read(0, 0);
         right_reads[0] = helper.right_fwd_read(0, 0);
 
+        impl_outer_cases(helper, op);
+
         for (IDEG out_deg = max_degree; out_deg > 2 * tile_letters; --out_deg) {
             const auto mid_deg = out_deg - 2 * tile_letters;
             const auto mid_end = out_deg - tile_letters;
@@ -1564,9 +1706,15 @@ protected:
                             right_reads[out_deg] = helper.right_fwd_read_ptr(out_deg, k, subtile_j);
                         }
 
-                        const auto& rhs_unit = helper.right_unit();
-                        if (out_deg <= old_lhs_deg && rhs_unit != Coeffs::zero) {
-                            impl_db0<Coeffs>(helper.out_tile_ptr(), left_reads[out_deg], rhs_unit, stride, ibound, jbound, op);
+                        if (out_deg < max_degree) {
+                            const auto& rhs_unit = helper.right_unit();
+                            if (out_deg <= old_lhs_deg && rhs_unit != Coeffs::zero) {
+                                impl_db0<Coeffs>(helper.out_tile_ptr(), left_reads[out_deg], rhs_unit, stride, ibound, jbound, op);
+                            }
+                            const auto& lhs_unit = helper.left_unit();
+                            if (out_deg <= rhs_max_deg && lhs_unit != Coeffs::zero) {
+                                impl_0bd<Coeffs>(helper.out_tile_ptr(), lhs_unit, right_reads[out_deg], stride, ibound, jbound, op);
+                            }
                         }
 
                         for (IDEG lhs_deg = lhs_deg_min; lhs_deg <= lhs_deg_max; ++lhs_deg) {
@@ -1592,10 +1740,7 @@ protected:
                                 BOOST_UNREACHABLE_RETURN()
                             }
                         }
-                        const auto& lhs_unit = helper.left_unit();
-                        if (out_deg <= rhs_max_deg && lhs_unit != Coeffs::zero) {
-                            impl_0bd<Coeffs>(helper.out_tile_ptr(), lhs_unit, right_reads[out_deg], stride, ibound, jbound, op);
-                        }
+
 
                         helper.write_tile(out_deg, k, k_reverse, subtile_i, subtile_j);
                     }// subtile_j
@@ -1637,7 +1782,7 @@ public:
             return;
         }
 
-        if (!lhs.empty() && !rhs.empty()) {
+        if (lhs.dimension() != 0 && rhs.dimension() != 0) {
             helper_type<Coeffs> helper(out, lhs, rhs, max_degree);
             fma_impl(helper, op, helper.out_degree());
             if (helper.out_degree() > 0) {
@@ -1658,7 +1803,7 @@ public:
             return;
         }
 
-        if (!rhs.empty()) {
+        if (rhs.dimension() != 0) {
             helper_type<Coeffs> helper(lhs, rhs, max_degree);
             multiply_inplace_impl(helper, op, helper.out_degree());
             if (helper.out_degree() > 0) {

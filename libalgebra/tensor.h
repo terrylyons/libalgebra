@@ -520,6 +520,8 @@ protected:
 
     using tsi = tensor_size_info<Width>;
 
+    using index_type = typename central_tile_helper<Width, Depth, Coeffs, 0>::index_type;
+
     template<typename B>
     using dense_tensor = vectors::dense_vector<B, coefficient_ring>;
 
@@ -657,6 +659,7 @@ public:
     using const_pointer = const scalar_type*;
     using reference = scalar_type&;
     using const_reference = const scalar_type&;
+    using typename base_helper::index_type;
 
 private:
     template<typename B>
@@ -931,6 +934,7 @@ class free_tensor_multiplier
 public:
     using basis_type = tensor_basis<Width, Depth>;
     using key_type = typename basis_type::KEY;
+    using index_type = std::ptrdiff_t;
     using pair_type = std::pair<key_type, int>;
     using result_type = boost::container::small_vector<pair_type, 1>;
     using argument_type = key_type;
@@ -962,6 +966,7 @@ public:
     using base::multiply_inplace;
     using mixin::fma;
     using mixin::multiply_inplace;
+    using index_type = std::ptrdiff_t;
 
     using basis_type = tensor_basis<Width, Depth>;
 
@@ -1209,6 +1214,39 @@ class tiled_free_tensor_multiplication
 
     template<typename C>
     using const_reference = const typename C::S&;
+
+public:
+    using index_type = std::ptrdiff_t;
+
+private:
+    template<typename C, typename Fn>
+    LA_INLINE_ALWAYS static void linear_fwd_zipped_mul(pointer<C> out_p,
+                                                       const_pointer<C> lsrc,
+                                                       const_pointer<C> rsrc,
+                                                       const_reference<C> lunit,
+                                                       const_reference<C> runit,
+                                                       index_type bound,
+                                                       Fn op) noexcept
+    {
+        for (index_type i = 0; i < bound; ++i) {
+            out_p[i] += op(lsrc[i] * runit) + op(lunit * rsrc[i]);
+        }
+    }
+
+    template<typename C, typename Fn>
+    LA_INLINE_ALWAYS static void
+    linear_fwd_zipped_mul_inplace(
+            pointer<C> out_p,
+            const_pointer<C> rsrc,
+            const_reference<C> lunit,
+            const_reference<C> runit,
+            index_type bound,
+            Fn op) noexcept
+    {
+        for (index_type i = 0; i < bound; ++i) {
+            out_p[i] = op(out_p[i] * runit) + op(lunit * rsrc[i]);
+        }
+    }
 
     template<typename C, typename Fn>
     LA_INLINE_ALWAYS static void impl_0bd(pointer<C> tile,

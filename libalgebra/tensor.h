@@ -1408,21 +1408,21 @@ private:
         }
     }
 
-    template <typename C, typename Fn>
+    template<typename C, typename Fn>
     LA_INLINE_ALWAYS static void
     linear_fwd_mul_inplace_left(pointer<C> optr, const_pointer<C> lptr, const_reference<C> runit, index_type bound, Fn op) noexcept
     {
-        for (index_type i=0; i<bound; ++i) {
-            optr[i] = op(lptr[i]*runit);
+        for (index_type i = 0; i < bound; ++i) {
+            optr[i] = op(lptr[i] * runit);
         }
     }
 
-    template <typename C, typename Fn>
+    template<typename C, typename Fn>
     LA_INLINE_ALWAYS static void
     linear_fwd_mul_left(pointer<C> optr, const_pointer<C> lptr, const_reference<C> runit, index_type bound, Fn op) noexcept
     {
-        for (index_type i=0; i<bound; ++i) {
-            optr[i] += op(lptr[i]*runit);
+        for (index_type i = 0; i < bound; ++i) {
+            optr[i] += op(lptr[i] * runit);
         }
     }
 

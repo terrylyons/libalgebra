@@ -1508,6 +1508,24 @@ private:
     }
 
     template<typename C, typename Fn>
+    LA_INLINE_ALWAYS static void impl_lb1(pointer<C> optr,
+                                          const_pointer<C> lptr,
+                                          const_pointer<C> rptr,
+                                          index_type i2,
+                                          index_type i1bound,
+                                          index_type i2bound,
+                                          Fn op)
+    {
+        constexpr auto tile_width = helper_type<C>::tile_width;
+        for (index_type i1 = 0; i1 < i1bound; ++i1) {
+            auto i = i1 * i2bound + i2;
+            for (index_type j = 0; j < tile_width; ++j) {
+                optr[i * tile_width + j] += op(lptr[i2] * rptr[j]);
+            }
+        }
+    }
+
+    template<typename C, typename Fn>
     LA_INLINE_ALWAYS static void impl_1br(pointer<C> tile,
                                           const_pointer<C> lhs_tile,
                                           const_reference<C> rhs_val,
@@ -1518,6 +1536,25 @@ private:
         constexpr auto tile_width = helper_type<C>::tile_width;
         for (IDIMN i = 0; i < tile_width; ++i) {
             tile[i * tile_width + j] += op(lhs_tile[perm[i]] * rhs_val);
+        }
+    }
+
+    template<typename C, typename Fn>
+    LA_INLINE_ALWAYS static void impl_1br(pointer<C> optr,
+                                          const_pointer<C> lptr,
+                                          const_pointer<C> rptr,
+                                          index_type j1,
+                                          index_type j2bound,
+                                          Fn op)
+    {
+        constexpr auto tile_width = helper_type<C>::tile_width;
+        using perm = dtl::reversing_permutation<Width, helper_type<C>::tile_letters>;
+        for (index_type i = 0; i < tile_width; ++i) {
+            //            auto pi = perm::permute_idx(i);
+            for (index_type j2 = 0; j2 < j2bound; ++j2) {
+                auto j = j1 * j2bound + j2;
+                optr[i * tile_width + j] += op(lptr[i] * rptr[j2]);
+            }
         }
     }
 
@@ -1554,8 +1591,7 @@ private:
     }
 
 protected:
-
-    template <typename C, typename Fn>
+    template<typename C, typename Fn>
     static void impl_outer_cases_zip(helper_type<C>& helper, Fn op) noexcept
     {
         constexpr auto tile_width = helper_type<C>::tile_width;
@@ -1568,26 +1604,30 @@ protected:
         const_reference<C> lunit = helper.left_unit();
         const_reference<C> runit = helper.right_unit();
 
-        const auto bound = helper.num_subtiles*tsi::powers[out_deg-helper.tile_letters];
+        const auto bound = helper.num_subtiles * tsi::powers[out_deg - helper.tile_letters];
 
         if (helper.is_inplace()) {
-            for (index_type i=0; i<bound; ++i, rsrc+=tile_width, optr+=tile_width) {
-                helper.read_right_tile(rsrc);
-                helper.read_left_tile(optr);
-                linear_fwd_zipped_mul_inplace<C>(optr, lptr, rptr, lunit, runit, tile_width, op);
+            for (index_type i = 0; i < bound; ++i/*, rsrc += tile_width, optr += tile_width*/) {
+                helper.read_right_tile(rsrc + i*tile_width);
+                helper.read_left_tile(optr + i*tile_width);
+                linear_fwd_zipped_mul_inplace<C>(optr + i*tile_width, lptr, rptr, lunit, runit, tile_width, op);
             }
-        } else {
+        }
+        else {
             const_pointer<C> lsrc = helper.left_fwd_read(out_deg);
 
-            for (index_type i=0; i<bound; ++i, lsrc+=tile_width, rsrc+=tile_width, optr+=tile_width) {
-                helper.read_left_tile(lsrc);
-                helper.read_right_tile(rsrc);
-                linear_fwd_zipped_mul<C>(optr, lptr, rptr, lunit, runit, tile_width, op);
+            for (index_type i = 0; i < bound; ++i/*, lsrc += tile_width, rsrc += tile_width, optr += tile_width*/) {
+                helper.read_left_tile(lsrc + i*tile_width);
+                helper.read_right_tile(rsrc + i*tile_width);
+                linear_fwd_zipped_mul<C>(optr + i*tile_width, lptr, rptr, lunit, runit, tile_width, op);
+//                for (index_type j=0; j<tile_width; ++j) {
+//                    optr[i*tile_width + j] += op(lsrc[i*tile_width + j]*runit) + op(lunit*rsrc[i*tile_width+j]);
+//                }
             }
         }
     }
 
-    template <typename C, typename Fn>
+    template<typename C, typename Fn>
     static void impl_outer_left_only(helper_type<C>& helper, Fn op)
     {
         constexpr auto tile_width = helper_type<C>::tile_width;
@@ -1599,21 +1639,22 @@ protected:
         const auto bound = helper.num_subtiles * tsi::powers[out_deg - helper.tile_letters];
 
         if (helper.is_inplace()) {
-            for (index_type i=0; i<bound; ++i, optr+=tile_width) {
+            for (index_type i = 0; i < bound; ++i, optr += tile_width) {
                 helper.read_left_tile(optr);
                 linear_fwd_mul_inplace_left<C>(optr, lptr, runit, tile_width, op);
             }
-        } else {
+        }
+        else {
             const_pointer<C> lsrc = helper.left_fwd_read(out_deg);
 
-            for (index_type i=0; i<bound; ++i, lsrc+=tile_width, optr+=tile_width) {
+            for (index_type i = 0; i < bound; ++i, lsrc += tile_width, optr += tile_width) {
                 helper.read_left_tile(lsrc);
                 linear_fwd_mul_left<C>(optr, lptr, runit, tile_width, op);
             }
         }
     }
 
-    template <typename C, typename Fn>
+    template<typename C, typename Fn>
     static void impl_outer_right_only(helper_type<C>& helper, Fn op)
     {
         constexpr auto tile_width = helper_type<C>::tile_width;
@@ -1625,65 +1666,156 @@ protected:
         const auto bound = helper.num_subtiles * tsi::powers[out_deg - helper.tile_letters];
 
         if (helper.is_inplace()) {
-            for (index_type i=0; i<bound; ++i, optr+=tile_width) {
+            for (index_type i = 0; i < bound; ++i, optr += tile_width) {
                 helper.read_right_tile(optr);
-                linear_fwd_mul_inplace_left<C>(optr, rptr, lunit, tile_width, op);
+                linear_fwd_mul_inplace_right<C>(optr, rptr, lunit, tile_width, op);
             }
-        } else {
+        }
+        else {
             const_pointer<C> rsrc = helper.right_fwd_read(out_deg);
 
-            for (index_type i=0; i<bound; ++i, rsrc+=tile_width, optr+=tile_width) {
+            for (index_type i = 0; i < bound; ++i, rsrc += tile_width, optr += tile_width) {
                 helper.read_right_tile(rsrc);
-                linear_fwd_mul_left<C>(optr, rptr, lunit, tile_width, op);
+                linear_fwd_mul_right<C>(optr, rptr, lunit, tile_width, op);
             }
         }
     }
 
-    template <typename C, typename Fn>
+    template<typename C, typename Fn>
     static void impl_outer_cases(helper_type<C>& helper, Fn op) noexcept
     {
         bool left_valid = helper.lhs_degree() >= helper.out_degree()
-                && helper.left_unit() != C::zero;
-        bool right_valid = helper.rhs_degree() >= helper.out_degree()
                 && helper.right_unit() != C::zero;
+        bool right_valid = helper.rhs_degree() >= helper.out_degree()
+                && helper.left_unit() != C::zero;
 
         if (left_valid && right_valid) {
             impl_outer_cases_zip(helper, op);
-        } else if (left_valid) {
+        }
+        else if (left_valid) {
             impl_outer_left_only(helper, op);
-        } else {
+        }
+        else {
             impl_outer_right_only(helper, op);
+        }
+    }
+
+    template<typename Coeffs, typename Fn>
+    static void impl_top_zipped(helper_type<Coeffs>& helper,
+                                const_pointer<Coeffs> lsrc,
+                                const_pointer<Coeffs> rsrc,
+                                IDEG degree,
+                                index_type stride,
+                                index_type ibound,
+                                index_type jbound,
+                                Fn op)
+    {
+        constexpr auto tile_width = helper_type<Coeffs>::tile_width;
+        pointer<Coeffs> tptr = helper.out_tile_ptr();
+        const_pointer<Coeffs> lptr = helper.left_read_tile_ptr();
+        const_pointer<Coeffs> rptr = helper.right_read_tile_ptr();
+
+        const_reference<Coeffs> lunit = helper.left_unit();
+        const_reference<Coeffs> runit = helper.right_unit();
+
+        for (index_type i = 0; i < ibound; ++i/*, lsrc += stride, rsrc += stride*/) {
+            helper.read_left_tile(lsrc+i*stride, ibound);
+            helper.read_right_tile(rsrc+i*stride, jbound);
+
+            for (index_type j = 0; j < jbound; ++j) {
+                tptr[i * tile_width + j] += op(lptr[j] * runit) + op(lunit * rptr[j]);
+            }
+        }
+    }
+
+    template<typename Coeffs, typename Fn>
+    static void impl_top_left_only(helper_type<Coeffs>& helper,
+                                   const_pointer<Coeffs> lsrc,
+                                   IDEG degree,
+                                   index_type stride,
+                                   index_type ibound,
+                                   index_type jbound,
+                                   Fn op)
+    {
+        constexpr auto tile_width = helper_type<Coeffs>::tile_width;
+        pointer<Coeffs> tptr = helper.out_tile_ptr();
+        const_pointer<Coeffs> lptr = helper.left_read_tile_ptr();
+
+        const_reference<Coeffs> runit = helper.right_unit();
+
+        for (index_type i = 0; i < ibound; ++i, lsrc += stride) {
+            helper.read_left_tile(lsrc, ibound);
+
+            for (index_type j = 0; j < jbound; ++j) {
+                tptr[i * tile_width + j] += op(lptr[j] * runit);
+            }
+        }
+    }
+
+    template<typename Coeffs, typename Fn>
+    static void impl_top_right_only(helper_type<Coeffs>& helper,
+                                    const_pointer<Coeffs> rsrc,
+                                    IDEG degree,
+                                    index_type stride,
+                                    index_type ibound,
+                                    index_type jbound,
+                                    Fn op)
+    {
+        constexpr auto tile_width = helper_type<Coeffs>::tile_width;
+        pointer<Coeffs> tptr = helper.out_tile_ptr();
+        const_pointer<Coeffs> rptr = helper.right_read_tile_ptr();
+
+        const_reference<Coeffs> lunit = helper.left_unit();
+
+        for (index_type i = 0; i < ibound; ++i, rsrc += stride) {
+            helper.read_right_tile(rsrc, ibound);
+
+            for (index_type j = 0; j < jbound; ++j) {
+                tptr[i * tile_width + j] += op(lunit * rptr[j]);
+            }
         }
     }
 
     template<typename Coeffs, typename Fn>
     static void
     impl_lhs_small(helper_type<Coeffs>& helper,
-                   Fn op,
                    IDEG out_deg,
                    IDEG lhs_deg,
-                   IDIMN k,
-                   IDIMN subtile_i,
-                   IDIMN subtile_j) noexcept
+                   index_type k,
+                   Fn op) noexcept
     {
         const auto rhs_deg = out_deg - lhs_deg;
         constexpr auto tile_width = helper_type<Coeffs>::tile_width;
         constexpr auto tile_letters = helper_type<Coeffs>::tile_letters;
 
-        const auto ibound = helper.boundary_subtile(subtile_i) ? Width % tile_width : tile_width;
+        //        const auto ibound = helper.boundary_subtile(subtile_i) ? Width % tile_width : tile_width;
 
         assert(1 <= lhs_deg && lhs_deg <= tile_letters);
-        for (IDIMN i = 0; i < ibound; ++i) {
-            const auto split = helper.split_key(tile_letters - lhs_deg, subtile_i * tile_width + i);
-            const auto& left_val = *helper.left_fwd_read(lhs_deg, split.first);
-            helper.read_right_tile(rhs_deg,
-                                   helper.combine_keys(out_deg - 2 * tile_letters, split.second, k),
-                                   subtile_j);
-            impl_lb1<Coeffs>(helper.out_tile_ptr(),
-                             left_val,
-                             helper.right_read_tile_ptr(),
-                             op,
-                             i);
+        //        for (IDIMN i = 0; i < ibound; ++i) {
+        //            const auto split = helper.split_key(tile_letters - lhs_deg, subtile_i * tile_width + i);
+        //            const auto& left_val = *helper.left_fwd_read(lhs_deg, split.first);
+        //            helper.read_right_tile(rhs_deg,
+        //                                   helper.combine_keys(out_deg - 2 * tile_letters, split.second, k),
+        //                                   subtile_j);
+        //            impl_lb1<Coeffs>(helper.out_tile_ptr(),
+        //                             left_val,
+        //                             helper.right_read_tile_ptr(),
+        //                             op,
+        //                             i);
+        //        }
+
+        const auto i1bound = tsi::powers[tile_letters - lhs_deg];
+        const auto i2bound = tsi::powers[lhs_deg];
+
+        pointer<Coeffs> tptr = helper.out_tile_ptr();
+        const_pointer<Coeffs> lptr = helper.left_read_tile_ptr();
+        const_pointer<Coeffs> rptr = helper.right_read_tile_ptr();
+        helper.read_right_tile(helper.left_fwd_read(lhs_deg), i1bound);
+
+        for (index_type i2 = 0; i2 < i2bound; ++i2) {
+            auto key = helper.combine_keys(out_deg - 2 * tile_letters, i2, k);
+            helper.read_right_tile(helper.right_fwd_read_ptr(rhs_deg, key, 0, 0));
+            impl_lb1<Coeffs>(tptr, lptr, rptr, i2, i1bound, i2bound, op);
         }
     }
 
@@ -1709,6 +1841,7 @@ protected:
         const auto split = helper.split_key(rhs_split, k);
         helper.read_left_tile(lhs_deg, helper.reverse_key(lhs_split, split.first), subtile_i);
         helper.read_right_tile(rhs_deg, split.second, subtile_j);
+        helper.permute_left_tile();
         impl_mid<Coeffs>(helper.out_tile_ptr(),
                          helper.left_read_tile_ptr(),
                          helper.right_read_tile_ptr(),
@@ -1748,35 +1881,51 @@ protected:
     template<typename Coeffs, typename Fn>
     static void
     impl_rhs_small_reverse(helper_type<Coeffs>& helper,
-                           Fn op,
                            IDEG out_deg,
                            IDEG lhs_deg,
                            IDIMN k_reverse,
-                           IDIMN subtile_i,
-                           IDIMN subtile_j) noexcept
+                           Fn op) noexcept
     {
         constexpr auto tile_width = helper_type<Coeffs>::tile_width;
         constexpr auto tile_letters = helper_type<Coeffs>::tile_letters;
 
         const auto rhs_deg = out_deg - lhs_deg;
-        assert(out_deg - 2 * tile_letters < lhs_deg && lhs_deg < out_deg);
-        assert(1 <= rhs_deg && rhs_deg < tile_letters);
-        const auto split_left_letters = tile_letters - rhs_deg;
-        assert(0 < split_left_letters && split_left_letters < tile_letters);
-        assert(lhs_deg == out_deg - 2 * tile_letters + split_left_letters + tile_letters);
+        //        assert(out_deg - 2 * tile_letters < lhs_deg && lhs_deg < out_deg);
+        //        assert(1 <= rhs_deg && rhs_deg < tile_letters);
+        //        const auto split_left_letters = tile_letters - rhs_deg;
+        //        assert(0 < split_left_letters && split_left_letters < tile_letters);
+        //        assert(lhs_deg == out_deg - 2 * tile_letters + split_left_letters + tile_letters);
+        //
+        //        for (IDIMN j = 0; j < tile_width; ++j) {
+        //            const auto split = helper.split_key(rhs_deg, subtile_j * tile_width + j);
+        //            const auto& right_val = *helper.right_fwd_read(rhs_deg, split.second);
+        //            helper.read_left_tile(lhs_deg,
+        //                                  helper.combine_keys(split_left_letters, helper.reverse_key(split_left_letters, split.first), k_reverse),
+        //                                  subtile_i);
+        //            impl_1br<Coeffs>(helper.out_tile_ptr(),
+        //                             helper.left_read_tile_ptr(),
+        //                             right_val, helper.reverser(),
+        //                             op,
+        //
+        //                             j);
+        //        }
 
-        for (IDIMN j = 0; j < tile_width; ++j) {
-            const auto split = helper.split_key(rhs_deg, subtile_j * tile_width + j);
-            const auto& right_val = *helper.right_fwd_read(rhs_deg, split.second);
-            helper.read_left_tile(lhs_deg,
-                                  helper.combine_keys(split_left_letters, helper.reverse_key(split_left_letters, split.first), k_reverse),
-                                  subtile_i);
-            impl_1br<Coeffs>(helper.out_tile_ptr(),
-                             helper.left_read_tile_ptr(),
-                             right_val, helper.reverser(),
-                             op,
+        const auto mid_deg = out_deg - 2 * tile_letters;
+        const auto j1deg = tile_letters - rhs_deg;
+        const auto j1bound = tsi::powers[j1deg];
+        const auto j2bound = tsi::powers[rhs_deg];
+        helper.read_right_tile(helper.right_fwd_read(rhs_deg), j2bound);
 
-                             j);
+        pointer<Coeffs> tptr = helper.out_tile_ptr();
+        const_pointer<Coeffs> lptr = helper.left_read_tile_ptr();
+        const_pointer<Coeffs> rptr = helper.right_read_tile_ptr();
+
+        for (index_type j1 = 0; j1 < j1bound; ++j1) {
+            auto rj1 = helper.reverse_key(j1deg, j1);
+            auto key = helper.combine_keys(mid_deg, rj1, k_reverse);
+            helper.read_left_tile(helper.left_rev_read_ptr(lhs_deg, key, 0, 0));
+            helper.permute_left_tile();
+            impl_1br<Coeffs>(tptr, lptr, rptr, j1, j2bound, op);
         }
     }
 
@@ -1849,7 +1998,14 @@ protected:
                         helper.reset_tile(out_deg, k, k_reverse, subtile_i, subtile_j);
 
                         // Setup read pointers
-
+                        if (out_deg < max_degree) {
+                            if (out_deg <= old_lhs_deg) {
+                                left_reads[out_deg] = helper.left_fwd_read_ptr(out_deg, k, subtile_i);
+                            }
+                            if (out_deg <= rhs_max_deg) {
+                                right_reads[out_deg] = helper.right_fwd_read_ptr(out_deg, k, subtile_j);
+                            }
+                        }
                         for (IDEG i = std::max(tile_letters, lhs_deg_min); i <= std::min(out_deg - tile_letters, lhs_deg_max); ++i) {
                             auto split = helper.split_key(out_deg - i - tile_letters, k);
                             auto lkey = helper.reverse_key(i - tile_letters, split.first);
@@ -1857,31 +2013,41 @@ protected:
                             left_reads[i] = helper.left_rev_read_ptr(i, lkey, subtile_i);
                             right_reads[out_deg - i] = helper.right_fwd_read_ptr(out_deg - i, rkey, subtile_j);
                         }
-                        if (out_deg <= old_lhs_deg) {
-                            left_reads[out_deg] = helper.left_fwd_read_ptr(out_deg, k, subtile_i);
-                        }
-                        if (out_deg <= rhs_max_deg) {
-                            right_reads[out_deg] = helper.right_fwd_read_ptr(out_deg, k, subtile_j);
-                        }
 
                         if (out_deg < max_degree) {
                             const auto& rhs_unit = helper.right_unit();
-                            if (out_deg <= old_lhs_deg && rhs_unit != Coeffs::zero) {
-                                impl_db0<Coeffs>(helper.out_tile_ptr(), left_reads[out_deg], rhs_unit, stride, ibound, jbound, op);
-                            }
                             const auto& lhs_unit = helper.left_unit();
-                            if (out_deg <= rhs_max_deg && lhs_unit != Coeffs::zero) {
-                                impl_0bd<Coeffs>(helper.out_tile_ptr(), lhs_unit, right_reads[out_deg], stride, ibound, jbound, op);
+                            bool left_ok = out_deg <= old_lhs_deg && rhs_unit != Coeffs::zero;
+                            bool right_ok = out_deg <= rhs_max_deg && lhs_unit != Coeffs::zero;
+                            if (left_ok && right_ok) {
+                                impl_top_zipped(helper, left_reads[out_deg], right_reads[out_deg],
+                                                out_deg, stride, ibound, jbound, op);
                             }
+                            else if (left_ok) {
+                                impl_top_left_only(helper, left_reads[out_deg],
+                                                   out_deg, stride, ibound, jbound, op);
+                            }
+                            else {
+                                impl_top_right_only(helper, right_reads[out_deg],
+                                                    out_deg, stride, ibound, jbound, op);
+                            }
+
+                            //                            if (out_deg <= old_lhs_deg && rhs_unit != Coeffs::zero) {
+                            //                                impl_db0<Coeffs>(helper.out_tile_ptr(), left_reads[out_deg], rhs_unit, stride, ibound, jbound, op);
+                            //                            }
+                            //                            if (out_deg <= rhs_max_deg && lhs_unit != Coeffs::zero) {
+                            //                                impl_0bd<Coeffs>(helper.out_tile_ptr(), lhs_unit, right_reads[out_deg], stride, ibound, jbound, op);
+                            //                            }
                         }
 
                         for (IDEG lhs_deg = lhs_deg_min; lhs_deg <= lhs_deg_max; ++lhs_deg) {
                             if (lhs_deg < tile_letters) {
-                                impl_lhs_small(helper, op, out_deg, lhs_deg, k, subtile_i, subtile_j);
+                                impl_lhs_small(helper, out_deg, lhs_deg, k, op);
                             }
                             else if (lhs_deg <= mid_end && lhs_deg < old_lhs_deg) {
                                 helper.read_left_tile(left_reads[lhs_deg], helper.subtile_bound(subtile_i));
                                 helper.read_right_tile(right_reads[out_deg - lhs_deg], helper.subtile_bound(subtile_j));
+                                helper.permute_left_tile();
                                 impl_mid<Coeffs>(helper.out_tile_ptr(), helper.left_read_tile_ptr(), helper.right_read_tile_ptr(), helper.reverser(), op);
                                 //                                impl_mid_cases_reverse(helper, op, out_deg, lhs_deg, k, subtile_i, subtile_j);
                             }
@@ -1889,7 +2055,7 @@ protected:
                                 impl_mid_cases_no_reverse(helper, op, out_deg, lhs_deg, k, subtile_i, subtile_j);
                             }
                             else if (lhs_deg > mid_end && lhs_deg < old_lhs_deg) {
-                                impl_rhs_small_reverse(helper, op, out_deg, lhs_deg, k_reverse, subtile_i, subtile_j);
+                                impl_rhs_small_reverse(helper, out_deg, lhs_deg, k_reverse, op);
                             }
                             else if (lhs_deg > mid_end) {
                                 impl_rhs_small_no_reverse(helper, op, out_deg, lhs_deg, k, subtile_i, subtile_j);
@@ -1898,7 +2064,6 @@ protected:
                                 BOOST_UNREACHABLE_RETURN()
                             }
                         }
-
 
                         helper.write_tile(out_deg, k, k_reverse, subtile_i, subtile_j);
                     }// subtile_j

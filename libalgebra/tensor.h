@@ -836,6 +836,72 @@ public:
         return right_read_tile.data;
     }
 
+private:
+    template<IDEG Letters, bool IsEven = (Letters & 1) == 0>
+    struct tile_transposer {
+        static constexpr IDEG half_letters = Letters / 2;
+        static constexpr index_type half_tile_width = integer_maths::power(index_type(Width), half_letters);
+        using half_letters_permute = reversing_permutation<Width, half_letters>;
+
+        static constexpr void permute(pointer tile)
+        {
+            for (index_type left = 0; left < half_tile_width; ++left) {
+                for (index_type middle = 0; middle < static_cast<index_type>(Width); ++middle) {
+                    for (index_type right = left + 1; right < half_tile_width; ++right) {
+                        auto i = (left * Width + middle) * half_tile_width + right;
+                        auto j = (half_letters_permute::permute_idx(right) * Width + middle) * half_tile_width + half_letters_permute::permute_idx(left);
+                        std::swap(tile[i], tile[j]);
+                    }
+                }
+            }
+        }
+    };
+
+    template<IDEG Letters>
+    struct tile_transposer<Letters, true> {
+        static constexpr IDEG half_letters = Letters / 2;
+        static constexpr index_type half_tile_width = integer_maths::power(index_type(Width), half_letters);
+        using half_letters_permute = reversing_permutation<Width, half_letters>;
+
+        static constexpr void permute(pointer tile)
+        {
+            for (index_type left = 0; left < half_tile_width; ++left) {
+                for (index_type right = left + 1; right < half_tile_width; ++right) {
+                    auto i = left * half_tile_width + right;
+                    auto j = half_letters_permute::permute_idx(right) * half_tile_width + half_letters_permute::permute_idx(left);
+                    std::swap(tile[i], tile[j]);
+                }
+            }
+        }
+    };
+
+    template<bool IsEven>
+    struct tile_transposer<1, IsEven> {
+
+        static constexpr void permute(pointer tile)
+        {
+        }
+    };
+
+
+
+public:
+    constexpr void permute_left_tile() noexcept
+    {
+//        using perm = dtl::reversing_permutation<Width, Letters>;
+//        auto* tptr = left_read_tile.data;
+//                const auto* perm = base_helper::reverser();
+//        for (index_type i = 0; i < Size; ++i) {
+//            auto pi = perm::permute_idx(i);
+//                        auto pi = perm[i];
+//            if (pi < i) {
+//                std::swap(tptr[i], tptr[pi]);
+//            }
+//        }
+        tile_transposer<tile_letters>::permute(left_read_tile.data);
+
+    }
+
     void read_left_tile(IDEG degree, IDIMN index, IDIMN subtile_i = 0) noexcept
     {
         const auto* ptr_begin = left_reverse_read_ptr + pointer_offset(degree, index, 0, subtile_i);

@@ -201,11 +201,22 @@ protected:
         }
     }
 
-    void write_tile_impl(pointer out_p, index_type lhs_stride, index_type ibound, index_type jbound) const noexcept
+    static void write_tile_assign(pointer out_p, const_pointer tptr, index_type lhs_stride, index_type ibound, index_type jbound) noexcept
     {
-        for (index_type i = 0; i < ibound; ++i) {
+        for (index_type i = 0; i < ibound; ++i, tptr += tile_width) {
+            pointer optr = out_p + i * lhs_stride;
+            std::copy(tptr, tptr + jbound, optr);
+            //            for (index_type j = 0; j < jbound; ++j) {
+            //                out_p[i * lhs_stride + j] = tile.data[i * tile_width + j];
+            //            }
+        }
+    }
+
+    static void write_tile_acc(pointer optr, const_pointer tptr, index_type stride, index_type ibound, index_type jbound)
+    {
+        for (index_type i =0; i < ibound; ++i) {
             for (index_type j = 0; j < jbound; ++j) {
-                out_p[i * lhs_stride + j] = tile.data[i * tile_width + j];
+                optr[i*stride + j] += tptr[i*tile_width + j];
             }
         }
     }
@@ -267,7 +278,7 @@ public:
     {
         const auto stride = tsi::powers[degree - tile_info::tile_letters];
         pointer out_p = dst_p + pointer_offset(degree, index, subtile_i, subtile_j);
-        write_tile_impl(out_p, stride, subtile_bound(subtile_i), subtile_bound(subtile_j));
+        write_tile_assign(out_p, tile.data, stride, subtile_bound(subtile_i), subtile_bound(subtile_j));
     }
 
     void write_tile_reverse(pointer dst_p,
@@ -888,16 +899,69 @@ public:
 #endif
     }
 
+    void permute_write_tile()
+    {
+        //        using perm = dtl::reversing_permutation<Width, tile_letters>;
+        pointer tptr = out_tile_ptr();
+        const auto* perm = base_helper::reverser();
+        for (index_type i = 0; i < tile_width; ++i) {
+            //            auto pi = perm::permute_idx(i);
+            auto pi = perm[i];
+            for (index_type j = i + 1; i < tile_width; ++i) {
+                //                auto pj = perm::permute_idx(j);
+                auto pj = perm[j];
+                std::swap(tptr[i * tile_width + j], tptr[pj * tile_width + pi]);
+            }
+        }
+    }
+
+private:
+    LA_INLINE_ALWAYS void write_tile_impl(pointer optr, index_type stride, index_type ibound, index_type jbound)
+    {
+        const_pointer tptr = out_tile_ptr();
+        const_pointer iptr = left_read_tile.data;
+
+        if (base::is_inplace()) {
+            base_helper::write_tile_assign(optr, tptr, stride, ibound, jbound);
+            //            for (index_type i = 0; i < ibound; ++i, tptr += tile_width, optr += stride) {
+            //                read_left_tile(tptr, jbound);
+            //                for (index_type j = 0; j < jbound; ++j) {
+            //                    optr[j] = iptr[j];
+            //                }
+            //            }
+        }
+        else {
+            base_helper::write_tile_acc(optr, tptr, stride, ibound, jbound);
+        }
+    }
+
+public:
     void write_tile(IDEG degree, IDIMN index, IDIMN reverse_index, IDIMN subtile_i = 0, IDIMN subtile_j = 0) noexcept
     {
         assert(0 <= degree && degree <= static_cast<IDEG>(Depth));
         assert(index <= static_cast<IDIMN>(tsi::powers[degree - 2 * tile_letters]));
         assert(reverse_index <= static_cast<IDIMN>(tsi::powers[degree - 2 * tile_letters]));
-        base_helper::write_tile(base::out_data, degree, index, subtile_i, subtile_j);
+
+        const auto stride = tsi::powers[degree - tile_letters];
+        const auto ibound = base_helper::subtile_bound(subtile_i);
+        const auto jbound = base_helper::subtile_bound(subtile_j);
+        const auto subtile_offset = (subtile_i * stride + subtile_j) * tile_width;
+
+        pointer optr = base::fwd_write(degree);
+        optr += index * tile_info::tile_stride;
+        optr += subtile_offset;
+
+        write_tile_impl(optr, stride, ibound, jbound);
 
         if (reverse_write_ptr != nullptr && degree < base::out_deg) {
             // Write out reverse data
-            base_helper::write_tile_reverse(reverse_write_ptr, degree, reverse_index, subtile_i, subtile_j);
+            permute_write_tile();
+
+            optr = m_out_rev_levels[degree];
+            optr += reverse_index * tile_info::tile_stride;
+            optr += subtile_offset;
+            write_tile_impl(optr, stride, ibound, jbound);
+            //            base_helper::write_tile(reverse_write_ptr, degree, reverse_index, subtile_i, subtile_j);
         }
     }
 

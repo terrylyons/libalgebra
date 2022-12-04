@@ -1326,7 +1326,7 @@ public:
         DEG max_degree,
         OriginalVectors&) const
     {
-        if (lhs.dimension() == 0 && rhs.dimension() != 0) {
+        if (lhs.dimension() != 0 && rhs.dimension() != 0) {
             helper<Coeffs> help(out, lhs, rhs, max_degree);
             fma_impl(help, op, help.out_degree());
             update_reverse_data(out, help.out_degree());

@@ -1487,9 +1487,9 @@ private:
     {
         constexpr auto tile_width = helper_type<C>::tile_width;
         for (IDIMN i = 0; i < tile_width; ++i) {
-            auto pi = perm[i];
+            //            auto pi = perm[i];
             for (IDIMN j = 0; j < tile_width; ++j) {
-                tile[i * tile_width + j] += op(lhs_tile[pi] * rhs_tile[j]);
+                tile[i * tile_width + j] += op(lhs_tile[i] * rhs_tile[j]);
             }
         }
     }

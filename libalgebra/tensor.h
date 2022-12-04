@@ -7,7 +7,7 @@ Distributed under the terms of the GNU General Public License,
 Version 3. (See accompanying file License.txt)
 
 ************************************************************* */
-
+#pragma warning(disable : 4068) /* disable unknown pragma warnings */
 //  tensor.h
 
 // Include once wrapper
@@ -33,7 +33,10 @@ Version 3. (See accompanying file License.txt)
 #include "tensor_basis.h"
 
 #define LA_RESTRICT __restrict
-#define LA_INLINE_ALWAYS __attribute__((always_inline))
+//#define LA_INLINE_ALWAYS __attribute__((always_inline))
+//#define LA_INLINE_ALWAYS [[always_inline]]
+#define LA_INLINE_ALWAYS
+
 
 #define LA_ALIGNAS(BYTES) alignas(BYTES)
 #ifndef LA_CACHELINE_BYTES
@@ -1408,7 +1411,7 @@ protected:
                                 impl_rhs_small_no_reverse(helper, op, out_deg, lhs_deg, k, subtile_i, subtile_j);
                             }
                             else {
-                                BOOST_UNREACHABLE_RETURN()
+                                BOOST_UNREACHABLE_RETURN(0)
                             }
                         }
 

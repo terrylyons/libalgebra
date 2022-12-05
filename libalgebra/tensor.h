@@ -1663,7 +1663,7 @@ protected:
         const_reference<C> lunit = helper.left_unit();
         pointer<C> optr = helper.fwd_write(out_deg);
 
-        const auto bound = helper.num_subtiles * tsi::powers[out_deg - helper.tile_letters];
+        const auto bound = tsi::powers[out_deg - helper.tile_letters];
 
         if (helper.is_inplace()) {
             for (index_type i = 0; i < bound; ++i, optr += tile_width) {
@@ -1695,7 +1695,7 @@ protected:
         else if (left_valid) {
             impl_outer_left_only(helper, op);
         }
-        else {
+        else if (right_valid) {
             impl_outer_right_only(helper, op);
         }
     }
@@ -2027,7 +2027,7 @@ protected:
                                 impl_top_left_only(helper, left_reads[out_deg],
                                                    out_deg, stride, ibound, jbound, op);
                             }
-                            else {
+                            else if (right_ok) {
                                 impl_top_right_only(helper, right_reads[out_deg],
                                                     out_deg, stride, ibound, jbound, op);
                             }
@@ -2100,7 +2100,7 @@ public:
              DEG max_degree,
              OriginalVectors& orig) const
     {
-        if (max_degree <= 2 * helper_type<Coeffs>::tile_letters) {
+        if (max_degree <= 2 * helper_type<Coeffs>::tile_letters || lhs.degree() + rhs.degree() <= 2*helper_type<Coeffs>::tile_letters) {
             base::fma(out, lhs, rhs, op, max_degree, orig);
             return;
         }
@@ -2121,7 +2121,7 @@ public:
                           Fn op, DEG max_degree, OriginalVectors& orig) const
     {
         //        std::cout << "BEFORE " << lhs << '\n';
-        if (max_degree <= 2 * helper_type<Coeffs>::tile_letters) {
+        if (max_degree <= 2 * helper_type<Coeffs>::tile_letters || lhs.degree() + rhs.degree() <= 2*helper_type<Coeffs>::tile_letters) {
             base::multiply_inplace(lhs, rhs, op, max_degree, orig);
             return;
         }

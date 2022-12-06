@@ -1809,7 +1809,7 @@ protected:
         pointer<Coeffs> tptr = helper.out_tile_ptr();
         const_pointer<Coeffs> lptr = helper.left_read_tile_ptr();
         const_pointer<Coeffs> rptr = helper.right_read_tile_ptr();
-        helper.read_right_tile(helper.left_fwd_read(lhs_deg), i1bound);
+        helper.read_left_tile(helper.left_fwd_read(lhs_deg), i1bound);
 
         for (index_type i2 = 0; i2 < i2bound; ++i2) {
             auto key = helper.combine_keys(out_deg - 2 * tile_letters, i2, k);

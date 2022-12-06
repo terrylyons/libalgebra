@@ -1603,7 +1603,7 @@ protected:
         const_reference<C> lunit = helper.left_unit();
         const_reference<C> runit = helper.right_unit();
 
-        const auto bound = helper.num_subtiles * tsi::powers[out_deg - helper.tile_letters];
+        const auto bound = static_cast<index_type>(tsi::powers[out_deg - helper.tile_letters]);
 
         if (helper.is_inplace()) {
             for (index_type i = 0; i < bound; ++i/*, rsrc += tile_width, optr += tile_width*/) {
@@ -1635,7 +1635,7 @@ protected:
         const_reference<C> runit = helper.right_unit();
         pointer<C> optr = helper.fwd_write(out_deg);
 
-        const auto bound = helper.num_subtiles * tsi::powers[out_deg - helper.tile_letters];
+        const auto bound = static_cast<index_type>(tsi::powers[out_deg - helper.tile_letters]);
 
         if (helper.is_inplace()) {
             for (index_type i = 0; i < bound; ++i, optr += tile_width) {
@@ -1662,7 +1662,7 @@ protected:
         const_reference<C> lunit = helper.left_unit();
         pointer<C> optr = helper.fwd_write(out_deg);
 
-        const auto bound = tsi::powers[out_deg - helper.tile_letters];
+        const auto bound = static_cast<index_type>(tsi::powers[out_deg - helper.tile_letters]);
 
         if (helper.is_inplace()) {
             for (index_type i = 0; i < bound; ++i, optr += tile_width) {
@@ -1803,8 +1803,8 @@ protected:
         //                             i);
         //        }
 
-        const auto i1bound = tsi::powers[tile_letters - lhs_deg];
-        const auto i2bound = tsi::powers[lhs_deg];
+        const auto i1bound = static_cast<index_type>(tsi::powers[tile_letters - lhs_deg]);
+        const auto i2bound = static_cast<index_type>(tsi::powers[lhs_deg]);
 
         pointer<Coeffs> tptr = helper.out_tile_ptr();
         const_pointer<Coeffs> lptr = helper.left_read_tile_ptr();
@@ -1911,8 +1911,8 @@ protected:
 
         const auto mid_deg = out_deg - 2 * tile_letters;
         const auto j1deg = tile_letters - rhs_deg;
-        const auto j1bound = tsi::powers[j1deg];
-        const auto j2bound = tsi::powers[rhs_deg];
+        const auto j1bound = static_cast<index_type>(tsi::powers[j1deg]);
+        const auto j2bound = static_cast<index_type>(tsi::powers[rhs_deg]);
         helper.read_right_tile(helper.right_fwd_read(rhs_deg), j2bound);
 
         pointer<Coeffs> tptr = helper.out_tile_ptr();

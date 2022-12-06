@@ -356,7 +356,7 @@ SUITE(tensor_multiplication)
                                                                                                      \
         CHECK_EQUAL(basis.start_of_degree(std::min(LDEG + RDEG, DEGREE) + 1), result.size());        \
         for (auto item : result) {                                                                   \
-            CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000, LDEG, RDEG), item.value()); \
+            REQUIRE CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000, LDEG, RDEG), item.value()); \
         }                                                                                            \
     }
 
@@ -373,7 +373,7 @@ SUITE(tensor_multiplication)
                                                                                                      \
         CHECK_EQUAL(3906, lhs.size());                                                               \
         for (auto item : lhs) {                                                                      \
-            if (basis.degree(item.key()) < DEGREE + 1) {                                             \
+            if (basis.degree(item.key()) < (DEGREE) + 1) {                                             \
                 REQUIRE CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value()); \
             }                                                                                        \
             else {                                                                                   \
@@ -396,7 +396,7 @@ SUITE(tensor_multiplication)
             if (item.key() == key_type()) {                                                                  \
                 REQUIRE CHECK_EQUAL(scalar_type(), item.value());                                            \
             }                                                                                                \
-            else if (basis.degree(item.key()) < DEGREE + 1) {                                                \
+            else if (basis.degree(item.key()) < (DEGREE) + 1) {                                                \
                 REQUIRE CHECK_EQUAL(construct_expected_rzu(item.key(), 1000000, 2000000) / 2, item.value()); \
             }                                                                                                \
             else {                                                                                           \
@@ -414,7 +414,7 @@ SUITE(tensor_multiplication)
         auto result = lhs * rhs;                                                                          \
         REQUIRE CHECK_EQUAL(3906, result.size());                                                         \
         for (auto item : result) {                                                                        \
-            CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value());                  \
+            REQUIRE CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value());                  \
         }                                                                                                 \
     }                                                                                                     \
                                                                                                           \
@@ -518,7 +518,7 @@ SUITE(tensor_multiplication)
         CHECK_EQUAL(3906, result.size());                                                                 \
         for (auto item : result) {                                                                        \
             REQUIRE CHECK_EQUAL(it->key(), item.key());                                                   \
-            CHECK_EQUAL(it->value().size(), item.value().size());                                         \
+            REQUIRE CHECK_EQUAL(it->value().size(), item.value().size());                                         \
             if (it->value().size() != item.value().size()) {                                              \
                 std::cout << it->key() << ' ' << item.value() - it->value() << "\n\n";                    \
             }                                                                                             \
@@ -608,6 +608,7 @@ SUITE(tensor_multiplication)
                 break;
             }
             auto reverse_index = tensor_basis::key_to_index(item.key().reverse());
+            CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value());
             REQUIRE CHECK_EQUAL(item.value(), reverse_data[reverse_index]);
         }
     }

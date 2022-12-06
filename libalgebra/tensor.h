@@ -1813,7 +1813,7 @@ protected:
 
         for (index_type i2 = 0; i2 < i2bound; ++i2) {
             auto key = helper.combine_keys(out_deg - 2 * tile_letters, i2, k);
-            helper.read_right_tile(helper.right_fwd_read_ptr(rhs_deg, key, 0, 0));
+            helper.read_right_tile(helper.right_fwd_read_ptr(rhs_deg, key, 0));
             impl_lb1<Coeffs>(tptr, lptr, rptr, i2, i1bound, i2bound, op);
         }
     }

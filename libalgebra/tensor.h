@@ -1976,7 +1976,7 @@ protected:
         left_reads[0] = helper.left_fwd_read(0, 0);
         right_reads[0] = helper.right_fwd_read(0, 0);
 
-        impl_outer_cases(helper, op);
+//        impl_outer_cases(helper, op);
 
         for (IDEG out_deg = max_degree; out_deg > 2 * tile_letters; --out_deg) {
             const auto mid_deg = out_deg - 2 * tile_letters;
@@ -1997,14 +1997,14 @@ protected:
                         helper.reset_tile(out_deg, k, k_reverse, subtile_i, subtile_j);
 
                         // Setup read pointers
-                        if (out_deg < max_degree) {
+//                        if (out_deg < max_degree) {
                             if (out_deg <= old_lhs_deg) {
                                 left_reads[out_deg] = helper.left_fwd_read_ptr(out_deg, k, subtile_i);
                             }
                             if (out_deg <= rhs_max_deg) {
                                 right_reads[out_deg] = helper.right_fwd_read_ptr(out_deg, k, subtile_j);
                             }
-                        }
+//                        }
                         for (IDEG i = std::max(tile_letters, lhs_deg_min); i <= std::min(out_deg - tile_letters, lhs_deg_max); ++i) {
                             auto split = helper.split_key(out_deg - i - tile_letters, k);
                             auto lkey = helper.reverse_key(i - tile_letters, split.first);
@@ -2013,7 +2013,7 @@ protected:
                             right_reads[out_deg - i] = helper.right_fwd_read_ptr(out_deg - i, rkey, subtile_j);
                         }
 
-                        if (out_deg < max_degree) {
+//                        if (out_deg < max_degree) {
                             const auto& rhs_unit = helper.right_unit();
                             const auto& lhs_unit = helper.left_unit();
                             bool left_ok = out_deg <= old_lhs_deg && rhs_unit != Coeffs::zero;
@@ -2037,7 +2037,7 @@ protected:
                             //                            if (out_deg <= rhs_max_deg && lhs_unit != Coeffs::zero) {
                             //                                impl_0bd<Coeffs>(helper.out_tile_ptr(), lhs_unit, right_reads[out_deg], stride, ibound, jbound, op);
                             //                            }
-                        }
+//                        }
 
                         for (IDEG lhs_deg = lhs_deg_min; lhs_deg <= lhs_deg_max; ++lhs_deg) {
                             if (lhs_deg < tile_letters) {

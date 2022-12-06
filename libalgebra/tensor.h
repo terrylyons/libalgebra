@@ -1922,7 +1922,7 @@ protected:
         for (index_type j1 = 0; j1 < j1bound; ++j1) {
             auto rj1 = helper.reverse_key(j1deg, j1);
             auto key = helper.combine_keys(mid_deg, rj1, k_reverse);
-            helper.read_left_tile(helper.left_rev_read_ptr(lhs_deg, key, 0, 0));
+            helper.read_left_tile(helper.left_rev_read_ptr(lhs_deg, key, 0));
             helper.permute_left_tile();
             impl_1br<Coeffs>(tptr, lptr, rptr, j1, j2bound, op);
         }

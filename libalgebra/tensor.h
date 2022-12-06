@@ -1052,8 +1052,8 @@ public:
 
             optr = m_out_rev_levels[degree];
             optr += reverse_index * tile_info::tile_stride;
-            optr += subtile_offset;
-            write_tile_impl(optr, stride, ibound, jbound);
+            optr += (subtile_j*stride + subtile_i)*tile_width;
+            write_tile_impl(optr, stride, jbound, ibound);
             //            base_helper::write_tile(reverse_write_ptr, degree, reverse_index, subtile_i, subtile_j);
         }
     }

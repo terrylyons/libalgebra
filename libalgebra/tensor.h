@@ -1547,7 +1547,6 @@ private:
                                           Fn op)
     {
         constexpr auto tile_width = helper_type<C>::tile_width;
-        using perm = dtl::reversing_permutation<Width, helper_type<C>::tile_letters>;
         for (index_type i = 0; i < tile_width; ++i) {
             //            auto pi = perm::permute_idx(i);
             for (index_type j2 = 0; j2 < j2bound; ++j2) {
@@ -1784,7 +1783,6 @@ protected:
                    Fn op) noexcept
     {
         const auto rhs_deg = out_deg - lhs_deg;
-        constexpr auto tile_width = helper_type<Coeffs>::tile_width;
         constexpr auto tile_letters = helper_type<Coeffs>::tile_letters;
 
         //        const auto ibound = helper.boundary_subtile(subtile_i) ? Width % tile_width : tile_width;
@@ -1885,7 +1883,6 @@ protected:
                            IDIMN k_reverse,
                            Fn op) noexcept
     {
-        constexpr auto tile_width = helper_type<Coeffs>::tile_width;
         constexpr auto tile_letters = helper_type<Coeffs>::tile_letters;
 
         const auto rhs_deg = out_deg - lhs_deg;

@@ -1070,15 +1070,15 @@ public:
         return left * shift + right;
     }
 
-    const_pointer left_fwd_read_ptr(IDEG degree, IDIMN index, IDIMN subtile_i, IDIMN subtile_j = 0) const noexcept
+    const_pointer left_fwd_read_ptr(IDEG degree, IDIMN index, IDIMN subtile_i) const noexcept
     {
-        return base::left_fwd_read(degree, index * tile_info::tile_stride + subtile_i * tile_info::tile_width * tsi::powers[degree - tile_letters]);
+        return base::left_fwd_read(degree, index * tile_info::tile_stride + subtile_i * tile_info::tile_width * tsi::powers[degree-tile_letters]);
     }
-    const_pointer left_rev_read_ptr(IDEG degree, IDIMN index, IDIMN subtile_i, IDIMN subtile_j = 0) const noexcept
+    const_pointer left_rev_read_ptr(IDEG degree, IDIMN index, IDIMN subtile_i) const noexcept
     {
-        return m_lhs_rev_levels[degree] + index * tile_info::tile_stride + subtile_i * tile_width * tsi::powers[degree - tile_letters];
+        return m_lhs_rev_levels[degree] + index * tile_info::tile_stride + subtile_i * tile_width;
     }
-    const_pointer right_fwd_read_ptr(IDEG degree, IDIMN index, IDIMN subtile_j, IDIMN subtile_i = 0) const noexcept
+    const_pointer right_fwd_read_ptr(IDEG degree, IDIMN index, IDIMN subtile_j) const noexcept
     {
         return base::right_fwd_read(degree, index * tile_info::tile_stride + subtile_j * tile_info::tile_width);
     }

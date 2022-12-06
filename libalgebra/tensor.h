@@ -1013,7 +1013,6 @@ private:
     LA_INLINE_ALWAYS void write_tile_impl(pointer optr, index_type stride, index_type ibound, index_type jbound)
     {
         const_pointer tptr = out_tile_ptr();
-        const_pointer iptr = left_read_tile.data;
 
         if (base::is_inplace()) {
             base_helper::write_tile_assign(optr, tptr, stride, ibound, jbound);

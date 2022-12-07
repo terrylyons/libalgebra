@@ -1516,7 +1516,7 @@ private:
         for (index_type i1 = 0; i1 < i1bound; ++i1) {
             auto i = i1 * i2bound + i2;
             for (index_type j = 0; j < tile_width; ++j) {
-                optr[i * tile_width + j] += op(lptr[i2] * rptr[j]);
+                optr[i * tile_width + j] += op(lptr[i1] * rptr[j]);
             }
         }
     }

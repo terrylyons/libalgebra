@@ -1965,8 +1965,6 @@ public:
     using base::fma;
     using base::multiply_inplace;
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "HidingNonVirtualFunction"
     template<typename B1, typename Coeffs, typename Fn, typename OriginalVectors>
     void fma(vectors::dense_vector<B1, Coeffs>& out,
              const vectors::dense_vector<B1, Coeffs>& lhs,
@@ -2013,7 +2011,6 @@ public:
             lhs.clear();
         }
     }
-#pragma clang diagnostic pop
 };
 
 //template <DEG Width, DEG Depth>
@@ -2118,8 +2115,6 @@ private:
     }
 
 public:
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "HidingNonVirtualFunction"
     result_type operator()(argument_type lhs, argument_type rhs) const
     {
         static const boost::container::small_vector<pair_type, 0> null;
@@ -2131,7 +2126,6 @@ public:
         return base::cached_compute(lhs, rhs);
         //        return half_shuffle_base::shuffle(lhs, rhs);
     }
-#pragma clang diagnostic pop
 };
 
 template<DEG Width, DEG Depth>
@@ -2160,8 +2154,6 @@ private:
     }
 
 public:
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "HidingNonVirtualFunction"
     result_type operator()(argument_type lhs, argument_type rhs) const
     {
         static const boost::container::small_vector<pair_type, 0> null;
@@ -2172,7 +2164,6 @@ public:
 
         return base::cached_compute(lhs, rhs);
     }
-#pragma clang diagnostic pop
 };
 
 template<DEG Width, DEG Depth>

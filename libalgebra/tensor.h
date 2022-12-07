@@ -1624,7 +1624,7 @@ protected:
         const_reference<Coeffs> runit = helper.right_unit();
 
         for (index_type i = 0; i < ibound; ++i, lsrc += stride) {
-            helper.read_left_tile(lsrc, ibound);
+            helper.read_left_tile(lsrc, jbound);
 
             for (index_type j = 0; j < jbound; ++j) {
                 tptr[i * tile_width + j] += op(lptr[j] * runit);
@@ -1648,7 +1648,7 @@ protected:
         const_reference<Coeffs> lunit = helper.left_unit();
 
         for (index_type i = 0; i < ibound; ++i, rsrc += stride) {
-            helper.read_right_tile(rsrc, ibound);
+            helper.read_right_tile(rsrc, jbound);
 
             for (index_type j = 0; j < jbound; ++j) {
                 tptr[i * tile_width + j] += op(lunit * rptr[j]);

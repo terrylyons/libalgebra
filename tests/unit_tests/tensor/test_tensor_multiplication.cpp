@@ -672,8 +672,11 @@ SUITE(tensor_multiplication)
 
 
         CHECK_EQUAL(1 + width*(1 + width*(1+width)), result.size());
-        for (auto item : result) {
-            REQUIRE CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value());
+//        for (auto item : result) {
+//            REQUIRE CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value());
+//        }
+        for (auto key : basis.iterate_keys()) {
+            REQUIRE CHECK_EQUAL(construct_expected(key, 1000000, 2000000), result[key]);
         }
     }
 

@@ -997,7 +997,7 @@ public:
         for (index_type i = 0; i < tile_width; ++i) {
             //            auto pi = perm::permute_idx(i);
             auto pi = perm[i];
-            for (index_type j = i + 1; i < tile_width; ++i) {
+            for (index_type j = 0; i < tile_width; ++i) {
                 //                auto pj = perm::permute_idx(j);
                 auto pj = perm[j];
                 std::swap(tptr[i * tile_width + j], tptr[pj * tile_width + pi]);

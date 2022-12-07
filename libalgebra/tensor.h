@@ -1390,65 +1390,16 @@ private:
     }
 
     template<typename C, typename Fn>
-    LA_INLINE_ALWAYS static void impl_0bd(pointer<C> tile,
-                                          const_reference<C> lhs_unit,
-                                          const_pointer<C> rhs_ptr,
-                                          IDIMN stride,
-                                          IDIMN ibound,
-                                          IDIMN jbound,
-                                          Fn op) noexcept
-    {
-        constexpr auto tile_width = helper_type<C>::tile_width;
-        for (IDIMN i = 0; i < ibound; ++i) {
-            for (IDIMN j = 0; j < jbound; ++j) {
-                tile[i * tile_width + j] += op(lhs_unit * rhs_ptr[i * stride + j]);
-            }
-        }
-    }
-
-    template<typename C, typename Fn>
-    LA_INLINE_ALWAYS static void impl_db0(pointer<C> tile,
-                                          const_pointer<C> lhs_ptr,
-                                          const_reference<C> rhs_unit,
-                                          IDIMN stride,
-                                          IDIMN ibound,
-                                          IDIMN jbound,
-                                          Fn op) noexcept
-    {
-        constexpr auto tile_width = helper_type<C>::tile_width;
-        for (IDIMN i = 0; i < ibound; ++i) {
-            for (IDIMN j = 0; j < jbound; ++j) {
-                tile[i * tile_width + j] += op(lhs_ptr[i * stride + j] * rhs_unit);
-            }
-        }
-    }
-
-    template<typename C, typename Fn>
     LA_INLINE_ALWAYS static void impl_mid(pointer<C> tile,
                                           const_pointer<C> lhs_tile,
                                           const_pointer<C> rhs_tile,
-                                          const int* perm,
                                           Fn op) noexcept
     {
         constexpr auto tile_width = helper_type<C>::tile_width;
         for (IDIMN i = 0; i < tile_width; ++i) {
-            //            auto pi = perm[i];
             for (IDIMN j = 0; j < tile_width; ++j) {
                 tile[i * tile_width + j] += op(lhs_tile[i] * rhs_tile[j]);
             }
-        }
-    }
-
-    template<typename C, typename Fn>
-    LA_INLINE_ALWAYS static void impl_lb1(pointer<C> tile,
-                                          const_reference<C> lhs_val,
-                                          const_pointer<C> rhs_tile,
-                                          Fn op,
-                                          IDIMN i) noexcept
-    {
-        constexpr auto tile_width = helper_type<C>::tile_width;
-        for (IDIMN j = 0; j < tile_width; ++j) {
-            tile[i * tile_width + j] += op(lhs_val * rhs_tile[j]);
         }
     }
 
@@ -1471,20 +1422,6 @@ private:
     }
 
     template<typename C, typename Fn>
-    LA_INLINE_ALWAYS static void impl_1br(pointer<C> tile,
-                                          const_pointer<C> lhs_tile,
-                                          const_reference<C> rhs_val,
-                                          const int* perm,
-                                          Fn op,
-                                          IDIMN j) noexcept
-    {
-        constexpr auto tile_width = helper_type<C>::tile_width;
-        for (IDIMN i = 0; i < tile_width; ++i) {
-            tile[i * tile_width + j] += op(lhs_tile[perm[i]] * rhs_val);
-        }
-    }
-
-    template<typename C, typename Fn>
     LA_INLINE_ALWAYS static void impl_1br(pointer<C> optr,
                                           const_pointer<C> lptr,
                                           const_pointer<C> rptr,
@@ -1494,7 +1431,6 @@ private:
     {
         constexpr auto tile_width = helper_type<C>::tile_width;
         for (index_type i = 0; i < tile_width; ++i) {
-            //            auto pi = perm::permute_idx(i);
             for (index_type j2 = 0; j2 < j2bound; ++j2) {
                 auto j = j1 * j2bound + j2;
                 optr[i * tile_width + j] += op(lptr[i] * rptr[j2]);
@@ -1560,7 +1496,7 @@ protected:
         else {
             const_pointer<C> lsrc = helper.left_fwd_read(out_deg);
 
-            for (index_type i = 0; i < bound; ++i /*, lsrc += tile_width, rsrc += tile_width, optr += tile_width*/) {
+            for (index_type i = 0; i < bound; ++i) {
                 helper.read_left_tile(lsrc + i * tile_width);
                 helper.read_right_tile(rsrc + i * tile_width);
                 linear_fwd_zipped_mul<C>(optr + i * tile_width, lptr, rptr, lunit, runit, tile_width, op);
@@ -1662,7 +1598,7 @@ protected:
         const_reference<Coeffs> lunit = helper.left_unit();
         const_reference<Coeffs> runit = helper.right_unit();
 
-        for (index_type i = 0; i < ibound; ++i /*, lsrc += stride, rsrc += stride*/) {
+        for (index_type i = 0; i < ibound; ++i) {
             helper.read_left_tile(lsrc + i * stride, jbound);
             helper.read_right_tile(rsrc + i * stride, jbound);
 
@@ -1788,7 +1724,6 @@ protected:
         impl_mid<Coeffs>(helper.out_tile_ptr(),
                          helper.left_read_tile_ptr(),
                          helper.right_read_tile_ptr(),
-                         helper.reverser(),
                          op);
     }
 
@@ -1979,13 +1914,6 @@ protected:
                                                 out_deg, stride, ibound, jbound, op);
                         }
 
-                        //                            if (out_deg <= old_lhs_deg && rhs_unit != Coeffs::zero) {
-                        //                                impl_db0<Coeffs>(helper.out_tile_ptr(), left_reads[out_deg], rhs_unit, stride, ibound, jbound, op);
-                        //                            }
-                        //                            if (out_deg <= rhs_max_deg && lhs_unit != Coeffs::zero) {
-                        //                                impl_0bd<Coeffs>(helper.out_tile_ptr(), lhs_unit, right_reads[out_deg], stride, ibound, jbound, op);
-                        //                            }
-                        //                        }
 
                         for (IDEG lhs_deg = lhs_deg_min; lhs_deg <= lhs_deg_max; ++lhs_deg) {
                             if (lhs_deg < tile_letters) {
@@ -1995,7 +1923,7 @@ protected:
                                 helper.read_left_tile(left_reads[lhs_deg], ibound);
                                 helper.read_right_tile(right_reads[out_deg - lhs_deg], jbound);
                                 helper.permute_left_tile();
-                                impl_mid<Coeffs>(helper.out_tile_ptr(), helper.left_read_tile_ptr(), helper.right_read_tile_ptr(), helper.reverser(), op);
+                                impl_mid<Coeffs>(helper.out_tile_ptr(), helper.left_read_tile_ptr(), helper.right_read_tile_ptr(), op);
                                 //                                impl_mid_cases_reverse(helper, op, out_deg, lhs_deg, k, subtile_i, subtile_j);
                             }
                             else if (lhs_deg <= mid_end && lhs_deg == old_lhs_deg) {

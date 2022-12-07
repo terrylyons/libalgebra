@@ -899,19 +899,6 @@ public:
                 tile_transposer<tile_letters>::permute(left_read_tile.data);
     }
 
-    void read_left_tile(IDEG degree, IDIMN index, IDIMN subtile_i = 0) noexcept
-    {
-        const auto* ptr_begin = left_reverse_read_ptr + pointer_offset(degree, index, 0, subtile_i);
-        if (boundary_subtile(subtile_i)) {
-            const auto mid = Width % tile_width;
-            std::copy(ptr_begin, ptr_begin + mid, left_read_tile.data);
-            std::fill(left_read_tile.data + mid, left_read_tile.data + tile_width, Coeffs::zero);
-        }
-        else {
-            std::copy(ptr_begin, ptr_begin + tile_width, left_read_tile.data);
-        }
-    }
-
 private:
     static void read_tile(pointer tptr, const_pointer src, index_type count)
     {
@@ -930,48 +917,11 @@ public:
     {
         pointer tptr = left_read_tile.data;
         read_tile(tptr, src, count);
-        //        for (index_type i = 0; i < count; ++i) {
-        //            tptr[i] = src[i];
-        //        }
-        //        for (index_type i = count; i < tile_width; ++i) {
-        //            tptr[i] = Coeffs::zero;
-        //        }
-        //        if (count == tile_width) {
-        //            read_tile(tptr, src);
-        ////            std::copy(src, src + count, tptr);
-        //        }
-        //        else {
-        ////            std::copy(src, src + count, tptr);
-        //            read_tile<Width % tile_width>(tptr, src);
-        //            std::fill(tptr + count, tptr + tile_width, Coeffs::zero);
-        //        }
-    }
-    void read_right_tile(IDEG degree, IDIMN index, IDIMN subtile_j = 0) noexcept
-    {
-        const auto* ptr_begin = base::rhs_data + pointer_offset(degree, index, 0, subtile_j);
-        if (boundary_subtile(subtile_j)) {
-            const auto mid = Width % tile_width;
-            std::copy(ptr_begin, ptr_begin + mid, right_read_tile.data);
-            std::fill(right_read_tile.data + mid, right_read_tile.data + tile_width, Coeffs::zero);
-        }
-        else {
-            std::copy(ptr_begin, ptr_begin + tile_width, right_read_tile.data);
-        }
     }
     void read_right_tile(const_pointer src, IDIMN count = tile_width) noexcept
     {
-        // TODO: make resilient to subtiles
         pointer tptr = right_read_tile.data;
         read_tile(tptr, src, count);
-        //
-        //        if (count == tile_width) {
-        //            read_tile(tptr, src);
-        //        }
-        //        else {
-        ////            std::copy(src, src + count, right_read_tile.data);
-        //            read_tile(tptr, src, count);
-        //            std::fill(right_read_tile.data + count, right_read_tile.data + tile_width, Coeffs::zero);
-        //        }
     }
 
     void reset_tile(IDEG degree, IDIMN index, IDIMN /*reverse_index*/, IDIMN subtile_i = 0, IDIMN subtile_j = 0) noexcept

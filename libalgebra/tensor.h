@@ -1602,22 +1602,22 @@ protected:
         const auto bound = static_cast<index_type>(tsi::powers[out_deg - helper.tile_letters]);
 
         if (helper.is_inplace()) {
-            for (index_type i = 0; i < bound; ++i/*, rsrc += tile_width, optr += tile_width*/) {
-                helper.read_right_tile(rsrc + i*tile_width);
-                helper.read_left_tile(optr + i*tile_width);
-                linear_fwd_zipped_mul_inplace<C>(optr + i*tile_width, lptr, rptr, lunit, runit, tile_width, op);
+            for (index_type i = 0; i < bound; ++i /*, rsrc += tile_width, optr += tile_width*/) {
+                helper.read_right_tile(rsrc + i * tile_width);
+                helper.read_left_tile(optr + i * tile_width);
+                linear_fwd_zipped_mul_inplace<C>(optr + i * tile_width, lptr, rptr, lunit, runit, tile_width, op);
             }
         }
         else {
             const_pointer<C> lsrc = helper.left_fwd_read(out_deg);
 
-            for (index_type i = 0; i < bound; ++i/*, lsrc += tile_width, rsrc += tile_width, optr += tile_width*/) {
-                helper.read_left_tile(lsrc + i*tile_width);
-                helper.read_right_tile(rsrc + i*tile_width);
-                linear_fwd_zipped_mul<C>(optr + i*tile_width, lptr, rptr, lunit, runit, tile_width, op);
-//                for (index_type j=0; j<tile_width; ++j) {
-//                    optr[i*tile_width + j] += op(lsrc[i*tile_width + j]*runit) + op(lunit*rsrc[i*tile_width+j]);
-//                }
+            for (index_type i = 0; i < bound; ++i /*, lsrc += tile_width, rsrc += tile_width, optr += tile_width*/) {
+                helper.read_left_tile(lsrc + i * tile_width);
+                helper.read_right_tile(rsrc + i * tile_width);
+                linear_fwd_zipped_mul<C>(optr + i * tile_width, lptr, rptr, lunit, runit, tile_width, op);
+                //                for (index_type j=0; j<tile_width; ++j) {
+                //                    optr[i*tile_width + j] += op(lsrc[i*tile_width + j]*runit) + op(lunit*rsrc[i*tile_width+j]);
+                //                }
             }
         }
     }

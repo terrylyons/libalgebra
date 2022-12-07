@@ -203,20 +203,19 @@ protected:
 
     static void write_tile_assign(pointer out_p, const_pointer tptr, index_type lhs_stride, index_type ibound, index_type jbound) noexcept
     {
-        for (index_type i = 0; i < ibound; ++i, tptr += tile_width) {
-            pointer optr = out_p + i * lhs_stride;
-            std::copy(tptr, tptr + jbound, optr);
-            //            for (index_type j = 0; j < jbound; ++j) {
-            //                out_p[i * lhs_stride + j] = tile.data[i * tile_width + j];
-            //            }
+        for (index_type i = 0; i < ibound; ++i) {
+            //            std::copy(tptr, tptr + jbound, optr);
+            for (index_type j = 0; j < jbound; ++j) {
+                out_p[i * lhs_stride + j] = tptr[i * tile_width + j];
+            }
         }
     }
 
     static void write_tile_acc(pointer optr, const_pointer tptr, index_type stride, index_type ibound, index_type jbound)
     {
-        for (index_type i =0; i < ibound; ++i) {
+        for (index_type i = 0; i < ibound; ++i) {
             for (index_type j = 0; j < jbound; ++j) {
-                optr[i*stride + j] += tptr[i*tile_width + j];
+                optr[i * stride + j] += tptr[i * tile_width + j];
             }
         }
     }

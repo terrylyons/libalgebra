@@ -991,14 +991,14 @@ public:
 
     void permute_write_tile()
     {
-        //        using perm = dtl::reversing_permutation<Width, tile_letters>;
+//                using perm = dtl::reversing_permutation<Width, tile_letters>;
         pointer tptr = out_tile_ptr();
         const auto* perm = base_helper::reverser();
         for (index_type i = 0; i < tile_width; ++i) {
-            //            auto pi = perm::permute_idx(i);
+//                        auto pi = perm::permute_idx(i);
             auto pi = perm[i];
-            for (index_type j = 0; i < tile_width; ++i) {
-                //                auto pj = perm::permute_idx(j);
+            for (index_type j = i+1; j < tile_width; ++j) {
+//                                auto pj = perm::permute_idx(j);
                 auto pj = perm[j];
                 std::swap(tptr[i * tile_width + j], tptr[pj * tile_width + pi]);
             }
@@ -1044,13 +1044,13 @@ public:
 
         if (reverse_write_ptr != nullptr && degree < base::out_deg) {
             // Write out reverse data
-            //            permute_write_tile();
+            permute_write_tile();
 
             optr = m_out_rev_levels[degree];
             optr += reverse_index * tile_info::tile_stride;
             optr += (subtile_j * stride + subtile_i) * tile_width;
-            //            write_tile_impl(optr, stride, jbound, ibound);
-            base_helper::write_tile_reverse_impl(optr, stride, ibound, jbound);
+            write_tile_impl(optr, stride, jbound, ibound);
+//        base_helper::write_tile_reverse_impl(optr, stride, ibound, jbound);
             //            base_helper::write_tile(reverse_write_ptr, degree, reverse_index, subtile_i, subtile_j);
         }
     }

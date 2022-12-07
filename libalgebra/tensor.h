@@ -1069,7 +1069,7 @@ public:
 
     const_pointer left_fwd_read_ptr(IDEG degree, IDIMN index, IDIMN subtile_i) const noexcept
     {
-        return base::left_fwd_read(degree, index * tile_info::tile_stride + subtile_i * tile_info::tile_width * tsi::powers[degree-tile_letters]);
+        return base::left_fwd_read(degree, index * tile_info::tile_stride + subtile_i * tile_info::tile_width /* * tsi::powers[degree-tile_letters]*/);
     }
     const_pointer left_rev_read_ptr(IDEG degree, IDIMN index, IDIMN subtile_i) const noexcept
     {

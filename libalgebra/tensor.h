@@ -1713,9 +1713,9 @@ protected:
         const_reference<Coeffs> lunit = helper.left_unit();
         const_reference<Coeffs> runit = helper.right_unit();
 
-        for (index_type i = 0; i < ibound; ++i/*, lsrc += stride, rsrc += stride*/) {
-            helper.read_left_tile(lsrc+i*stride, ibound);
-            helper.read_right_tile(rsrc+i*stride, jbound);
+        for (index_type i = 0; i < ibound; ++i /*, lsrc += stride, rsrc += stride*/) {
+            helper.read_left_tile(lsrc + i * stride, jbound);
+            helper.read_right_tile(rsrc + i * stride, jbound);
 
             for (index_type j = 0; j < jbound; ++j) {
                 tptr[i * tile_width + j] += op(lptr[j] * runit) + op(lunit * rptr[j]);

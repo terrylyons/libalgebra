@@ -1938,6 +1938,7 @@ protected:
         const auto rhs_deg = out_deg - lhs_deg;
         const auto split_left_letters = tile_letters - rhs_deg;
         const auto lhs_stride = tsi::powers[lhs_deg - tile_letters];
+
         for (IDIMN j = 0; j < tile_width; ++j) {
             const auto split = helper.split_key(rhs_deg, subtile_j * tile_width + j);
             const auto& right_val = *helper.right_fwd_read(rhs_deg, split.second);
@@ -1970,7 +1971,7 @@ protected:
         left_reads[0] = helper.left_fwd_read(0, 0);
         right_reads[0] = helper.right_fwd_read(0, 0);
 
-//        impl_outer_cases(helper, op);
+        //        impl_outer_cases(helper, op);
 
         for (IDEG out_deg = max_degree; out_deg > 2 * tile_letters; --out_deg) {
             const auto mid_deg = out_deg - 2 * tile_letters;
@@ -1984,21 +1985,21 @@ protected:
                 auto k_reverse = helper.reverse_key(mid_deg, k);
 
                 for (IDIMN subtile_i = 0; subtile_i < num_subtiles; ++subtile_i) {
-                    const auto ibound = helper.boundary_subtile(subtile_i) ? Width % tile_width : tile_width;
+                    const auto ibound = helper.subtile_bound(subtile_i);
                     for (IDIMN subtile_j = 0; subtile_j < num_subtiles; ++subtile_j) {
-                        const auto jbound = helper.boundary_subtile(subtile_j) ? Width % tile_width : tile_width;
+                        const auto jbound = helper.subtile_bound(subtile_j);
 
                         helper.reset_tile(out_deg, k, k_reverse, subtile_i, subtile_j);
 
                         // Setup read pointers
-//                        if (out_deg < max_degree) {
-                            if (out_deg <= old_lhs_deg) {
-                                left_reads[out_deg] = helper.left_fwd_read_ptr(out_deg, k, subtile_i);
-                            }
-                            if (out_deg <= rhs_max_deg) {
-                                right_reads[out_deg] = helper.right_fwd_read_ptr(out_deg, k, subtile_j);
-                            }
-//                        }
+                        //                        if (out_deg < max_degree) {
+                        if (out_deg <= old_lhs_deg) {
+                            left_reads[out_deg] = helper.left_fwd_read(out_deg, k * helper.tile_stride + (subtile_i * stride + subtile_j) * tile_width);
+                        }
+                        if (out_deg <= rhs_max_deg) {
+                            right_reads[out_deg] = helper.right_fwd_read(out_deg, k * helper.tile_stride + (subtile_i * stride + subtile_j) * tile_width);
+                        }
+                        //                        }
                         for (IDEG i = std::max(tile_letters, lhs_deg_min); i <= std::min(out_deg - tile_letters, lhs_deg_max); ++i) {
                             auto split = helper.split_key(out_deg - i - tile_letters, k);
                             auto lkey = helper.reverse_key(i - tile_letters, split.first);
@@ -2007,39 +2008,39 @@ protected:
                             right_reads[out_deg - i] = helper.right_fwd_read_ptr(out_deg - i, rkey, subtile_j);
                         }
 
-//                        if (out_deg < max_degree) {
-                            const auto& rhs_unit = helper.right_unit();
-                            const auto& lhs_unit = helper.left_unit();
-                            bool left_ok = out_deg <= old_lhs_deg && rhs_unit != Coeffs::zero;
-                            bool right_ok = out_deg <= rhs_max_deg && lhs_unit != Coeffs::zero;
-                            if (left_ok && right_ok) {
-                                impl_top_zipped(helper, left_reads[out_deg], right_reads[out_deg],
+                        //                        if (out_deg < max_degree) {
+                        const auto& rhs_unit = helper.right_unit();
+                        const auto& lhs_unit = helper.left_unit();
+                        bool left_ok = out_deg <= old_lhs_deg && rhs_unit != Coeffs::zero;
+                        bool right_ok = out_deg <= rhs_max_deg && lhs_unit != Coeffs::zero;
+                        if (left_ok && right_ok) {
+                            impl_top_zipped(helper, left_reads[out_deg], right_reads[out_deg],
+                                            out_deg, stride, ibound, jbound, op);
+                        }
+                        else if (left_ok) {
+                            impl_top_left_only(helper, left_reads[out_deg],
+                                               out_deg, stride, ibound, jbound, op);
+                        }
+                        else if (right_ok) {
+                            impl_top_right_only(helper, right_reads[out_deg],
                                                 out_deg, stride, ibound, jbound, op);
-                            }
-                            else if (left_ok) {
-                                impl_top_left_only(helper, left_reads[out_deg],
-                                                   out_deg, stride, ibound, jbound, op);
-                            }
-                            else if (right_ok) {
-                                impl_top_right_only(helper, right_reads[out_deg],
-                                                    out_deg, stride, ibound, jbound, op);
-                            }
+                        }
 
-                            //                            if (out_deg <= old_lhs_deg && rhs_unit != Coeffs::zero) {
-                            //                                impl_db0<Coeffs>(helper.out_tile_ptr(), left_reads[out_deg], rhs_unit, stride, ibound, jbound, op);
-                            //                            }
-                            //                            if (out_deg <= rhs_max_deg && lhs_unit != Coeffs::zero) {
-                            //                                impl_0bd<Coeffs>(helper.out_tile_ptr(), lhs_unit, right_reads[out_deg], stride, ibound, jbound, op);
-                            //                            }
-//                        }
+                        //                            if (out_deg <= old_lhs_deg && rhs_unit != Coeffs::zero) {
+                        //                                impl_db0<Coeffs>(helper.out_tile_ptr(), left_reads[out_deg], rhs_unit, stride, ibound, jbound, op);
+                        //                            }
+                        //                            if (out_deg <= rhs_max_deg && lhs_unit != Coeffs::zero) {
+                        //                                impl_0bd<Coeffs>(helper.out_tile_ptr(), lhs_unit, right_reads[out_deg], stride, ibound, jbound, op);
+                        //                            }
+                        //                        }
 
                         for (IDEG lhs_deg = lhs_deg_min; lhs_deg <= lhs_deg_max; ++lhs_deg) {
                             if (lhs_deg < tile_letters) {
                                 impl_lhs_small(helper, out_deg, lhs_deg, k, op);
                             }
                             else if (lhs_deg <= mid_end && lhs_deg < old_lhs_deg) {
-                                helper.read_left_tile(left_reads[lhs_deg], helper.subtile_bound(subtile_i));
-                                helper.read_right_tile(right_reads[out_deg - lhs_deg], helper.subtile_bound(subtile_j));
+                                helper.read_left_tile(left_reads[lhs_deg], ibound);
+                                helper.read_right_tile(right_reads[out_deg - lhs_deg], jbound);
                                 helper.permute_left_tile();
                                 impl_mid<Coeffs>(helper.out_tile_ptr(), helper.left_read_tile_ptr(), helper.right_read_tile_ptr(), helper.reverser(), op);
                                 //                                impl_mid_cases_reverse(helper, op, out_deg, lhs_deg, k, subtile_i, subtile_j);

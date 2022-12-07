@@ -33,6 +33,7 @@ Version 3. (See accompanying file License.txt)
 #include "detail/integer_maths.h"
 #include "detail/level_walkers.h"
 #include "detail/reversing_permutation.h"
+#include "detail/unpacked_tensor_word.h"
 #include "half_shuffle_tensor_basis.h"
 #include "tensor_basis.h"
 
@@ -1973,6 +1974,7 @@ protected:
 
         //        impl_outer_cases(helper, op);
 
+        unpacked_tensor_word<Width, Depth-2*tile_letters> word;
         for (IDEG out_deg = max_degree; out_deg > 2 * tile_letters; --out_deg) {
             const auto mid_deg = out_deg - 2 * tile_letters;
             const auto mid_end = out_deg - tile_letters;
@@ -1980,9 +1982,10 @@ protected:
 
             auto lhs_deg_min = std::max(IDEG(1), out_deg - rhs_max_deg);
             auto lhs_deg_max = std::min(out_deg - 1, old_lhs_deg);
+            word.reset(mid_deg);
 
-            for (IDIMN k = 0; k < static_cast<IDIMN>(tsi::powers[mid_deg]); ++k) {
-                auto k_reverse = helper.reverse_key(mid_deg, k);
+            for (IDIMN k = 0; k < static_cast<IDIMN>(tsi::powers[mid_deg]); ++k, ++word) {
+                auto k_reverse = word.to_reverse_index();
 
                 for (IDIMN subtile_i = 0; subtile_i < num_subtiles; ++subtile_i) {
                     const auto ibound = helper.subtile_bound(subtile_i);
@@ -2001,9 +2004,11 @@ protected:
                         }
                         //                        }
                         for (IDEG i = std::max(tile_letters, lhs_deg_min); i <= std::min(out_deg - tile_letters, lhs_deg_max); ++i) {
-                            auto split = helper.split_key(out_deg - i - tile_letters, k);
-                            auto lkey = helper.reverse_key(i - tile_letters, split.first);
-                            auto rkey = split.second;
+//                            auto split = helper.split_key(out_deg - i - tile_letters, k);
+//                            auto lkey = helper.reverse_key(i - tile_letters, split.first);
+//                            auto rkey = split.second;
+                            auto lkey = word.split_left_reverse_index(i - tile_letters);
+                            auto rkey = word.split_right_index(i-tile_letters);
                             left_reads[i] = helper.left_rev_read_ptr(i, lkey, subtile_i);
                             right_reads[out_deg - i] = helper.right_fwd_read_ptr(out_deg - i, rkey, subtile_j);
                         }

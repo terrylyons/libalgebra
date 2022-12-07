@@ -641,7 +641,7 @@ public:
         assert(offset < IDIMN(tsi::powers[d]));
         return m_rhs_levels[d] + offset;
     }
-    pointer fwd_write(IDEG d, index_type offset=0) const noexcept
+    pointer fwd_write(IDEG d, index_type offset = 0) const noexcept
     {
         assert(d >= 0 && d <= out_deg);
         //        return out_data + basis_type::start_of_degree(d);

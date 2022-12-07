@@ -882,23 +882,20 @@ private:
         }
     };
 
-
-
 public:
     constexpr void permute_left_tile() noexcept
     {
-//        using perm = dtl::reversing_permutation<Width, Letters>;
-//        auto* tptr = left_read_tile.data;
-//                const auto* perm = base_helper::reverser();
-//        for (index_type i = 0; i < Size; ++i) {
-//            auto pi = perm::permute_idx(i);
-//                        auto pi = perm[i];
-//            if (pi < i) {
-//                std::swap(tptr[i], tptr[pi]);
-//            }
-//        }
-        tile_transposer<tile_letters>::permute(left_read_tile.data);
-
+        //        using perm = dtl::reversing_permutation<Width, Letters>;
+        auto* tptr = left_read_tile.data;
+        const auto* perm = base_helper::reverser();
+        for (index_type i = 0; i < tile_width; ++i) {
+            //            auto pi = perm::permute_idx(i);
+            auto pi = perm[i];
+            if (pi < i) {
+                std::swap(tptr[i], tptr[pi]);
+            }
+        }
+        //        tile_transposer<tile_letters>::permute(left_read_tile.data);
     }
 
     void read_left_tile(IDEG degree, IDIMN index, IDIMN subtile_i = 0) noexcept

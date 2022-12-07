@@ -1700,34 +1700,6 @@ protected:
         }
     }
 
-    template<typename Coeffs, typename Fn>
-    static void
-    impl_mid_cases_reverse(helper_type<Coeffs>& helper,
-                           Fn op,
-                           IDEG out_deg,
-                           IDEG lhs_deg,
-                           IDIMN k,
-                           IDIMN subtile_i,
-                           IDIMN subtile_j) noexcept
-    {
-        constexpr auto tile_letters = helper_type<Coeffs>::tile_letters;
-
-        const auto rhs_deg = out_deg - lhs_deg;
-        assert(tile_letters <= lhs_deg && lhs_deg <= out_deg - tile_letters);
-        assert(tile_letters <= rhs_deg && rhs_deg <= out_deg - tile_letters);
-        const auto lhs_split = lhs_deg - tile_letters;
-        const auto rhs_split = rhs_deg - tile_letters;
-        assert(lhs_split + rhs_split == out_deg - 2 * tile_letters);
-
-        const auto split = helper.split_key(rhs_split, k);
-        helper.read_left_tile(lhs_deg, helper.reverse_key(lhs_split, split.first), subtile_i);
-        helper.read_right_tile(rhs_deg, split.second, subtile_j);
-        helper.permute_left_tile();
-        impl_mid<Coeffs>(helper.out_tile_ptr(),
-                         helper.left_read_tile_ptr(),
-                         helper.right_read_tile_ptr(),
-                         op);
-    }
 
     template<typename Coeffs, typename Fn>
     static void

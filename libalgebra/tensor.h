@@ -1691,8 +1691,10 @@ protected:
         const_pointer<Coeffs> rptr = helper.right_read_tile_ptr();
         helper.read_left_tile(helper.left_fwd_read(lhs_deg), i1bound);
 
+        const auto key_offset = static_cast<index_type>(tsi::powers[out_deg - 2*tile_letters]);
+
         for (index_type i2 = 0; i2 < i2bound; ++i2) {
-            auto key = helper.combine_keys(out_deg - 2 * tile_letters, i2, k);
+            auto key = i2 * key_offset + k;
             helper.read_right_tile(helper.right_fwd_read_ptr(rhs_deg, key, 0));
             impl_lb1<Coeffs>(tptr, lptr, rptr, i2, i1bound, i2bound, op);
         }
@@ -1797,9 +1799,14 @@ protected:
         const_pointer<Coeffs> lptr = helper.left_read_tile_ptr();
         const_pointer<Coeffs> rptr = helper.right_read_tile_ptr();
 
-        for (index_type j1 = 0; j1 < j1bound; ++j1) {
-            auto rj1 = helper.reverse_key(j1deg, j1);
-            auto key = helper.combine_keys(mid_deg, rj1, k_reverse);
+        const auto key_offset = static_cast<index_type>(tsi::powers[mid_deg]);
+
+        unpacked_tensor_word<Width, tile_letters> j1_word;
+        j1_word.reset(j1deg);
+        for (index_type j1 = 0; j1 < j1bound; ++j1, ++j1_word) {
+//            auto rj1 = helper.reverse_key(j1deg, j1);
+            auto rj1 = j1_word.to_reverse_index();
+            auto key = rj1*key_offset + k_reverse;
             helper.read_left_tile(helper.left_rev_read_ptr(lhs_deg, key, 0));
             helper.permute_left_tile();
             impl_1br<Coeffs>(tptr, lptr, rptr, j1, j2bound, op);
@@ -1874,16 +1881,20 @@ protected:
                     const auto ibound = helper.subtile_bound(subtile_i);
                     for (IDIMN subtile_j = 0; subtile_j < num_subtiles; ++subtile_j) {
                         const auto jbound = helper.subtile_bound(subtile_j);
+                        const auto subtile_offset = (subtile_i*stride + subtile_j)*tile_width;
 
                         helper.reset_tile(out_deg, k, k_reverse, subtile_i, subtile_j);
 
                         // Setup read pointers
-                        //                        if (out_deg < max_degree) {
-                        if (out_deg <= old_lhs_deg) {
-                            left_reads[out_deg] = helper.left_fwd_read(out_deg, k * helper.tile_stride + (subtile_i * stride + subtile_j) * tile_width);
+                        const auto& rhs_unit = *right_reads[0];
+                        const auto& lhs_unit = *left_reads[0];
+                        bool left_ok = out_deg <= old_lhs_deg && rhs_unit != Coeffs::zero;
+                        bool right_ok = out_deg <= rhs_max_deg && lhs_unit != Coeffs::zero;                       //                        if (out_deg < max_degree) {
+                        if (left_ok) {
+                            left_reads[out_deg] = helper.left_fwd_read(out_deg, k * helper.tile_stride + subtile_offset);
                         }
-                        if (out_deg <= rhs_max_deg) {
-                            right_reads[out_deg] = helper.right_fwd_read(out_deg, k * helper.tile_stride + (subtile_i * stride + subtile_j) * tile_width);
+                        if (right_ok) {
+                            right_reads[out_deg] = helper.right_fwd_read(out_deg, k * helper.tile_stride + subtile_offset);
                         }
                         //                        }
                         for (IDEG i = std::max(tile_letters, lhs_deg_min); i <= std::min(out_deg - tile_letters, lhs_deg_max); ++i) {
@@ -1897,22 +1908,7 @@ protected:
                         }
 
                         //                        if (out_deg < max_degree) {
-                        const auto& rhs_unit = helper.right_unit();
-                        const auto& lhs_unit = helper.left_unit();
-                        bool left_ok = out_deg <= old_lhs_deg && rhs_unit != Coeffs::zero;
-                        bool right_ok = out_deg <= rhs_max_deg && lhs_unit != Coeffs::zero;
-                        if (left_ok && right_ok) {
-                            impl_top_zipped(helper, left_reads[out_deg], right_reads[out_deg],
-                                            out_deg, stride, ibound, jbound, op);
-                        }
-                        else if (left_ok) {
-                            impl_top_left_only(helper, left_reads[out_deg],
-                                               out_deg, stride, ibound, jbound, op);
-                        }
-                        else if (right_ok) {
-                            impl_top_right_only(helper, right_reads[out_deg],
-                                                out_deg, stride, ibound, jbound, op);
-                        }
+
 
 
                         for (IDEG lhs_deg = lhs_deg_min; lhs_deg <= lhs_deg_max; ++lhs_deg) {
@@ -1921,8 +1917,8 @@ protected:
                             }
                             else if (lhs_deg <= mid_end && lhs_deg < old_lhs_deg) {
                                 helper.read_left_tile(left_reads[lhs_deg], ibound);
-                                helper.read_right_tile(right_reads[out_deg - lhs_deg], jbound);
                                 helper.permute_left_tile();
+                                helper.read_right_tile(right_reads[out_deg - lhs_deg], jbound);
                                 impl_mid<Coeffs>(helper.out_tile_ptr(), helper.left_read_tile_ptr(), helper.right_read_tile_ptr(), op);
                                 //                                impl_mid_cases_reverse(helper, op, out_deg, lhs_deg, k, subtile_i, subtile_j);
                             }
@@ -1935,6 +1931,19 @@ protected:
                             else if (lhs_deg > mid_end) {
                                 impl_rhs_small_no_reverse(helper, op, out_deg, lhs_deg, k, subtile_i, subtile_j);
                             }
+                        }
+
+                        if (left_ok && right_ok) {
+                            impl_top_zipped(helper, left_reads[out_deg], right_reads[out_deg],
+                                            out_deg, stride, ibound, jbound, op);
+                        }
+                        else if (left_ok) {
+                            impl_top_left_only(helper, left_reads[out_deg],
+                                               out_deg, stride, ibound, jbound, op);
+                        }
+                        else if (right_ok) {
+                            impl_top_right_only(helper, right_reads[out_deg],
+                                                out_deg, stride, ibound, jbound, op);
                         }
 
                         helper.write_tile(out_deg, k, k_reverse, subtile_i, subtile_j);

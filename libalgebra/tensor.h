@@ -902,13 +902,11 @@ public:
 private:
     static void read_tile(pointer tptr, const_pointer src, index_type count)
     {
-
-        if (count == tile_width) {
-            std::copy(src, src + tile_width, tptr);
+        for (index_type i=0; i<count; ++i) {
+            tptr[i] = src[i];
         }
-        else {
-            std::copy(src, src + count, tptr);
-            std::fill(tptr + count, tptr + tile_width, Coeffs::zero);
+        for (index_type i=count; i <tile_width; ++i) {
+            tptr[i] = Coeffs::zero;
         }
     }
 

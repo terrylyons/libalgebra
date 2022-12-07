@@ -2094,7 +2094,7 @@ public:
              DEG max_degree,
              OriginalVectors& orig) const
     {
-        if (max_degree <= 2 * helper_type<Coeffs>::tile_letters || lhs.degree() + rhs.degree() <= 2*helper_type<Coeffs>::tile_letters) {
+        if (max_degree <= 2 * helper_type<Coeffs>::tile_letters || lhs.degree() + rhs.degree() <= 2 * helper_type<Coeffs>::tile_letters) {
             base::fma(out, lhs, rhs, op, max_degree, orig);
             return;
         }
@@ -2115,7 +2115,7 @@ public:
                           Fn op, DEG max_degree, OriginalVectors& orig) const
     {
         //        std::cout << "BEFORE " << lhs << '\n';
-        if (max_degree <= 2 * helper_type<Coeffs>::tile_letters || lhs.degree() + rhs.degree() <= 2*helper_type<Coeffs>::tile_letters) {
+        if (max_degree <= 2 * helper_type<Coeffs>::tile_letters || lhs.degree() + rhs.degree() <= 2 * helper_type<Coeffs>::tile_letters) {
             base::multiply_inplace(lhs, rhs, op, max_degree, orig);
             return;
         }

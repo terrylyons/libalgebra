@@ -14,6 +14,10 @@ endif ()
 
 find_package(UnitTest++ CONFIG REQUIRED)
 
+if (NOT TARGET UnitTest++::UnitTest++ AND TARGET UnitTest++)
+    add_library(UnitTest++::UnitTest++ ALIAS UnitTest++)
+endif()
+
 # include_directories(SYSTEM "${UnitTest++_INCLUDE_DIRS})
 # target_link_libraries(main PRIVATE UnitTest++)
 

@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
 
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (WIN32)
     ## better remove this and add it to the command line as machine specific

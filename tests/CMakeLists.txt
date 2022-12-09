@@ -14,10 +14,14 @@ endif ()
 
 find_package(UnitTest++ CONFIG REQUIRED)
 
+if (NOT TARGET UnitTest++::UnitTest++ AND TARGET UnitTest++)
+    add_library(UnitTest++::UnitTest++ ALIAS UnitTest++)
+endif()
+
 # include_directories(SYSTEM "${UnitTest++_INCLUDE_DIRS})
 # target_link_libraries(main PRIVATE UnitTest++)
 
-find_package(Boost COMPONENTS thread filesystem iostreams chrono random container REQUIRED)
+find_package(Boost REQUIRED COMPONENTS thread filesystem iostreams chrono random container )
 
 find_package(OpenMP REQUIRED)
 

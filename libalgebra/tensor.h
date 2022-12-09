@@ -7,7 +7,6 @@ Distributed under the terms of the GNU General Public License,
 Version 3. (See accompanying file License.txt)
 
 ************************************************************* */
-
 //  tensor.h
 
 // Include once wrapper
@@ -33,7 +32,13 @@ Version 3. (See accompanying file License.txt)
 #include "tensor_basis.h"
 
 #define LA_RESTRICT __restrict
+
+#if BOOST_COMP_GNUC || BOOST_COMP_CLANG
 #define LA_INLINE_ALWAYS __attribute__((always_inline))
+#else
+#define LA_INLINE_ALWAYS
+#endif
+
 
 #define LA_ALIGNAS(BYTES) alignas(BYTES)
 #ifndef LA_CACHELINE_BYTES
@@ -1407,9 +1412,6 @@ protected:
                             else if (lhs_deg > mid_end) {
                                 impl_rhs_small_no_reverse(helper, op, out_deg, lhs_deg, k, subtile_i, subtile_j);
                             }
-                            else {
-                                BOOST_UNREACHABLE_RETURN()
-                            }
                         }
 
                         helper.write_tile(out_deg, k, k_reverse, subtile_i, subtile_j);
@@ -1437,8 +1439,6 @@ public:
     using base::fma;
     using base::multiply_inplace;
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "HidingNonVirtualFunction"
     template<typename B1, typename Coeffs, typename Fn, typename OriginalVectors>
     void fma(vectors::dense_vector<B1, Coeffs>& out,
              const vectors::dense_vector<B1, Coeffs>& lhs,
@@ -1485,7 +1485,6 @@ public:
             lhs.clear();
         }
     }
-#pragma clang diagnostic pop
 };
 
 //template<DEG Width, DEG Depth>
@@ -1590,8 +1589,6 @@ private:
     }
 
 public:
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "HidingNonVirtualFunction"
     result_type operator()(argument_type lhs, argument_type rhs) const
     {
         static const boost::container::small_vector<pair_type, 0> null;
@@ -1603,7 +1600,6 @@ public:
         return base::cached_compute(lhs, rhs);
         //        return half_shuffle_base::shuffle(lhs, rhs);
     }
-#pragma clang diagnostic pop
 };
 
 template<DEG Width, DEG Depth>
@@ -1632,8 +1628,6 @@ private:
     }
 
 public:
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "HidingNonVirtualFunction"
     result_type operator()(argument_type lhs, argument_type rhs) const
     {
         static const boost::container::small_vector<pair_type, 0> null;
@@ -1644,7 +1638,6 @@ public:
 
         return base::cached_compute(lhs, rhs);
     }
-#pragma clang diagnostic pop
 };
 
 template<DEG Width, DEG Depth>
@@ -1735,6 +1728,8 @@ public:
 
 public:
     using base::base;
+
+    free_tensor() : base() {}
 
     explicit free_tensor(typename boost::call_traits<scalar_type>::param_type s)
         : base(key_type{}, s)

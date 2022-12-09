@@ -1410,9 +1410,6 @@ protected:
                             else if (lhs_deg > mid_end) {
                                 impl_rhs_small_no_reverse(helper, op, out_deg, lhs_deg, k, subtile_i, subtile_j);
                             }
-                            else {
-                                BOOST_UNREACHABLE_RETURN(0)
-                            }
                         }
 
                         helper.write_tile(out_deg, k, k_reverse, subtile_i, subtile_j);

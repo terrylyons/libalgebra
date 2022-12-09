@@ -32,9 +32,12 @@ Version 3. (See accompanying file License.txt)
 #include "tensor_basis.h"
 
 #define LA_RESTRICT __restrict
-//#define LA_INLINE_ALWAYS __attribute__((always_inline))
-//#define LA_INLINE_ALWAYS [[always_inline]]
+
+#if BOOST_COMP_GNUC || BOOST_COMP_CLANG
+#define LA_INLINE_ALWAYS __attribute__((always_inline))
+#else
 #define LA_INLINE_ALWAYS
+#endif
 
 
 #define LA_ALIGNAS(BYTES) alignas(BYTES)

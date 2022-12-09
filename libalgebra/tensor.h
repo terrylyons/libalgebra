@@ -1729,6 +1729,8 @@ public:
 public:
     using base::base;
 
+    free_tensor() : base() {}
+
     explicit free_tensor(typename boost::call_traits<scalar_type>::param_type s)
         : base(key_type{}, s)
     {}

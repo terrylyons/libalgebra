@@ -53,9 +53,9 @@ public:
     constexpr IndexType to_index() const noexcept
     {
         IndexType result = 0;
-        for (auto i=1; i<=m_degree; ++i) {
+        for (unsigned i=0; i<m_degree; ++i) {
             result *= IndexType(Width);
-            result += m_bits[m_degree-i];
+            result += m_bits[i];
         }
         return result;
     }
@@ -64,9 +64,9 @@ public:
     constexpr IndexType to_reverse_index() const noexcept
     {
         IndexType result = 0;
-        for (auto i=0; i<m_degree; ++i) {
+        for (unsigned i=1; i<=m_degree; ++i) {
             result *= IndexType(Width);
-            result += m_bits[i];
+            result += m_bits[m_degree-i];
         }
         return result;
 
@@ -77,7 +77,7 @@ public:
     constexpr IndexType split_left_index(Int left_letters) const noexcept
     {
         IndexType result = 0;
-        for (auto i=0; i<left_letters; ++i) {
+        for (unsigned i=0; i<left_letters; ++i) {
             result *= IndexType(Width);
             result += m_bits[i];
         }
@@ -88,7 +88,7 @@ public:
     constexpr IndexType split_left_reverse_index(Int left_letters) const noexcept
     {
         IndexType result = 0;
-        for (auto i=1; i<=left_letters; ++i) {
+        for (Int i=1; i<=left_letters; ++i) {
             result *= Width;
             result += m_bits[left_letters-i];
         }
@@ -99,7 +99,7 @@ public:
     constexpr IndexType split_right_index(Int left_letters) const noexcept
     {
         IndexType result = 0;
-        for (auto i=left_letters; i<m_degree; ++i) {
+        for (unsigned i=left_letters; i<m_degree; ++i) {
             result *= Width;
             result += m_bits[i];
         }

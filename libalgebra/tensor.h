@@ -1847,6 +1847,7 @@ protected:
             word.reset(mid_deg);
 
             for (IDIMN k = 0; k < static_cast<IDIMN>(tsi::powers[mid_deg]); ++k, ++word) {
+                assert(k == word.to_index());
                 auto k_reverse = word.to_reverse_index();
 
                 for (IDIMN subtile_i = 0; subtile_i < num_subtiles; ++subtile_i) {

@@ -3,6 +3,7 @@
 
 #include <libalgebra/libalgebra.h>
 #include <libalgebra/tensor.h>
+#include <libalgebra/dense_vector.h>
 #include "../../tests/common/random_vector_generator.h"
 #include "../../tests/common/rng.h"
 
@@ -13,48 +14,7 @@ typedef alg::coefficients::coefficient_field<alg::coefficients::rational> ration
 using float_dist = std::uniform_real_distribution<float_field::S>;
 
 template<DEG Width, DEG Depth>
-static void BM_traditional_multiplication(benchmark::State& state) {
-
-    typedef alg::free_tensor<float_field, Width, Depth, alg::vectors::dense_vector> TENSOR;
-    typedef alg::lie<float_field, Width, Depth, alg::vectors::dense_vector> LIE;
-
-    using rvg_t = la_testing::random_vector_generator<TENSOR, float_dist>;
-    using rvg_l = la_testing::random_vector_generator<LIE, float_dist>;
-
-    const TENSOR tunit;
-    const TENSOR tzero;
-
-    std::mt19937 rngt;
-    rvg_t rvgt;
-
-    std::mt19937 rngl;
-    rvg_l rvgl;
-
-    typedef typename TENSOR::KEY KEY;
-
-    auto lhs = rvgt(rngt);
-    auto rhs = rvgt(rngt);
-
-    using mul_t = traditional_free_tensor_multiplication<Width, Depth>;
-    using traits = dtl::multiplication_traits<mul_t>;
-    mul_t mul;
-
-    lhs.base_vector().construct_reverse_data(Depth - 1);  // Optional
-
-    TENSOR result;
-
-    for (auto _: state) {
-        benchmark::DoNotOptimize(result.base_vector().as_mut_ptr());
-        traits::multiply_and_add(mul, result, lhs, rhs);
-        benchmark::ClobberMemory();
-    }
-
-    state.SetBytesProcessed(3*sizeof(float)*state.iterations()*lhs.base_vector().dimension());
-
-}
-
-template<DEG Width, DEG Depth, DEG TileLetters>
-static void BM_tiled_multiplication(benchmark::State& state) {
+static void BM_memcpy(benchmark::State& state) {
 
     //    TODO: replace random vector generator for dense vectors
     //    auto* ptr = lhs.base_vector().as_mut_ptr();
@@ -77,95 +37,121 @@ static void BM_tiled_multiplication(benchmark::State& state) {
 
     typedef typename TENSOR::KEY KEY;
 
-    auto lhs = rvgt(rngt);
-    auto rhs = rvgt(rngt);
+    TENSOR input_tensor = rvgt(rngt);
 
-    using mul_t = tiled_free_tensor_multiplication<Width, Depth, TileLetters>;
-    using traits = dtl::multiplication_traits<mul_t>;
-    mul_t mul;
+    TENSOR result;
 
-    lhs.base_vector().construct_reverse_data(Depth - 1);  // Optional
+    void* dest = result.base_vector().as_mut_ptr();
+    const void* src = input_tensor.base_vector().as_mut_ptr();
+
+    for (auto _: state) {
+        benchmark::DoNotOptimize(result.base_vector().as_mut_ptr());
+        
+        std::memcpy(dest, src, sizeof(float)*input_tensor.base_vector().dimension());
+
+        benchmark::ClobberMemory();
+    }
+
+    state.SetBytesProcessed(2*sizeof(float)*state.iterations()*input_tensor.base_vector().dimension());
+
+}
+
+template<DEG Width, DEG Depth, DEG TileLetters>
+static void BM_antipode(benchmark::State& state) {
+
+    //    TODO: replace random vector generator for dense vectors
+    //    auto* ptr = lhs.base_vector().as_mut_ptr();
+    //    std::generate(ptr, ptr + lhs.base_vector().dimension(), [this, distribution]() { return distribution(rng);
+
+    typedef alg::free_tensor<float_field, Width, Depth, alg::vectors::dense_vector> TENSOR;
+    typedef alg::lie<float_field, Width, Depth, alg::vectors::dense_vector> LIE;
+
+    using rvg_t = la_testing::random_vector_generator<TENSOR, float_dist>;
+    using rvg_l = la_testing::random_vector_generator<LIE, float_dist>;
+
+    const TENSOR tunit;
+    const TENSOR tzero;
+
+    std::mt19937 rngt;
+    rvg_t rvgt;
+
+    std::mt19937 rngl;
+    rvg_l rvgl;
+
+    typedef typename TENSOR::KEY KEY;
+
+    TENSOR input_tensor = rvgt(rngt);
 
     TENSOR result;
 
     for (auto _: state) {
         benchmark::DoNotOptimize(result.base_vector().as_mut_ptr());
-        traits::multiply_and_add(mul, result, lhs, rhs);
+//        result = antipode(input_tensor);
+        dtl::tiled_inverse_operator<Width, Depth, float_field , dtl::default_signer, TileLetters>
+                ::apply(input_tensor.base_vector(), result.base_vector());
         benchmark::ClobberMemory();
     }
 
-    state.SetBytesProcessed(3*sizeof(float)*state.iterations()*lhs.base_vector().dimension());
+    state.SetBytesProcessed(2*sizeof(float)*state.iterations()*input_tensor.base_vector().dimension());
 
 }
 
-BENCHMARK_TEMPLATE(BM_traditional_multiplication, 4, 4);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 4, 1);
+BENCHMARK_TEMPLATE(BM_memcpy, 4, 4);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 4, 1);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 4, 2);
 
-BENCHMARK_TEMPLATE(BM_traditional_multiplication, 4, 5);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 5, 1);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 5, 2);
+BENCHMARK_TEMPLATE(BM_memcpy, 4, 5);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 5, 1);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 5, 2);
 
-BENCHMARK_TEMPLATE(BM_traditional_multiplication, 4, 6);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 6, 1);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 6, 2);
+BENCHMARK_TEMPLATE(BM_memcpy, 4, 6);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 6, 1);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 6, 2);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 6, 3);
 
-BENCHMARK_TEMPLATE(BM_traditional_multiplication, 4, 7);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 7, 1);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 7, 2);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 7, 3);
+BENCHMARK_TEMPLATE(BM_memcpy, 4, 7);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 7, 1);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 7, 2);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 7, 3);
 
-BENCHMARK_TEMPLATE(BM_traditional_multiplication, 4, 8);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 8, 1);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 8, 2);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 8, 3);
+BENCHMARK_TEMPLATE(BM_memcpy, 4, 8);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 8, 1);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 8, 2);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 8, 3);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 8, 4);
 
-BENCHMARK_TEMPLATE(BM_traditional_multiplication, 4, 9);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 9, 1);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 9, 2);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 9, 3);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 9, 4);
+BENCHMARK_TEMPLATE(BM_memcpy, 4, 9);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 9, 1);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 9, 2);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 9, 3);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 9, 4);
 
-BENCHMARK_TEMPLATE(BM_traditional_multiplication, 4, 10);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 10, 1);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 10, 2);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 10, 3);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 10, 4);
+BENCHMARK_TEMPLATE(BM_memcpy, 4, 10);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 10, 1);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 10, 2);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 10, 3);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 10, 4);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 10, 5);
 
-BENCHMARK_TEMPLATE(BM_traditional_multiplication, 4, 11);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 11, 1);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 11, 2);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 11, 3);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 11, 4);
-//BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 11, 5); // SIGSEGV
+BENCHMARK_TEMPLATE(BM_memcpy, 4, 11);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 11, 1);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 11, 2);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 11, 3);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 11, 4);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 11, 5);
 
-BENCHMARK_TEMPLATE(BM_traditional_multiplication, 4, 12);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 12, 1);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 12, 2);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 12, 3);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 12, 4);
-//BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 12, 5); // SIGSEGV
+BENCHMARK_TEMPLATE(BM_memcpy, 4, 12);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 12, 1);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 12, 2);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 12, 3);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 12, 4);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 12, 5);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 12, 6);
 
-BENCHMARK_TEMPLATE(BM_traditional_multiplication, 4, 13);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 13, 1);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 13, 2);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 13, 3);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 13, 4);
-//BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 13, 5); // SIGSEGV
-//BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 13, 6); // SIGSEGV
-
-BENCHMARK_TEMPLATE(BM_traditional_multiplication, 4, 14);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 14, 1);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 14, 2);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 14, 3);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 14, 4);
-//BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 14, 5); // SIGSEGV
-//BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 14, 6); // SIGSEGV
-
-BENCHMARK_TEMPLATE(BM_traditional_multiplication, 4, 15);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 15, 1);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 15, 2);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 15, 3);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 15, 4);
-//BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 15, 5); // SIGSEGV
-//BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 15, 6); // SIGSEGV
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 15, 7);
+BENCHMARK_TEMPLATE(BM_memcpy, 4, 13);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 13, 1);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 13, 2);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 13, 3);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 13, 4);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 13, 5);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 13, 6);

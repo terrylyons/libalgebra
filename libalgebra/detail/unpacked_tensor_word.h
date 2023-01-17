@@ -24,6 +24,13 @@ class unpacked_tensor_word
 
 public:
 
+    constexpr unsigned degree() const noexcept { return m_degree; }
+
+    template <typename Int>
+    constexpr letter_type operator[](Int idx) const noexcept
+    { return m_bits[idx]; }
+
+
     template <typename Int>
     void reset(Int index) noexcept
     {
@@ -34,16 +41,18 @@ public:
     constexpr unpacked_tensor_word& operator++() noexcept
     {
         letter_type carry = 1;
-        int pos = m_degree;
-        do {
-            --pos;
-            m_bits[pos] += carry;
-            if (m_bits[pos] >= Width) {
-                m_bits[pos] = letter_type(0);
-            } else {
-                carry = 0;
-            }
-        } while (carry > 0 && pos > 0);
+        if (m_degree > 0) {
+            int pos = m_degree;
+            do {
+                --pos;
+                m_bits[pos] += carry;
+                if (m_bits[pos] >= Width) {
+                    m_bits[pos] = letter_type(0);
+                } else {
+                    carry = 0;
+                }
+            } while (carry > 0 && pos > 0);
+        }
         m_degree += carry;
         return *this;
     }
@@ -89,7 +98,7 @@ public:
     {
         IndexType result = 0;
         for (Int i=1; i<=left_letters; ++i) {
-            result *= Width;
+            result *= IndexType(Width);
             result += m_bits[left_letters-i];
         }
         return result;
@@ -100,11 +109,24 @@ public:
     {
         IndexType result = 0;
         for (unsigned i=left_letters; i<m_degree; ++i) {
-            result *= Width;
+            result *= IndexType(Width);
             result += m_bits[i];
         }
         return result;
     }
+
+    template <typename IndexType=index_type, typename Int>
+    constexpr IndexType split_right_reverse_index(Int left_letters) const noexcept
+    {
+        IndexType result = 0;
+        assert(left_letters >= 0 && left_letters <= m_degree);
+        for (unsigned i=m_degree; i > left_letters; --i) {
+            result *= IndexType(Width);
+            result += IndexType(m_bits[i-1]);
+        }
+        return result;
+    }
+
 
 
 };

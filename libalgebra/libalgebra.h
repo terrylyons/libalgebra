@@ -144,9 +144,20 @@ class free_tensor_basis;
 template<DEG n_letters, DEG max_degree = 0>
 class shuffle_tensor_basis;
 
+
+template <DEG Width, DEG Depth>
+class traditional_free_tensor_multiplication;
+
+template <DEG Width, DEG Depth, IDEG TileLetters=0, IDEG WriteCacheLetters=1>
+class tiled_free_tensor_multiplication;
+
+template <DEG Width, DEG Depth>
+using free_tensor_multiplication = traditional_free_tensor_multiplication<Width, Depth>;
+
 /// Free Associative Algebra.  Associative and non commutative.
 template<typename Coeff, DEG n_letters, DEG max_degree = 0,
          template<typename, typename, typename...> class VectorType = vectors::template_vector_type_selector<free_tensor_basis<n_letters, max_degree>, Coeff>::template type,
+         template <DEG, DEG> class FTMultiplication=free_tensor_multiplication,
          typename...>
 class free_tensor;
 

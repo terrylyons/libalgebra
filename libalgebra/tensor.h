@@ -34,8 +34,11 @@ Version 3. (See accompanying file License.txt)
 #include "detail/level_walkers.h"
 #include "detail/reversing_permutation.h"
 #include "detail/unpacked_tensor_word.h"
+#include "detail/platform.h"
 #include "half_shuffle_tensor_basis.h"
 #include "tensor_basis.h"
+
+#include <xmmintrin.h>
 
 #define LA_RESTRICT __restrict
 #define LA_INLINE_ALWAYS __attribute__((always_inline))
@@ -205,18 +208,20 @@ protected:
         }
     }
 
-    static void write_tile_assign(pointer out_p, const_pointer tptr, index_type ibound, index_type jbound, index_type out_stride, index_type in_stride) noexcept
+    static void LA_INLINE_ALWAYS write_tile_assign(pointer out_p, const_pointer tptr, index_type ibound, index_type jbound, index_type out_stride, index_type in_stride) noexcept
     {
         for (index_type i = 0; i < ibound; ++i) {
+            LA_PREFETCH_ET0(out_p + (i+1)*out_stride);
             for (index_type j = 0; j < jbound; ++j) {
                 out_p[i * out_stride + j] = tptr[i * in_stride + j];
             }
         }
     }
 
-    static void write_tile_acc(pointer optr, const_pointer tptr, index_type ibound, index_type jbound, index_type out_stride, index_type in_stride)
+    static void LA_INLINE_ALWAYS write_tile_acc(pointer optr, const_pointer tptr, index_type ibound, index_type jbound, index_type out_stride, index_type in_stride)
     {
         for (index_type i = 0; i < ibound; ++i) {
+            LA_PREFETCH_ET0(optr + (i+1) * out_stride);
             for (index_type j = 0; j < jbound; ++j) {
                 optr[i * out_stride + j] += tptr[i * in_stride + j];
             }
@@ -293,7 +298,7 @@ public:
         pointer out_p = dst_p + pointer_offset(degree, index, subtile_j, subtile_i);
         write_tile_reverse_impl(out_p, subtile_bound(subtile_i), subtile_bound(subtile_j), stride, tile_width);
     }
-    void permute_write_tile()
+    void LA_INLINE_ALWAYS permute_write_tile()
     {
         //                using perm = dtl::reversing_permutation<Width, tile_letters>;
         pointer tptr = tile_ptr();
@@ -725,13 +730,13 @@ private:
             if (Depth > (WriteCacheLetters + 2 * tile_info::tile_letters)) {
                 fwd_write_cache = static_cast<scalar_type*>(boost::alignment::aligned_alloc(64, cache_size*sizeof(scalar_type)));
 //                fwd_write_cache = new scalar_type[cache_size] {};
-                std::uninitialized_fill_n(fwd_write_cache, cache_size, scalar_type());
+                std::uninitialized_fill_n(fwd_write_cache, cache_size, Coeffs::zero);
             }
 #ifdef LIBALGEBRA_TM_UPDATE_REVERSE_INLINE
             if (Depth >  (1 + WriteCacheLetters + 2*tile_info::tile_letters)) {
                 rev_write_cache = static_cast<scalar_type*>(boost::alignment::aligned_alloc(64, cache_size*sizeof(scalar_type)));
                 //                rev_write_cache = new scalar_type[cache_size] {};
-                std::uninitialized_fill_n(rev_write_cache, cache_size, scalar_type());
+                std::uninitialized_fill_n(rev_write_cache, cache_size, Coeffs::zero);
             }
 #endif
         }
@@ -910,7 +915,7 @@ private:
         static constexpr index_type half_tile_width = integer_maths::power(index_type(Width), half_letters);
         using half_letters_permute = reversing_permutation<Width, half_letters>;
 
-        static constexpr void permute(pointer tile)
+        static constexpr void LA_INLINE_ALWAYS permute(pointer tile)
         {
             for (index_type left = 0; left < half_tile_width; ++left) {
                 for (index_type middle = 0; middle < static_cast<index_type>(Width); ++middle) {
@@ -930,7 +935,7 @@ private:
         static constexpr index_type half_tile_width = integer_maths::power(index_type(Width), half_letters);
         using half_letters_permute = reversing_permutation<Width, half_letters>;
 
-        static constexpr void permute(pointer tile)
+        static constexpr void LA_INLINE_ALWAYS permute(pointer tile)
         {
             for (index_type left = 0; left < half_tile_width; ++left) {
                 for (index_type right = left + 1; right < half_tile_width; ++right) {
@@ -951,6 +956,7 @@ private:
     };
 
 public:
+    LA_INLINE_ALWAYS
     constexpr void permute_left_tile() noexcept
     {
         //        using perm = dtl::reversing_permutation<Width, Letters>;
@@ -967,23 +973,27 @@ public:
     }
 
 private:
+    LA_INLINE_ALWAYS
     static void read_tile(pointer tptr, const_pointer src, index_type count)
     {
-        for (index_type i=0; i<count; ++i) {
-            tptr[i] = src[i];
-        }
-//        std::copy(src, src + count, tptr);
-        for (index_type i=count; i <tile_width; ++i) {
-            tptr[i] = Coeffs::zero;
-        }
+//        for (index_type i=0; i<count; ++i) {
+//            tptr[i] = src[i];
+//        }
+        std::copy(src, src + count, tptr);
+//        for (index_type i=count; i <tile_width; ++i) {
+//            tptr[i] = Coeffs::zero;
+//        }
+        std::fill_n(tptr + count, tile_width-count, scalar_type(0));
     }
 
 public:
+    LA_INLINE_ALWAYS
     void read_left_tile(const_pointer src, IDIMN count = tile_width) noexcept
     {
         pointer tptr = left_read_tile.data;
         read_tile(tptr, src, count);
     }
+    LA_INLINE_ALWAYS
     void read_right_tile(const_pointer src, IDIMN count = tile_width) noexcept
     {
         pointer tptr = right_read_tile.data;
@@ -1010,6 +1020,11 @@ public:
 
 private:
 
+    static void inline LA_INLINE_ALWAYS write_small_tile(pointer out, const_pointer in, index_type ibound, index_type jbound, index_type out_stride)
+    {
+
+    }
+
     template <unsigned D>
     void flush_cache(const unpacked_tensor_word<Width, D>& word) {
         assert(WriteCacheLetters < word.degree());
@@ -1020,9 +1035,9 @@ private:
 
         assert(index < static_cast<index_type>(tsi::powers[degree - WriteCacheLetters]));
         assert(stride > cache_ncols);
-        auto __attribute__((unused)) wcl = WriteCacheLetters;
 
         pointer fwd_write = base::fwd_write(out_degree, index*cache_ncols);
+        LA_PREFETCH_ET0(fwd_write);
         if (base::is_inplace()) {
             base_helper::write_tile_assign(fwd_write, fwd_write_cache, cache_nrows, cache_ncols, stride, cache_ncols);
 
@@ -1030,6 +1045,8 @@ private:
             if (reverse_write_ptr != nullptr && IDEG(out_degree) < base::out_deg) {
                 pointer reverse_write = m_out_rev_levels[out_degree];
                 reverse_write += word.split_left_reverse_index(degree - WriteCacheLetters)*cache_ncols;
+                LA_PREFETCH_ET0(reverse_write);
+                base_helper::permute_write_tile();
                 base_helper::write_tile_assign(reverse_write, rev_write_cache, cache_nrows, cache_ncols, stride, cache_ncols);
             }
 #endif
@@ -1040,6 +1057,8 @@ private:
             if (reverse_write_ptr != nullptr && IDEG(out_degree) < base::out_deg) {
                 pointer reverse_write = m_out_rev_levels[out_degree];
                 reverse_write += word.split_left_reverse_index(degree - WriteCacheLetters)*cache_ncols;
+                LA_PREFETCH_ET0(reverse_write);
+                base_helper::permute_write_tile();
                 base_helper::write_tile_acc(reverse_write, rev_write_cache, cache_nrows, cache_ncols, stride, cache_ncols);
             }
 #endif
@@ -1071,21 +1090,22 @@ private:
         auto jbound = base_helper::subtile_bound(subtile_j);
 
         auto degree = word.degree();
-        auto __attribute__((unused)) wcl = WriteCacheLetters ;
         auto index = word.split_right_index(degree - WriteCacheLetters);
         assert(index < index_type(tsi::powers[WriteCacheLetters]));
 
         auto offset = (subtile_i*cache_ncols + subtile_j)*tile_info::tile_width + index*tile_info::tile_stride;
 
         pointer ptr = fwd_write_cache + offset;
+        LA_PREFETCH_ET1(ptr);
         base_helper::write_tile_assign(ptr, out_tile_ptr(), ibound, jbound, cache_ncols, tile_info::tile_width);
 
 #ifdef LIBALGEBRA_TM_UPDATE_REVERSE_INLINE
         if (reverse_write_ptr != nullptr && IDEG(degree) < base::out_deg - 2*tile_letters) {
-            base_helper::permute_write_tile();
             index = word.split_right_reverse_index(degree - WriteCacheLetters);
             offset = (subtile_j*cache_ncols + subtile_i)*tile_info::tile_width + index*tile_info::tile_stride;
             ptr = rev_write_cache + offset;
+            LA_PREFETCH_ET1(ptr);
+            base_helper::permute_write_tile();
             base_helper::write_tile_assign(ptr, out_tile_ptr(), jbound, ibound, cache_ncols, tile_info::tile_width);
         }
 #endif
@@ -1119,17 +1139,20 @@ private:
         pointer optr = base::fwd_write(degree);
         optr += word.to_index() * tile_info::tile_stride;
         optr += subtile_offset;
+        LA_PREFETCH_ET1(optr);
 
         write_tile_impl(optr, stride, ibound, jbound);
 
 #ifdef LIBALGEBRA_TM_UPDATE_REVERSE_INLINE
         if (reverse_write_ptr != nullptr && IDEG(degree) < base::out_deg) {
             // Write out reverse data
-            base_helper::permute_write_tile();
-
             optr = m_out_rev_levels[degree];
             optr += word.to_reverse_index() * tile_info::tile_stride;
             optr += (subtile_j * stride + subtile_i) * tile_width;
+
+            LA_PREFETCH_ET1(optr);
+            base_helper::permute_write_tile();
+
             write_tile_impl(optr, stride, jbound, ibound);
             //        base_helper::write_tile_reverse_impl(optr, stride, ibound, jbound);
             //            base_helper::write_tile(reverse_write_ptr, degree, reverse_index, subtile_i, subtile_j);
@@ -1536,53 +1559,58 @@ private:
     }
 
     template<typename C, typename Fn>
-    LA_INLINE_ALWAYS static void impl_mid(pointer<C> tile,
+    LA_INLINE_ALWAYS static void impl_mid_compute(pointer<C> tile,
                                           const_pointer<C> lhs_tile,
                                           const_pointer<C> rhs_tile,
                                           Fn op) noexcept
     {
         constexpr auto tile_width = helper_type<C>::tile_width;
+        pointer<C> optr = tile;
         for (IDIMN i = 0; i < tile_width; ++i) {
             for (IDIMN j = 0; j < tile_width; ++j) {
-                tile[i * tile_width + j] += op(lhs_tile[i] * rhs_tile[j]);
+                optr[j] += op(lhs_tile[i] * rhs_tile[j]);
             }
+            optr += tile_width;
         }
     }
 
     template<typename C, typename Fn>
-    LA_INLINE_ALWAYS static void impl_lb1(pointer<C> optr,
+    LA_INLINE_ALWAYS static void impl_lb1(pointer<C> tile,
                                           const_pointer<C> lptr,
                                           const_pointer<C> rptr,
-                                          index_type i2,
                                           index_type i1bound,
                                           index_type i2bound,
                                           Fn op)
     {
         constexpr auto tile_width = helper_type<C>::tile_width;
+//        auto stride = i2bound * tile_width;
+        pointer<C> optr = tile;
         for (index_type i1 = 0; i1 < i1bound; ++i1) {
-            auto i = i1 * i2bound + i2;
+//            auto i = i1 * i2bound;
             for (index_type j = 0; j < tile_width; ++j) {
-                optr[i * tile_width + j] += op(lptr[i1] * rptr[j]);
+                optr[j] += op(lptr[i1] * rptr[j]);
             }
+            optr += i2bound*tile_width;
         }
     }
 
     template<typename C, typename Fn>
-    LA_INLINE_ALWAYS static void impl_1br(pointer<C> optr,
+    LA_INLINE_ALWAYS static void impl_1br(pointer<C> tile,
                                           const_pointer<C> lptr,
                                           const_pointer<C> rptr,
-                                          index_type j1,
                                           index_type j2bound,
                                           Fn op)
     {
         constexpr auto tile_width = helper_type<C>::tile_width;
+        pointer<C> optr = tile;
         for (index_type i = 0; i < tile_width; ++i) {
             for (index_type j2 = 0; j2 < j2bound; ++j2) {
-                auto j = j1 * j2bound + j2;
-                optr[i * tile_width + j] += op(lptr[i] * rptr[j2]);
+                optr[j2] += op(lptr[i] * rptr[j2]);
             }
+            optr += tile_width;
         }
     }
+
 
     template<typename C, typename Fn>
     LA_INLINE_ALWAYS static void impl_ulmd(pointer<C> tile,
@@ -1617,114 +1645,7 @@ private:
     }
 
 protected:
-    template<typename C, typename Fn>
-    static void impl_outer_cases_zip(helper_type<C>& helper, Fn op) noexcept
-    {
-        constexpr auto tile_width = helper_type<C>::tile_width;
-        const auto out_deg = helper.out_degree();
-        const_pointer<C> lptr = helper.left_read_tile_ptr();
-        const_pointer<C> rptr = helper.right_read_tile_ptr();
-        pointer<C> optr = helper.fwd_write(out_deg);
-        const_pointer<C> rsrc = helper.right_fwd_read(out_deg);
 
-        const_reference<C> lunit = helper.left_unit();
-        const_reference<C> runit = helper.right_unit();
-
-        const auto bound = static_cast<index_type>(tsi::powers[out_deg - helper.tile_letters]);
-
-        if (helper.is_inplace()) {
-            for (index_type i = 0; i < bound; ++i /*, rsrc += tile_width, optr += tile_width*/) {
-                helper.read_right_tile(rsrc + i * tile_width);
-                helper.read_left_tile(optr + i * tile_width);
-                linear_fwd_zipped_mul_inplace<C>(optr + i * tile_width, lptr, rptr, lunit, runit, tile_width, op);
-            }
-        }
-        else {
-            const_pointer<C> lsrc = helper.left_fwd_read(out_deg);
-
-            for (index_type i = 0; i < bound; ++i) {
-                helper.read_left_tile(lsrc + i * tile_width);
-                helper.read_right_tile(rsrc + i * tile_width);
-                linear_fwd_zipped_mul<C>(optr + i * tile_width, lptr, rptr, lunit, runit, tile_width, op);
-                //                for (index_type j=0; j<tile_width; ++j) {
-                //                    optr[i*tile_width + j] += op(lsrc[i*tile_width + j]*runit) + op(lunit*rsrc[i*tile_width+j]);
-                //                }
-            }
-        }
-    }
-
-    template<typename C, typename Fn>
-    static void impl_outer_left_only(helper_type<C>& helper, Fn op)
-    {
-        constexpr auto tile_width = helper_type<C>::tile_width;
-        const auto out_deg = helper.out_degree();
-        const_pointer<C> lptr = helper.left_read_tile_ptr();
-        const_reference<C> runit = helper.right_unit();
-        pointer<C> optr = helper.fwd_write(out_deg);
-
-        const auto bound = static_cast<index_type>(tsi::powers[out_deg - helper.tile_letters]);
-
-        if (helper.is_inplace()) {
-            for (index_type i = 0; i < bound; ++i, optr += tile_width) {
-                helper.read_left_tile(optr);
-                linear_fwd_mul_inplace_left<C>(optr, lptr, runit, tile_width, op);
-            }
-        }
-        else {
-            const_pointer<C> lsrc = helper.left_fwd_read(out_deg);
-
-            for (index_type i = 0; i < bound; ++i, lsrc += tile_width, optr += tile_width) {
-                helper.read_left_tile(lsrc);
-                linear_fwd_mul_left<C>(optr, lptr, runit, tile_width, op);
-            }
-        }
-    }
-
-    template<typename C, typename Fn>
-    static void impl_outer_right_only(helper_type<C>& helper, Fn op)
-    {
-        constexpr auto tile_width = helper_type<C>::tile_width;
-        const auto out_deg = helper.out_degree();
-        const_pointer<C> rptr = helper.right_read_tile_ptr();
-        const_reference<C> lunit = helper.left_unit();
-        pointer<C> optr = helper.fwd_write(out_deg);
-
-        const auto bound = static_cast<index_type>(tsi::powers[out_deg - helper.tile_letters]);
-
-        if (helper.is_inplace()) {
-            for (index_type i = 0; i < bound; ++i, optr += tile_width) {
-                helper.read_right_tile(optr);
-                linear_fwd_mul_inplace_right<C>(optr, rptr, lunit, tile_width, op);
-            }
-        }
-        else {
-            const_pointer<C> rsrc = helper.right_fwd_read(out_deg);
-
-            for (index_type i = 0; i < bound; ++i, rsrc += tile_width, optr += tile_width) {
-                helper.read_right_tile(rsrc);
-                linear_fwd_mul_right<C>(optr, rptr, lunit, tile_width, op);
-            }
-        }
-    }
-
-    template<typename C, typename Fn>
-    static void impl_outer_cases(helper_type<C>& helper, Fn op) noexcept
-    {
-        bool left_valid = helper.lhs_degree() >= helper.out_degree()
-                && helper.right_unit() != C::zero;
-        bool right_valid = helper.rhs_degree() >= helper.out_degree()
-                && helper.left_unit() != C::zero;
-
-        if (left_valid && right_valid) {
-            impl_outer_cases_zip(helper, op);
-        }
-        else if (left_valid) {
-            impl_outer_left_only(helper, op);
-        }
-        else if (right_valid) {
-            impl_outer_right_only(helper, op);
-        }
-    }
 
     template<typename Coeffs, typename Fn>
     static void impl_top_zipped(helper_type<Coeffs>& helper,
@@ -1746,6 +1667,8 @@ protected:
 
 
         for (index_type i = 0; i < ibound; ++i) {
+            LA_PREFETCH_T1(lsrc+(i+1)*stride);
+            LA_PREFETCH_T1(rsrc+(i+1)*stride);
             helper.read_left_tile(lsrc + i * stride, jbound);
 //            for (index_type j=0; j<jbound; ++j) {
 //                tptr[i*tile_width + j] += op(lptr[j] * runit);
@@ -1755,10 +1678,11 @@ protected:
 //            for (index_type j=0; j<jbound; ++j) {
 //                tptr[i*tile_width + j] += op(lunit*rptr[j]);
 //            }
-//
+
             for (index_type j = 0; j < jbound; ++j) {
-                tptr[i * tile_width + j] += op(lptr[j] * runit) + op(lunit * rptr[j]);
+                tptr[j] += op(lptr[j] * runit) + op(lunit * rptr[j]);
             }
+            tptr += tile_width;
         }
     }
 
@@ -1834,19 +1758,34 @@ protected:
 
         const auto key_offset = static_cast<index_type>(tsi::powers[out_deg - 2*tile_letters]);
 
-//        const_pointer<Coeffs>* reads = helper.read_queue();
-//        for (index_type i2=0; i2<i2bound; ++i2) {
-//            reads[i2] = rhs_read + i2*key_offset;
-//        }
+        const_pointer<Coeffs>* reads = helper.read_queue();
+        for (index_type i2=0; i2<i2bound; ++i2) {
+            reads[i2] = rhs_read + i2*key_offset;
+            LA_PREFETCH_T1(reads[i2]);
+        }
 
 
         for (index_type i2 = 0; i2 < i2bound; ++i2) {
-            helper.read_right_tile(rhs_read + i2*key_offset);
-//            helper.read_right_tile(reads[i2]);
-            impl_lb1<Coeffs>(tptr, lptr, rptr, i2, i1bound, i2bound, op);
+//            helper.read_right_tile(rhs_read + i2*key_offset);
+            helper.read_right_tile(reads[i2]);
+            impl_lb1<Coeffs>(tptr + i2*helper_type<Coeffs>::tile_width, lptr, rptr, i1bound, i2bound, op);
         }
     }
 
+    template <typename Coeffs, typename Array, typename Fn>
+    static void impl_mid(helper_type<Coeffs>& helper,
+                         IDEG out_deg,
+                         IDEG lhs_deg,
+                         const Array& left_reads,
+                         const Array& right_reads,
+                         index_type ibound, index_type jbound,
+                         Fn fn)
+    {
+        helper.read_left_tile(left_reads[lhs_deg], ibound);
+        helper.read_right_tile(right_reads[out_deg - lhs_deg], jbound);
+        helper.permute_left_tile();
+        impl_mid_compute<Coeffs>(helper.out_tile_ptr(), helper.left_read_tile_ptr(), helper.right_read_tile_ptr(), fn);
+    }
 
     template<typename Coeffs, typename Fn>
     static void
@@ -1908,6 +1847,7 @@ protected:
         for (index_type j1=0; j1<j1bound; ++j1, ++j1_word) {
             auto rj1 = j1_word.to_reverse_index();
             reads[j1] = left_read + rj1*key_offset;
+            LA_PREFETCH_T1(reads[j1]);
         }
 
         for (index_type j1 = 0; j1 < j1bound; ++j1) {
@@ -1916,7 +1856,7 @@ protected:
 //            helper.read_left_tile(left_read + rj1*key_offset);
             helper.read_left_tile(reads[j1]);
             helper.permute_left_tile();
-            impl_1br<Coeffs>(tptr, lptr, rptr, j1, j2bound, op);
+            impl_1br<Coeffs>(tptr + j1*j2bound, lptr, rptr, j2bound, op);
         }
     }
 
@@ -1990,6 +1930,9 @@ protected:
                         const auto jbound = helper.subtile_bound(subtile_j);
                         const auto subtile_offset = (subtile_i*stride + subtile_j)*tile_width;
 
+//                        _mm_prefetch(helper.out_tile_ptr(), _MM_HINT_T0);
+//                        _mm_prefetch(helper.left_read_tile_ptr(), _MM_HINT_T0);
+//                        _mm_prefetch(helper.right_read_tile_ptr(), _MM_HINT_T0);
                         helper.reset_tile(out_deg, k, k_reverse, subtile_i, subtile_j);
 
                         // Setup read pointers
@@ -2023,10 +1966,7 @@ protected:
                                 impl_lhs_small(helper, out_deg, lhs_deg, k, op);
                             }
                             else if (lhs_deg <= mid_end && lhs_deg < old_lhs_deg) {
-                                helper.read_left_tile(left_reads[lhs_deg], ibound);
-                                helper.permute_left_tile();
-                                helper.read_right_tile(right_reads[out_deg - lhs_deg], jbound);
-                                impl_mid<Coeffs>(helper.out_tile_ptr(), helper.left_read_tile_ptr(), helper.right_read_tile_ptr(), op);
+                                impl_mid(helper, out_deg, lhs_deg, left_reads, right_reads, ibound, jbound, op);
                                 //                                impl_mid_cases_reverse(helper, op, out_deg, lhs_deg, k, subtile_i, subtile_j);
                             }
                             else if (lhs_deg <= mid_end && lhs_deg == old_lhs_deg) {

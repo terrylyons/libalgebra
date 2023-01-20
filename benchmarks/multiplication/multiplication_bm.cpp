@@ -104,7 +104,7 @@ BENCHMARK_TEMPLATE(BM_traditional_multiplication, 4, 13);
 //BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 10, 1, 0);
 //BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 11, 1, 0);
 //BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 12, 1, 0);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 13, 1, 0);
+//BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 13, 1, 0);
 
 //BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 4, 2, 0);
 //BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 5, 2, 0);
@@ -138,7 +138,7 @@ BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 13, 3, 0);
 //BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 10, 1, 1);
 //BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 11, 1, 1);
 //BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 12, 1, 1);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 13, 1, 1);
+//BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 13, 1, 1);
 
 //BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 4, 2, 1);
 //BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 5, 2, 1);
@@ -172,7 +172,7 @@ BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 13, 3, 1);
 //BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 10, 1, 2);
 //BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 11, 1, 2);
 //BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 12, 1, 2);
-BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 13, 1, 2);
+//BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 13, 1, 2);
 
 //BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 4, 2, 2);
 //BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 5, 2, 2);
@@ -198,6 +198,9 @@ BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 13, 3, 2);
 
 
 BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 13, 3, 3);
+BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 13, 4, 0);
+BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 13, 4, 1);
+BENCHMARK_TEMPLATE(BM_tiled_multiplication, 4, 13, 4, 2);
 
 
 //

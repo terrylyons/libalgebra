@@ -7,6 +7,7 @@ target_compile_options(multiplication_bm PRIVATE
         -g
         -pg
         -fno-omit-frame-pointer
+        -march=native
         )
 
 target_link_libraries(multiplication_bm PRIVATE

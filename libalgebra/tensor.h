@@ -199,7 +199,7 @@ public:
     }
 
 protected:
-    void read_tile_impl(const_pointer in_p, index_type lhs_stride, index_type ibound, index_type jbound) noexcept
+    void read_tile_impl(const_pointer LA_RESTRICT in_p, index_type lhs_stride, index_type ibound, index_type jbound) noexcept
     {
         for (index_type i = 0; i < ibound; ++i) {
             for (index_type j = 0; j < jbound; ++j) {
@@ -207,6 +207,17 @@ protected:
             }
         }
     }
+
+    template <index_type IBound, index_type JBound, index_type OutStride=JBound>
+    inline LA_INLINE_ALWAYS void read_tile_impl(const_pointer LA_RESTRICT src, index_type in_stride)
+    {
+        for (index_type i = 0; i < IBound; ++i) {
+            for (index_type j = 0; j < IBound; ++j) {
+                tile.data[i * OutStride + j] = src[i * in_stride + j];
+            }
+        }
+    }
+
 
     template <index_type IBound, index_type JBound, index_type InStride=JBound>
     LA_INLINE_ALWAYS static void write_tile_assign(pointer __restrict optr, const_pointer __restrict tptr, index_type out_stride)
@@ -301,7 +312,11 @@ public:
     {
         const auto stride = tsi::powers[degree - tile_info::tile_letters];
         const_pointer in_p = src_p + pointer_offset(degree, index, subtile_i, subtile_j);
-        read_tile_impl(in_p, stride, subtile_bound(subtile_i), subtile_bound(subtile_j));
+        if (tile_info::num_subtiles == 1) {
+            read_tile_impl<tile_info::tile_width, tile_info::tile_width>(in_p, stride);
+        } else {
+            read_tile_impl(in_p, stride, subtile_bound(subtile_i), subtile_bound(subtile_j));
+        }
     }
 
     void write_tile(pointer dst_p,
@@ -312,7 +327,11 @@ public:
     {
         const auto stride = tsi::powers[degree - tile_info::tile_letters];
         pointer out_p = dst_p + pointer_offset(degree, index, subtile_i, subtile_j);
-        write_tile_assign(out_p, tile.data, subtile_bound(subtile_i), subtile_bound(subtile_j), stride, tile_width);
+        if (tile_info::num_subtiles == 1) {
+            write_tile_assign<tile_info::tile_width, tile_info::tile_width>(out_p, tile.data, stride);
+        } else {
+            write_tile_assign(out_p, tile.data, subtile_bound(subtile_i), subtile_bound(subtile_j), stride, tile_width);
+        }
     }
 
     void write_tile_reverse(pointer dst_p,
@@ -325,16 +344,42 @@ public:
         pointer out_p = dst_p + pointer_offset(degree, index, subtile_j, subtile_i);
         write_tile_reverse_impl(out_p, subtile_bound(subtile_i), subtile_bound(subtile_j), stride, tile_width);
     }
-    LA_INLINE_ALWAYS void permute_write_tile()
+
+    template <size_type IIndex, size_type JIndex>
+    struct permute_info
     {
-        //                using perm = dtl::reversing_permutation<Width, tile_letters>;
-        pointer tptr = tile_ptr();
+        using perm = dtl::reversing_permutation<Width, tile_info::tile_letters>;
+        static constexpr size_type reverse_i = perm::permute_idx(IIndex);
+        static constexpr size_type reverse_j = perm::permute_idx(JIndex);
+    };
+
+    template <size_type IIndex, size_type JIndex>
+    static constexpr LA_INLINE_ALWAYS void permute_loop_impl(pointer LA_RESTRICT tptr, permute_info<IIndex, JIndex> marker)
+    {
+        std::swap(tptr[IIndex*tile_width+JIndex], tptr[marker.reverse_j*tile_width + marker.reverse_i]);
+        permute_loop_impl(tptr, permute_info<IIndex, JIndex+1>());
+    }
+
+    template <size_type IIndex>
+    static constexpr LA_INLINE_ALWAYS void permute_loop_impl(pointer LA_RESTRICT tptr, permute_info<IIndex, tile_width> marker)
+    {
+        permute_loop_impl(tptr, permute_info<IIndex + 1, IIndex+2>());
+    }
+
+    template <size_type JIndex>
+    static constexpr LA_INLINE_ALWAYS void permute_loop_impl(pointer LA_RESTRICT tptr, permute_info<tile_width, JIndex> marker)
+    {}
+
+    LA_INLINE_ALWAYS constexpr void permute_write_tile()
+    {
+//        using perm = dtl::reversing_permutation<Width, tile_info::tile_letters>;
+        pointer LA_RESTRICT tptr = tile_ptr();
         const auto* perm = reverser();
         for (index_type i = 0; i < tile_width; ++i) {
-            //                        auto pi = perm::permute_idx(i);
+//            auto pi = perm::permute_idx(i);
             auto pi = perm[i];
             for (index_type j = i + 1; j < tile_width; ++j) {
-                //                                auto pj = perm::permute_idx(j);
+//                auto pj = perm::permute_idx(j);
                 auto pj = perm[j];
                 std::swap(tptr[i * tile_width + j], tptr[pj * tile_width + pi]);
             }
@@ -425,7 +470,7 @@ class tiled_inverse_operator
     template<DEG Degree>
     struct untiled_compute {
         template<typename S>
-        static void eval(S* LA_RESTRICT dst_ptr, const S* LA_RESTRICT src_ptr, DEG current_degree)
+        static inline LA_INLINE_ALWAYS void eval(S* LA_RESTRICT dst_ptr, const S* LA_RESTRICT src_ptr, DEG current_degree)
         {
             if (current_degree >= Degree) {
                 using perm = dtl::reversing_permutation<Width, Degree>;
@@ -451,12 +496,12 @@ class tiled_inverse_operator
 public:
     static constexpr DEG block_letters = tile_info::tile_letters;
 
-    static void untiled_cases(scalar_type* LA_RESTRICT dst_ptr, const scalar_type* LA_RESTRICT src_ptr, DEG current_degree) noexcept
+    static void LA_INLINE_ALWAYS untiled_cases(scalar_type* LA_RESTRICT dst_ptr, const scalar_type* LA_RESTRICT src_ptr, DEG current_degree) noexcept
     {
         dtl::increasing_level_walker<untiled_compute, 2 * tile_info::tile_letters>::eval(dst_ptr, src_ptr, current_degree);
     }
 
-    static void sign_and_permute(scalar_type* LA_RESTRICT tile, Signer& signer) noexcept
+    static void LA_INLINE_ALWAYS sign_and_permute(scalar_type* LA_RESTRICT tile, Signer& signer) noexcept
     {
         for (DIMN i = 0; i < tile_info::tile_size; ++i) {
             tile[i] = signer(tile[i]);

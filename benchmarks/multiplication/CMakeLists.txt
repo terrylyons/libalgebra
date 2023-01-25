@@ -8,7 +8,23 @@ target_compile_options(multiplication_bm PRIVATE
         -pg
         -fno-omit-frame-pointer
         -march=native
+#        -fopt-info-vec-missed
+#        -ftree-vectorizer-verbose=2
+#        -qopt-report-stdout
+#        -qopt-report=max
         )
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "IntelLLVM")
+    target_compile_options(multiplication_bm PRIVATE
+            -qopt-report-stdout
+            -qopt-report=max)
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    target_compile_options(multiplication_bm PRIVATE
+            -fopt-info
+#            -fno-tree-loop-distribute-patterns
+            -ftree-vectorizer-verbose=2)
+endif()
+
 
 target_link_libraries(multiplication_bm PRIVATE
         benchmark::benchmark

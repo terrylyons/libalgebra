@@ -148,7 +148,7 @@ class shuffle_tensor_basis;
 template <DEG Width, DEG Depth>
 class traditional_free_tensor_multiplication;
 
-template <DEG Width, DEG Depth, IDEG TileLetters=0, IDEG WriteCacheLetters=1>
+template <DEG Width, DEG Depth, IDEG TileLetters=0, IDEG WriteCacheLetters=0>
 class tiled_free_tensor_multiplication;
 
 template <DEG Width, DEG Depth>

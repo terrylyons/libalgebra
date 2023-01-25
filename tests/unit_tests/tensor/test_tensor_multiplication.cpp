@@ -413,7 +413,7 @@ SUITE(tensor_multiplication)
         auto result = lhs * rhs;                                                                          \
         CHECK_EQUAL(3906, result.size());                                                         \
         for (auto item : result) {                                                                        \
-            CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value());          \
+            REQUIRE CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value());          \
         }                                                                                                 \
     }                                                                                                     \
                                                                                                           \
@@ -423,7 +423,7 @@ SUITE(tensor_multiplication)
         auto rhs = generic_tensor<MUL##_multiplication, alg::vectors::VEC##_vector>(2000000);             \
                                                                                                           \
         lhs *= rhs;                                                                                       \
-        REQUIRE CHECK_EQUAL(3906, lhs.size());                                                            \
+        CHECK_EQUAL(3906, lhs.size());                                                            \
         for (auto item : lhs) {                                                                           \
             REQUIRE CHECK_EQUAL(construct_expected(item.key(), 1000000, 2000000), item.value());          \
         }                                                                                                 \
@@ -436,7 +436,7 @@ SUITE(tensor_multiplication)
         rhs[key_type()] = scalar_type();                                                                  \
                                                                                                           \
         lhs *= rhs;                                                                                       \
-        REQUIRE CHECK_EQUAL(3905, lhs.size());                                                            \
+        CHECK_EQUAL(3905, lhs.size());                                                            \
         for (auto item : lhs) {                                                                           \
             if (basis.degree(item.key()) == 0) {                                                          \
                 REQUIRE CHECK_EQUAL(scalar_type(), item.value());                                         \
@@ -454,13 +454,13 @@ SUITE(tensor_multiplication)
         lhs[key_type()] = scalar_type();                                                                  \
                                                                                                           \
         lhs *= rhs;                                                                                       \
-        REQUIRE CHECK_EQUAL(3905, lhs.size());                                                            \
+        CHECK_EQUAL(3905, lhs.size());                                                            \
         for (auto item : lhs) {                                                                           \
             if (basis.degree(item.key()) == 0) {                                                          \
-                CHECK_EQUAL(scalar_type(), item.value());                                                 \
+                REQUIRE CHECK_EQUAL(scalar_type(), item.value());                                                 \
             }                                                                                             \
             else {                                                                                        \
-                CHECK_EQUAL(construct_expected_lzu(item.key(), 1000000, 2000000), item.value());          \
+                REQUIRE CHECK_EQUAL(construct_expected_lzu(item.key(), 1000000, 2000000), item.value());          \
             }                                                                                             \
         }                                                                                                 \
     }                                                                                                     \

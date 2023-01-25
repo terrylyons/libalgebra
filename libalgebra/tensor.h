@@ -39,7 +39,6 @@ Version 3. (See accompanying file License.txt)
 #include "half_shuffle_tensor_basis.h"
 #include "tensor_basis.h"
 
-#include <xmmintrin.h>
 
 #define LA_RESTRICT __restrict
 #define LA_INLINE_ALWAYS __attribute__((always_inline))

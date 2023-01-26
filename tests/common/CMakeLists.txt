@@ -29,7 +29,7 @@ target_link_libraries(libalgebra_tests_utilities PUBLIC
 
 # Set compiler flags for reporting warnings when compiling tests
 target_compile_options(libalgebra_tests_utilities PUBLIC
-        $<$<CXX_COMPILER_ID:MSVC>: /W3>
+        $<$<CXX_COMPILER_ID:MSVC>: /W4>
         $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:
         -Wall
         -Wextra

@@ -21,23 +21,10 @@ static void BM_memcpy(benchmark::State& state) {
     //    std::generate(ptr, ptr + lhs.base_vector().dimension(), [this, distribution]() { return distribution(rng);
 
     typedef alg::free_tensor<float_field, Width, Depth, alg::vectors::dense_vector> TENSOR;
-    typedef alg::lie<float_field, Width, Depth, alg::vectors::dense_vector> LIE;
-
-    using rvg_t = la_testing::random_vector_generator<TENSOR, float_dist>;
-    using rvg_l = la_testing::random_vector_generator<LIE, float_dist>;
-
-    const TENSOR tunit;
-    const TENSOR tzero;
-
-    std::mt19937 rngt;
-    rvg_t rvgt;
-
-    std::mt19937 rngl;
-    rvg_l rvgl;
 
     typedef typename TENSOR::KEY KEY;
 
-    TENSOR input_tensor = rvgt(rngt);
+    TENSOR input_tensor;
 
     TENSOR result;
 
@@ -67,23 +54,25 @@ static void BM_antipode(benchmark::State& state) {
     //    std::generate(ptr, ptr + lhs.base_vector().dimension(), [this, distribution]() { return distribution(rng);
 
     typedef alg::free_tensor<float_field, Width, Depth, alg::vectors::dense_vector> TENSOR;
-    typedef alg::lie<float_field, Width, Depth, alg::vectors::dense_vector> LIE;
-
-    using rvg_t = la_testing::random_vector_generator<TENSOR, float_dist>;
-    using rvg_l = la_testing::random_vector_generator<LIE, float_dist>;
-
-    const TENSOR tunit;
-    const TENSOR tzero;
-
-    std::mt19937 rngt;
-    rvg_t rvgt;
-
-    std::mt19937 rngl;
-    rvg_l rvgl;
+//    typedef alg::lie<float_field, Width, Depth, alg::vectors::dense_vector> LIE;
+//
+//    using rvg_t = la_testing::random_vector_generator<TENSOR, float_dist>;
+//    using rvg_l = la_testing::random_vector_generator<LIE, float_dist>;
+//
+//    const TENSOR tunit;
+//    const TENSOR tzero;
+//
+//    std::mt19937 rngt;
+//    rvg_t rvgt;
+//
+//    std::mt19937 rngl;
+//    rvg_l rvgl;
 
     typedef typename TENSOR::KEY KEY;
 
-    TENSOR input_tensor = rvgt(rngt);
+//    TENSOR input_tensor = rvgt(rngt);
+    TENSOR input_tensor;
+    input_tensor.base_vector().resize_to_degree(Depth);
 
     TENSOR result;
 
@@ -100,56 +89,61 @@ static void BM_antipode(benchmark::State& state) {
 }
 
 BENCHMARK_TEMPLATE(BM_memcpy, 4, 4);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 4, 1);
-
 BENCHMARK_TEMPLATE(BM_memcpy, 4, 5);
+BENCHMARK_TEMPLATE(BM_memcpy, 4, 6);
+BENCHMARK_TEMPLATE(BM_memcpy, 4, 7);
+BENCHMARK_TEMPLATE(BM_memcpy, 4, 8);
+BENCHMARK_TEMPLATE(BM_memcpy, 4, 9);
+BENCHMARK_TEMPLATE(BM_memcpy, 4, 10);
+BENCHMARK_TEMPLATE(BM_memcpy, 4, 11);
+BENCHMARK_TEMPLATE(BM_memcpy, 4, 12);
+BENCHMARK_TEMPLATE(BM_memcpy, 4, 13);
+
+BENCHMARK_TEMPLATE(BM_antipode, 4, 4, 1);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 4, 2);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 4, 3);
+
 BENCHMARK_TEMPLATE(BM_antipode, 4, 5, 1);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 5, 2);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 5, 3);
 
-BENCHMARK_TEMPLATE(BM_memcpy, 4, 6);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 6, 1);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 6, 2);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 6, 3);
 
-BENCHMARK_TEMPLATE(BM_memcpy, 4, 7);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 7, 1);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 7, 2);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 7, 3);
 
-BENCHMARK_TEMPLATE(BM_memcpy, 4, 8);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 8, 1);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 8, 2);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 8, 3);
 
-BENCHMARK_TEMPLATE(BM_memcpy, 4, 9);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 9, 1);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 9, 2);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 9, 3);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 9, 4);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 9, 4);
 
-BENCHMARK_TEMPLATE(BM_memcpy, 4, 10);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 10, 1);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 10, 2);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 10, 3);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 10, 4);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 10, 4);
 
-BENCHMARK_TEMPLATE(BM_memcpy, 4, 11);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 11, 1);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 11, 2);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 11, 3);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 11, 4);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 11, 5);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 11, 4);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 11, 5);
 
-BENCHMARK_TEMPLATE(BM_memcpy, 4, 12);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 12, 1);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 12, 2);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 12, 3);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 12, 4);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 12, 5);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 12, 4);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 12, 5);
 
-BENCHMARK_TEMPLATE(BM_memcpy, 4, 13);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 13, 1);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 13, 2);
 BENCHMARK_TEMPLATE(BM_antipode, 4, 13, 3);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 13, 4);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 13, 5);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 13, 6);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 13, 4);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 13, 5);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 13, 6);

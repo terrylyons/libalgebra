@@ -5,10 +5,10 @@
 #ifndef LIBALGEBRA_LIBALGEBRA_VECTOR_BUNDLE_H_
 #define LIBALGEBRA_LIBALGEBRA_VECTOR_BUNDLE_H_
 
-#include <libalgebra/algebra.h>
-#include <libalgebra/implementation_types.h>
-#include <libalgebra/tensor.h>
-#include <libalgebra/vectors/vectors.h>
+#include "algebra.h"
+#include "implementation_types.h"
+#include "tensor.h"
+#include "vectors.h"
 
 #include <iosfwd>
 #include <type_traits>
@@ -458,140 +458,140 @@ commutator(const vector_bundle<Vector, Fibre>& x, const vector_bundle<Vector, Fi
     result.add_mul(y, x);
     return result;
 }
-
-template<typename Coeff,
-         DEG Width,
-         DEG Depth,
-         template<typename, typename, typename...> class VectorType,
-         typename... Args>
-class vector_bundle<free_tensor<Coeff, Width, Depth, VectorType, Args...>,
-                    free_tensor<Coeff, Width, Depth, VectorType, Args...>>
-    //    : public free_tensor<Coeff, Width, Depth, VectorType, Args...>
-    : public dtl::vector_bundle_base<free_tensor<Coeff, Width, Depth, VectorType, Args...>,
-                                     free_tensor<Coeff, Width, Depth, VectorType, Args...>,
-                                     vector_bundle<free_tensor<Coeff, Width, Depth, VectorType, Args...>,
-                                                   free_tensor<Coeff, Width, Depth, VectorType, Args...>>>
-{
-public:
-    using vector_type = free_tensor<Coeff, Width, Depth, VectorType, Args...>;
-
-    using bundle_base = dtl::vector_bundle_base<vector_type, vector_type, vector_bundle>;
-
-    using fibre_vector_type = vector_type;
-
-    using basis_type = typename vector_type::BASIS;
-    using coeff_type = Coeff;
-    using key_type = typename vector_type::KEY;
-    using scalar_type = typename vector_type::SCALAR;
-    using rational_type = typename vector_type::RATIONAL;
-
-    using fibre_basis_type = basis_type;
-    using fibre_coeff_type = coeff_type;
-    using fibre_key_type = key_type;
-    using fibre_scalar_type = scalar_type;
-    using fibre_rational_type = rational_type;
-
-    // Legacy declarations
-    using BASIS = basis_type;
-    using SCALAR = scalar_type;
-    using RATIONAL = rational_type;
-    using KEY = key_type;
-    using coefficient_field = coeff_type;
-
-    using bundle_base::bundle_base;
-
-#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
-    friend class boost::serialization::access;
-
-    template<typename Archive>
-    void serialize(Archive& ar, unsigned int const /*version*/)
-    {
-        ar& boost::serialization::base_object<bundle_base>(*this);
-    }
-#endif
-
-    vector_bundle fmexp(const vector_bundle& arg) const
-    {
-        vector_bundle result(*this), x(arg);
-        key_type kunit;
-
-        //        const auto& self = static_cast<const vector_type&>(*this);
-
-        auto unit_elt = x.find(kunit);
-        if (unit_elt != x.end() && unit_elt->value() != coeff_type::zero) {
-            x.erase(unit_elt);
-        }
-
-        for (DEG i = Depth; i >= 1; --i) {
-            result.mul_scal_div(x, rational_type(i), Depth - i + 1);
-            result += *this;
-        }
-
-        return result;
-    }
-
-    vector_bundle fmexp(const vector_type& arg) const
-    {
-        vector_bundle result(*this);
-        vector_type x(arg);
-
-        key_type kunit;
-        auto unit_elt = x.find(kunit);
-        if (unit_elt != x.end() && unit_elt->value() != coeff_type::zero) {
-            x.erase(unit_elt);
-        }
-
-        for (DEG i = Depth; i >= 1; --i) {
-            result.mul_scal_div(x, rational_type(i), Depth - i + 1);
-            result += *this;
-        }
-
-        return result;
-    }
-
-    vector_bundle& fmexp_inplace(const vector_bundle& arg)
-    {
-        vector_bundle self(*this), x(arg);
-
-        key_type kunit;
-
-        auto unit_elt = x.find(kunit);
-        if (unit_elt != x.end() && unit_elt->value() != coeff_type::zero) {
-            x.erase(unit_elt);
-        }
-
-        for (DEG i = Depth; i >= 1; --i) {
-            bundle_base::mul_scal_div(x, rational_type(i), Depth - i + 1);
-            *this += self;
-        }
-
-        return *this;
-    }
-
-    vector_bundle& fmexp_inplace(const vector_type& arg)
-    {
-        vector_bundle self(*this);
-        vector_type x(arg);
-
-        key_type kunit;
-        auto unit_elt = x.find(kunit);
-        if (unit_elt != x.end() && unit_elt->value() != coeff_type::zero) {
-            x.erase(unit_elt);
-        }
-
-        for (DEG i = Depth; i >= 1; --i) {
-            bundle_base::mul_scal_div(x, rational_type(i), Depth - i + 1);
-            *this += self;
-        }
-
-        return *this;
-    }
-
-    friend vector_bundle antipode(const vector_bundle& arg)
-    {
-        return {antipode(static_cast<const vector_type&>(arg)), antipode(arg.fibre())};
-    }
-};
+//
+//template<typename Coeff,
+//         DEG Width,
+//         DEG Depth,
+//         template<typename, typename, typename...> class VectorType,
+//         typename... Args>
+//class vector_bundle<free_tensor<Coeff, Width, Depth, VectorType, Args...>,
+//                    free_tensor<Coeff, Width, Depth, VectorType, Args...>>
+//    //    : public free_tensor<Coeff, Width, Depth, VectorType, Args...>
+//    : public dtl::vector_bundle_base<free_tensor<Coeff, Width, Depth, VectorType, Args...>,
+//                                     free_tensor<Coeff, Width, Depth, VectorType, Args...>,
+//                                     vector_bundle<free_tensor<Coeff, Width, Depth, VectorType, Args...>,
+//                                                   free_tensor<Coeff, Width, Depth, VectorType, Args...>>>
+//{
+//public:
+//    using vector_type = free_tensor<Coeff, Width, Depth, VectorType, Args...>;
+//
+//    using bundle_base = dtl::vector_bundle_base<vector_type, vector_type, vector_bundle>;
+//
+//    using fibre_vector_type = vector_type;
+//
+//    using basis_type = typename vector_type::BASIS;
+//    using coeff_type = Coeff;
+//    using key_type = typename vector_type::KEY;
+//    using scalar_type = typename vector_type::SCALAR;
+//    using rational_type = typename vector_type::RATIONAL;
+//
+//    using fibre_basis_type = basis_type;
+//    using fibre_coeff_type = coeff_type;
+//    using fibre_key_type = key_type;
+//    using fibre_scalar_type = scalar_type;
+//    using fibre_rational_type = rational_type;
+//
+//    // Legacy declarations
+//    using BASIS = basis_type;
+//    using SCALAR = scalar_type;
+//    using RATIONAL = rational_type;
+//    using KEY = key_type;
+//    using coefficient_field = coeff_type;
+//
+//    using bundle_base::bundle_base;
+//
+//#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
+//    friend class boost::serialization::access;
+//
+//    template<typename Archive>
+//    void serialize(Archive& ar, unsigned int const /*version*/)
+//    {
+//        ar& boost::serialization::base_object<bundle_base>(*this);
+//    }
+//#endif
+//
+//    vector_bundle fmexp(const vector_bundle& arg) const
+//    {
+//        vector_bundle result(*this), x(arg);
+//        key_type kunit;
+//
+//        //        const auto& self = static_cast<const vector_type&>(*this);
+//
+//        auto unit_elt = x.find(kunit);
+//        if (unit_elt != x.end() && unit_elt->value() != coeff_type::zero) {
+//            x.erase(unit_elt);
+//        }
+//
+//        for (DEG i = Depth; i >= 1; --i) {
+//            result.mul_scal_div(x, rational_type(i), Depth - i + 1);
+//            result += *this;
+//        }
+//
+//        return result;
+//    }
+//
+//    vector_bundle fmexp(const vector_type& arg) const
+//    {
+//        vector_bundle result(*this);
+//        vector_type x(arg);
+//
+//        key_type kunit;
+//        auto unit_elt = x.find(kunit);
+//        if (unit_elt != x.end() && unit_elt->value() != coeff_type::zero) {
+//            x.erase(unit_elt);
+//        }
+//
+//        for (DEG i = Depth; i >= 1; --i) {
+//            result.mul_scal_div(x, rational_type(i), Depth - i + 1);
+//            result += *this;
+//        }
+//
+//        return result;
+//    }
+//
+//    vector_bundle& fmexp_inplace(const vector_bundle& arg)
+//    {
+//        vector_bundle self(*this), x(arg);
+//
+//        key_type kunit;
+//
+//        auto unit_elt = x.find(kunit);
+//        if (unit_elt != x.end() && unit_elt->value() != coeff_type::zero) {
+//            x.erase(unit_elt);
+//        }
+//
+//        for (DEG i = Depth; i >= 1; --i) {
+//            bundle_base::mul_scal_div(x, rational_type(i), Depth - i + 1);
+//            *this += self;
+//        }
+//
+//        return *this;
+//    }
+//
+//    vector_bundle& fmexp_inplace(const vector_type& arg)
+//    {
+//        vector_bundle self(*this);
+//        vector_type x(arg);
+//
+//        key_type kunit;
+//        auto unit_elt = x.find(kunit);
+//        if (unit_elt != x.end() && unit_elt->value() != coeff_type::zero) {
+//            x.erase(unit_elt);
+//        }
+//
+//        for (DEG i = Depth; i >= 1; --i) {
+//            bundle_base::mul_scal_div(x, rational_type(i), Depth - i + 1);
+//            *this += self;
+//        }
+//
+//        return *this;
+//    }
+//
+//    friend vector_bundle antipode(const vector_bundle& arg)
+//    {
+//        return {antipode(static_cast<const vector_type&>(arg)), antipode(arg.fibre())};
+//    }
+//};
 
 template<typename Coeffs, DEG Width, DEG Depth, template<typename, typename, typename...> class VectorType, typename... Args>
 using tensor_bundle = vector_bundle<free_tensor<Coeffs, Width, Depth, VectorType, Args...>>;
@@ -918,16 +918,16 @@ Derived& vector_bundle_base<Vector, Fibre, Derived>::mul_scal_div(const vector_t
 }
 
 }// namespace dtl
-
-namespace vectors {
-namespace dtl {
-
-template<typename Vector, typename Fibre>
-struct disable_vector_operations_definition<vector_bundle<Vector, Fibre>>
-    : std::true_type {};
-
-}// namespace dtl
-}// namespace vectors
+//
+//namespace vectors {
+//namespace dtl {
+//
+//template<typename Vector, typename Fibre>
+//struct disable_vector_operations_definition<vector_bundle<Vector, Fibre>>
+//    : std::true_type {};
+//
+//}// namespace dtl
+//}// namespace vectors
 
 }// namespace alg
 

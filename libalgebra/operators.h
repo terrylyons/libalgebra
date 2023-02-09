@@ -11,7 +11,7 @@
 #include "composition_operator.h"
 #include "scalar_multiply_operator.h"
 #include "sum_operator.h"
-#include "tangents.h"
+#include "vector_bundle.h"
 
 namespace alg {
 namespace operators {

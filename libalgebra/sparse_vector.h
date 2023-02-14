@@ -140,12 +140,12 @@ public:
             : m_iterator(it)
         {}
 
-        key_type key()
+        key_type key() const
         {
             return m_iterator->first;
         }
 
-        value_type value()
+        value_type value() const
         {
             return m_iterator->second;
         }
@@ -206,12 +206,12 @@ public:
         }
     */
 
-        key_type key()
+        key_type key() const
         {
             return m_iterator->first;
         }
 
-        value_type value()
+        value_type value() const
         {
             return m_iterator->second;
         }
@@ -611,11 +611,15 @@ public:
             const sparse_vector& rhs,
             F&& func)
     {
+        if (rhs.empty()) {
+            result = lhs;
+            return;
+        }
+
         result = lhs;
         apply_inplace_flat_binary_op(result, rhs, std::forward<F>(func));
     }
 
-public:
     template<typename F>
     static void apply_inplace_flat_binary_op(
             sparse_vector& lhs,
@@ -623,6 +627,12 @@ public:
             F&& func)
     {
         if (rhs.empty()) {
+            return;
+        }
+        if (&lhs == &rhs) {
+            sparse_vector tmp(lhs);
+            apply_inplace_flat_binary_op(tmp, rhs, std::forward<F>(func));
+            lhs.swap(tmp);
             return;
         }
 
@@ -638,11 +648,15 @@ public:
                 auto val = func(it->second, cit->second);
                 if (val != Coeffs::zero) {
                     it->second = val;
-                } else {
+                }
+                else {
                     lhs.erase(it);
                 }
             }
         }
+        //        sparse_vector tmp;
+        //        apply_flat_binary_operation(tmp, lhs, rhs, std::forward<F>(func));
+        //        lhs.swap(tmp);
     }
 
     /// Returns an instance of the additive inverse of the instance.

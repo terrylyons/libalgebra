@@ -20,7 +20,6 @@ Version 3. (See accompanying file License.txt)
 
 #include <iosfwd>
 #include <map>
-#include <boost/container/flat_map.hpp>
 
 namespace alg {
 
@@ -43,7 +42,7 @@ class poly_basis
 public:
     typedef alg::LET LET;
     /// A key is a map from letters to degrees (i.e. a monomial of letters).
-    typedef boost::container::flat_map<LET, DEG> KEY;
+    typedef std::map<LET, DEG> KEY;
     /// A default key corresponds to the monomial of degree 0.
     const KEY empty_key;
     /// The rationals.

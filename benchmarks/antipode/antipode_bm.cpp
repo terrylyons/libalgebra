@@ -148,54 +148,77 @@ static void BM_antipode(benchmark::State& state) {
 
 }
 
-BENCHMARK_TEMPLATE(BM_memcpy, 4, 4);
-BENCHMARK_TEMPLATE(BM_memcpy, 4, 5);
-BENCHMARK_TEMPLATE(BM_memcpy, 4, 6);
-BENCHMARK_TEMPLATE(BM_memcpy, 4, 7);
-BENCHMARK_TEMPLATE(BM_memcpy, 4, 8);
-BENCHMARK_TEMPLATE(BM_memcpy, 4, 9);
-BENCHMARK_TEMPLATE(BM_memcpy, 4, 10);
+//BENCHMARK_TEMPLATE(BM_memcpy, 4, 4);
+//BENCHMARK_TEMPLATE(BM_memcpy, 4, 5);
+//BENCHMARK_TEMPLATE(BM_memcpy, 4, 6);
+//BENCHMARK_TEMPLATE(BM_memcpy, 4, 7);
+//BENCHMARK_TEMPLATE(BM_memcpy, 4, 8);
+//BENCHMARK_TEMPLATE(BM_memcpy, 4, 9);
+//BENCHMARK_TEMPLATE(BM_memcpy, 4, 10);
 //BENCHMARK_TEMPLATE(BM_memcpy, 4, 11);
 //BENCHMARK_TEMPLATE(BM_memcpy, 4, 12);
 //BENCHMARK_TEMPLATE(BM_memcpy, 4, 13);
 //BENCHMARK_TEMPLATE(BM_memcpy, 4, 14);
 //BENCHMARK_TEMPLATE(BM_memcpy, 4, 15);
 
-BENCHMARK_TEMPLATE(BM_antipode, 4, 4, 1);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 5, 1);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 6, 1);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 7, 1);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 8, 1);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 9, 1);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 10, 1);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 4, 1);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 5, 1);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 6, 1);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 7, 1);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 8, 1);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 9, 1);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 10, 1);
 //BENCHMARK_TEMPLATE(BM_antipode, 4, 11, 1);
 //BENCHMARK_TEMPLATE(BM_antipode, 4, 12, 1);
 //BENCHMARK_TEMPLATE(BM_antipode, 4, 13, 1);
 //BENCHMARK_TEMPLATE(BM_antipode, 4, 14, 1);
 //BENCHMARK_TEMPLATE(BM_antipode, 4, 15, 1);
 
-BENCHMARK_TEMPLATE(BM_antipode, 4, 4, 2);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 5, 2);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 6, 2);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 7, 2);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 8, 2);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 9, 2);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 10, 2);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 4, 2);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 5, 2);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 6, 2);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 7, 2);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 8, 2);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 9, 2);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 10, 2);
 //BENCHMARK_TEMPLATE(BM_antipode, 4, 11, 2);
 //BENCHMARK_TEMPLATE(BM_antipode, 4, 12, 2);
 //BENCHMARK_TEMPLATE(BM_antipode, 4, 13, 2);
 //BENCHMARK_TEMPLATE(BM_antipode, 4, 14, 2);
 //BENCHMARK_TEMPLATE(BM_antipode, 4, 15, 2);
 
-BENCHMARK_TEMPLATE(BM_antipode, 4, 4, 3);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 5, 3);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 6, 3);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 7, 3);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 8, 3);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 9, 3);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 10, 3);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 4, 3);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 5, 3);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 6, 3);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 7, 3);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 8, 3);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 9, 3);
+//BENCHMARK_TEMPLATE(BM_antipode, 4, 10, 3);
 //BENCHMARK_TEMPLATE(BM_antipode, 4, 11, 3);
 //BENCHMARK_TEMPLATE(BM_antipode, 4, 12, 3);
 //BENCHMARK_TEMPLATE(BM_antipode, 4, 13, 3);
 //BENCHMARK_TEMPLATE(BM_antipode, 4, 14, 3);
 //BENCHMARK_TEMPLATE(BM_antipode, 4, 15, 3);
+
+//////////////////////
+
+// Size of Tile 16
+BENCHMARK_TEMPLATE(BM_antipode, 2, 5, 2);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 5, 1);
+
+// Size of Tile 64
+BENCHMARK_TEMPLATE(BM_antipode, 2, 5, 3);
+BENCHMARK_TEMPLATE(BM_antipode, 8, 5, 1);
+
+// Size of Tile 81
+BENCHMARK_TEMPLATE(BM_antipode, 3, 5, 2);
+BENCHMARK_TEMPLATE(BM_antipode, 9, 5, 1);
+
+// Size of Tile 256
+BENCHMARK_TEMPLATE(BM_antipode, 4, 5, 2);
+BENCHMARK_TEMPLATE(BM_antipode, 16, 5, 1);
+
+// Size of Tile 4096
+BENCHMARK_TEMPLATE(BM_antipode, 4, 5, 3);
+BENCHMARK_TEMPLATE(BM_antipode, 8, 5, 2);
+

@@ -204,21 +204,21 @@ static void BM_antipode(benchmark::State& state) {
 
 // Size of Tile 16
 BENCHMARK_TEMPLATE(BM_antipode, 2, 5, 2);
-BENCHMARK_TEMPLATE(BM_antipode, 4, 5, 1);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 3, 1);
 
 // Size of Tile 64
-BENCHMARK_TEMPLATE(BM_antipode, 2, 5, 3);
-BENCHMARK_TEMPLATE(BM_antipode, 8, 5, 1);
+BENCHMARK_TEMPLATE(BM_antipode, 2, 7, 3);
+BENCHMARK_TEMPLATE(BM_antipode, 8, 3, 1);
 
 // Size of Tile 81
 BENCHMARK_TEMPLATE(BM_antipode, 3, 5, 2);
-BENCHMARK_TEMPLATE(BM_antipode, 9, 5, 1);
+BENCHMARK_TEMPLATE(BM_antipode, 9, 3, 1);
 
 // Size of Tile 256
 BENCHMARK_TEMPLATE(BM_antipode, 4, 5, 2);
-BENCHMARK_TEMPLATE(BM_antipode, 16, 5, 1);
+BENCHMARK_TEMPLATE(BM_antipode, 16, 3, 1);
 
 // Size of Tile 4096
-BENCHMARK_TEMPLATE(BM_antipode, 4, 5, 3);
+BENCHMARK_TEMPLATE(BM_antipode, 4, 7, 3);
 BENCHMARK_TEMPLATE(BM_antipode, 8, 5, 2);
 

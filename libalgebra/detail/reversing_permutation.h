@@ -37,7 +37,7 @@ struct reversing_permutation {
         return (idx % factor) / Width;
     }
 
-    static size_type permute_idx(size_type idx)
+    static constexpr size_type permute_idx(size_type idx)
     {
         static_assert(Level - 2 > 0, "Level must be at least 3 in this specialisation");
         using next = reversing_permutation<Width, Level - 2>;

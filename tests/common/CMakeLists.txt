@@ -1,6 +1,6 @@
 
 
-add_library(libalgebra_tests_utilities STATIC EXCLUDE_FROM_ALL
+add_library(libalgebra_tests_utilities STATIC
         reporter.cpp
         memfile.cpp
         reporter.h
@@ -43,7 +43,9 @@ target_compile_options(libalgebra_tests_utilities PUBLIC
 add_library(la_unittests::utilities ALIAS libalgebra_tests_utilities)
 
 
-add_library(main STATIC EXCLUDE_FROM_ALL run_tests.cpp)
-target_link_libraries(main PUBLIC libalgebra_tests_utilities)
+add_library(main STATIC run_tests.cpp)
+target_link_libraries(main PUBLIC
+        UnitTest++
+        libalgebra_tests_utilities)
 
 add_library(la_unittests::main ALIAS main)

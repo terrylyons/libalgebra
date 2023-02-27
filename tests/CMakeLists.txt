@@ -36,14 +36,4 @@ if (LA_TESTING_INCLUDE_INTEGRATION)
 endif ()
 
 add_subdirectory(unit_tests)
-add_executable(all_tests common/run_tests.cpp)
-
-message(STATUS "${LIBALGEBRA_TEST_SUITE_LIBS}")
-
-target_link_libraries(all_tests PRIVATE
-        la_unittests::utilities
-        ${LIBALGEBRA_TEST_SUITE_LIBS}
-        )
-
-
-add_test(NAME "All_tests" COMMAND all_tests)
+#add_executable(all_tests common/run_tests.cpp)

@@ -20,7 +20,6 @@ Version 3. (See accompanying file License.txt)
 
 #include <iosfwd>
 #include <map>
-#include <boost/container/flat_map.hpp>
 
 namespace alg {
 

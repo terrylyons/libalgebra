@@ -67,8 +67,8 @@ class vector_iterator
 {
 public:
     typedef ValueType value_type;
-    typedef value_type& reference;
-    typedef value_type* pointer;
+    typedef const value_type& reference;
+    typedef const value_type* pointer;
     typedef std::ptrdiff_t difference_type;
     typedef std::forward_iterator_tag iterator_category;
 
@@ -118,12 +118,12 @@ public:
 public:
     // Iterator access
 
-    reference operator*()
+    reference operator*() const
     {
         return m_value;
     }
 
-    pointer operator->()
+    pointer operator->() const
     {
         return &m_value;
     }

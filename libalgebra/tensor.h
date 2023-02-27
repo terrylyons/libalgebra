@@ -7,14 +7,11 @@ Distributed under the terms of the GNU General Public License,
 Version 3. (See accompanying file License.txt)
 
 ************************************************************* */
-
 //  tensor.h
 
 // Include once wrapper
 #ifndef DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
 #define DJC_COROPA_LIBALGEBRA_TENSORH_SEEN
-
-//#include <omp.h>
 
 #include <algorithm>
 #include <unordered_set>
@@ -34,6 +31,7 @@ Version 3. (See accompanying file License.txt)
 #include "detail/integer_maths.h"
 #include "detail/level_walkers.h"
 #include "detail/reversing_permutation.h"
+
 #include "detail/unpacked_tensor_word.h"
 #include "detail/platform.h"
 #include "half_shuffle_tensor_basis.h"
@@ -41,7 +39,13 @@ Version 3. (See accompanying file License.txt)
 
 
 #define LA_RESTRICT __restrict
+
+#if BOOST_COMP_GNUC || BOOST_COMP_CLANG
 #define LA_INLINE_ALWAYS __attribute__((always_inline))
+#else
+#define LA_INLINE_ALWAYS
+#endif
+
 
 #define LA_ALIGNAS(BYTES) alignas(BYTES)
 #ifndef LA_CACHELINE_BYTES
@@ -54,8 +58,10 @@ Version 3. (See accompanying file License.txt)
 
 #define LA_DEFAULT_TILE_PARAM(WIDTH, SCALAR) ::alg::dtl::tensor_tile_letters_helper<WIDTH, LIBALGEBRA_L1_CACHE_SIZE / (2 * sizeof(SCALAR))>::num_letters
 
+
 // Define LIBALGEBRA_TM_UPDATE_REVERSE_INLINE to allow writing of reverse data during multiplication
 #define LIBALGEBRA_TM_UPDATE_REVERSE_INLINE
+
 
 namespace alg {
 
@@ -116,7 +122,9 @@ struct tensor_tile_letters_helper<Width, TargetSize, false> {
 };
 
 template<typename S, DIMN Size>
+
 struct data_tile {
+
     static_assert(Size > 0, "size must be non-zero");
     static constexpr DIMN size = Size;
     S* data;
@@ -135,8 +143,6 @@ struct data_tile {
     }
 };
 
-
-
 template<DEG Width, DEG Depth, IDEG TileLetters = 0>
 struct tile_details {
     static constexpr IDEG tile_letters = (TileLetters > 0) ? TileLetters : 1;
@@ -152,7 +158,6 @@ struct tile_details {
     static constexpr IDIMN tile_size = tile_width * tile_width;
     static constexpr IDIMN tile_shift = integer_maths::power(Width, tile_letters - 1);
 };
-
 
 template<DEG Width, DEG Depth, typename Coeffs, IDEG TileLetters>
 class central_tile_helper : public tile_details<Width, Depth, TileLetters>
@@ -390,7 +395,6 @@ public:
         std::fill(tile.data, tile.data + tile_info::tile_size, Coeffs::zero);
     }
 };
-
 
 
 template<DEG Width, DEG Depth, typename Coeffs, IDEG TileLetters>
@@ -748,7 +752,9 @@ public:
     }
 };
 
+
 template<DEG Width, DEG Depth, typename Coeffs, IDEG TileLetters, IDEG WriteCacheLetters>
+
 class tiled_free_tensor_multiplication_helper
     : public free_tensor_multiplication_helper<Width, Depth, Coeffs>,
       public central_tile_helper<Width, Depth, Coeffs, TileLetters>
@@ -772,8 +778,10 @@ private:
 
     using basis_type = tensor_basis<Width, Depth>;
 
+
     std::vector<const_pointer> m_lhs_rev_levels;
     std::vector<pointer> m_out_rev_levels;
+
     //    std::vector<scalar_type> left_read_tile;
     dtl::data_tile<scalar_type, tile_info::tile_width> left_read_tile;
     //    std::vector<scalar_type> right_read_tile;
@@ -913,6 +921,7 @@ private:
         }
     }
 
+
     void setup_reverse_levels()
     {
         m_lhs_rev_levels.reserve(base::lhs_deg);
@@ -1046,6 +1055,7 @@ public:
 
 private:
 
+
     template <index_type Count>
     LA_INLINE_ALWAYS static inline void read_tile(pointer __restrict tptr, const_pointer __restrict src)
     {
@@ -1062,6 +1072,7 @@ private:
 
         for (index_type i=0; i < Count; ++i) {
             tptr[i] = src[i];
+
         }
 
 //        if (Count < tile_width) {
@@ -1070,6 +1081,7 @@ private:
             }
 //        }
     }
+
 
     LA_INLINE_ALWAYS
     static inline void read_tile(pointer __restrict tptr, const_pointer __restrict src, index_type count)
@@ -1170,6 +1182,7 @@ public:
         }
 #endif
     }
+
 
 
 
@@ -1347,6 +1360,7 @@ public:
         const auto shift = static_cast<IDIMN>(tsi::powers[right_deg]);
         return left * shift + right;
     }
+
 
     const_pointer left_fwd_read_ptr(IDEG degree, IDIMN index, IDIMN subtile_i) const noexcept
     {
@@ -1629,6 +1643,7 @@ public:
 };
 
 template<DEG Width, DEG Depth, IDEG TileLetters, IDEG WriteCacheLetters>
+
 class tiled_free_tensor_multiplication
     : public traditional_free_tensor_multiplication<Width, Depth>
 {
@@ -1639,6 +1654,7 @@ class tiled_free_tensor_multiplication
     template<typename C>
     using helper_type = dtl::tiled_free_tensor_multiplication_helper<
             Width, Depth, C, TileLetters == 0 ? LA_DEFAULT_TILE_PARAM(Width, typename C::S) : TileLetters, WriteCacheLetters>;
+
 
     using tsi = dtl::tensor_size_info<Width>;
 
@@ -1651,10 +1667,12 @@ class tiled_free_tensor_multiplication
     template<typename C>
     using const_reference = const typename C::S&;
 
+
 public:
     using index_type = std::ptrdiff_t;
 
 private:
+
     template<typename C, typename Fn>
     LA_INLINE_ALWAYS static void linear_fwd_zipped_mul(pointer<C> out_p,
                                                        const_pointer<C> lsrc,
@@ -1909,6 +1927,7 @@ protected:
         pointer<Coeffs> tptr = helper.out_tile_ptr();
         const_pointer<Coeffs> lptr = helper.left_read_tile_ptr();
 
+
         const_reference<Coeffs> runit = helper.right_unit();
 
         for (index_type i = 0; i < ibound; ++i, lsrc += stride) {
@@ -1917,6 +1936,7 @@ protected:
             for (index_type j = 0; j < jbound; ++j) {
                 tptr[i * tile_width + j] += op(lptr[j] * runit);
             }
+
         }
     }
 
@@ -1935,6 +1955,7 @@ protected:
 
         const_reference<Coeffs> lunit = helper.left_unit();
 
+
         for (index_type i = 0; i < ibound; ++i, rsrc += stride) {
             helper.read_right_tile(rsrc, jbound);
 
@@ -1942,6 +1963,7 @@ protected:
                 tptr[i * tile_width + j] += op(lunit * rptr[j]);
             }
         }
+
     }
 
 private:
@@ -2191,6 +2213,7 @@ public:
 //            impl_1br<Coeffs>(tptr, lptr, rptr, j2bound, op);
 //            tptr += j2bound;
 //        }
+
     }
 
     template<typename Coeffs, typename Fn>
@@ -2210,6 +2233,7 @@ public:
 
         for (IDIMN j = 0; j < tile_width; ++j) {
             const auto split = helper.split_key(rhs_deg, j);
+
             const auto& right_val = *helper.right_fwd_read(rhs_deg, split.second);
             const auto lhs_key = helper.combine_keys(split_left_letters, k, split.first);
 
@@ -2250,6 +2274,7 @@ public:
 
             auto lhs_deg_min = std::max(IDEG(1), out_deg - rhs_max_deg);
             auto lhs_deg_max = std::min(out_deg - 1, old_lhs_deg);
+
             word.reset(mid_deg);
 
             for (IDIMN k = 0; k < static_cast<IDIMN>(tsi::powers[mid_deg]); ++k, ++word) {
@@ -2266,6 +2291,7 @@ public:
 //                        _mm_prefetch(helper.out_tile_ptr(), _MM_HINT_T0);
 //                        _mm_prefetch(helper.left_read_tile_ptr(), _MM_HINT_T0);
 //                        _mm_prefetch(helper.right_read_tile_ptr(), _MM_HINT_T0);
+
                         helper.reset_tile(out_deg, k, k_reverse, subtile_i, subtile_j);
 
                         // Setup read pointers
@@ -2331,6 +2357,7 @@ public:
                 }    // subtile_i
             }        // k
             assert(helper.cache_empty());
+
         }            // out_deg
     }
 
@@ -2407,7 +2434,6 @@ public:
         }
     }
 };
-
 
 template<DEG Width, DEG Depth>
 class left_half_shuffle_multiplier
@@ -2645,6 +2671,8 @@ public:
 
 public:
     using base::base;
+
+    free_tensor() : base() {}
 
     explicit free_tensor(typename boost::call_traits<scalar_type>::param_type s)
         : base(key_type{}, s)
@@ -3075,13 +3103,13 @@ public:
         return static_cast<DIMN>(m_ptr - p_vector->as_ptr());
     }
 
-    key_type key()
+    key_type key() const
     {
         assert(index() < p_vector->dimension());
         return basis_type::index_to_key(index());
     }
 
-    reference value()
+    reference value() const
     {
         return *m_ptr;
     }
@@ -3142,13 +3170,13 @@ public:
         return static_cast<DIMN>(m_ptr - p_vector->as_mut_ptr());
     }
 
-    key_type key()
+    key_type key() const
     {
         assert(index() < p_vector->dimension());
         return basis_type::index_to_key(index());
     }
 
-    reference value()
+    reference value() const
     {
         return *m_ptr;
     }

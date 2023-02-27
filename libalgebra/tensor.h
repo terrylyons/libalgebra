@@ -1872,15 +1872,15 @@ protected:
 //        BOOST_ALIGN_ASSUME_ALIGNED(lptr, LA_CACHELINE_BYTES);
 //        BOOST_ALIGN_ASSUME_ALIGNED(rptr, LA_CACHELINE_BYTES);
 
-        for (index_type i = 0; i < tile_width; ++i) {
+        for (index_type i = 0; i < ibound; ++i) {
             LA_PREFETCH_T1(lsrc+(i+1)*stride);
             LA_PREFETCH_T1(rsrc+(i+1)*stride);
-            helper.template read_left_tile<tile_width>(lsrc + i*stride);
+            helper.read_left_tile(lsrc + i*stride, jbound);
 //            for (index_type j=0; j<jbound; ++j) {
 //                tptr[i*tile_width + j] += op(lptr[j] * runit);
 //            }
 
-            helper.template read_right_tile<tile_width>(rsrc + i*stride);
+            helper.read_right_tile(rsrc + i*stride, jbound);
 //            for (index_type j=0; j<jbound; ++j) {
 //                tptr[i*tile_width + j] += op(lunit*rptr[j]);
 //            }
@@ -1980,9 +1980,9 @@ private:
 
                 for (index_type i2 = 0; i2 < remainder_bound; ++i2) {
                     //            helper.read_right_tile(rhs_read + i2*key_offset);
-                    helper.template read_right_tile<helper_t::tile_width>(rhs_read);
-                    rhs_read = helper.right_fwd_read_ptr(rhs_deg, (i2+1)*key_offset + k, 0);
-                    LA_PREFETCH_T1(rhs_read);
+                    helper.template read_right_tile<helper_t::tile_width>(rhs_read + i2*key_offset*helper_t::tile_stride);
+//                    rhs_read = helper.right_fwd_read_ptr(rhs_deg, (i2+1)*key_offset + k, 0);
+                    LA_PREFETCH_T1(rhs_read + (i2+1)*key_offset);
 //                    helper.read_right_tile(reads[i2]);
 //                    impl_lb1<Coeffs>(tptr + i2*helper_type<Coeffs>::tile_width, lptr, rptr, small_bound, remainder_bound, op);
                     impl_lb1<Coeffs, small_bound, remainder_bound>(tptr + i2 * helper_t::tile_width, lptr, rptr, op);

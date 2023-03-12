@@ -117,6 +117,7 @@ add_custom_target(Libalgebra_headers SOURCES
         libalgebra/half_shuffle_tensor_basis.h
         libalgebra/half_shuffle_tensor_multiplication.h
         libalgebra/vector_bundle.h
+        libalgebra/detail/reversing_permutation.h
         )
 
 
@@ -220,4 +221,8 @@ endif ()
 if (LIBALGEBRA_TESTING)
     enable_testing()
     add_subdirectory(tests)
+endif ()
+
+if (LIBALGEBRA_BENCHMARKING)
+    add_subdirectory(benchmarks)
 endif ()

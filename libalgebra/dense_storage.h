@@ -236,7 +236,7 @@ public:
     dense_storage(dense_storage const& other)
         : m_base(other.size())
     {
-        if (other.size() > 0) {
+        if (other.size() > 0 && other.begin() != other.end()) {
             assert(other.begin() != nullptr && other.end() != nullptr);
             std::uninitialized_copy(other.begin(), other.end(), m_base.m_data);
         }

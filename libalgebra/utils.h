@@ -148,7 +148,7 @@ public:
     template <typename InputLie>
     vector_bundle<Tensor> l2t(const vector_bundle<InputLie>& arg)
     {
-        return {l2t(static_cast<const InputLie&>(arg)), l2t(arg.fibre())};
+        return {l2t(arg.base()), l2t(arg.fibre())};
     }
 
     /// Convert lie to tensor
@@ -191,7 +191,7 @@ public:
     template <typename InputTensor>
     vector_bundle<Lie> t2l(const vector_bundle<InputTensor>& arg)
     {
-        return {t2l(static_cast<const InputTensor&>(arg)), t2l(arg.fibre())};
+        return {t2l(arg.base()), t2l(arg.fibre())};
     }
 
     /**

@@ -161,10 +161,10 @@ struct TangentsFixture
         const auto tt = random_tangent_tensor();
 
         auto result = -tt;
-        auto expected_tensor = -static_cast<const tensor_t&>(tt);
+        auto expected_tensor = -tt.base();
         auto expected_tangent = -tt.fibre();
 
-        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected_tensor, result.base());
         CHECK_EQUAL(expected_tangent, result.fibre());
     }
 
@@ -174,10 +174,10 @@ struct TangentsFixture
         const auto tt2 = random_tangent_tensor();
 
         auto result = tt1 + tt2;
-        auto expected_tensor = static_cast<const tensor_t&>(tt1) + static_cast<const tensor_t&>(tt2);
+        auto expected_tensor = tt1.base() + tt2.base();
         auto expected_tangent = tt1.fibre() + tt2.fibre();
 
-        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected_tensor, result.base());
         CHECK_EQUAL(expected_tangent, result.fibre());
     }
 
@@ -187,10 +187,10 @@ struct TangentsFixture
         const auto t = random_tensor();
 
         auto result = tt + t;
-        auto expected_tensor = static_cast<const tensor_t&>(tt) + t;
+        auto expected_tensor = tt.base() + t;
         auto expected_tangent = tt.fibre();
 
-        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected_tensor, result.base());
         CHECK_EQUAL(expected_tangent, result.fibre());
     }
 
@@ -200,10 +200,10 @@ struct TangentsFixture
         const auto tt = random_tangent_tensor();
 
         auto result = t + tt;
-        auto expected_tensor = t + static_cast<const tensor_t&>(tt);
+        auto expected_tensor = t + tt.base();
         auto expected_tangent = tt.fibre();
 
-        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected_tensor, result.base());
         CHECK_EQUAL(expected_tangent, result.fibre());
     }
 
@@ -213,10 +213,10 @@ struct TangentsFixture
         const auto tt2 = random_tangent_tensor();
 
         auto result = tt1 - tt2;
-        auto expected_tensor = static_cast<const tensor_t&>(tt1) - static_cast<const tensor_t&>(tt2);
+        auto expected_tensor = tt1.base() - tt2.base();
         auto expected_tangent = tt1.fibre() - tt2.fibre();
 
-        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected_tensor, result.base());
         CHECK_EQUAL(expected_tangent, result.fibre());
     }
 
@@ -226,10 +226,10 @@ struct TangentsFixture
         const auto t = random_tensor();
 
         auto result = tt + t;
-        auto expected_tensor = static_cast<const tensor_t&>(tt) + t;
+        auto expected_tensor = tt.base() + t;
         auto expected_tangent = tt.fibre();
 
-        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected_tensor, result.base());
         CHECK_EQUAL(expected_tangent, result.fibre());
     }
 
@@ -238,15 +238,15 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
         const auto tt1 = random_tangent_tensor();
         const auto tt2 = random_tangent_tensor();
 
-        const auto& rt1 = static_cast<const tensor_t&>(tt1);
-        const auto& rt2 = static_cast<const tensor_t&>(tt2);
+        const auto& rt1 = tt1.base();
+        const auto& rt2 = tt2.base();
 
         auto result = tt1*tt2;
 
         auto expected_tensor = rt1*rt2;
         auto expected_tangent = rt1* tt2.fibre() + tt1.fibre()*rt2;
 
-        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected_tensor, result.base());
         CHECK_EQUAL(expected_tangent, result.fibre());
     }
 
@@ -255,14 +255,14 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
         const auto tt = random_tangent_tensor();
         const auto t = random_tensor();
 
-        const auto& rt = static_cast<const tensor_t&>(tt);
+        const auto& rt = tt.base();
 
         auto result = tt * t;
 
         auto expected_tensor = rt * t;
         auto expected_tangent = tt.fibre() * t;
 
-        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected_tensor, result.base());
         CHECK_EQUAL(expected_tangent, result.fibre());
     }
 
@@ -271,14 +271,14 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
         const auto t = random_tensor();
         const auto tt = random_tangent_tensor();
 
-        const auto& rt = static_cast<const tensor_t&>(tt);
+        const auto& rt = tt.base();
 
         auto result = t * tt;
 
         auto expected_tensor = t * rt;
         auto expected_tangent = t * tt.fibre();
 
-        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected_tensor, result.base());
         CHECK_EQUAL(expected_tangent, result.fibre());
     }
 
@@ -287,15 +287,15 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
         auto tt1 = random_tangent_tensor();
         const auto tt2 = random_tangent_tensor();
 
-        const auto& rt1 = static_cast<const tensor_t&>(tt1);
-        const auto& rt2 = static_cast<const tensor_t&>(tt2);
+        const auto& rt1 = tt1.base();
+        const auto& rt2 = tt2.base();
 
         auto expected_tensor = rt1*rt2;
         auto expected_tangent = rt1* tt2.fibre() + tt1.fibre()*rt2;
 
         tt1 *= tt2;
 
-        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(tt1));
+        CHECK_EQUAL(expected_tensor, tt1.base());
         CHECK_EQUAL(expected_tangent, tt1.fibre());
     }
 
@@ -304,14 +304,14 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
         auto tt = random_tangent_tensor();
         auto t = random_tensor();
 
-        const auto& rt = static_cast<const tensor_t&>(tt);
+        const auto& rt = tt.base();
 
         auto expected_tensor = rt * t;
         auto expected_tangent = tt.fibre()*t;
 
         tt *= t;
 
-        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(tt));
+        CHECK_EQUAL(expected_tensor, tt.base());
         CHECK_EQUAL(expected_tangent, tt.fibre());
     }
 
@@ -324,7 +324,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
         auto expected = tt1 + (tt2 * rs);
         auto result = tt1.add_scal_prod(tt2, rs);
 
-        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.base(), result.base());
         CHECK_EQUAL(expected.fibre(), result.fibre());
     }
 
@@ -338,7 +338,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
         auto expected = tt1 + (t2 * rs);
         auto result = tt1.add_scal_prod(t2, rs);
 
-        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.base(), result.base());
         CHECK_EQUAL(expected.fibre(), result.fibre());
     }
 
@@ -352,7 +352,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
         auto expected = tt1 - (tt2 * rs);
         auto result = tt1.sub_scal_prod(tt2, rs);
 
-        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.base(), result.base());
         CHECK_EQUAL(expected.fibre(), result.fibre());
     }
 
@@ -366,7 +366,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
         auto expected = tt1 - (t2 * rs);
         auto result = tt1.sub_scal_prod(t2, rs);
 
-        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.base(), result.base());
         CHECK_EQUAL(expected.fibre(), result.fibre());
     }
 
@@ -379,7 +379,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
         auto expected = tt1 + (tt2 / rs);
         auto result = tt1.add_scal_div(tt2, rs);
 
-        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.base(), result.base());
         CHECK_EQUAL(expected.fibre(), result.fibre());
     }
 
@@ -393,7 +393,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
         auto expected = tt1 + (t2 / rs);
         auto result = tt1.add_scal_div(t2, rs);
 
-        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.base(), result.base());
         CHECK_EQUAL(expected.fibre(), result.fibre());
     }
 
@@ -406,7 +406,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
         auto expected = tt1 - (tt2 / rs);
         auto result = tt1.sub_scal_div(tt2, rs);
 
-        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.base(), result.base());
         CHECK_EQUAL(expected.fibre(), result.fibre());
     }
 
@@ -420,7 +420,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
         auto expected = tt1 - (t2 / rs);
         auto result = tt1.sub_scal_div(t2, rs);
 
-        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.base(), result.base());
         CHECK_EQUAL(expected.fibre(), result.fibre());
     }
 
@@ -433,7 +433,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
         auto expected = tt1 * (tt2 * rs);
         auto result = tt1.mul_scal_prod(tt2, rs);
 
-        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.base(), result.base());
         CHECK_EQUAL(expected.fibre(), result.fibre());
     }
 
@@ -445,7 +445,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
         auto expected = tt1 * (t2 * rs);
         auto result = tt1.mul_scal_prod(t2, rs);
 
-        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.base(), result.base());
         CHECK_EQUAL(expected.fibre(), result.fibre());
     }
 
@@ -457,7 +457,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
         auto expected = tt1 * (tt2 / rs);
         auto result = tt1.mul_scal_div(tt2, rs);
 
-        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.base(), result.base());
         CHECK_EQUAL(expected.fibre(), result.fibre());
     }
 
@@ -469,7 +469,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
         auto expected = tt1 * (t2 / rs);
         auto result = tt1.mul_scal_div(t2, rs);
 
-        CHECK_EQUAL(static_cast<const tensor_t&>(expected), static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected.base(), result.base());
         CHECK_EQUAL(expected.fibre(), result.fibre());
     }
 
@@ -478,7 +478,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
     {
         const auto tt = random_tangent_tensor();
 
-        const auto& rt = static_cast<const tensor_t&>(tt);
+        const auto& rt = tt.base();
         const auto& rtan = tt.fibre();
 
         typename tensor_t::KEY kunit;
@@ -500,7 +500,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
 
         auto result = exp(tt);
 
-        CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+        CHECK_EQUAL(expected_tensor, result.base());
         CHECK_EQUAL(expected_tangent, result.fibre());
     }
 //
@@ -508,7 +508,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
 //
 //        const auto tt = random_tangent_tensor();
 //
-//        const auto& rt = static_cast<const tensor_t&>(tt);
+//        const auto& rt = tt.base();
 //        const auto& rtan = tt.fibre();
 //
 //        auto ad_X_k = [&](DEG k) {
@@ -537,7 +537,7 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
 //
 //    auto result = exp(tt);
 //
-//    CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+//    CHECK_EQUAL(expected_tensor, result.base());
 //    CHECK_EQUAL(expected_tangent, result.fibre());
 //}
 
@@ -546,7 +546,7 @@ TEST_FIXTURE(TangentsFixture, tensor_exp_sanity_test) {
 
     const auto tt = random_tangent_tensor();
 
-    const auto& rt = static_cast<const tensor_t&>(tt);
+    const auto& rt = tt.base();
     const auto& rtan = tt.fibre();
 
     typename tensor_t::KEY kunit;
@@ -554,7 +554,7 @@ TEST_FIXTURE(TangentsFixture, tensor_exp_sanity_test) {
     auto expected = tunit;
     for (DEG i=DEPTH; i>=1; --i) {
         expected.mul_scal_div(tt, typename tensor_t::RATIONAL(i));
-        expected += tunit;
+        expected += tunit.base();
     }
 
     auto result = exp(tt);
@@ -571,10 +571,10 @@ TEST_FIXTURE(TangentsFixture, test_lie_to_tensor) {
 
     auto result = maps.l2t(lt);
 
-    auto expected_tensor = maps.l2t(static_cast<const lie_t&>(lt));
+    auto expected_tensor = maps.l2t(lt.base());
     auto expected_tangent = maps.l2t(lt.fibre());
 
-    CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+    CHECK_EQUAL(expected_tensor, result.base());
     CHECK_EQUAL(expected_tangent, result.fibre());
 }
 
@@ -586,10 +586,10 @@ TEST_FIXTURE(TangentsFixture, test_tensor_to_lie_roundtrip) {
 
     auto result = maps.t2l(tt);
 
-    auto expected_lie = maps.t2l(static_cast<const tensor_t&>(tt));
+    auto expected_lie = maps.t2l(tt.base());
     auto expected_tangent = maps.t2l(tt.fibre());
 
-    CHECK_EQUAL(expected_lie, static_cast<const lie_t&>(result));
+    CHECK_EQUAL(expected_lie, result.base());
     CHECK_EQUAL(expected_tangent, result.fibre());
 }
 
@@ -600,7 +600,8 @@ TEST_FIXTURE(TangentsFixture, test_tensor_fmexp) {
 
     auto result = tt1.fmexp(tt2);
 
-    tensor_t x(tt2), x_tan(tt2.fibre());
+    tensor_t x(tt2.base());
+    tensor_t x_tan(tt2.fibre());
     typename tensor_t::KEY kunit;
 
     auto unit_elt = x.find(kunit);
@@ -608,7 +609,7 @@ TEST_FIXTURE(TangentsFixture, test_tensor_fmexp) {
         x.erase(unit_elt);
     }
 
-    const auto& self = static_cast<const tensor_t&>(tt1);
+    const auto& self = tt1.base();
     const auto& self_tan = tt1.fibre();
     tensor_t expected_tensor(self), expected_tangent(self_tan);
     for (DEG k=DEPTH; k>=1; --k) {
@@ -621,7 +622,7 @@ TEST_FIXTURE(TangentsFixture, test_tensor_fmexp) {
     }
 
 
-    CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+    CHECK_EQUAL(expected_tensor, result.base());
     CHECK_EQUAL(expected_tangent, result.fibre());
 }
 
@@ -641,7 +642,7 @@ TEST_FIXTURE(TangentsFixture, test_fmexp_tensor) {
         x.erase(unit_elt);
     }
 
-    const auto& self = static_cast<const tensor_t&>(tt1);
+    const auto& self = tt1.base();
     const auto& self_tan = tt1.fibre();
     tensor_t expected_tensor(self), expected_tangent(self_tan);
     for (DEG k = DEPTH; k >= 1; --k) {
@@ -653,7 +654,7 @@ TEST_FIXTURE(TangentsFixture, test_fmexp_tensor) {
         expected_tensor += self;
     }
 
-    CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+    CHECK_EQUAL(expected_tensor, result.base());
     CHECK_EQUAL(expected_tangent, result.fibre());
 }
 
@@ -666,10 +667,10 @@ TEST_FIXTURE(TangentsFixture, test_tensor_fmexp_inplace)
     result.fmexp_inplace(tt2);
 
     auto expected = tt1.fmexp(tt2);
-    const auto& expected_tensor = static_cast<const tensor_t&>(expected);
+    const auto& expected_tensor = expected.base();
     const auto& expected_tangent = expected.fibre();
 
-    CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+    CHECK_EQUAL(expected_tensor, result.base());
     CHECK_EQUAL(expected_tangent, result.fibre());
 }
 
@@ -684,10 +685,10 @@ TEST_FIXTURE(TangentsFixture, test_fmexp_inplace_tensor)
     result.fmexp_inplace(t2);
 
     auto expected = tt1.fmexp(t2);
-    const auto& expected_tensor = static_cast<const tensor_t &>(expected);
+    const auto& expected_tensor = expected.base();
     const auto& expected_tangent = expected.fibre();
 
-    CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+    CHECK_EQUAL(expected_tensor, result.base());
     CHECK_EQUAL(expected_tangent, result.fibre());
 }
 
@@ -700,9 +701,9 @@ TEST_FIXTURE(TangentsFixture, test_log) {
 
     auto x = tt;
     typename tensor_t::KEY kunit;
-    auto unit_elt = x.find(kunit);
-    if (unit_elt != x.end() && unit_elt->value() != scalar_type(0)) {
-        x.erase(unit_elt);
+    auto unit_elt = x.base().find(kunit);
+    if (unit_elt != x.base().end() && unit_elt->value() != scalar_type(0)) {
+        x.base().erase(unit_elt);
     }
 
     tensor_t tunit(kunit);
@@ -718,11 +719,11 @@ TEST_FIXTURE(TangentsFixture, test_log) {
             expected_tensor.add_scal_div(tunit, divisor);
             expected_tangent.add_scal_div(tunit, divisor);
         }
-        expected_tangent = expected_tensor * (x.fibre()) + expected_tangent * (static_cast<const tensor_t&>(x));
-        expected_tensor *= x;
+        expected_tangent = expected_tensor * (x.fibre()) + expected_tangent * (x.base());
+        expected_tensor *= x.base();
     }
 
-    CHECK_EQUAL(expected_tensor, static_cast<const tensor_t&>(result));
+    CHECK_EQUAL(expected_tensor, result.base());
     CHECK_EQUAL(expected_tangent, result.fibre());
 
 

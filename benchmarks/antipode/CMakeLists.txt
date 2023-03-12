@@ -8,8 +8,6 @@ target_link_libraries(antipode_bm PUBLIC Libalgebra::Libalgebra)
 target_compile_options(antipode_bm PRIVATE
         -fno-omit-frame-pointer
         -g -pg
-        -fopt-info
-        -ftree-vectorizer-verbose=2
         -march=native)
 #endif()
 

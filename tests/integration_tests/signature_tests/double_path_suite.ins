@@ -1,0 +1,54 @@
+
+
+struct double_fixture : Fixture
+{
+
+
+    typedef Fixture::double_field field;
+    typedef Fixture::double_sparse_framework sparse_framework;
+    typedef Fixture::double_dense_framework dense_framework;
+    typedef Fixture::double_hybrid_framework hybrid_framework;
+
+    double expected_error;
+
+    double_fixture() : Fixture(), expected_error(expected_double_error)
+    {}
+
+    typename sparse_framework::TENSOR sparse_signature(size_t start=0, size_t end=-1) const
+    {
+        return path.template signature<sparse_framework>(start, end);
+    }
+
+    typename dense_framework::TENSOR dense_signature(size_t start=0, size_t end=-1) const
+    {
+        return path.template signature<dense_framework>(start, end);
+    }
+
+    typename hybrid_framework::TENSOR hybrid_signature(size_t start=0, size_t end=-1) const
+    {
+        return path.template signature<hybrid_framework>(start, end);
+    }
+
+    typename sparse_framework::LIE sparse_log_signature(size_t start=0, size_t end=-1) const
+    {
+        return path.template log_signature<sparse_framework>(start, end);
+    }
+
+    typename dense_framework::LIE dense_log_signature(size_t start=0, size_t end=-1) const
+    {
+        return path.template log_signature<dense_framework>(start, end);
+    }
+
+    typename hybrid_framework::LIE hybrid_log_signature(size_t start=0, size_t end=-1) const
+    {
+        return path.template log_signature<hybrid_framework>(start, end);
+    }
+
+
+};
+
+#define COEFFICIENT_TEST(NAME) TEST_FIXTURE(double_fixture, NAME ## _double)
+
+#include "coefficient_path_suite.ins"
+
+#undef COEFFICIENT_TEST

@@ -554,7 +554,7 @@ TEST_FIXTURE(TangentsFixture, tensor_exp_sanity_test) {
     auto expected = tunit;
     for (DEG i=DEPTH; i>=1; --i) {
         expected.mul_scal_div(tt, typename tensor_t::RATIONAL(i));
-        expected += tunit.base();
+        expected += tunit;
     }
 
     auto result = exp(tt);

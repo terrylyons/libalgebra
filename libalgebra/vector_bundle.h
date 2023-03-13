@@ -358,7 +358,7 @@ public:
         }
 
         for (DEG i = Depth; i >= 1; --i) {
-            this->base().mul_scal_div(x, rational_type(i), Depth - i + 1);
+            bundle_base::mul_scal_div(x, rational_type(i), Depth - i + 1);
             *this += self;
         }
 

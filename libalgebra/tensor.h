@@ -2684,19 +2684,22 @@ public:
     {}
 
     /// Computes the truncated exponential of a free_tensor instance.
-    friend free_tensor exp(const free_tensor& arg)
+
+    template <typename Tensor>
+    inline friend typename std::enable_if<std::is_base_of<free_tensor, Tensor>::value, Tensor>::type
+     exp(const Tensor& arg)
     {
         // Computes the truncated exponential of arg
         // 1 + arg + arg^2/2! + ... + arg^n/n! where n = max_degree
         KEY kunit;
-        free_tensor result(kunit);
+        Tensor tunit(kunit);
+        Tensor result(tunit);
 
         resize_for_degree(result, max_degree);
 
-        free_tensor unit(kunit);
         for (DEG i = max_degree; i >= 1; --i) {
             result.mul_scal_div(arg, typename Coeff::Q(i));
-            result += unit;
+            result += tunit;
         }
         return result;
     }
@@ -2780,7 +2783,9 @@ public:
     }
 
     /// Computes the truncated logarithm of a free_tensor instance.
-    friend free_tensor log(const free_tensor& arg)
+    template <typename Tensor>
+    inline friend typename std::enable_if<std::is_base_of<free_tensor, Tensor>::value, Tensor>::type
+    log(const Tensor& arg)
     {
         // Computes the truncated log of arg up to degree max_degree
         // The coef. of the constant term (empty word in the monoid) of arg
@@ -2789,13 +2794,13 @@ public:
         // max_degree must be > 0
 
         KEY kunit;
-        free_tensor tunit(kunit);
-        free_tensor x(arg);
-        auto it = x.find(kunit);
+        Tensor tunit(kunit);
+        Tensor x(arg);
+        iterator it = x.find(kunit);
         if (it != x.end()) {
             x.erase(it);
         }
-        free_tensor result;
+        Tensor result;
 
         for (DEG i = max_degree; i >= 1; --i) {
             if (i % 2 == 0) {
@@ -2811,8 +2816,9 @@ public:
     }
 
     /// Computes the truncated inverse of a free_tensor instance.
-    friend free_tensor
-    inverse(const free_tensor& arg)
+    template<typename Tensor>
+    friend typename std::enable_if<std::is_base_of<free_tensor, Tensor>::value, Tensor>::type
+    inverse(const Tensor& arg)
     {
         // Computes the truncated inverse of arg up to degree max_degree
         // An exception is thrown if the leading term is zero.
@@ -2824,8 +2830,8 @@ public:
         // max_degree must be > 0
 
         KEY kunit;
-        scalar_type a(0);
-        free_tensor x, z(a);
+        SCA a(0);
+        Tensor x, z(a);
 
         auto it(arg.find(kunit));
         if (it == arg.end()) {
@@ -2841,9 +2847,7 @@ public:
         // S_n = a + z S_{ n - 1 }; z = -x / a; S_0 = a
         //
         //  the nonzero scalar component a of the tensor arg restored to a tensor
-        free_tensor free_tensor_a_inverse(scalar_type(1) / a), result(free_tensor_a_inverse);
-        resize_for_degree(result, max_degree);
-
+        Tensor free_tensor_a_inverse(SCA(1) / a), result(free_tensor_a_inverse);
         // z := - x/a
         z.sub_scal_div(x, a);
         // the iteration

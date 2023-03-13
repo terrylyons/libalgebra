@@ -702,7 +702,7 @@ public:
             const dense_vector& arg,
             F&& func)
     {
-        result.reserve_to_dimension(arg.m_dimension);
+    result.reserve_to_dimension(arg.m_dimension);
         for (DIMN i=0; i<arg.m_dimension; ++i) {
             result.m_data.emplace(i, func(arg.m_data[i]));
         }

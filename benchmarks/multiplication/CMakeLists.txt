@@ -15,14 +15,14 @@ target_compile_options(multiplication_bm PRIVATE
         )
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "IntelLLVM")
-    target_compile_options(multiplication_bm PRIVATE
-            -qopt-report-stdout
-            -qopt-report=max)
+#    target_compile_options(multiplication_bm PRIVATE
+#            -qopt-report-stdout
+#            -qopt-report=max)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    target_compile_options(multiplication_bm PRIVATE
-            -fopt-info
+#    target_compile_options(multiplication_bm PRIVATE
+#            -fopt-info
 #            -fno-tree-loop-distribute-patterns
-            -ftree-vectorizer-verbose=2)
+#            -ftree-vectorizer-verbose=2)
 endif()
 
 

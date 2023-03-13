@@ -236,7 +236,7 @@ public:
     dense_storage(dense_storage const& other)
         : m_base(other.size())
     {
-        if (other.size() > 0 && other.begin() != other.end()) {
+        if (m_base.m_data != nullptr) {
             assert(other.begin() != nullptr && other.end() != nullptr);
             std::uninitialized_copy(other.begin(), other.end(), m_base.m_data);
         }
@@ -442,6 +442,11 @@ private:
 
     void resize_owned(size_type sz)
     {
+        if (sz == 0) {
+            m_base = base_type();
+            return;
+        }
+
         assert(m_base.is_owned());
         assert(size() != sz);
 

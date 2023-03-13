@@ -1059,7 +1059,7 @@ private:
     template <index_type Count>
     LA_INLINE_ALWAYS static inline void read_tile(pointer __restrict tptr, const_pointer __restrict src)
     {
-        static constexpr index_type block_size = LA_CACHELINE_BYTES / sizeof(scalar_type);
+//        static constexpr index_type block_size = LA_CACHELINE_BYTES / sizeof(scalar_type);
         BOOST_ALIGN_ASSUME_ALIGNED(tptr, LA_CACHELINE_BYTES);
 //
 //        for (index_type i=0; i<Count / block_size; ++i)

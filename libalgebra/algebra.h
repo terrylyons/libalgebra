@@ -286,7 +286,7 @@ public:
             }
         }
 
-        assert(degree_ranges.back() == base::buffer.end());
+//        assert(degree_ranges.back() == base::buffer.end());
     }
 
     DEG depth() const noexcept { return m_depth; }

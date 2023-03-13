@@ -486,8 +486,8 @@ TEST_FIXTURE(TangentsFixture, test_tangent_multiplication_both_tangent_tensor)
         for (DEG i = DEPTH; i >= 1; --i) {
             typename tensor_t::RATIONAL divisor(i);
 
-            tensor_t& lhs = expected_tensor;
-            tensor_t& lhs_tan = expected_tangent;
+//            tensor_t& lhs = expected_tensor;
+//            tensor_t& lhs_tan = expected_tangent;
 
 
             expected_tangent = expected_tensor * (rtan / divisor) + expected_tangent * (rt / divisor);
@@ -546,8 +546,8 @@ TEST_FIXTURE(TangentsFixture, tensor_exp_sanity_test) {
 
     const auto tt = random_tangent_tensor();
 
-    const auto& rt = tt.base();
-    const auto& rtan = tt.fibre();
+//    const auto& rt = tt.base();
+//    const auto& rtan = tt.fibre();
 
     typename tensor_t::KEY kunit;
     tangent_tensor_t tunit(kunit);

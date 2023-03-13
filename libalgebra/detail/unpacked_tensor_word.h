@@ -8,6 +8,7 @@
 #include "smallest_int_type.h"
 #include <cstdint>
 #include <cassert>
+#include <array>
 #include <algorithm>
 
 namespace alg {
@@ -19,7 +20,7 @@ class unpacked_tensor_word
     using index_type = std::ptrdiff_t;
     using size_type = std::size_t;
 
-    letter_type m_bits[Depth] = {};
+    std::array<letter_type, Depth> m_bits {};
     unsigned m_degree;
 
 public:
@@ -35,7 +36,7 @@ public:
     void reset(Int index) noexcept
     {
         m_degree = unsigned(index);
-        std::fill(m_bits, m_bits+Depth, letter_type(0));
+        std::fill(m_bits.begin(), m_bits.end(), letter_type(0));
     }
 
     constexpr unpacked_tensor_word& operator++() noexcept

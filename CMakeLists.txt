@@ -109,6 +109,7 @@ add_custom_target(Libalgebra_headers SOURCES
         libalgebra/poly_lie_basis.h
         libalgebra/polynomials.h
         libalgebra/tensor.h
+        libalgebra/reconfigure_operator.h
         libalgebra/tensor_basis.h
         libalgebra/utils.h
         libalgebra/alternative_multiplications.h

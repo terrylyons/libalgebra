@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
 
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (WIN32)
     ## better remove this and add it to the command line as machine specific
@@ -13,6 +11,10 @@ endif ()
 
 
 find_package(UnitTest++ CONFIG REQUIRED)
+
+if (NOT TARGET UnitTest++::UnitTest++ AND TARGET UnitTest++)
+    add_library(UnitTest++::UnitTest++ ALIAS UnitTest++)
+endif()
 
 # include_directories(SYSTEM "${UnitTest++_INCLUDE_DIRS})
 # target_link_libraries(main PRIVATE UnitTest++)
@@ -36,14 +38,4 @@ if (LA_TESTING_INCLUDE_INTEGRATION)
 endif ()
 
 add_subdirectory(unit_tests)
-add_executable(all_tests common/run_tests.cpp)
-
-message(STATUS "${LIBALGEBRA_TEST_SUITE_LIBS}")
-
-target_link_libraries(all_tests PRIVATE
-        la_unittests::utilities
-        ${LIBALGEBRA_TEST_SUITE_LIBS}
-        )
-
-
-add_test(NAME "All_tests" COMMAND all_tests)
+#add_executable(all_tests common/run_tests.cpp)

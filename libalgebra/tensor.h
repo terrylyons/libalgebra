@@ -56,7 +56,7 @@ Version 3. (See accompanying file License.txt)
 #define LIBALGEBRA_L1_CACHE_SIZE 32768// 32KB should be fairly standard
 #endif
 
-#define LA_DEFAULT_TILE_PARAM(WIDTH, SCALAR) ::alg::dtl::tensor_tile_letters_helper<WIDTH, LIBALGEBRA_L1_CACHE_SIZE / (2 * sizeof(SCALAR))>::num_letters
+#define LA_DEFAULT_TILE_PARAM(WIDTH, DEPTH, SCALAR) ::alg::dtl::tensor_tile_letters_helper<WIDTH, DEPTH, LIBALGEBRA_L1_CACHE_SIZE / (2 * sizeof(SCALAR))>::num_letters
 
 
 // Define LIBALGEBRA_TM_UPDATE_REVERSE_INLINE to allow writing of reverse data during multiplication
@@ -96,20 +96,21 @@ struct non_signing_signer {
     explicit non_signing_signer(DEG deg) {}
 };
 
-template<DEG Width, DIMN TargetSize, bool WidthSquareFits = (Width * Width < TargetSize)>
+template<DEG Width, DEG Depth, DIMN TargetSize, bool WidthSquareFits = (Width * Width < TargetSize)>
 struct tensor_tile_letters_helper {
     static constexpr IDEG log_target = IDEG(::alg::integer_maths::logN(TargetSize, Width));
+    static constexpr IDEG num_letters_unlimited = std::min(IDEG(Depth) / 2, (log_target >= 2) ? log_target / 2 : -1);
 #ifdef LIBALGEBRA_MAX_TILE_LETTERS
     static constexpr IDEG num_letters = std::min(
             IDEG(LIBALGEBRA_MAX_TILE_LETTERS),
-            (log_target >= 2) ? log_target / 2 : -1);
+            num_letters_unlimited);
 #else
-    static constexpr IDEG num_letters = (log_target >= 2) ? log_target / 2 : -1;
+    static constexpr IDEG num_letters = num_letters_unlimited;
 #endif
 };
 
-template<DEG Width, DIMN TargetSize>
-struct tensor_tile_letters_helper<Width, TargetSize, false> {
+template<DEG Width, DEG Depth, DIMN TargetSize>
+struct tensor_tile_letters_helper<Width, Depth, TargetSize, false> {
     /*
      * If we're here, it is because Width^2 >= TargetSize.
      * In this case we're looking for n such that (Width/2^n)^2 < TargetSize,
@@ -459,7 +460,7 @@ public:
 };
 
 template<DEG Width, DEG MaxDepth, typename Coeffs, typename Signer,
-         IDEG TileLetters = LA_DEFAULT_TILE_PARAM(Width, typename Coeffs::S)>
+         IDEG TileLetters = LA_DEFAULT_TILE_PARAM(Width, MaxDepth, typename Coeffs::S)>
 class tiled_inverse_operator
 {
     using scalar_type = typename Coeffs::S;
@@ -1653,7 +1654,7 @@ class tiled_free_tensor_multiplication
 
     template<typename C>
     using helper_type = dtl::tiled_free_tensor_multiplication_helper<
-            Width, Depth, C, TileLetters == 0 ? LA_DEFAULT_TILE_PARAM(Width, typename C::S) : TileLetters, WriteCacheLetters>;
+            Width, Depth, C, TileLetters == 0 ? LA_DEFAULT_TILE_PARAM(Width, Depth, typename C::S) : TileLetters, WriteCacheLetters>;
 
 
     using tsi = dtl::tensor_size_info<Width>;

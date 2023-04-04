@@ -31,38 +31,73 @@ namespace dtl {
 
 using alg::integer_maths::power;
 
-template<DEG NoLetters>
+/*
+ *  The second template argument is not really necessary, but we include this so
+ *  that specializations can be partial rather than explicit. This means we can
+ *  define statics inside the header rather than needing a cpp file.
+ */
+
+template<DEG NoLetters, typename I=DIMN>
 struct tensor_size_info {
     static constexpr DEG bits_per_letter = ConstLog2<NoLetters - 1>::ans + 1;
     static constexpr DEG mantissa_bits_stored = std::numeric_limits<word_t>::digits - 1;
     static constexpr DEG max_depth = mantissa_bits_stored / bits_per_letter;
 
-    template<DIMN Depth>
+    template<I Depth>
     struct helper {
-        static constexpr DIMN value = integer_maths::sum_powers(NoLetters, Depth);
+        static constexpr I value = integer_maths::sum_powers(NoLetters, Depth);
     };
 
-    template<DIMN D>
+    template<I D>
     struct power_helper {
-        static constexpr DIMN value = power(NoLetters, D);
+        static constexpr I value = power(NoLetters, D);
     };
 
     using holder = typename alg::utils::generate_array<max_depth + 1, helper>::result;
     using power_holder = typename alg::utils::generate_array<max_depth, power_helper>::result;
-    using degree_sizes_t = std::array<DIMN, max_depth + 2>;
+    using degree_sizes_t = std::array<I, max_depth + 2>;
 
-    static const std::array<DIMN, max_depth + 1> powers;
-    static const std::array<DIMN, max_depth + 2> degree_sizes;
+    static const std::array<I, max_depth + 1> powers;
+    static const std::array<I, max_depth + 2> degree_sizes;
 };
 
-template<DEG N>
-const std::array<DIMN,
-                 tensor_size_info<N>::max_depth
-                         + 2>
-        tensor_size_info<N>::degree_sizes = tensor_size_info<N>::holder::data;
+template<DEG N, typename I>
+const std::array<I, tensor_size_info<N, I>::max_depth+ 2>
+        tensor_size_info<N, I>::degree_sizes = tensor_size_info<N, I>::holder::data;
 
-template<DEG Width>
-const std::array<DIMN, tensor_size_info<Width>::max_depth + 1> tensor_size_info<Width>::powers = tensor_size_info<Width>::power_holder::data;
+template<DEG Width, typename I>
+const std::array<I, tensor_size_info<Width, I>::max_depth + 1> tensor_size_info<Width, I>::powers = tensor_size_info<Width, I>::power_holder::data;
+
+template <typename I>
+struct tensor_size_info<1, I> {
+    static constexpr DEG max_depth = 52;
+
+    template <I D>
+    struct helper {
+        static constexpr I value = D + 1;
+    };
+
+    template <I D>
+    struct power_helper {
+        static constexpr I value = 1;
+    };
+
+    using holder = typename alg::utils::generate_array<max_depth + 1, helper>::result;
+    using power_holder = typename alg::utils::generate_array<max_depth, power_helper>::result;
+    using degree_sizes_t = std::array<I, max_depth + 2>;
+
+    static const std::array<I, max_depth+1> powers;
+    static const std::array<I, max_depth+2> degree_sizes;
+};
+
+
+template <typename I>
+const std::array<I, tensor_size_info<1, I>::max_depth + 2>
+        tensor_size_info<1, I>::degree_sizes = tensor_size_info<1, I>::holder::data;
+
+template <typename I>
+const std::array<I, tensor_size_info<1, I>::max_depth + 1> tensor_size_info<1, I>::powers = tensor_size_info<1, I>::power_holder::data;
+
 
 }// namespace dtl
 
@@ -129,7 +164,7 @@ public:
     /// We statically compute the size (n^{d+1}-1)/(n-1)
     /// where n == n_letters and d == max_degree.
     tensor_basis(void)
-        : _size((LET(ConstPower<n_letters, max_degree + 1>::ans) - 1) / (n_letters - 1))
+        : _size(dtl::tensor_size_info<n_letters>::degree_sizes[max_degree])
     {}
 
 public:

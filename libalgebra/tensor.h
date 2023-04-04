@@ -755,7 +755,6 @@ public:
 
 
 template<DEG Width, DEG Depth, typename Coeffs, IDEG TileLetters, IDEG WriteCacheLetters>
-
 class tiled_free_tensor_multiplication_helper
     : public free_tensor_multiplication_helper<Width, Depth, Coeffs>,
       public central_tile_helper<Width, Depth, Coeffs, TileLetters>
@@ -1644,7 +1643,6 @@ public:
 };
 
 template<DEG Width, DEG Depth, IDEG TileLetters, IDEG WriteCacheLetters>
-
 class tiled_free_tensor_multiplication
     : public traditional_free_tensor_multiplication<Width, Depth>
 {
@@ -2435,6 +2433,13 @@ public:
         }
     }
 };
+
+
+template <DEG Depth, IDEG TileLetters, IDEG WriteCacheLetters>
+class tiled_free_tensor_multiplication<1, Depth, TileLetters, WriteCacheLetters>
+        : public traditional_free_tensor_multiplication<1, Depth>
+{};
+
 
 template<DEG Width, DEG Depth>
 class left_half_shuffle_multiplier

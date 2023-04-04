@@ -3,6 +3,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/Modules/UnitTestPP.cmake)
 
 set(LIBALGEBRA_TEST_SUITE_LIBS "" CACHE INTERNAL "test libs")
 
+
 function(libalgebra_test)
 
     cmake_parse_arguments(LA_TESTS

@@ -16,6 +16,7 @@ if (NOT TARGET UnitTest++::UnitTest++ AND TARGET UnitTest++)
     add_library(UnitTest++::UnitTest++ ALIAS UnitTest++)
 endif()
 
+include(libalgebra_test_helper)
 # include_directories(SYSTEM "${UnitTest++_INCLUDE_DIRS})
 # target_link_libraries(main PRIVATE UnitTest++)
 

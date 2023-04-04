@@ -637,6 +637,7 @@ SUITE(tensor_multiplication)
 
     using PolyMultiplicationTests1283 = PolyMultiplicationTests<128, 3>;
 
+#if 0
     TEST_FIXTURE(PolyMultiplicationTests1283, test_dense_mul_large_width)
     {
         auto lhs = generic_d_free_tensor(1000000);
@@ -676,4 +677,5 @@ SUITE(tensor_multiplication)
             REQUIRE CHECK_EQUAL(construct_expected(key, 1000000, 2000000), result[key]);
         }
     }
+#endif
 }

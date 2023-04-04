@@ -51,7 +51,7 @@ class area_tensor_multiplication
             //	result[i->key()] += i->value();
             //}
 
-            static_assert(sizeof(Tensor) == sizeof(half_shuffle_tensor_t));
+            static_assert(sizeof(Tensor) == sizeof(half_shuffle_tensor_t), "Tensor and half_shuffle_tensor_t must be binary compatible");
             auto tmp = half_shuffle_tensor_t(k2) * half_shuffle_tensor_t(k1)
                     - half_shuffle_tensor_t(k1) * half_shuffle_tensor_t(k2);
 

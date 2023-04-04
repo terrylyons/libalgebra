@@ -14,6 +14,8 @@ Version 3. (See accompanying file License.txt)
 #ifndef DJC_COROPA_LIBALGEBRA_UTILSH_SEEN
 #define DJC_COROPA_LIBALGEBRA_UTILSH_SEEN
 
+#include <libalgebra/vector_bundle.h>
+
 namespace alg {
 
 /// Provides maps between lie and free_tensor instances.
@@ -143,6 +145,12 @@ public:
         return result;
     }
 
+    template <typename InputLie>
+    vector_bundle<Tensor> l2t(const vector_bundle<InputLie>& arg)
+    {
+        return {l2t(arg.base()), l2t(arg.fibre())};
+    }
+
     /// Convert lie to tensor
     Tensor l2t(dense_lie1_t&& arg)
     {
@@ -178,6 +186,12 @@ public:
             j->value() /= (RAT)(LIE::basis.degree(j->key()));
         }
         return result;
+    }
+
+    template <typename InputTensor>
+    vector_bundle<Lie> t2l(const vector_bundle<InputTensor>& arg)
+    {
+        return {t2l(arg.base()), t2l(arg.fibre())};
     }
 
     /**

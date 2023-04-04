@@ -14,6 +14,7 @@ Version 3. (See accompanying file License.txt)
 #include "constlog2.h"
 #include "implementation_types.h"
 #include <cstring>
+#include <cstdint>
 
 namespace alg {
 

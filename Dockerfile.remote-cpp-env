@@ -23,6 +23,7 @@ RUN apt-get update \
       libgmp-dev \
       wget \
       gdb \
+      rsync \
   && apt-get clean
 
 ARG CMAKE_INSTALLER=cmake-3.21.4-linux-x86_64.sh
@@ -37,6 +38,15 @@ WORKDIR /unittest-cpp/builds
 RUN cmake ../
 RUN cmake --build ./
 RUN cmake --build ./ --target install
+WORKDIR /
+
+# google benchmark
+RUN git clone https://github.com/google/benchmark.git
+WORKDIR /benchmark
+RUN cmake -E make_directory "build"
+RUN cmake -E chdir "build" cmake -DBENCHMARK_DOWNLOAD_DEPENDENCIES=on -DCMAKE_BUILD_TYPE=Release ../
+RUN cmake --build "build" --config Release
+WORKDIR /
 
 RUN ( \
     echo 'LogLevel DEBUG2'; \

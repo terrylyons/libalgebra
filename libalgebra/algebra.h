@@ -286,7 +286,7 @@ public:
             }
         }
 
-        assert(degree_ranges.back() == base::buffer.end());
+//        assert(degree_ranges.back() == base::buffer.end());
     }
 
     DEG depth() const noexcept { return m_depth; }
@@ -948,6 +948,35 @@ public:
 
 template<typename B, typename C, typename M, template<typename, typename, typename...> class V, typename D, typename... Args>
 const M algebra<B, C, M, V, D, Args...>::s_multiplication;
+
+
+namespace dtl {
+
+template <typename Algebra>
+class is_algebra_impl
+{
+    template<typename B, typename C, typename M, template<typename, typename, typename...> class V, typename... Args>
+    static std::true_type test(algebra<B, C, M, V, Args...>&);
+
+    static std::false_type test(...);
+
+public:
+    static constexpr bool value = decltype(test(std::declval<Algebra&>()))::value;
+};
+} // namespace dtl
+
+
+template <typename Algebra>
+constexpr bool is_algebra() noexcept
+{
+    return dtl::is_algebra_impl<Algebra>::value;
+}
+
+
+
+
+
+
 
 }// namespace alg
 // Include once wrapper

@@ -453,6 +453,9 @@ public:
         return dense_size() + sparse_size();
     }
 
+
+    DIMN dimension() const noexcept { return dense_dimension() + sparse_size(); }
+
     /// Test if the vector is empty (contains no non-zero elements)
     bool empty() const
     {

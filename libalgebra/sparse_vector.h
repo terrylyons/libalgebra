@@ -467,6 +467,9 @@ public:
         insert_from_pointer(offset, begin, end);
     }
 
+
+    DIMN dimension() const noexcept { return size(); }
+
 public:
     template<typename F>
     static void apply_unary_operation(

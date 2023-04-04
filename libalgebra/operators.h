@@ -13,6 +13,8 @@
 #include "sum_operator.h"
 #include "vector_bundle.h"
 
+#include <libalgebra/alg_types.h>
+
 namespace alg {
 namespace operators {
 
@@ -140,6 +142,62 @@ using left_multiplication_operator = linear_operator<
 template<typename Algebra>
 using right_multiplication_operator = linear_operator<
         dtl::right_multiplication_operator_impl<Algebra>,
+        Algebra,
+        Algebra>;
+
+namespace dtl {
+
+template<typename Algebra>
+class adjoint_of_left_multiplication_operator_impl
+{
+protected:
+    using algebra_t = Algebra;
+
+public:
+    template<typename... Args>
+    explicit adjoint_of_left_multiplication_operator_impl(Args&&... args)
+        : m_lhs(std::forward<Args>(args)...)
+    {}
+
+    explicit adjoint_of_left_multiplication_operator_impl(algebra_t&& alg) : m_lhs(alg)
+    {}
+
+    algebra_t operator()(const algebra_t& arg) const
+    {
+        algebra_t result;
+        for (auto& pr : m_lhs) {
+            result += shift_down(arg, pr.key()) * pr.value();
+        }
+        return result;
+
+    }
+
+private:
+    algebra_t m_lhs;
+
+    static algebra_t shift_down(const algebra_t & sh, typename algebra_t::KEY word)
+    {
+        algebra_t result(sh), working;
+        while (word.size()) {
+            auto letter = word.lparent();
+            word = word.rparent();
+            for (auto pr : result) {
+                if (pr.key().size() > 0 && pr.key().lparent() == letter)
+                    working[pr.key().rparent()] = result[pr.key()];
+            }
+            result.swap(working);
+            working.clear();
+        }
+        return result;
+    }
+};
+
+
+}// namespace dtl
+
+template<typename Algebra>
+using adjoint_of_left_multiplication_operator = linear_operator<
+        dtl::adjoint_of_left_multiplication_operator_impl<Algebra>,
         Algebra,
         Algebra>;
 

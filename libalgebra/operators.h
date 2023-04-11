@@ -87,7 +87,7 @@ template<typename Algebra>
 class left_multiplication_operator_impl
 {
 protected:
-    using algebra_t = Algebra;
+    using shuffle_algebra_t = Algebra;
 
 public:
     template<typename... Args>
@@ -95,23 +95,23 @@ public:
         : m_lhs(std::forward<Args>(args)...)
     {}
 
-    explicit left_multiplication_operator_impl(algebra_t&& alg) : m_lhs(alg)
+    explicit left_multiplication_operator_impl(shuffle_algebra_t&& alg) : m_lhs(alg)
     {}
 
-    algebra_t operator()(const algebra_t& arg) const
+    shuffle_algebra_t operator()(const shuffle_algebra_t& arg) const
     {
         return m_lhs * arg;
     }
 
 private:
-    algebra_t m_lhs;
+    shuffle_algebra_t m_lhs;
 };
 
 template<typename Algebra>
 class right_multiplication_operator_impl
 {
 protected:
-    using algebra_t = Algebra;
+    using shuffle_algebra_t = Algebra;
 
 public:
     template<typename... Args>
@@ -119,16 +119,16 @@ public:
         : m_rhs(std::forward<Args>(args)...)
     {}
 
-    explicit right_multiplication_operator_impl(algebra_t&& alg) : m_rhs(alg)
+    explicit right_multiplication_operator_impl(shuffle_algebra_t&& alg) : m_rhs(alg)
     {}
 
-    algebra_t operator()(const algebra_t& arg) const
+    shuffle_algebra_t operator()(const shuffle_algebra_t& arg) const
     {
         return arg * m_rhs;
     }
 
 private:
-    algebra_t m_rhs;
+    shuffle_algebra_t m_rhs;
 };
 
 }//namespace dtl
@@ -147,11 +147,12 @@ using right_multiplication_operator = linear_operator<
 
 namespace dtl {
 
-template<typename Algebra>
+template<typename ShuffleAlgebra, typename TensorAlgebra>
 class adjoint_of_left_multiplication_operator_impl
 {
 protected:
-    using algebra_t = Algebra;
+    using shuffle_algebra_t = ShuffleAlgebra;
+    using tensor_algebra_t = TensorAlgebra;
 
 public:
     template<typename... Args>
@@ -159,12 +160,12 @@ public:
         : m_lhs(std::forward<Args>(args)...)
     {}
 
-    explicit adjoint_of_left_multiplication_operator_impl(algebra_t&& alg) : m_lhs(alg)
+    explicit adjoint_of_left_multiplication_operator_impl(tensor_algebra_t&& alg) : m_lhs(alg)
     {}
 
-    algebra_t operator()(const algebra_t& arg) const
+    shuffle_algebra_t operator()(const shuffle_algebra_t& arg) const
     {
-        algebra_t result;
+        shuffle_algebra_t result;
         for (auto& pr : m_lhs) {
             result += shift_down(arg, pr.key()) * pr.value();
         }
@@ -173,11 +174,11 @@ public:
     }
 
 private:
-    algebra_t m_lhs;
+    tensor_algebra_t m_lhs;
 
-    static algebra_t shift_down(const algebra_t & sh, typename algebra_t::KEY word)
+    static shuffle_algebra_t shift_down(const shuffle_algebra_t & sh, typename shuffle_algebra_t::KEY word)
     {
-        algebra_t result(sh), working;
+        shuffle_algebra_t result(sh), working;
         while (word.size()) {
             auto letter = word.lparent();
             word = word.rparent();
@@ -195,11 +196,11 @@ private:
 
 }// namespace dtl
 
-template<typename Algebra>
+template<typename ShuffleAlgebra, typename TensorAlgebra>
 using adjoint_of_left_multiplication_operator = linear_operator<
-        dtl::adjoint_of_left_multiplication_operator_impl<Algebra>,
-        Algebra,
-        Algebra>;
+        dtl::adjoint_of_left_multiplication_operator_impl<ShuffleAlgebra, TensorAlgebra>,
+        ShuffleAlgebra,
+        ShuffleAlgebra>;
 
 }// namespace operators
 }// namespace alg

@@ -7,144 +7,159 @@
 #include <libalgebra/tensor.h>
 #include "../../common/random_vector_generator.h"
 #include "../../common/rng.h"
+#include <libalgebra/polynomial_coefficients.h>
+#include <libalgebra/operators.h>
 
-using alg::LET;
-
-typedef alg::coefficients::coefficient_field<float> float_field;
-typedef alg::coefficients::coefficient_field<alg::coefficients::rational> rational_field;
-
-template<typename Coeff, unsigned Width, unsigned Depth>
-struct SparseFixture {
-
-    typedef typename Coeff::S S;
-    typedef typename Coeff::Q Q;
-
-    typedef alg::free_tensor_basis<Width, Depth> TBASIS;
-    typedef alg::vectors::sparse_vector<TBASIS, Coeff> VECT;
-    typedef alg::free_tensor<Coeff, Width, Depth, alg::vectors::sparse_vector> TENSOR;
-
-    typedef typename TBASIS::KEY KEY;
-
-    const TENSOR tunit;
-    const TENSOR tzero;
-
-    SparseFixture() : tunit(KEY()), tzero()
-    {}
-
-    KEY make_key(const LET* arg, const std::size_t N)
-    {
-        KEY k;
-        for (std::size_t i = 0; i < N; ++i) {
-            k.push_back(arg[i]);
-        }
-        return k;
-    }
-};
-
-template<typename Coeff, unsigned Width, unsigned Depth>
-struct DenseFixture {
-
-    typedef typename Coeff::S S;
-    typedef typename Coeff::Q Q;
-
-    static constexpr unsigned width = Width;
-    static constexpr unsigned depth = Depth;
-    typedef Coeff coeffs;
-
-    typedef alg::free_tensor_basis<Width, Depth> TBASIS;
-    typedef alg::vectors::dense_vector<TBASIS, Coeff> VECT;
-    typedef alg::free_tensor<Coeff, Width, Depth, alg::vectors::dense_vector> TENSOR;
-
-    typedef typename TBASIS::KEY KEY;
-
-    const TENSOR tunit;
-    const TENSOR tzero;
-
-    DenseFixture() : tunit(KEY()), tzero()
-    {}
-
-    KEY make_key(const LET* arg, const std::size_t N)
-    {
-        KEY k;
-        for (std::size_t i = 0; i < N; ++i) {
-            k.push_back(arg[i]);
-        }
-        return k;
-    }
-};
-
-template<unsigned Width, unsigned Depth>
-struct RandomRationalDenseFixture {
-
-    static constexpr unsigned width = Width;
-    static constexpr unsigned depth = Depth;
-
-    typedef alg::free_tensor<rational_field, Width, Depth, alg::vectors::dense_vector> TENSOR;
-    typedef alg::lie<rational_field, Width, Depth, alg::vectors::dense_vector> LIE;
-
-    using rat_dist = la_testing::uniform_rational_distribution<rational_field::S>;
-    using rvg_t = la_testing::random_vector_generator<TENSOR, rat_dist>;
-    using rvg_l = la_testing::random_vector_generator<LIE, rat_dist>;
-
-    const TENSOR tunit;
-    const TENSOR tzero;
-
-    std::mt19937 rngt;
-    rvg_t rvgt;
-
-    std::mt19937 rngl;
-    rvg_l rvgl;
-
-    typedef typename TENSOR::KEY KEY;
-
-    RandomRationalDenseFixture() : tunit(KEY()), tzero(),
-                      rngt(std::random_device()()), rvgt(-1, 1),
-                      rngl(std::random_device()()), rvgl(-1, 1)
-
-    {}
-};
-
-//static SHUFFLE_TENSOR shift_down(const SHUFFLE_TENSOR& sh, typename SHUFFLE_TENSOR::KEY word)
-//{
-//    SHUFFLE_TENSOR result(sh), working;
-//    while (word.size()) {
-//        auto letter = word.lparent();
-//        word = word.rparent();
-//        for (auto pr : result) {
-//            if (pr.key().size() > 0 && pr.key().lparent() == letter)
-//                working[pr.key().rparent()] = result[pr.key()];
-//        }
-//        result.swap(working);
-//        working.clear();
-//    }
-//    return result;
-//}
-//
-//// the evaluation of the adjoint operation is worked out below
-//// <sh,ab>=\sum_{uv=sh}<ua><vb>
-////        = <\sum_{uv=sh}<ua>v,b>
-//// Let T_w(sh) be all the projection of sh onto the part beginning with w with w removed
-//// \sum_{i} <ki shi,ab> =
-////        = \sum_{i} ki<\sum_{uv=shi}<ua>v,b>
-////        = \sum_{u} < <ua>T_u(sh), b>
-////  The action of the adjoint of tensor multiplication by a multiplication is \sum_u <ua> T_u(sh)
-//
-//static SHUFFLE_TENSOR adjoint_to_multiply(const TENSOR& t, SHUFFLE_TENSOR sh)
-//{
-//    // this implementation is understandable and reliable but repetitive and can be radically accelerated
-//    SHUFFLE_TENSOR result;
-//    for (auto& pr : t) {
-//        result += shift_down(sh, pr.key()) * pr.value();
-//    }
-//    return result;
-//}
+using namespace alg;
 
 SUITE(Adjoint)
 {
-    typedef DenseFixture<float_field, 4, 4> dense_fixture;
-    TEST_FIXTURE(dense_fixture, Test)
+    template<DEG Width, DEG Depth>
+    struct PolyMultiplicationTests {
+        static constexpr DEG width = Width;
+        static constexpr DEG depth = Depth;
+
+        using coeff_ring = alg::coefficients::rational_poly_ring;
+        using rational_type = typename coeff_ring::Q;
+        using scalar_type = typename coeff_ring::S;
+
+        using poly_basis = alg::poly_basis;
+        using poly_key = typename poly_basis::KEY;
+
+        using tensor_basis = alg::free_tensor_basis<width, depth>;
+        using traditional_multiplication = alg::traditional_free_tensor_multiplication<width, depth>;
+        using tiled_multiplication = alg::tiled_free_tensor_multiplication<width, depth>;
+        using tiled2_multiplication = alg::tiled_free_tensor_multiplication<width, depth, 2>;
+
+        using key_type = typename tensor_basis::KEY;
+        tensor_basis basis;
+
+        using tensor_type = alg::free_tensor<coeff_ring, width, depth>;
+
+        using shuffle_tensor_type = alg::shuffle_tensor<coeff_ring, width, depth>;
+
+        using operator_type = operators::dtl::adjoint_of_left_multiplication_operator_impl<shuffle_tensor_type, tensor_type>;
+
+        using sparse_traditional_tensor = alg::algebra<tensor_basis, coeff_ring, traditional_multiplication, alg::vectors::sparse_vector>;
+        using dense_traditional_tensor = alg::algebra<tensor_basis, coeff_ring, traditional_multiplication, alg::vectors::dense_vector>;
+
+        scalar_type construct_expected(key_type key, LET lhs_offset, LET rhs_offset, DEG lhs_max = depth, DEG rhs_max = depth) const
+        {
+            auto deg = key.size();
+            auto dmin = (deg >= rhs_max) ? deg - rhs_max : DEG(0);
+            auto dmax = std::min(deg, lhs_max);
+
+            scalar_type result;
+            for (DEG i = dmin; i <= dmax; ++i) {
+                auto right(key);
+                auto left = right.split_n(i);
+                result += to_poly_key(left, lhs_offset) * to_poly_key(right, rhs_offset);
+            }
+            return result;
+        }
+
+        scalar_type construct_expected_rzu(key_type key, LET lhs_offset, LET rhs_offset) const
+        {
+            auto deg = key.size();
+
+            scalar_type result;
+            for (DEG i = 0; i < deg; ++i) {
+                auto right(key);
+                auto left = right.split_n(i);
+                result += to_poly_key(left, lhs_offset) * to_poly_key(right, rhs_offset);
+            }
+            return result;
+        }
+        scalar_type construct_expected_lzu(key_type key, LET lhs_offset, LET rhs_offset) const
+        {
+            auto deg = key.size();
+
+            scalar_type result;
+            for (DEG i = 1; i <= deg; ++i) {
+                auto right(key);
+                auto left = right.split_n(i);
+                result += to_poly_key(left, lhs_offset) * to_poly_key(right, rhs_offset);
+            }
+            return result;
+        }
+
+        scalar_type to_poly_key(key_type key, LET offset) const
+        {
+            constexpr LET digits_per_letter = alg::integer_maths::logN(LET(width), LET(10)) + 1;
+            constexpr LET letter_offset = alg::power(LET(10), digits_per_letter);
+
+            auto offset_digits = alg::integer_maths::logN(LET(offset), LET(10)) + LET(1);
+            if (offset_digits <= depth * digits_per_letter) {
+                offset *= alg::power(LET(10), depth * digits_per_letter - offset_digits + 1);
+            }
+
+            LET count = 0;
+            while (key.size() > 0) {
+                count *= letter_offset;
+                count += key.FirstLetter();
+                key = key.rparent();
+            }
+            return scalar_type(count + offset, 1);
+        }
+
+        template<typename Mul, template<typename, typename, typename...> class VT>
+        alg::algebra<tensor_basis, coeff_ring, Mul, VT> generic_tensor(LET offset = 0, DEG max_degree = depth) const
+        {
+            alg::algebra<tensor_basis, coeff_ring, Mul, VT> result;
+
+            for (auto key : basis.iterate_keys_to_deg(max_degree + 1)) {
+                result[key] = to_poly_key(key, offset);
+            }
+            return result;
+        }
+
+        shuffle_tensor_type generic_shuffle_tensor(LET offset = 0, DEG max_degree = depth) const
+        {
+            shuffle_tensor_type result;
+
+            for (auto key : basis.iterate_keys_to_deg(max_degree + 1)) {
+                result[key] = to_poly_key(key, offset);
+            }
+            return result;
+        }
+
+        alg::free_tensor<coeff_ring, width, depth, alg::vectors::dense_vector>
+        generic_d_free_tensor(LET offset = 0, DEG max_degree = depth)
+        {
+            alg::free_tensor<coeff_ring, width, depth, alg::vectors::dense_vector> result;
+
+            for (auto key : basis.iterate_keys_to_deg(max_degree + 1)) {
+                result[key] = to_poly_key(key, offset);
+            }
+            return result;
+        }
+    };
+
+    using PolyMultiplicationTests55 = PolyMultiplicationTests<5, 5>;
+    TEST_FIXTURE(PolyMultiplicationTests55, IdentityTest)
     {
-        CHECK_EQUAL(0,1);
+
+        tensor_type this_tensor(scalar_type(1));
+        shuffle_tensor_type this_shuffle_tensor(scalar_type(1));
+
+        operator_type adjoint(this_tensor);
+
+        CHECK_EQUAL(this_shuffle_tensor, adjoint(this_shuffle_tensor));
+
+
+    }
+
+    TEST_FIXTURE(PolyMultiplicationTests55, PolynomialTest)
+    {
+
+        tensor_type this_tensor(scalar_type(1));
+        shuffle_tensor_type this_shuffle_tensor = generic_shuffle_tensor(2);
+
+        operator_type adjoint(this_tensor);
+
+        CHECK_EQUAL(this_shuffle_tensor, adjoint(this_shuffle_tensor));
+
+
     }
 
 }// SUITE adjoint

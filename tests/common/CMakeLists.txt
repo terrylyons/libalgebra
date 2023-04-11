@@ -45,7 +45,7 @@ add_library(la_unittests::utilities ALIAS libalgebra_tests_utilities)
 
 add_library(main STATIC run_tests.cpp)
 target_link_libraries(main PUBLIC
-        UnitTest++
+        UnitTest++::UnitTest++
         libalgebra_tests_utilities)
 
 add_library(la_unittests::main ALIAS main)

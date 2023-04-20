@@ -42,7 +42,7 @@ public:
     vector_bundle<result_type> operator()(const vector_bundle<argument_type>& arg)
     {
         return {implementation_type::operator()(static_cast<const argument_type&>(arg)),
-        implementation_type::operator()(arg.fibre())};
+                implementation_type::operator()(arg.fibre())};
     }
 
 protected:
@@ -170,15 +170,16 @@ public:
             result += shift_down(arg, pr.key()) * pr.value();
         }
         return result;
-
     }
 
 private:
     tensor_algebra_t m_lhs;
 
-    static shuffle_algebra_t shift_down(const shuffle_algebra_t & sh, typename shuffle_algebra_t::KEY word)
+    template<typename Arg>
+    static Arg shift_down(const Arg& sh, typename Arg::KEY word)
     {
-        shuffle_algebra_t result(sh), working;
+        Arg result(sh);
+        Arg working;
         while (word.size()) {
             auto letter = word.lparent();
             word = word.rparent();
@@ -191,8 +192,83 @@ private:
         }
         return result;
     }
-};
 
+    template<typename Arg, typename FTensor>
+    static void eval(Arg& result, const Arg& arg, const FTensor& param)
+    {
+        using s_t = typename Arg::SCALAR;
+        for (auto&& pr : param) {
+            const auto& val = pr.value();
+            Arg::template apply_flat_inplace_binary_op(result, shift_down(arg, pr.key()),
+                                                       [&val](const s_t& l, const s_t& r) { return l + val * r; });
+        }
+    }
+
+    template<typename S, typename T>
+    static void eval_single(S* LA_RESTRICT out,
+                            const S* LA_RESTRICT in,
+                            const T* LA_RESTRICT param,
+                            const DIMN* powers,
+                            const DIMN* sizes,
+                            DEG param_deg,
+                            DEG arg_deg)
+    {
+        if (param_deg < arg_deg) {
+            for (DEG d = param_deg; d <= arg_deg; ++d) {
+                auto result_deg = d - param_deg;
+                auto* out_ptr = out + sizes[result_deg - 1];
+
+                for (DIMN param_idx = 0; param_idx < powers[param_deg]; ++param_idx) {
+                    const auto* in_ptr = in + param_idx * powers[result_deg];
+                    const auto& param_val = param[param_idx];
+
+                    for (DIMN i = 0; i < powers[result_deg]; ++i) {
+                        out_ptr[i] += param_val * in_ptr[i];
+                    }
+                }
+
+                in += powers[d];
+            }
+        }
+        else {
+            auto& unit = out[0];
+
+            for (DIMN i=0; i<powers[param_deg]; ++i) {
+                unit += param[i]*in[i];
+            }
+
+        }
+    }
+
+    template<typename ShB, typename FB, typename C>
+    static void eval(vectors::dense_vector<ShB, C>& result, const vectors::dense_vector<ShB, C>& arg, const vectors::dense_vector<FB, C>& param)
+    {
+        using tsi = typename ShB::SIZE_INFO;
+
+        auto arg_deg = arg.degree();
+        auto param_deg = param.degree();
+        DEG lower_deg = std::min(arg_deg, param_deg);
+        result.resize_to_degree(arg_deg);
+
+        auto* out_ptr = result.as_mut_ptr();
+        const auto* arg_ptr = arg.as_ptr();
+        const auto* param_ptr = param.as_ptr();
+
+        const auto& param_unit = param_ptr[0];
+        if (param_unit != typename C::S(0)) {
+            for (DIMN i = 0; i < arg.dimension(); ++i) {
+                out_ptr[i] = param_unit * arg_ptr[i];
+            }
+        }
+
+        for (DEG prefix_deg = 1; prefix_deg < lower_deg; ++prefix_deg) {
+            arg_ptr += tsi::powers[prefix_deg - 1];
+            param_ptr += tsi::powers[prefix_deg - 1];
+
+            eval_single(out_ptr, arg_ptr, param_ptr, tsi::powers.data(), tsi::degree_sizes.data(), prefix_deg, arg_deg);
+        }
+    }
+};
 
 }// namespace dtl
 

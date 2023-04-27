@@ -109,6 +109,12 @@ struct tensor_tile_letters_helper {
 #endif
 };
 
+template <DEG Depth, DIMN T, bool B>
+struct tensor_tile_letters_helper<1, Depth, T, B> {
+    static constexpr IDEG num_letters = 0;
+};
+
+
 template<DEG Width, DEG Depth, DIMN TargetSize>
 struct tensor_tile_letters_helper<Width, Depth, TargetSize, false> {
     /*
@@ -582,17 +588,12 @@ public:
     template<typename Vector>
     static void apply(const Vector& src, Vector& result, DEG max_degree = MaxDepth)
     {
-        using ring = typename Vector::coefficient_ring;
         for (auto item : src) {
             auto key = item.key();
             auto deg = key.size();
-            if (max_degree == MaxDepth && deg <= max_degree) {
-                if (key.size() % 2 == 0) {
-                    result[key.reverse()] = item.value();
-                }
-                else {
-                    result[key.reverse()] = ring::uminus(item.value());
-                }
+            if (deg <= max_degree) {
+                Signer s(deg);
+                result[key.reverse()] = s(item.value());
             }
         }
     }
@@ -612,6 +613,42 @@ public:
         }
     }
 };
+
+template <DEG MaxDepth, typename Coeffs, typename Signer, IDEG UNUSED>
+class tiled_inverse_operator<1, MaxDepth, Coeffs, Signer, UNUSED> {
+public:
+
+    template<typename Vector>
+    static void apply(const Vector& src, Vector& result, DEG max_degree = MaxDepth)
+    {
+        for (auto item : src) {
+            auto key = item.key();
+            auto deg = key.size();
+            if (deg <= max_degree) {
+                Signer s(deg);
+                result[key] = s(src[key]);
+            }
+        }
+    }
+
+    template<typename B, typename C>
+    static void apply(const vectors::dense_vector<B, C>& src, vectors::dense_vector<B, C>& dst, DEG max_depth = MaxDepth)
+    {
+        if (src.dimension() == 0) {
+            return;
+        }
+        assert(max_depth <= MaxDepth);
+        dst.resize_to_degree(std::min(src.degree(), max_depth));
+
+        auto* optr = dst.as_mut_ptr();
+        const auto* iptr = src.as_ptr();
+        for (DEG d=0; d<=dst.degree(); ++d) {
+            Signer s(d);
+            optr[d] = s(iptr[d]);
+        }
+    }
+};
+
 
 template<DEG Width, DEG Depth, typename Coeffs>
 class free_tensor_multiplication_helper
@@ -755,7 +792,6 @@ public:
 
 
 template<DEG Width, DEG Depth, typename Coeffs, IDEG TileLetters, IDEG WriteCacheLetters>
-
 class tiled_free_tensor_multiplication_helper
     : public free_tensor_multiplication_helper<Width, Depth, Coeffs>,
       public central_tile_helper<Width, Depth, Coeffs, TileLetters>
@@ -1644,7 +1680,6 @@ public:
 };
 
 template<DEG Width, DEG Depth, IDEG TileLetters, IDEG WriteCacheLetters>
-
 class tiled_free_tensor_multiplication
     : public traditional_free_tensor_multiplication<Width, Depth>
 {
@@ -2435,6 +2470,13 @@ public:
         }
     }
 };
+
+
+template <DEG Depth, IDEG TileLetters, IDEG WriteCacheLetters>
+class tiled_free_tensor_multiplication<1, Depth, TileLetters, WriteCacheLetters>
+        : public traditional_free_tensor_multiplication<1, Depth>
+{};
+
 
 template<DEG Width, DEG Depth>
 class left_half_shuffle_multiplier

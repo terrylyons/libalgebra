@@ -46,7 +46,6 @@ endif ()
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
 find_package(Bignum)
-include(libalgebra_test_helper)
 
 find_package(OpenMP)
 
@@ -109,6 +108,7 @@ add_custom_target(Libalgebra_headers SOURCES
         libalgebra/poly_lie_basis.h
         libalgebra/polynomials.h
         libalgebra/tensor.h
+        libalgebra/reconfigure_operator.h
         libalgebra/tensor_basis.h
         libalgebra/utils.h
         libalgebra/alternative_multiplications.h

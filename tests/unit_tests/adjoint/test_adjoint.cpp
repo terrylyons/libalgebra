@@ -123,6 +123,16 @@ SUITE(Adjoint)
             return result;
         }
 
+        tensor_type generic_tensor(LET offset = 0, DEG max_degree = depth) const
+        {
+            tensor_type result;
+
+            for (auto key : basis.iterate_keys_to_deg(max_degree + 1)) {
+                result[key] = to_poly_key(key, offset);
+            }
+            return result;
+        }
+
         alg::free_tensor<coeff_ring, width, depth, alg::vectors::dense_vector>
         generic_d_free_tensor(LET offset = 0, DEG max_degree = depth)
         {
@@ -134,6 +144,7 @@ SUITE(Adjoint)
             return result;
         }
 
+<<<<<<< HEAD
         tensor_type generic_tensor(LET offset, std::initializer_list<key_type> keys) const {
             tensor_type result;
 
@@ -144,6 +155,23 @@ SUITE(Adjoint)
         }
 
         shuffle_tensor_type construct_expected(LET op_offset, LET arg_offset, std::initializer_list<key_type> keys) const {
+=======
+        shuffle_tensor_type construct_expected(LET tensor_offset, LET shuffle_offset) {
+            shuffle_tensor_type result;
+
+            for (auto&& key : basis.iterate_keys()) {
+                for (DEG i=0; i<=key.size(); ++i) {
+                    auto right(key);
+                    auto left = right.split_n(i);
+                    result.add_scal_prod(right, to_poly_key(left, tensor_offset) * to_poly_key(key, shuffle_offset));
+                }
+            }
+
+            return result;
+        }
+        shuffle_tensor_type construct_expected(LET op_offset, LET arg_offset, std::initializer_list<key_type> keys) const
+        {
+>>>>>>> 809f478f3d70b2cad2fa7512f72ec512b8b44d60
             shuffle_tensor_type result;
 
             for (auto&& key : basis.iterate_keys()) {
@@ -151,7 +179,11 @@ SUITE(Adjoint)
                     auto right(key);
                     auto left = right.split_n(op_key.size());
                     if (left == op_key) {
+<<<<<<< HEAD
                         result.add_scal_prod(right, to_poly_key(op_key, op_offset)*to_poly_key(arg_offset, key));
+=======
+                        result.add_scal_prod(right, to_poly_key(op_key, op_offset) * to_poly_key(arg_offset, key));
+>>>>>>> 809f478f3d70b2cad2fa7512f72ec512b8b44d60
                     }
                 }
             }
@@ -184,6 +216,18 @@ SUITE(Adjoint)
         CHECK_EQUAL(this_shuffle_tensor, adjoint(this_shuffle_tensor));
 
 
+    }
+
+
+    TEST_FIXTURE(PolyMultiplicationTests55, FullTest) {
+        tensor_type this_tensor(generic_tensor(1));
+        shuffle_tensor_type  this_shuffle_tensor(generic_shuffle_tensor(2));
+
+        operator_type adjoint(this_tensor);
+
+        auto expected = construct_expected(1, 2);
+
+        CHECK_EQUAL(expected, adjoint(this_shuffle_tensor));
     }
 
 }// SUITE adjoint

@@ -218,8 +218,8 @@ if (NOT_SUBPROJECT)
             )
 endif ()
 
+enable_testing()
 if (LIBALGEBRA_TESTING)
-    enable_testing()
     add_subdirectory(tests)
 endif ()
 

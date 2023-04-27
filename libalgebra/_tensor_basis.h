@@ -264,6 +264,13 @@ public:
          * Simplify the old code. Here the memcpy isn't really a problem since a copy would have
          * been used in any case. This is much easier to read since each operation is split out.
          */
+
+        if (No_Letters == 1) {
+            int exponent;
+            frexp(_word, &exponent);
+            return static_cast<unsigned>(exponent-1);
+        }
+
         fp_info<word_t>::unsigned_int_type sz;
         std::memcpy(&sz, &_word, sizeof(word_t));
         sz &= fp_info<word_t>::exponent_mask;

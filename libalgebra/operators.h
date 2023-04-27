@@ -34,10 +34,10 @@ public:
 
     template <typename ArgBase, typename ArgFibre>
     auto operator()(const vector_bundle<ArgBase, ArgFibre>& arg)
-            -> vector_bundle<decltype((*this)(arg.base())), decltype((*this)(arg.fibre()))>
+            -> vector_bundle<decltype((*this)(arg.base())),
+                    decltype((*this)(arg.fibre()))>
     {
-        return {implementation_type::operator()(static_cast<const ArgBase&>(arg)),
-                implementation_type::operator()(arg.fibre())};
+        return {Impl::operator()(arg.base()), Impl::operator()(arg.fibre())};
     }
 
 protected:
@@ -129,12 +129,11 @@ using right_multiplication_operator = linear_operator<
 
 namespace dtl {
 
-template<typename ShuffleAlgebra, typename TensorAlgebra>
+template<typename FreeTensor>
 class adjoint_of_left_multiplication_operator_impl
 {
 protected:
-    using shuffle_algebra_t = ShuffleAlgebra;
-    using tensor_algebra_t = TensorAlgebra;
+    using tensor_algebra_t =  FreeTensor;
 
 public:
     template<typename... Args>
@@ -145,12 +144,12 @@ public:
     explicit adjoint_of_left_multiplication_operator_impl(tensor_algebra_t&& alg) : m_lhs(alg)
     {}
 
-    shuffle_algebra_t operator()(const shuffle_algebra_t& arg) const
+    template <typename ShuffleTensor>
+    std::enable_if_t<ShuffleTensor::BASIS::s_no_letters == FreeTensor::BASIS::s_no_letters, ShuffleTensor>
+    operator()(const ShuffleTensor& arg) const
     {
-        shuffle_algebra_t result;
-        for (auto& pr : m_lhs) {
-            result += shift_down(arg, pr.key()) * pr.value();
-        }
+        ShuffleTensor result;
+        eval(result.base_vector(), arg.base_vector(), m_lhs.base_vector());
         return result;
     }
 
@@ -181,7 +180,7 @@ private:
         using s_t = typename Arg::SCALAR;
         for (auto&& pr : param) {
             const auto& val = pr.value();
-            Arg::template apply_flat_inplace_binary_op(result, shift_down(arg, pr.key()),
+            Arg::template apply_inplace_flat_binary_op(result, shift_down(arg, pr.key()),
                                                        [&val](const s_t& l, const s_t& r) { return l + val * r; });
         }
     }
@@ -222,6 +221,36 @@ private:
         }
     }
 
+    template <typename ShB, typename C, typename FTensor>
+    static void eval(vectors::dense_vector<ShB, C>& result, const vectors::dense_vector<ShB, C>& arg, const FTensor& param) {
+        using tsi = typename ShB::SIZE_INFO;
+
+        const auto& basis = result.basis;
+
+        auto arg_deg = arg.degree();
+        auto param_deg = param.degree();
+        result.resize_to_degree(arg_deg);
+
+        for (auto&& item : param) {
+            const auto prefix_deg = item.first.size();
+            auto idx = basis.key_to_index(item.first);
+            idx -= basis.start_of_degree(prefix_deg);
+
+            for (DEG deg = prefix_deg; deg <= arg_deg; ++deg) {
+                const auto suffix_deg = deg - prefix_deg;
+                auto* optr = arg.as_mut_ptr() + basis.start_of_degree(suffix_deg);
+                const auto* iptr = arg.as_ptr() + idx * tsi::powers[suffix_deg];
+
+                for (DIMN i=0; i<tsi::powers[suffix_deg]; ++i) {
+                    optr[i] += item.second * iptr[i];
+                }
+            }
+
+        }
+
+
+    }
+
     template<typename ShB, typename FB, typename C>
     static void eval(vectors::dense_vector<ShB, C>& result, const vectors::dense_vector<ShB, C>& arg, const vectors::dense_vector<FB, C>& param)
     {
@@ -254,9 +283,9 @@ private:
 
 }// namespace dtl
 
-template<typename ShuffleAlgebra, typename TensorAlgebra>
+template<typename TensorAlgebra>
 using adjoint_of_left_multiplication_operator = linear_operator<
-        dtl::adjoint_of_left_multiplication_operator_impl<ShuffleAlgebra, TensorAlgebra>>;
+        dtl::adjoint_of_left_multiplication_operator_impl<TensorAlgebra>>;
 
 }// namespace operators
 }// namespace alg

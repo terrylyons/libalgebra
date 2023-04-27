@@ -98,9 +98,9 @@ struct alg_types {
     typedef Q RAT;
     typedef alg::DEG DEG;
     typedef alg::LET LET;
-    static const unsigned DEPTH = D;
-    static const unsigned myDIM = W;
-    static const unsigned ALPHABET_SIZE = W;
+    static constexpr unsigned DEPTH = D;
+    static constexpr unsigned myDIM = W;
+    static constexpr unsigned ALPHABET_SIZE = W;
     typedef alg::poly<COEFF> MULTIPOLY1;
     typedef alg::free_tensor<COEFF, ALPHABET_SIZE, DEPTH> TENSOR;
     typedef alg::shuffle_tensor<COEFF, ALPHABET_SIZE, DEPTH> SHUFFLE_TENSOR;
@@ -114,6 +114,17 @@ struct alg_types {
     // mtl::row_major>::type mtlMatrix; typedef typename mtl::matrix<RAT,
     // mtl::diagonal<>, mtl::packed<>, mtl::row_major>::type mtlDiagMat;
 };
+
+template<size_t D, size_t W, coefficient_t F, vector_t VectorType>
+constexpr unsigned alg_types<D, W, F, VectorType>::DEPTH;
+
+template<size_t D, size_t W, coefficient_t F, vector_t VectorType>
+constexpr unsigned alg_types<D, W, F, VectorType>::myDIM;
+
+template<size_t D, size_t W, coefficient_t F, vector_t VectorType>
+constexpr unsigned alg_types<D, W, F, VectorType>::ALPHABET_SIZE;
+
+
 
 ////  alg_types.h : provides an interface to and sets consistent sets of basic
 ///algebraic types

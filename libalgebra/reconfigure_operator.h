@@ -111,7 +111,7 @@ template <typename InputType, typename... Changes>
 using recalibrated_t = typename recalibrate_chain<InputType, Changes...>::type;
 
 
-template <typename Algebra, typename... Changes>
+template <typename... Changes>
 class recalibrate_operator_impl {
 
     template <template <DEG, DEG> class B, DEG W, DEG D1,
@@ -119,7 +119,7 @@ class recalibrate_operator_impl {
              typename C1,
              typename C2>
     void construct_impl(vectors::dense_vector<B<W, D1>, C1>& dst,
-                        const vectors::dense_vector<B<W, D2>, C2>& src) {
+                        const vectors::dense_vector<B<W, D2>, C2>& src) const {
         auto max_deg = std::min(D1, src.degree());
         dst.resize_to_degree(max_deg);
 
@@ -141,7 +141,7 @@ class recalibrate_operator_impl {
              template <typename, typename, typename...> class V1,
              template <typename, typename, typename...> class V2>
     void construct_impl(V1<B<W, D1>, C1>& dst,
-                        const V2<B<W, D2>, C2>& src) {
+                        const V2<B<W, D2>, C2>& src) const {
         for (auto&& it : src) {
             auto key = it.key();
             if (src.degree(key) <= D1) {
@@ -155,13 +155,10 @@ class recalibrate_operator_impl {
 
 public:
 
-    using argument_type = Algebra;
-    using result_type = recalibrated_t<Algebra, Changes...>;
 
-
-
-    result_type operator()(const argument_type& arg) const {
-        result_type result;
+    template <typename Argument>
+    auto operator()(const Argument& arg) const -> recalibrated_t<Argument, Changes...> {
+        recalibrated_t<Argument, Changes...> result;
         construct_impl(result.base_vector(), arg.base_vector());
         return result;
     }
@@ -172,9 +169,8 @@ public:
 }// namespace dtl
 
 
-template<typename Algebra, typename... Options>
-using recalibrate_operator = linear_operator<
-        dtl::recalibrate_operator_impl<Algebra, Options...>>;
+template<typename... Options>
+using recalibrate_operator = linear_operator<dtl::recalibrate_operator_impl<Options...>>;
 
 }// namespace operators
 }// namespace alg

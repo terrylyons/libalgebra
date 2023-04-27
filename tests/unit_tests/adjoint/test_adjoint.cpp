@@ -38,7 +38,7 @@ SUITE(Adjoint)
 
         using shuffle_tensor_type = alg::shuffle_tensor<coeff_ring, width, depth>;
 
-        using operator_type = operators::dtl::adjoint_of_left_multiplication_operator_impl<shuffle_tensor_type, tensor_type>;
+        using operator_type = operators::dtl::adjoint_of_left_multiplication_operator_impl<tensor_type>;
 
         using sparse_traditional_tensor = alg::algebra<tensor_basis, coeff_ring, traditional_multiplication, alg::vectors::sparse_vector>;
         using dense_traditional_tensor = alg::algebra<tensor_basis, coeff_ring, traditional_multiplication, alg::vectors::dense_vector>;
@@ -144,18 +144,6 @@ SUITE(Adjoint)
             return result;
         }
 
-<<<<<<< HEAD
-        tensor_type generic_tensor(LET offset, std::initializer_list<key_type> keys) const {
-            tensor_type result;
-
-            for (auto key : keys) {
-                result.add_scal_prod(key, to_poly_key(key, offset));
-            }
-            return result;
-        }
-
-        shuffle_tensor_type construct_expected(LET op_offset, LET arg_offset, std::initializer_list<key_type> keys) const {
-=======
         shuffle_tensor_type construct_expected(LET tensor_offset, LET shuffle_offset) {
             shuffle_tensor_type result;
 
@@ -171,7 +159,6 @@ SUITE(Adjoint)
         }
         shuffle_tensor_type construct_expected(LET op_offset, LET arg_offset, std::initializer_list<key_type> keys) const
         {
->>>>>>> 809f478f3d70b2cad2fa7512f72ec512b8b44d60
             shuffle_tensor_type result;
 
             for (auto&& key : basis.iterate_keys()) {
@@ -179,11 +166,7 @@ SUITE(Adjoint)
                     auto right(key);
                     auto left = right.split_n(op_key.size());
                     if (left == op_key) {
-<<<<<<< HEAD
-                        result.add_scal_prod(right, to_poly_key(op_key, op_offset)*to_poly_key(arg_offset, key));
-=======
                         result.add_scal_prod(right, to_poly_key(op_key, op_offset) * to_poly_key(arg_offset, key));
->>>>>>> 809f478f3d70b2cad2fa7512f72ec512b8b44d60
                     }
                 }
             }

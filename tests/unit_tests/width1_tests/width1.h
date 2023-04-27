@@ -10,8 +10,10 @@
 
 #include <libalgebra/alg_types.h>
 
-class Width1Tests : public alg_types<2, 1, DPReal> {
 
+
+class Width1Tests : public alg_types<2, 1, DPReal>
+{
 };
 
 

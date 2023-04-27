@@ -19,13 +19,7 @@ SUITE(operator_composition)
         using functional_t = alg::operators::shuffle_tensor_functional<SHUFFLE_TENSOR, TENSOR>;
 
         using operator_t = alg::operators::linear_operator<
-                alg::operators::composition_operator<
-                        functional_t,
-                        multiply_t,
-                        TENSOR,
-                        S>,
-                TENSOR,
-                S>;
+                alg::operators::composition_operator<functional_t, multiply_t>>;
 
         operator_t op;
 

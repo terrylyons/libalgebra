@@ -8,7 +8,7 @@
 namespace alg {
 namespace operators {
 
-template<typename Impl1, typename Impl2, typename ArgumentType, typename ResultType>
+template<typename Impl1, typename Impl2>
 class sum_operator
 {
     Impl1 left;
@@ -19,7 +19,8 @@ public:
         : left(impl1), right(impl2)
     {}
 
-    ResultType operator()(const ArgumentType& arg) const
+    template <typename ArgumentType>
+    auto operator()(const ArgumentType& arg) const -> decltype(left(arg) + right(arg))
     {
         return left(arg) + right(arg);
     }

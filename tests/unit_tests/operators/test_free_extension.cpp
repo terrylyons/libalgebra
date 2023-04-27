@@ -59,7 +59,7 @@ SUITE(free_extension_operator)
                 alg::no_caching_tag,
                 typename types::TENSOR::BASIS,
                 key_func>;
-        using linear_op = alg::operators::linear_operator<ext_op, typename types::TENSOR, typename out_types::TENSOR>;
+        using linear_op = alg::operators::linear_operator<ext_op>;
 
         linear_op op;
     };

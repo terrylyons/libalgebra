@@ -14,13 +14,8 @@ SUITE(test_operator_smul) {
     {
         using multiplier_t = alg::operators::left_multiplication_operator<TENSOR>;
 
-        using smul_operator_t = alg::operators::scalar_multiply_operator<
-                TENSOR,
-                TENSOR,
-                multiplier_t,
-                S
-                >;
-        using operator_t = alg::operators::linear_operator<smul_operator_t, TENSOR, TENSOR>;
+        using smul_operator_t = alg::operators::scalar_multiply_operator<multiplier_t, S>;
+        using operator_t = alg::operators::linear_operator<smul_operator_t>;
         operator_t op;
 
         fixture() : op(multiplier_t(TENSOR(LET(1), S(2))), S(3))

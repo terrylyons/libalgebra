@@ -165,18 +165,16 @@ public:
         construct_impl(result.base_vector(), arg.base_vector());
         return result;
     }
-
-
 };
 
 
-template <typename Algebra, typename... Options>
-using recalibrate_operator = linear_operator<
-        dtl::recalibrate_operator_impl<Algebra, Options...>,
-        Algebra, dtl::recalibrated_t<Algebra, Options...>>;
-
 
 }// namespace dtl
+
+
+template<typename Algebra, typename... Options>
+using recalibrate_operator = linear_operator<
+        dtl::recalibrate_operator_impl<Algebra, Options...>>;
 
 }// namespace operators
 }// namespace alg

@@ -15,9 +15,9 @@ SUITE(test_operator_sum)
 
         using multiplier_t = alg::operators::left_multiplication_operator<TENSOR>;
 
-        using sum_type = alg::operators::sum_operator<multiplier_t, multiplier_t, TENSOR, TENSOR>;
+        using sum_type = alg::operators::sum_operator<multiplier_t, multiplier_t>;
 
-        using operator_t = alg::operators::linear_operator<sum_type, TENSOR, TENSOR>;
+        using operator_t = alg::operators::linear_operator<sum_type>;
 
         static multiplier_t make_left_tensor()
         {

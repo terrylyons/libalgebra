@@ -8,4 +8,5 @@ libalgebra_test(NAME operators
         test_operator_sum.cpp
         test_operators_smul.cpp
         test_lie_inner_product.cpp
+        test_recalibrate_operator.cpp
         )

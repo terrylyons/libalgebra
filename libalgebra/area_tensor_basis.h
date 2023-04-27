@@ -1,6 +1,11 @@
 #ifndef area_tensor_basis_h__
 #define area_tensor_basis_h__
 
+#include "implementation_types.h"
+#include "base_basis.h"
+#include "tensor_basis.h"
+
+
 namespace alg {
 
 /// The monoid of words of a finite number of letters with the area product.

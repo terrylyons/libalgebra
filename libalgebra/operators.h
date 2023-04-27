@@ -13,22 +13,16 @@
 #include "sum_operator.h"
 #include "vector_bundle.h"
 
-#include <libalgebra/alg_types.h>
+
 
 namespace alg {
 namespace operators {
 
-template<typename Impl, typename ArgumentType, typename ResultType>
+template<typename Impl>
 class linear_operator : protected Impl
 {
-    static_assert(
-            std::is_same<
-                    decltype(std::declval<Impl>()(std::declval<const ArgumentType&>())),
-                    ResultType>::value,
-            "implementation class must be callable with a const reference to ArgumentType and return ResultType");
 
 public:
-    using argument_type = ArgumentType;
 
 protected:
     using implementation_type = Impl;
@@ -36,12 +30,13 @@ protected:
 public:
     using implementation_type::implementation_type;
 
-    using result_type = ResultType;
     using implementation_type::operator();
 
-    vector_bundle<result_type> operator()(const vector_bundle<argument_type>& arg)
+    template <typename ArgBase, typename ArgFibre>
+    auto operator()(const vector_bundle<ArgBase, ArgFibre>& arg)
+            -> vector_bundle<decltype((*this)(arg.base())), decltype((*this)(arg.fibre()))>
     {
-        return {implementation_type::operator()(static_cast<const argument_type&>(arg)),
+        return {implementation_type::operator()(static_cast<const ArgBase&>(arg)),
                 implementation_type::operator()(arg.fibre())};
     }
 
@@ -51,35 +46,26 @@ protected:
 
 public:
     template<typename OtherImpl>
-    linear_operator<
-            sum_operator<Impl, OtherImpl, ArgumentType, ResultType>,
-            ArgumentType,
-            ResultType>
-    operator+(const linear_operator<OtherImpl, ArgumentType, ResultType>& other) const
+    linear_operator<sum_operator<Impl, OtherImpl>>
+    operator+(const linear_operator<OtherImpl>& other) const
     {
         return {*this, other};
     }
 
     template<typename OtherImpl, typename NewArgumentType>
-    linear_operator<
-            composition_operator<Impl, OtherImpl, NewArgumentType, ResultType>,
-            NewArgumentType,
-            ResultType> friend
+    linear_operator<composition_operator<Impl, OtherImpl>> friend
     operator*(const linear_operator& outer,
-              const linear_operator<OtherImpl, NewArgumentType, ArgumentType>& inner)
+              const linear_operator<OtherImpl>& inner)
     {
-        using composition_type = composition_operator<Impl, OtherImpl, NewArgumentType, ResultType>;
-        using return_type = linear_operator<
-                composition_type,
-                NewArgumentType,
-                ResultType>;
+        using composition_type = composition_operator<Impl, OtherImpl>;
+        using return_type = linear_operator<composition_type>;
 
         return return_type(composition_type(static_cast<const OtherImpl&>(inner)), static_cast<const Impl&>(outer));
     }
 };
 
-template<typename Impl, typename ArgumentType>
-using linear_functional = linear_operator<Impl, ArgumentType, typename ArgumentType::SCALAR>;
+template<typename Impl>
+using linear_functional = linear_operator<Impl>;
 
 namespace dtl {
 
@@ -135,15 +121,11 @@ private:
 
 template<typename Algebra>
 using left_multiplication_operator = linear_operator<
-        dtl::left_multiplication_operator_impl<Algebra>,
-        Algebra,
-        Algebra>;
+        dtl::left_multiplication_operator_impl<Algebra>>;
 
 template<typename Algebra>
 using right_multiplication_operator = linear_operator<
-        dtl::right_multiplication_operator_impl<Algebra>,
-        Algebra,
-        Algebra>;
+        dtl::right_multiplication_operator_impl<Algebra>>;
 
 namespace dtl {
 
@@ -274,9 +256,7 @@ private:
 
 template<typename ShuffleAlgebra, typename TensorAlgebra>
 using adjoint_of_left_multiplication_operator = linear_operator<
-        dtl::adjoint_of_left_multiplication_operator_impl<ShuffleAlgebra, TensorAlgebra>,
-        ShuffleAlgebra,
-        ShuffleAlgebra>;
+        dtl::adjoint_of_left_multiplication_operator_impl<ShuffleAlgebra, TensorAlgebra>>;
 
 }// namespace operators
 }// namespace alg

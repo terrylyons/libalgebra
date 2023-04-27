@@ -10,7 +10,7 @@
 namespace alg {
 namespace operators {
 
-template<typename ArgumentType, typename ResultType, typename Impl, typename Scalar>
+template<typename Impl, typename Scalar>
 class scalar_multiply_operator : protected Impl
 {
     Scalar m_scalar;
@@ -20,7 +20,8 @@ public:
         : Impl(implementation), m_scalar(s)
     {}
 
-    ResultType operator()(const ArgumentType& arg) const
+    template <typename ArgumentType>
+    auto operator()(const ArgumentType& arg) const -> decltype(Impl::operator()(arg)*m_scalar)
     {
         return Impl::operator()(arg) * m_scalar;
     }

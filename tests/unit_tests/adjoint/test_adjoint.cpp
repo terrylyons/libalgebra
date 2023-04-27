@@ -133,6 +133,30 @@ SUITE(Adjoint)
             }
             return result;
         }
+
+        tensor_type generic_tensor(LET offset, std::initializer_list<key_type> keys) const {
+            tensor_type result;
+
+            for (auto key : keys) {
+                result.add_scal_prod(key, to_poly_key(key, offset));
+            }
+            return result;
+        }
+
+        shuffle_tensor_type construct_expected(LET op_offset, LET arg_offset, std::initializer_list<key_type> keys) const {
+            shuffle_tensor_type result;
+
+            for (auto&& key : basis.iterate_keys()) {
+                for (const auto& op_key : keys) {
+                    auto right(key);
+                    auto left = right.split_n(op_key.size());
+                    if (left == op_key) {
+                        result.add_scal_prod(right, to_poly_key(op_key, op_offset)*to_poly_key(arg_offset, key));
+                    }
+                }
+            }
+            return result;
+        }
     };
 
     using PolyMultiplicationTests55 = PolyMultiplicationTests<5, 5>;

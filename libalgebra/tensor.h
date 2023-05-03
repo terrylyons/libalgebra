@@ -619,6 +619,7 @@ public:
 template <DEG MaxDepth, typename Coeffs, typename Signer, IDEG UNUSED>
 class tiled_inverse_operator<1, MaxDepth, Coeffs, Signer, UNUSED> {
 public:
+    using scalar_type = typename Coeffs::S;
 
     template<typename Vector>
     static void apply(const Vector& src, Vector& result, DEG max_degree = MaxDepth)
@@ -649,6 +650,25 @@ public:
             optr[d] = s(iptr[d]);
         }
     }
+
+
+    void operator()(const scalar_type* src_ptr, scalar_type* dst_ptr, const DEG curr_degree) const noexcept
+    {
+
+        if (src_ptr == nullptr)// if pointer to source is null
+        {
+            return;
+        }
+        if (dst_ptr == nullptr) {
+            return;
+        }
+
+        for (DEG d = 0; d <= curr_degree; ++d) {
+            Signer s(d);
+            dst_ptr[d] = s(src_ptr[d]);
+        }
+    }
+
 };
 
 

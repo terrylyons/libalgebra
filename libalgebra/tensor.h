@@ -248,7 +248,7 @@ protected:
         BOOST_ALIGN_ASSUME_ALIGNED(tptr, LA_CACHELINE_BYTES);
         for (index_type i = 0; i < ibound; ++i) {
             LA_PREFETCH_ET0(out_p + (i+1)*out_stride);
-#pragma omp simd
+
             for (index_type j = 0; j < jbound; ++j) {
                 out_p[i*out_stride + j] = tptr[i*in_stride + j];
             }

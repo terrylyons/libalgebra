@@ -31,6 +31,8 @@ protected:
     Fibre m_fibre;
 
 public:
+    static const typename Vector::BASIS basis;
+
     using vector_type = Vector;
     using fibre_vector_type = Fibre;
 
@@ -49,7 +51,9 @@ public:
     // Legacy declarations
     using BASIS = basis_type;
     using SCALAR = scalar_type;
+    using SCA = SCALAR;
     using RATIONAL = rational_type;
+    using RAT = RATIONAL;
     using KEY = key_type;
     using coefficient_field = coeff_type;
 
@@ -69,10 +73,12 @@ public:
             "fibre scalar type must be multiplicative with vector scalar type");
 
     vector_bundle_base() = default;
-
     vector_bundle_base(const vector_bundle_base &) = default;
-
     vector_bundle_base(vector_bundle_base &&) noexcept = default;
+
+    vector_bundle_base& operator=(const vector_bundle_base& other) = default;
+    vector_bundle_base& operator=(vector_bundle_base& other) noexcept = default;
+
 
     explicit vector_bundle_base(const Vector &point) : m_base(point), m_fibre() {}
 
@@ -125,6 +131,11 @@ private:
 
 #endif
 public:
+
+    const scalar_type& operator[](const key_type& key) const
+    { return m_base[key]; }
+
+
     Derived &add_scal_prod(const vector_bundle_base &rhs, const scalar_type &s);
 
     Derived &sub_scal_prod(const vector_bundle_base &rhs, const scalar_type &s);
@@ -165,8 +176,13 @@ public:
     Derived& sub_mul(const vector_bundle_base& lhs, const vector_bundle_base& rhs);
 
 
+    scalar_type NormL1() const { return m_base.NormL1(); }
+
 };
 
+
+template <typename Vector, typename Fibre, typename Derived>
+const typename Vector::BASIS vector_bundle_base<Vector, Fibre, Derived>::basis = Vector::basis;
 
 }// namespace dtl
 

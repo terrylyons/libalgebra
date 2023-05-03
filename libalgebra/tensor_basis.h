@@ -72,14 +72,14 @@ template <typename I>
 struct tensor_size_info<1, I> {
     static constexpr DEG max_depth = 52;
 
-    template <I D>
+    template <std::size_t D>
     struct helper {
-        static constexpr I value = D + 1;
+        static constexpr std::size_t value = D + 1;
     };
 
-    template <I D>
+    template <std::size_t D>
     struct power_helper {
-        static constexpr I value = 1;
+        static constexpr std::size_t value = 1;
     };
 
     using holder = typename alg::utils::generate_array<max_depth + 1, helper>::result;

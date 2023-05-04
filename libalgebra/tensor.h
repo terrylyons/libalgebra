@@ -1,4 +1,4 @@
-﻿/* *************************************************************
+/* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
 Greg Gyurkó and Arend Janssen.
@@ -307,11 +307,11 @@ public:
         return reverse.data();
     }
 
-    pointer tile_ptr() noexcept
+    pointer __declspec(restrict) tile_ptr() noexcept
     {
         return static_cast<pointer>(tile.data);
     }
-    const_pointer tile_ptr() const noexcept
+    const_pointer __declspec(restrict)  tile_ptr() const noexcept
     {
         return static_cast<const_pointer>(tile.data);
     }
@@ -385,7 +385,7 @@ public:
     LA_INLINE_ALWAYS constexpr void permute_write_tile()
     {
 //        using perm = dtl::reversing_permutation<Width, tile_info::tile_letters>;
-        pointer LA_RESTRICT tptr = tile_ptr();
+        pointer tptr = tile_ptr();
         const auto* perm = reverser();
         for (index_type i = 0; i < tile_width; ++i) {
 //            auto pi = perm::permute_idx(i);

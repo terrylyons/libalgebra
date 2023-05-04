@@ -71,6 +71,7 @@ class recalibrate<change_coeffs<NewCoeffs>, Base> : Base
     template<typename C, DEG W, DEG D, template<typename, typename, typename...> class V, typename... Args>
     static lie<NewCoeffs, W, D, V, Args...> f(lie<C, W, D, V, Args...>& a);
 
+
 public:
     using type = decltype(f(std::declval<old_type&>()));
 };
@@ -88,6 +89,7 @@ class recalibrate<change_storage<NewVType, NewVArgs...>, Base> : Base
 
     template<typename C, DEG W, DEG D, template<typename, typename, typename...> class V, typename... Args>
     static lie<C, W, D, NewVType, NewVArgs...> f(lie<C, W, D, V, Args...>& a);
+
 
 public:
     using type = decltype(f(std::declval<old_type&>()));
@@ -170,13 +172,14 @@ public:
 };
 
 
-template <typename Algebra, typename... Options>
-using recalibrate_operator = linear_operator<
-        dtl::recalibrate_operator_impl<Algebra, Options...>,
-        Algebra, dtl::recalibrated_t<Algebra, Options...>>;
 
 
 }// namespace dtl
+
+template<typename Algebra, typename... Options>
+using recalibrate_operator = linear_operator<
+        dtl::recalibrate_operator_impl<Algebra, Options...>,
+        Algebra, dtl::recalibrated_t<Algebra, Options...>>;
 
 }// namespace operators
 }// namespace alg

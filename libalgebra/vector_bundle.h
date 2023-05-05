@@ -58,10 +58,12 @@ public:
     using coefficient_field = coeff_type;
 
     static_assert(
-            std::is_base_of<vectors::vector<basis_type, coeff_type>, Vector>::value,
+            alg::utils::is_vector_type<Vector>::value,
+//            std::is_base_of<vectors::vector<basis_type, coeff_type>, Vector>::value,
             "Vector must be a vector type");
     static_assert(
-            std::is_base_of<vectors::vector<fibre_basis_type, fibre_coeff_type>, Fibre>::value,
+            alg::utils::is_vector_type<Fibre>::value,
+//            std::is_base_of<vectors::vector<fibre_basis_type, fibre_coeff_type>, Fibre>::value,
             "Fibre must be a vector type");
     static_assert(
             std::is_same<
@@ -79,6 +81,10 @@ public:
     vector_bundle_base& operator=(const vector_bundle_base& other) = default;
     vector_bundle_base& operator=(vector_bundle_base& other) noexcept = default;
 
+
+    template <typename... Args>
+    explicit vector_bundle_base(Args&&... args) : m_base(std::forward<Args>(args)...), m_fibre()
+    {}
 
     explicit vector_bundle_base(const Vector &point) : m_base(point), m_fibre() {}
 
@@ -132,6 +138,11 @@ private:
 #endif
 public:
 
+    void swap(vector_bundle_base& other) const noexcept {
+        std::swap(m_base, other.m_base);
+        std::swap(m_fibre, other.m_fibre);
+    }
+
     const scalar_type& operator[](const key_type& key) const
     { return m_base[key]; }
 
@@ -183,6 +194,405 @@ public:
 
 template <typename Vector, typename Fibre, typename Derived>
 const typename Vector::BASIS vector_bundle_base<Vector, Fibre, Derived>::basis = Vector::basis;
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived operator-(const vector_bundle_base<Vector, Fibre, Derived>& arg)
+{
+    return {-arg.base(), -arg.fibre()};
+}
+
+template<typename LBase, typename LFibre, typename LDerived,
+         typename RBase, typename RFibre, typename RDerived>
+LDerived operator+(const vector_bundle_base<LBase, LFibre, LDerived>& lhs,
+                   const vector_bundle_base<RBase, RFibre, RDerived>& rhs)
+{
+    return {lhs.base() + rhs.base(), lhs.fibre() + rhs.fibre()};
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived operator+(const vector_bundle_base<Vector, Fibre, Derived>& lhs, const Vector& rhs)
+{
+    return {lhs.base() + rhs, lhs.fibre()};
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived operator+(const Vector& lhs, const vector_bundle_base<Vector, Fibre, Derived>& rhs)
+{
+    return {lhs + rhs.base(), rhs.fibre()};
+}
+
+template<typename LBase, typename LFibre, typename LDerived,
+         typename RBase, typename RFibre, typename RDerived>
+LDerived operator-(const vector_bundle_base<LBase, LFibre, LDerived>& lhs,
+                   const vector_bundle_base<RBase, RFibre, RDerived>& rhs)
+{
+    return {lhs.base() - rhs.base(), lhs.fibre() - rhs.fibre()};
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived operator-(const vector_bundle_base<Vector, Fibre, Derived>& lhs, const Vector& rhs)
+{
+    return {lhs.base() - rhs, lhs.fibre()};
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived operator-(const Vector& lhs, const vector_bundle_base<Vector, Fibre, Derived>& rhs)
+{
+    return {lhs - rhs.base(), -rhs.fibre()};
+}
+
+/*
+ * For scalar multiplication, the vector and fibre types might have different scalar types, so we define
+ * scalar multiplication with respect to both and let the compiler figure out which one is more permissive.
+ * The same is true for rational division.
+ */
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived
+operator*(const vector_bundle_base<Vector, Fibre, Derived>& lhs, const typename Vector::SCALAR& rhs)
+{
+    return {lhs.base() * rhs, lhs.fibre() * rhs};
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived operator*(const typename Vector::SCALAR& lhs, const vector_bundle_base<Vector, Fibre, Derived>& rhs)
+{
+    return {lhs * rhs.base(), lhs * rhs.fibre()};
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived operator/(const vector_bundle_base<Vector, Fibre, Derived>& lhs, const typename Vector::RATIONAL& rhs)
+{
+    return {lhs.base() / rhs, lhs.fibre() / rhs};
+}
+
+template<typename LBase, typename LFibre, typename LDerived,
+         typename RBase, typename RFibre, typename RDerived>
+LDerived operator*(
+        const vector_bundle_base<LBase, LFibre, LDerived>& left,
+        const vector_bundle_base<RBase, RFibre, RDerived>& right)
+{
+    const auto& lhs_vec = left.base();
+    const auto& rhs_vec = right.base();
+    return {lhs_vec * rhs_vec, lhs_vec * right.fibre() + left.fibre() * rhs_vec};
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived operator*(
+        const vector_bundle_base<Vector, Fibre, Derived>& left,
+        const Vector& rhs_vec)
+{
+    const auto& lhs_vec = left.base();
+    return {lhs_vec * rhs_vec, left.fibre() * rhs_vec};
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived operator*(
+        const Vector& lhs_vec,
+        const vector_bundle_base<Vector, Fibre, Derived>& right)
+{
+    const auto& rhs_vec = right.base();
+    return {lhs_vec * rhs_vec, lhs_vec * right.fibre()};
+}
+
+/*
+ * Now all the in-place operations.
+ */
+
+template<typename LBase, typename LFibre, typename LDerived,
+         typename RBase, typename RFibre, typename RDerived>
+LDerived&
+operator+=(vector_bundle_base<LBase, LFibre, LDerived>& lhs,
+           const vector_bundle_base<RBase, RFibre, RDerived>& rhs)
+{
+    lhs.base() += rhs.base();
+    lhs.fibre() += rhs.fibre();
+    return static_cast<LDerived&>(lhs);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived& operator+=(vector_bundle_base<Vector, Fibre, Derived>& lhs, const Vector& rhs)
+{
+    lhs.base() += rhs;
+    return static_cast<Derived&>(lhs);
+}
+
+template<typename LBase, typename LFibre, typename LDerived,
+         typename RBase, typename RFibre, typename RDerived>
+LDerived&
+operator-=(vector_bundle_base<LBase, LFibre, LDerived>& lhs,
+           const vector_bundle_base<RBase, RFibre, RDerived>& rhs)
+{
+    lhs.base() -= rhs.base();
+    lhs.fibre() -= rhs.fibre();
+    return static_cast<LDerived&>(lhs);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived& operator-=(vector_bundle_base<Vector, Fibre, Derived>& lhs, const Vector& rhs)
+{
+    lhs.base() -= rhs;
+    return static_cast<Derived&>(lhs);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived& operator*=(vector_bundle_base<Vector, Fibre, Derived>& lhs, const typename Vector::SCALAR& rhs)
+{
+    lhs.base() *= rhs;
+    lhs.fibre() *= rhs;
+    return static_cast<Derived&>(lhs);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived& operator/=(vector_bundle_base<Vector, Fibre, Derived>& lhs, const typename Vector::RATIONAL& rhs)
+{
+    lhs.base() /= rhs;
+    lhs.fibre() /= rhs;
+    return static_cast<Derived&>(lhs);
+}
+
+template<typename LBase, typename LFibre, typename LDerived,
+         typename RBase, typename RFibre, typename RDerived>
+LDerived& operator*=(
+        vector_bundle_base<LBase, LFibre, LDerived>& lhs,
+        const vector_bundle_base<RBase, RFibre, RDerived>& rhs)
+{
+    auto& lhs_vec = lhs.base();
+    const auto& rhs_vec = rhs.base();
+
+    lhs.fibre() *= rhs_vec;
+    lhs.fibre() += lhs_vec * rhs.fibre();
+
+    // Do this operation last because otherwise it messes with the
+    // calculation of the fibre.
+    lhs_vec *= rhs_vec;
+    return static_cast<LDerived&>(lhs);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived& operator*=(
+        vector_bundle_base<Vector, Fibre, Derived>& lhs,
+        const Vector& rhs_vec)
+{
+    auto& lhs_vec = lhs.base();
+
+    lhs_vec *= rhs_vec;
+    lhs.fibre() *= rhs_vec;
+    return static_cast<Derived&>(lhs);
+}
+
+template<typename LBase, typename LFibre, typename LDerived,
+         typename RBase, typename RFibre, typename RDerived>
+bool operator==(const vector_bundle_base<LBase, LFibre, LDerived>& lhs,
+                const vector_bundle_base<RBase, RFibre, RDerived>& rhs)
+{
+    return (lhs.base() == rhs.base()) && (lhs.fibre() == rhs.fibre());
+}
+
+template<typename LBase, typename LFibre, typename LDerived,
+         typename RBase, typename RFibre, typename RDerived>
+bool operator!=(const vector_bundle_base<LBase, LFibre, LDerived>& lhs,
+                const vector_bundle_base<RBase, RFibre, RDerived>& rhs)
+{
+    return !operator==(lhs, rhs);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+std::ostream& operator<<(std::ostream& os, const vector_bundle_base<Vector, Fibre, Derived>& arg)
+{
+    return os << '('
+              << arg.base()
+              << ", "
+              << arg.fibre()
+              << ')';
+}
+
+template<typename LBase, typename LFibre, typename LDerived,
+         typename RBase, typename RFibre, typename RDerived>
+typename std::enable_if<is_algebra<LBase>(), LDerived>::type
+commutator(const vector_bundle_base<LBase, LFibre, LDerived>& x,
+           const vector_bundle_base<RBase, RFibre, RDerived>& y)
+{
+    LDerived result(x * y);
+    result.add_mul(y, x);
+    return result;
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived&
+vector_bundle_base<Vector, Fibre, Derived>::add_scal_prod(const vector_bundle_base& rhs, const scalar_type& s)
+{
+    m_base.add_scal_prod(rhs.base(), s);
+    m_fibre.add_scal_prod(rhs.m_fibre, s);
+    return static_cast<Derived&>(*this);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived&
+vector_bundle_base<Vector, Fibre, Derived>::sub_scal_prod(const vector_bundle_base& rhs, const scalar_type& s)
+{
+    m_base.sub_scal_prod(rhs.base(), s);
+    m_fibre.sub_scal_prod(rhs.m_fibre, s);
+    return static_cast<Derived&>(*this);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived& vector_bundle_base<Vector, Fibre, Derived>::add_scal_div(const vector_bundle_base& rhs,
+                                                                  const rational_type& s)
+{
+    m_base.add_scal_div(rhs.base(), s);
+    m_fibre.add_scal_div(rhs.m_fibre, s);
+    return static_cast<Derived&>(*this);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived& vector_bundle_base<Vector, Fibre, Derived>::sub_scal_div(const vector_bundle_base& rhs,
+                                                                  const rational_type& s)
+{
+    m_base.sub_scal_div(rhs.base(), s);
+    m_fibre.sub_scal_div(rhs.m_fibre, s);
+    return static_cast<Derived&>(*this);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived& vector_bundle_base<Vector, Fibre, Derived>::add_scal_prod(const Vector& rhs, const scalar_type& s)
+{
+    m_base.add_scal_prod(rhs, s);
+    return static_cast<Derived&>(*this);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived& vector_bundle_base<Vector, Fibre, Derived>::sub_scal_prod(const Vector& rhs, const scalar_type& s)
+{
+    m_base.sub_scal_prod(rhs, s);
+    return static_cast<Derived&>(*this);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived& vector_bundle_base<Vector, Fibre, Derived>::add_scal_div(const Vector& rhs, const rational_type& s)
+{
+    m_base.add_scal_div(rhs, s);
+    return static_cast<Derived&>(*this);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived& vector_bundle_base<Vector, Fibre, Derived>::sub_scal_div(const Vector& rhs, const rational_type& s)
+{
+    m_base.sub_scal_div(rhs, s);
+    return static_cast<Derived&>(*this);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+template<typename OtherVector>
+typename std::enable_if<!std::is_base_of<vector_bundle_base<Vector, Fibre, Derived>, OtherVector>::value, Derived>::type&
+vector_bundle_base<Vector, Fibre, Derived>::add_scal_prod(const OtherVector& rhs, const scalar_type& s)
+{
+    m_base.add_scal_prod(rhs, s);
+    return static_cast<Derived&>(*this);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived&
+vector_bundle_base<Vector, Fibre, Derived>::mul_scal_prod(const vector_bundle_base& rhs, const scalar_type& s,
+                                                          DEG depth)
+{
+    m_fibre.mul_scal_prod(rhs.base(), s, depth);
+    m_fibre += m_base * (rhs.m_fibre * s);
+    m_base.mul_scal_prod(rhs.base(), s, depth);
+    return static_cast<Derived&>(*this);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived& vector_bundle_base<Vector, Fibre, Derived>::mul_scal_prod(const vector_type& rhs, const scalar_type& s,
+                                                                   DEG depth)
+{
+    m_fibre.mul_scal_prod(rhs, s, depth);
+    m_base.mul_scal_prod(rhs, s, depth);
+    return static_cast<Derived&>(*this);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived&
+vector_bundle_base<Vector, Fibre, Derived>::mul_scal_prod(const vector_bundle_base& rhs, const scalar_type& s)
+{
+    m_fibre.mul_scal_prod(rhs.base(), s);
+    m_fibre += m_base * (rhs.m_fibre * s);
+    m_base.mul_scal_prod(rhs.base(), s);
+    return static_cast<Derived&>(*this);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived&
+vector_bundle_base<Vector, Fibre, Derived>::mul_scal_prod(const vector_type& rhs, const scalar_type& s)
+{
+    m_base.mul_scal_prod(rhs, s);
+    m_fibre.mul_scal_prod(rhs, s);
+    return static_cast<Derived&>(*this);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived&
+vector_bundle_base<Vector, Fibre, Derived>::mul_scal_div(const vector_bundle_base& rhs, const rational_type& s,
+                                                         DEG depth)
+{
+    m_fibre.mul_scal_div(rhs.base(), s, depth);
+    m_fibre += m_base * (rhs.m_fibre / s);
+    m_base.mul_scal_div(rhs.base(), s, depth);
+    return static_cast<Derived&>(*this);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived&
+vector_bundle_base<Vector, Fibre, Derived>::mul_scal_div(const vector_type& rhs, const rational_type& s,
+                                                         DEG depth)
+{
+    m_base.mul_scal_div(rhs, s, depth);
+    m_fibre.mul_scal_div(rhs, s, depth);
+    return static_cast<Derived&>(*this);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived& vector_bundle_base<Vector, Fibre, Derived>::mul_scal_div(const vector_bundle_base& rhs,
+                                                                  const rational_type& s)
+{
+    m_fibre.mul_scal_div(rhs.base(), s);
+    m_fibre += m_base * (rhs.m_fibre / s);
+    m_base.mul_scal_div(rhs.base(), s);
+    return static_cast<Derived&>(*this);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived&
+vector_bundle_base<Vector, Fibre, Derived>::mul_scal_div(const vector_type& rhs, const rational_type& s)
+{
+    m_base.mul_scal_div(rhs, s);
+    m_fibre.mul_scal_div(rhs, s);
+    return static_cast<Derived&>(*this);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived&
+vector_bundle_base<Vector, Fibre, Derived>::add_mul(const vector_bundle_base& lhs, const vector_bundle_base& rhs)
+{
+    // Operation is z = z + x*y
+    // derivative is z' = z' + (x*y' + x'*y)
+    m_fibre += lhs.base() * rhs.fibre() + lhs.fibre() * rhs.base();
+    m_base.sub_mul(lhs.base(), rhs.base());
+
+    return static_cast<Derived&>(*this);
+}
+
+template<typename Vector, typename Fibre, typename Derived>
+Derived&
+vector_bundle_base<Vector, Fibre, Derived>::sub_mul(const vector_bundle_base& lhs, const vector_bundle_base& rhs)
+{
+    // Operation is z = z - x*y
+    // derivative is z' = z' - (x*y' + x'*y)
+    m_fibre -= lhs.base() * rhs.fibre() + lhs.fibre() * rhs.base();
+    m_base.sub_mul(lhs.base(), rhs.base());
+
+    return static_cast<Derived&>(*this);
+}
 
 }// namespace dtl
 
@@ -479,364 +889,6 @@ public:
 
 
 namespace dtl {
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived operator-(const vector_bundle_base<Vector, Fibre, Derived> &arg) {
-    return {-arg.base(), -arg.fibre()};
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived operator+(const vector_bundle_base<Vector, Fibre, Derived> &lhs,
-                  const vector_bundle_base<Vector, Fibre, Derived> &rhs) {
-    return {
-            lhs.base() + rhs.base(),
-            lhs.fibre() + rhs.fibre()};
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived operator+(const vector_bundle_base<Vector, Fibre, Derived> &lhs, const Vector &rhs) {
-    return {lhs.base() + rhs, lhs.fibre()};
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived operator+(const Vector &lhs, const vector_bundle_base<Vector, Fibre, Derived> &rhs) {
-    return {lhs + rhs.base(), rhs.fibre()};
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived operator-(const vector_bundle_base<Vector, Fibre, Derived> &lhs,
-                  const vector_bundle_base<Vector, Fibre, Derived> &rhs) {
-    return {
-            lhs.base() - rhs.base(),
-            lhs.fibre() - rhs.fibre()};
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived operator-(const vector_bundle_base<Vector, Fibre, Derived> &lhs, const Vector &rhs) {
-    return {lhs.base() - rhs, lhs.fibre()};
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived operator-(const Vector &lhs, const vector_bundle_base<Vector, Fibre, Derived> &rhs) {
-    return {lhs - rhs.base(), -rhs.fibre()};
-}
-
-/*
- * For scalar multiplication, the vector and fibre types might have different scalar types, so we define
- * scalar multiplication with respect to both and let the compiler figure out which one is more permissive.
- * The same is true for rational division.
- */
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived
-operator*(const vector_bundle_base<Vector, Fibre, Derived> &lhs, const typename Vector::SCALAR &rhs) {
-    return {lhs.base() * rhs, lhs.fibre() * rhs};
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived operator*(const typename Vector::SCALAR &lhs, const vector_bundle_base<Vector, Fibre, Derived> &rhs) {
-    return {lhs * rhs.base(), lhs * rhs.fibre()};
-}
-
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived operator/(const vector_bundle_base<Vector, Fibre, Derived> &lhs, const typename Vector::RATIONAL &rhs) {
-    return {lhs.base() / rhs, lhs.fibre() / rhs};
-}
-
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived operator*(
-        const vector_bundle_base<Vector, Fibre, Derived> &left,
-        const vector_bundle_base<Vector, Fibre, Derived> &right) {
-    const auto &lhs_vec = left.base();
-    const auto &rhs_vec = right.base();
-    return vector_bundle < Vector, Fibre > (
-            lhs_vec * rhs_vec,
-                    lhs_vec * right.fibre() + left.fibre() * rhs_vec);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived operator*(
-        const vector_bundle_base<Vector, Fibre, Derived> &left,
-        const Vector &rhs_vec) {
-    const auto &lhs_vec = left.base();
-    return {lhs_vec * rhs_vec, left.fibre() * rhs_vec};
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived operator*(
-        const Vector &lhs_vec,
-        const vector_bundle_base<Vector, Fibre, Derived> &right) {
-    const auto &rhs_vec = right.base();
-    return vector_bundle < Vector, Fibre > (
-            lhs_vec * rhs_vec,
-                    lhs_vec * right.fibre());
-}
-
-
-/*
- * Now all the in-place operations.
- */
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &
-operator+=(vector_bundle_base<Vector, Fibre, Derived> &lhs,
-           const vector_bundle_base<Vector, Fibre, Derived> &rhs) {
-    lhs.base() += rhs.base();
-    lhs.fibre() += rhs.fibre();
-    return static_cast<Derived&>(lhs);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &operator+=(vector_bundle_base<Vector, Fibre, Derived> &lhs, const Vector &rhs) {
-    lhs.base() += rhs;
-    return static_cast<Derived&>(lhs);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &
-operator-=(vector_bundle_base<Vector, Fibre, Derived> &lhs,
-           const vector_bundle_base<Vector, Fibre, Derived> &rhs) {
-    lhs.base() -= rhs.base();
-    lhs.fibre() -= rhs.fibre();
-    return static_cast<Derived&>(lhs);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &operator-=(vector_bundle_base<Vector, Fibre, Derived> &lhs, const Vector &rhs) {
-    lhs.base() -= rhs;
-    return static_cast<Derived&>(lhs);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &operator*=(vector_bundle_base<Vector, Fibre, Derived> &lhs, const typename Vector::SCALAR &rhs) {
-    lhs.base() *= rhs;
-    lhs.fibre() *= rhs;
-    return static_cast<Derived&>(lhs);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &operator/=(vector_bundle_base<Vector, Fibre, Derived> &lhs, const typename Vector::RATIONAL &rhs) {
-    lhs.base() /= rhs;
-    lhs.fibre() /= rhs;
-    return static_cast<Derived&>(lhs);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &operator*=(
-        vector_bundle_base<Vector, Fibre, Derived> &lhs,
-        const vector_bundle_base<Vector, Fibre, Derived> &rhs) {
-    auto &lhs_vec = lhs.base();
-    const auto &rhs_vec = rhs.base();
-
-    lhs.fibre() *= rhs_vec;
-    lhs.fibre() += lhs_vec * rhs.fibre();
-
-    // Do this operation last because otherwise it messes with the
-    // calculation of the fibre.
-    lhs_vec *= rhs_vec;
-    return static_cast<Derived&>(lhs);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &operator*=(
-        vector_bundle_base<Vector, Fibre, Derived> &lhs,
-        const Vector &rhs_vec) {
-    auto &lhs_vec = lhs.base();
-
-    lhs_vec *= rhs_vec;
-    lhs.fibre() *= rhs_vec;
-    return static_cast<Derived&>(lhs);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-bool operator==(const vector_bundle_base<Vector, Fibre, Derived> &lhs,
-                const vector_bundle_base<Vector, Fibre, Derived> &rhs) {
-    return (lhs.base() == rhs.base()) && (lhs.fibre() == rhs.fibre());
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-bool operator!=(const vector_bundle_base<Vector, Fibre, Derived> &lhs,
-                const vector_bundle_base<Vector, Fibre, Derived> &rhs) {
-    return !operator==(lhs, rhs);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-std::ostream &operator<<(std::ostream &os, const vector_bundle_base<Vector, Fibre, Derived> &arg) {
-    return os << '('
-              << arg.base()
-              << ", "
-              << arg.fibre()
-              << ')';
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-typename std::enable_if<is_algebra<Vector>(), Derived>::type
-commutator(const vector_bundle_base<Vector, Fibre, Derived> &x,
-           const vector_bundle_base<Vector, Fibre, Derived> &y) {
-    Derived result(x * y);
-    result.add_mul(y, x);
-    return result;
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &
-vector_bundle_base<Vector, Fibre, Derived>::add_scal_prod(const vector_bundle_base &rhs, const scalar_type &s) {
-    m_base.add_scal_prod(rhs.base(), s);
-    m_fibre.add_scal_prod(rhs.m_fibre, s);
-    return static_cast<Derived &>(*this);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &
-vector_bundle_base<Vector, Fibre, Derived>::sub_scal_prod(const vector_bundle_base &rhs, const scalar_type &s) {
-    m_base.sub_scal_prod(rhs.base(), s);
-    m_fibre.sub_scal_prod(rhs.m_fibre, s);
-    return static_cast<Derived &>(*this);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &vector_bundle_base<Vector, Fibre, Derived>::add_scal_div(const vector_bundle_base &rhs,
-                                                                  const rational_type &s) {
-    m_base.add_scal_div(rhs.base(), s);
-    m_fibre.add_scal_div(rhs.m_fibre, s);
-    return static_cast<Derived &>(*this);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &vector_bundle_base<Vector, Fibre, Derived>::sub_scal_div(const vector_bundle_base &rhs,
-                                                                  const rational_type &s) {
-    m_base.sub_scal_div(rhs.base(), s);
-    m_fibre.sub_scal_div(rhs.m_fibre, s);
-    return static_cast<Derived &>(*this);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &vector_bundle_base<Vector, Fibre, Derived>::add_scal_prod(const Vector &rhs, const scalar_type &s) {
-    m_base.add_scal_prod(rhs, s);
-    return static_cast<Derived &>(*this);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &vector_bundle_base<Vector, Fibre, Derived>::sub_scal_prod(const Vector &rhs, const scalar_type &s) {
-    m_base.sub_scal_prod(rhs, s);
-    return static_cast<Derived &>(*this);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &vector_bundle_base<Vector, Fibre, Derived>::add_scal_div(const Vector &rhs, const rational_type &s) {
-    m_base.add_scal_div(rhs, s);
-    return static_cast<Derived &>(*this);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &vector_bundle_base<Vector, Fibre, Derived>::sub_scal_div(const Vector &rhs, const rational_type &s) {
-    m_base.sub_scal_div(rhs, s);
-    return static_cast<Derived &>(*this);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-template<typename OtherVector>
-typename std::enable_if<!std::is_base_of<vector_bundle_base<Vector, Fibre, Derived>, OtherVector>::value, Derived>::type &
-vector_bundle_base<Vector, Fibre, Derived>::add_scal_prod(const OtherVector &rhs, const scalar_type &s) {
-    m_base.add_scal_prod(rhs, s);
-    return static_cast<Derived &>(*this);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &
-vector_bundle_base<Vector, Fibre, Derived>::mul_scal_prod(const vector_bundle_base &rhs, const scalar_type &s,
-                                                          DEG depth) {
-    m_fibre.mul_scal_prod(rhs.base(), s, depth);
-    m_fibre += m_base * (rhs.m_fibre * s);
-    m_base.mul_scal_prod(rhs.base(), s, depth);
-    return static_cast<Derived &>(*this);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &vector_bundle_base<Vector, Fibre, Derived>::mul_scal_prod(const vector_type &rhs, const scalar_type &s,
-                                                                   DEG depth) {
-    m_fibre.mul_scal_prod(rhs, s, depth);
-    m_base.mul_scal_prod(rhs, s, depth);
-    return static_cast<Derived &>(*this);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &
-vector_bundle_base<Vector, Fibre, Derived>::mul_scal_prod(const vector_bundle_base &rhs, const scalar_type &s) {
-    m_fibre.mul_scal_prod(rhs.base(), s);
-    m_fibre += m_base * (rhs.m_fibre * s);
-    m_base.mul_scal_prod(rhs.base(), s);
-    return static_cast<Derived &>(*this);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &
-vector_bundle_base<Vector, Fibre, Derived>::mul_scal_prod(const vector_type &rhs, const scalar_type &s) {
-    m_base.mul_scal_prod(rhs, s);
-    m_fibre.mul_scal_prod(rhs, s);
-    return static_cast<Derived &>(*this);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &
-vector_bundle_base<Vector, Fibre, Derived>::mul_scal_div(const vector_bundle_base &rhs, const rational_type &s,
-                                                         DEG depth) {
-    m_fibre.mul_scal_div(rhs.base(), s, depth);
-    m_fibre += m_base * (rhs.m_fibre / s);
-    m_base.mul_scal_div(rhs.base(), s, depth);
-    return static_cast<Derived &>(*this);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &
-vector_bundle_base<Vector, Fibre, Derived>::mul_scal_div(const vector_type &rhs, const rational_type &s,
-                                                         DEG depth) {
-    m_base.mul_scal_div(rhs, s, depth);
-    m_fibre.mul_scal_div(rhs, s, depth);
-    return static_cast<Derived &>(*this);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &vector_bundle_base<Vector, Fibre, Derived>::mul_scal_div(const vector_bundle_base &rhs,
-                                                                  const rational_type &s) {
-    m_fibre.mul_scal_div(rhs.base(), s);
-    m_fibre += m_base * (rhs.m_fibre / s);
-    m_base.mul_scal_div(rhs.base(), s);
-    return static_cast<Derived &>(*this);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &
-vector_bundle_base<Vector, Fibre, Derived>::mul_scal_div(const vector_type &rhs, const rational_type &s) {
-    m_base.mul_scal_div(rhs, s);
-    m_fibre.mul_scal_div(rhs, s);
-    return static_cast<Derived &>(*this);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &
-vector_bundle_base<Vector, Fibre, Derived>::add_mul(const vector_bundle_base &lhs, const vector_bundle_base &rhs) {
-    // Operation is z = z + x*y
-    // derivative is z' = z' + (x*y' + x'*y)
-    m_fibre += lhs.base() * rhs.fibre() + lhs.fibre() * rhs.base();
-    m_base.sub_mul(lhs.base(), rhs.base());
-
-    return static_cast<Derived&>(*this);
-}
-
-template<typename Vector, typename Fibre, typename Derived>
-Derived &
-vector_bundle_base<Vector, Fibre, Derived>::sub_mul(const vector_bundle_base &lhs, const vector_bundle_base &rhs) {
-    // Operation is z = z - x*y
-    // derivative is z' = z' - (x*y' + x'*y)
-    m_fibre -= lhs.base()*rhs.fibre() + lhs.fibre()*rhs.base();
-    m_base.sub_mul(lhs.base(), rhs.base());
-
-    return static_cast<Derived&>(*this);
-}
-
 
 }// namespace dtl
 //

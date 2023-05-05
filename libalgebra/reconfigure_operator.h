@@ -121,7 +121,7 @@ class recalibrate_operator_impl {
              typename C1,
              typename C2>
     void construct_impl(vectors::dense_vector<B<W, D1>, C1>& dst,
-                        const vectors::dense_vector<B<W, D2>, C2>& src) {
+                        const vectors::dense_vector<B<W, D2>, C2>& src) const {
         auto max_deg = std::min(D1, src.degree());
         dst.resize_to_degree(max_deg);
 
@@ -143,7 +143,7 @@ class recalibrate_operator_impl {
              template <typename, typename, typename...> class V1,
              template <typename, typename, typename...> class V2>
     void construct_impl(V1<B<W, D1>, C1>& dst,
-                        const V2<B<W, D2>, C2>& src) {
+                        const V2<B<W, D2>, C2>& src) const {
         for (auto&& it : src) {
             auto key = it.key();
             if (src.degree(key) <= D1) {

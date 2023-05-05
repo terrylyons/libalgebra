@@ -767,7 +767,7 @@ template<typename T>
 struct is_vector_type {
 private:
     template<typename B, typename C, template<typename, typename, typename...> class Type, typename... Args>
-    static std::true_type check(vectors::vector<B, C, Type, Args...>&);
+    static std::true_type check(const vectors::vector<B, C, Type, Args...>&);
 
     static std::false_type check(...);
 

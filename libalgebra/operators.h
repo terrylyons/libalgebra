@@ -39,7 +39,7 @@ public:
 
     vector_bundle<result_type> operator()(const vector_bundle<argument_type>& arg)
     {
-        return {implementation_type::operator()(static_cast<const argument_type&>(arg)),
+        return {implementation_type::operator()(arg.base()),
         implementation_type::operator()(arg.fibre())};
     }
 

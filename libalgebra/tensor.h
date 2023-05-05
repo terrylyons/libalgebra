@@ -385,7 +385,7 @@ public:
     LA_INLINE_ALWAYS constexpr void permute_write_tile()
     {
 //        using perm = dtl::reversing_permutation<Width, tile_info::tile_letters>;
-        pointer LA_RESTRICT tptr = tile_ptr();
+        pointer tptr = tile_ptr();
         const auto* perm = reverser();
         for (index_type i = 0; i < tile_width; ++i) {
 //            auto pi = perm::permute_idx(i);

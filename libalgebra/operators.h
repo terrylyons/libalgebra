@@ -18,6 +18,21 @@
 namespace alg {
 namespace operators {
 
+namespace dtl {
+
+template <typename Impl, typename ArgBase, typename ArgFibre>
+struct result_is_not_scalar_bundle {
+    using base_result_t = decltype(std::declval<Impl>()(std::declval<const ArgBase&>()));
+    using fibre_result_t = decltype(std::declval<Impl>()(std::declval<const ArgFibre&>()));
+
+
+    static constexpr bool value = !std::is_same<base_result_t, typename ArgBase::SCALAR>::value
+            && !std::is_same<fibre_result_t, typename ArgFibre::SCALAR>::value;
+
+};
+
+}
+
 template<typename Impl>
 class linear_operator : protected Impl
 {
@@ -32,7 +47,8 @@ public:
 
     using implementation_type::operator();
 
-    template <typename ArgBase, typename ArgFibre>
+    template <typename ArgBase, typename ArgFibre,
+             typename=std::enable_if_t<dtl::result_is_not_scalar_bundle<Impl, ArgBase, ArgFibre>::value>>
     auto operator()(const vector_bundle<ArgBase, ArgFibre>& arg)
             -> vector_bundle<decltype((*this)(arg.base())),
                     decltype((*this)(arg.fibre()))>
@@ -63,9 +79,6 @@ public:
         return return_type(composition_type(static_cast<const OtherImpl&>(inner)), static_cast<const Impl&>(outer));
     }
 };
-
-template<typename Impl>
-using linear_functional = linear_operator<Impl>;
 
 namespace dtl {
 

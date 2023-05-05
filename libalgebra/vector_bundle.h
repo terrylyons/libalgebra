@@ -9,6 +9,7 @@
 #include "implementation_types.h"
 #include "tensor.h"
 #include "vectors.h"
+#include "scalar_bundle.h"
 
 #include <iosfwd>
 #include <type_traits>
@@ -47,6 +48,10 @@ public:
     using fibre_key_type = typename Fibre::KEY;
     using fibre_scalar_type = typename Fibre::SCALAR;
     using fibre_rational_type = typename Fibre::RATIONAL;
+
+    using scalar_bundle_type = scalar_bundle<coeff_type, fibre_coeff_type>;
+    using rational_bundle_type = rational_bundle<coeff_type, fibre_coeff_type>;
+
 
     // Legacy declarations
     using BASIS = basis_type;
@@ -148,19 +153,12 @@ public:
 
 
     Derived &add_scal_prod(const vector_bundle_base &rhs, const scalar_type &s);
-
     Derived &sub_scal_prod(const vector_bundle_base &rhs, const scalar_type &s);
-
     Derived &add_scal_div(const vector_bundle_base &rhs, const rational_type &s);
-
     Derived &sub_scal_div(const vector_bundle_base &rhs, const rational_type &s);
-
     Derived &add_scal_prod(const Vector &rhs, const scalar_type &s);
-
     Derived &sub_scal_prod(const Vector &rhs, const scalar_type &s);
-
     Derived &add_scal_div(const Vector &rhs, const rational_type &s);
-
     Derived &sub_scal_div(const Vector &rhs, const rational_type &s);
 
     template<typename OtherVector>

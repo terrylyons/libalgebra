@@ -173,7 +173,6 @@ public:
 
     using size_type = typename base_type::size_type;
 
-    using is_pod_t = std::is_pod<S>;
 
     using value_type = S;
     using reference = S&;

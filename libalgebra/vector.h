@@ -18,49 +18,48 @@ namespace vectors {
 template<typename Basis, typename Field>
 struct template_vector_type_selector;
 
-template<typename Basis, typename Coeffs, template<typename, typename, typename...> class VectorImpl = template_vector_type_selector<Basis, Coeffs>::template type, typename... Args>
-class vector;
-
 namespace dtl {
-class vector_base_access
-{
-public:
-    template<typename B, typename C, template<typename, typename, typename...> class Vector, typename... Args>
-    static Vector<B, C, Args...>& convert(Vector<B, C, Args...>& arg)
-    {
-        return arg;
-    }
 
-    template<typename B, typename C, template<typename, typename, typename...> class Vector, typename... Args>
-    static const Vector<B, C, Args...>& convert(const Vector<B, C, Args...>& arg)
-    {
-        return arg;
-    }
 
-    template<typename Basis, typename Coeffs, template<typename, typename, typename...> class Vector, typename... Args>
-    static Vector<Basis, Coeffs, Args...>& convert(vector<Basis, Coeffs, Vector, Args...>& arg)
-    {
-        return arg;
-    }
 
-    //    template<typename B, typename C, template<typename, typename, typename...> class Vector, typename... Args>
-    //    static const Vector<B, C, Args...>& convert(const Vector<B, C, Args...>& arg)
-    //    {
-    //        return arg;
-    //    }
+//class vector_base_access
+//{
+//public:
+//    template<typename B, typename C, template<typename, typename, typename...> class Vector, typename... Args>
+//    static Vector<B, C, Args...>& convert(Vector<B, C, Args...>& arg)
+//    {
+//        return arg;
+//    }
+//
+//    template<typename B, typename C, template<typename, typename, typename...> class Vector, typename... Args>
+//    static const Vector<B, C, Args...>& convert(const Vector<B, C, Args...>& arg)
+//    {
+//        return arg;
+//    }
+//
+//    template<typename Basis, typename Coeffs, typename Vector, typename... Args>
+//    static Vector<Basis, Coeffs, Args...>& convert(vector<Basis, Coeffs, Vector, Args...>& arg)
+//    {
+//        return arg;
+//    }
+//
+//    //    template<typename B, typename C, template<typename, typename, typename...> class Vector, typename... Args>
+//    //    static const Vector<B, C, Args...>& convert(const Vector<B, C, Args...>& arg)
+//    //    {
+//    //        return arg;
+//    //    }
+//
+//    template<typename Basis, typename Coeffs, template<typename, typename, typename...> class Vector, typename... Args>
+//    static const Vector<Basis, Coeffs, Args...>& convert(const vector<Basis, Coeffs, Vector, Args...>& arg)
+//    {
+//        return arg;
+//    }
+//};
+//
+//template<typename Vector>
+//struct data_access : public data_access_base<Vector> {
+//};
 
-    template<typename Basis, typename Coeffs, template<typename, typename, typename...> class Vector, typename... Args>
-    static const Vector<Basis, Coeffs, Args...>& convert(const vector<Basis, Coeffs, Vector, Args...>& arg)
-    {
-        return arg;
-    }
-};
-
-template<typename Vector>
-struct data_access : public data_access_base<Vector> {
-};
-
-}// namespace dtl
 
 /// Main vector interface
 /**
@@ -80,16 +79,16 @@ struct data_access : public data_access_base<Vector> {
  * @tparam VectorImpl The underlying vector class to use. Selected automatically
  * based on the vector_type_selector trait.
  */
-template<typename Basis, typename Coeffs, template<typename, typename, typename...> class VectorImpl, typename... Args>
-class vector : VectorImpl<Basis, Coeffs, Args...>
+template<typename Basis, typename Coeffs, typename VectorImpl>
+class vector : VectorImpl
 {
 protected:
     // The underlying vector type is accessible from derived classes
     // since we might need to access the class directly in order to
     // optimise some operations.
-    typedef VectorImpl<Basis, Coeffs, Args...> UnderlyingVectorType;
+    typedef VectorImpl UnderlyingVectorType;
 
-    friend class dtl::vector_base_access;
+//    friend class dtl::vector_base_access;
 
 public:
     // Type definitions
@@ -182,7 +181,7 @@ public:
      * @tparam F Other field. Scalar types must be convertible to SCALAR.
      * @tparam V Other underlying vector type.
      */
-    template<typename F, template<typename, typename> class V>
+    template<typename F, typename V>
     explicit vector(const vector<BASIS, F, V>& other) : UnderlyingVectorType()
     {
         typename vector<BASIS, F, V>::const_iterator cit;
@@ -390,22 +389,20 @@ public:
     // Templated versions of the fused operations. For cross-vector type
     // application.
 
-    template<template<typename, typename, typename...> class V>
+    template<typename V>
     vector& add_scal_prod(const vector<Basis, Coeffs, V>& rhs, const SCALAR& s)
     {
-        using VectorType = V<Basis, Coeffs>;
-        typename VectorType::const_iterator cit;
+        typename V::const_iterator cit;
         for (cit = rhs.begin(); cit != rhs.end(); ++cit) {
             UnderlyingVectorType::add_scal_prod(cit->key(), cit->value() * s);
         }
         return *this;
     }
 
-    template<template<typename, typename, typename...> class V>
+    template<typename V>
     vector& sub_scal_prod(const vector<Basis, Coeffs, V>& rhs, const SCALAR& s)
     {
-        using VectorType = V<Basis, Coeffs>;
-        typename VectorType::const_iterator cit;
+        typename V::const_iterator cit;
         const auto m = Coeffs::uminus(s);
         for (cit = rhs.begin(); cit != rhs.end(); ++cit) {
             UnderlyingVectorType::add_scal_prod(cit->key(), cit->value() * m);
@@ -413,22 +410,20 @@ public:
         return *this;
     }
 
-    template<template<typename, typename, typename...> class V>
+    template<typename V>
     vector& add_scal_div(const vector<Basis, Coeffs, V>& rhs, const RATIONAL& s)
     {
-        using VectorType = V<Basis, Coeffs>;
-        typename VectorType::const_iterator cit;
+        typename V::const_iterator cit;
         for (cit = rhs.begin(); cit != rhs.end(); ++cit) {
             UnderlyingVectorType::add_scal_prod(cit->key(), cit->value() / s);
         }
         return *this;
     }
 
-    template<template<typename, typename, typename...> class V>
+    template<typename V>
     vector& sub_scal_div(const vector<Basis, Coeffs, V>& rhs, const RATIONAL& s)
     {
-        using VectorType = V<Basis, Coeffs>;
-        typename VectorType::const_iterator cit;
+        typename V::const_iterator cit;
         const auto m = Coeffs::div(Coeffs::mone, s);
         for (cit = rhs.begin(); cit != rhs.end(); ++cit) {
             UnderlyingVectorType::add_scal_prod(cit->key(), cit->value() * m);
@@ -595,12 +590,11 @@ public:
     }
 
     template<typename Vector,
-             template<typename, typename, typename...> class OtherVType,
-             typename... OtherArgs>
+             typename OtherVType>
     friend typename std::enable_if<
             std::is_base_of<vector, Vector>::value,
             Vector>::type
-    operator+(const Vector& lhs, const vector<Basis, Coeffs, OtherVType, OtherArgs...>& rhs)
+    operator+(const Vector& lhs, const vector<Basis, Coeffs, OtherVType>& rhs)
     {
         Vector result(lhs);
         for (auto item : rhs) {
@@ -623,12 +617,11 @@ public:
     }
 
     template<typename Vector,
-             template<typename, typename, typename...> class OtherVType,
-             typename... OtherArgs>
+             typename OtherVType>
     friend typename std::enable_if<
             std::is_base_of<vector, Vector>::value,
             Vector>::type
-    operator-(const Vector& lhs, const vector<Basis, Coeffs, OtherVType, OtherArgs...>& rhs)
+    operator-(const Vector& lhs, const vector<Basis, Coeffs, OtherVType>& rhs)
     {
         Vector result(lhs);
         for (auto item : rhs) {
@@ -671,9 +664,9 @@ public:
         return lhs;
     }
 
-    template<typename Vector, template<typename, typename, typename...> class OtherVType, typename... OtherArgs>
+    template<typename Vector, typename OtherVType>
     friend typename std::enable_if<std::is_base_of<vector, Vector>::value, Vector>::type&
-    operator+=(Vector& lhs, const vector<Basis, Coeffs, OtherVType, OtherArgs...>& rhs)
+    operator+=(Vector& lhs, const vector<Basis, Coeffs, OtherVType>& rhs)
     {
         for (auto item : rhs) {
             lhs.add_scal_prod(item.key(), item.value());
@@ -691,9 +684,9 @@ public:
         return lhs;
     }
 
-    template<typename Vector, template<typename, typename, typename...> class OtherVType, typename... OtherArgs>
+    template<typename Vector, typename OtherVType>
     friend typename std::enable_if<std::is_base_of<vector, Vector>::value, Vector>::type&
-    operator-=(Vector& lhs, const vector<Basis, Coeffs, OtherVType, OtherArgs...>& rhs)
+    operator-=(Vector& lhs, const vector<Basis, Coeffs, OtherVType>& rhs)
     {
         for (auto item : rhs) {
             lhs.sub_scal_prod(item.key(), item.value());
@@ -760,6 +753,12 @@ public:
     }
 };
 
+}// namespace dtl
+
+
+template <typename B, typename C, template <typename, typename, typename...> class VT=template_vector_type_selector<B, C>::template type, typename... A>
+using vector = dtl::vector<B, C, VT<B, C, A...>>;
+
 }// namespace vectors
 
 namespace utils {
@@ -768,12 +767,12 @@ template<typename T>
 struct is_vector_type {
 private:
     template<typename B, typename C, template<typename, typename, typename...> class Type, typename... Args>
-    static std::true_type check(vectors::vector<B, C, Type, Args...>&);
+    static std::true_type check(const vectors::vector<B, C, Type, Args...>&);
 
     static std::false_type check(...);
 
 public:
-    static constexpr bool value = decltype(check(std::declval<T>()))::value;
+    static constexpr bool value = decltype(check(std::declval<T&>()))::value;
 };
 
 }// namespace utils

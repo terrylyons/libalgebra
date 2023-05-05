@@ -16,13 +16,13 @@ namespace coefficients {
 
 #define LIBALGEBRA_FIELD_GENERATE_BINARY(NAME, OP, RET_T, LHS_T, RHS_T)                                   \
     template<typename Lhs = LHS_T, typename Rhs = RHS_T>                                                  \
-    static constexpr RET_T NAME(const Lhs& lhs, const Rhs& rhs) noexcept(noexcept(lhs OP rhs))            \
+    static constexpr RET_T NAME(const Lhs& lhs, const Rhs& rhs)            \
     {                                                                                                     \
         return lhs OP rhs;                                                                                \
     }                                                                                                     \
                                                                                                           \
     template<typename Rhs = RHS_T>                                                                        \
-    static constexpr RET_T& NAME##_inplace(RET_T& lhs, const Rhs& rhs) noexcept(noexcept(lhs OP## = rhs)) \
+    static constexpr RET_T& NAME##_inplace(RET_T& lhs, const Rhs& rhs)  \
     {                                                                                                     \
         return (lhs OP## = rhs);                                                                          \
     }
@@ -60,13 +60,13 @@ struct coefficient_ring {
         return static_cast<SCA>(arg);
     }
 
-    static constexpr SCA uminus(SCA arg) noexcept(noexcept(-arg))
+    static constexpr SCA uminus(SCA arg)
     {
         return -arg;
     }
 
     template<typename Order = std::less<SCA>>
-    static constexpr bool less(const SCA& a, const SCA& b) noexcept
+    static constexpr bool less(const SCA& a, const SCA& b)
     {
         return Order{}(a, b);
     }

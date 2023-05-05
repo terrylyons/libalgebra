@@ -132,6 +132,70 @@ public:
 
 };
 
+template <unsigned Depth>
+struct unpacked_tensor_word<1U, Depth> {
+    using letter_type = unsigned char;
+    using index_type = std::ptrdiff_t;
+    using size_type = std::size_t;
+
+    unsigned m_degree;
+
+public:
+    constexpr unsigned degree() const noexcept { return m_degree; }
+
+    template<typename Int>
+    constexpr letter_type operator[](Int idx) const noexcept
+    {
+        return 0;
+    }
+
+    template<typename Int>
+    void reset(Int index) noexcept{
+    }
+
+    constexpr unpacked_tensor_word& operator++() noexcept
+    {
+        m_degree += 1;
+        return *this;
+    }
+
+    template<typename IndexType = index_type>
+    constexpr IndexType to_index() const noexcept
+    {
+        return m_degree;
+    }
+
+    template<typename IndexType = index_type>
+    constexpr IndexType to_reverse_index() const noexcept
+    {
+        return m_degree;
+    }
+
+    template<typename IndexType = index_type, typename Int>
+    constexpr IndexType split_left_index(Int left_letters) const noexcept
+    {
+        return std::min(m_degree, static_cast<unsigned>(left_letters));
+    }
+
+    template<typename IndexType = index_type, typename Int>
+    constexpr IndexType split_left_reverse_index(Int left_letters) const noexcept
+    {
+        return std::min(m_degree, static_cast<unsigned>(left_letters));
+    }
+
+    template<typename IndexType = index_type, typename Int>
+    constexpr IndexType split_right_index(Int left_letters) const noexcept
+    {
+        return left_letters > m_degree ? 0 : m_degree - left_letters;
+    }
+
+    template<typename IndexType = index_type, typename Int>
+    constexpr IndexType split_right_reverse_index(Int left_letters) const noexcept
+    {
+        return left_letters > m_degree ? 0 : m_degree - left_letters;
+    }
+
+};
 
 template <unsigned Width>
 struct unpacked_tensor_word<Width, 0U> {

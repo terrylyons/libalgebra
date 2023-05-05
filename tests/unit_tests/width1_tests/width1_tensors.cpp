@@ -42,7 +42,7 @@ SUITE(Width1)
         DEG d = 0;
 
         TENSOR tensor(key, S(d + 1));
-        for (; d <= DEPTH; ++d) {
+        for (; d < DEPTH; ++d) {
             key.push_back(LET(1));
             tensor.add_scal_prod(key, S(d + 1));
         }
@@ -51,7 +51,7 @@ SUITE(Width1)
 
         typename TENSOR::KEY ekey;
         TENSOR expected(ekey, S(1));
-        for (d = 0; d <= DEPTH; ++d) {
+        for (d = 0; d < DEPTH; ++d) {
             ekey.push_back(LET(1));
             if (d % 2 == 0) {
                 expected.add_scal_prod(ekey, S(d + 1));
@@ -67,7 +67,7 @@ SUITE(Width1)
         typename TENSOR::KEY key1;
         DEG d1 = 0;
         TENSOR tensor1(key1, S(d1 + 1));
-        for (; d1 <= DEPTH; ++d1) {
+        for (; d1 <DEPTH; ++d1) {
             key1.push_back(LET(1));
             tensor1.add_scal_prod(key1, S(d1 + 1));
         }
@@ -75,7 +75,7 @@ SUITE(Width1)
         typename TENSOR::KEY key2;
         DEG d2 = 0;
         TENSOR tensor2(key2, S(d2 + 1));
-        for (; d2 <= DEPTH; ++d2) {
+        for (; d2 < DEPTH; ++d2) {
             key2.push_back(LET(1));
             tensor2.add_scal_prod(key2, S(d2 + 1));
         }
@@ -101,7 +101,7 @@ SUITE(Width1)
         typename TENSOR::KEY key1;
         DEG d1 = 0;
         TENSOR tensor1(key1, S(d1 + 1));
-        for (; d1 <= DEPTH; ++d1) {
+        for (; d1 < DEPTH; ++d1) {
             key1.push_back(LET(1));
             tensor1.add_scal_prod(key1, S(d1 + 1));
         }
@@ -109,7 +109,7 @@ SUITE(Width1)
         typename TENSOR::KEY key2;
         DEG d2 = 0;
         TENSOR tensor2(key2, S(d2 + 1));
-        for (; d2 <= DEPTH; ++d2) {
+        for (; d2 < DEPTH; ++d2) {
             key2.push_back(LET(1));
             tensor2.add_scal_prod(key2, S(d2 + 1));
         }
@@ -134,7 +134,7 @@ SUITE(Width1)
         typename SHUFFLE_TENSOR::KEY key1;
         DEG d1 = 0;
         SHUFFLE_TENSOR tensor1(key1, S(d1 + 1));
-        for (; d1 <= DEPTH; ++d1) {
+        for (; d1 < DEPTH; ++d1) {
             key1.push_back(LET(1));
             tensor1.add_scal_prod(key1, S(d1 + 1));
         }
@@ -142,7 +142,7 @@ SUITE(Width1)
         typename SHUFFLE_TENSOR::KEY key2;
         DEG d2 = 0;
         SHUFFLE_TENSOR tensor2(key2, S(d2 + 1));
-        for (; d2 <= DEPTH; ++d2) {
+        for (; d2 < DEPTH; ++d2) {
             key2.push_back(LET(1));
             tensor2.add_scal_prod(key2, S(d2 + 1));
         }

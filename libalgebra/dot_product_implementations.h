@@ -69,8 +69,8 @@ private:
         template<typename... AArgs>
         static result_type eval(const f_type& functional, const avector_t<vectors::dense_vector, AArgs...>& argument) noexcept
         {
-            const auto& dense_functional = vectors::dtl::vector_base_access::convert(functional);
-            const auto& dense_argument = vectors::dtl::vector_base_access::convert(argument);
+            const auto& dense_functional = functional.base_vector();
+            const auto& dense_argument = argument.base_vector();
 
             auto dim = std::min(dense_functional.dimension(), dense_argument.dimension());
 

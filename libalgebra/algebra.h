@@ -922,24 +922,24 @@ private:
 #endif
 
 public:
-    template<typename Algebra1, typename OtherBasis, template<typename, typename, typename...> class VType>
+    template<typename Algebra1, typename OtherBasis, typename VType>
     friend
             typename std::enable_if<
                     std::is_base_of<algebra, Algebra1>::value && basis::related_to<OtherBasis, BASIS>::value,
                     Algebra1>::type
-            operator*(const Algebra1& lhs, const vectors::vector<OtherBasis, Coeff, VType>& rhs)
+            operator*(const Algebra1& lhs, const vectors::dtl::vector<OtherBasis, Coeff, VType>& rhs)
     {
         Algebra1 result;
         mtraits::multiply_and_add(s_multiplication, result, lhs, rhs, scalar_passthrough());
         return result;
     }
 
-    template<typename Algebra1, typename OtherBasis, template <typename, typename, typename...> class VType>
+    template<typename Algebra1, typename OtherBasis, typename VType>
     friend
             typename std::enable_if<
                     std::is_base_of<algebra, Algebra1>::value && basis::related_to<OtherBasis, BASIS>::value,
                     Algebra1>::type&
-            operator*=(Algebra1& lhs, const vectors::vector<OtherBasis, Coeff, VType>& rhs)
+            operator*=(Algebra1& lhs, const vectors::dtl::vector<OtherBasis, Coeff, VType>& rhs)
     {
         mtraits::multiply_inplace(s_multiplication, lhs, rhs, scalar_passthrough());
         return lhs;

@@ -152,7 +152,7 @@ struct data_tile {
 
 template<DEG Width, DEG Depth, IDEG TileLetters = 0>
 struct tile_details {
-    static constexpr IDEG tile_letters = (TileLetters > 0) ? TileLetters : 1;
+    static constexpr IDEG tile_letters = (Depth > 1) ? (TileLetters > 0) ? TileLetters : 1 : 0;
     static constexpr IDIMN tile_width = (TileLetters >= 0)
             ? integer_maths::power(IDIMN(Width), tile_letters)
             : IDIMN(Width) / integer_maths::power(IDIMN(2), -TileLetters);
@@ -248,7 +248,7 @@ protected:
         BOOST_ALIGN_ASSUME_ALIGNED(tptr, LA_CACHELINE_BYTES);
         for (index_type i = 0; i < ibound; ++i) {
             LA_PREFETCH_ET0(out_p + (i+1)*out_stride);
-#pragma omp simd
+
             for (index_type j = 0; j < jbound; ++j) {
                 out_p[i*out_stride + j] = tptr[i*in_stride + j];
             }
@@ -522,10 +522,12 @@ public:
 
     static void permute_level_tiled(helper_type<Coeffs>& helper, DEG out_deg) noexcept
     {
+        static constexpr unsigned max_middle_letters = MaxDepth > 2*tile_info::tile_letters
+                ? MaxDepth - 2 * tile_info::tile_letters : 0;
         const auto mid_deg = out_deg - 2 * tile_info::tile_letters;
         Signer signer(out_deg);
 
-        unpacked_tensor_word<Width, MaxDepth-2*tile_info::tile_letters> word;
+        unpacked_tensor_word<Width, max_middle_letters> word;
         word.reset(mid_deg);
         for (IDIMN middle_index = 0; middle_index < IDIMN(tsi::powers[mid_deg]); ++middle_index, ++word) {
 //            const auto reverse_middle_index = helper.reverse_key(mid_deg, middle_index);
@@ -617,6 +619,7 @@ public:
 template <DEG MaxDepth, typename Coeffs, typename Signer, IDEG UNUSED>
 class tiled_inverse_operator<1, MaxDepth, Coeffs, Signer, UNUSED> {
 public:
+    using scalar_type = typename Coeffs::S;
 
     template<typename Vector>
     static void apply(const Vector& src, Vector& result, DEG max_degree = MaxDepth)
@@ -647,6 +650,25 @@ public:
             optr[d] = s(iptr[d]);
         }
     }
+
+
+    void operator()(const scalar_type* src_ptr, scalar_type* dst_ptr, const DEG curr_degree) const noexcept
+    {
+
+        if (src_ptr == nullptr)// if pointer to source is null
+        {
+            return;
+        }
+        if (dst_ptr == nullptr) {
+            return;
+        }
+
+        for (DEG d = 0; d <= curr_degree; ++d) {
+            Signer s(d);
+            dst_ptr[d] = s(src_ptr[d]);
+        }
+    }
+
 };
 
 

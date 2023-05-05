@@ -19,7 +19,7 @@ SUITE(tensor_creation) {
         std::vector<double> values {1.0, 2.0}; // Definitely not a full dimension
         dense_tensor constructed(values.data(), values.data()+2);
 
-        CHECK_EQUAL(6, alg::vectors::dtl::vector_base_access::convert(constructed).dimension());
+        CHECK_EQUAL(6, constructed.dimension());
     }
 
 }

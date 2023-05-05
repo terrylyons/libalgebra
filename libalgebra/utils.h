@@ -322,6 +322,22 @@ public:
         }
         return m_maps.t2l(log(tmp));
     }
+
+
+    vector_bundle<Lie> full(const std::vector<const vector_bundle<Lie>*> lies) const
+    {
+        if (lies.empty()) {
+            return vector_bundle<Lie>();
+        }
+
+        auto acc = exp(m_maps.l2t(*lies[0]));
+        for (DIMN i=1; i<lies.size(); ++i) {
+            acc.fmexp_inplace(m_maps.l2t(*lies[i]));
+        }
+
+        return m_maps.t2l(log(acc));
+    }
+
 };
 
 }// namespace alg

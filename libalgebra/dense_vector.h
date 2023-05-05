@@ -38,7 +38,7 @@ struct requires_order {
  * @tparam Basis
  * @tparam Coeffs
  */
-template<typename Basis, typename Coeffs>
+template<typename Basis, typename Coeffs, typename...>
 class dense_vector : protected base_vector<Basis, Coeffs>, dtl::requires_order<Basis>
 {
     typedef dense_storage<typename Coeffs::S> STORAGE;

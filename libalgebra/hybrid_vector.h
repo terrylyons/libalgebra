@@ -47,7 +47,7 @@ struct size_control {
     template<typename Basis, typename Coeff, template<typename, typename> class Vector>
     static DIMN set_dense_dimension(vector<Basis, Coeff, Vector>& vect, DIMN dim)
     {
-        Vector<Basis, Coeff>& v_vect = dtl::vector_base_access::convert(vect);
+        Vector<Basis, Coeff>& v_vect = vect.base_vector();
         v_vect.resize_dense(dim);
         return v_vect.dense_dimension();
     }

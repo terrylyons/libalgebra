@@ -32,7 +32,6 @@ class tensor_defined_operator
 {
 public:
     using functional_type = FunctionalType;
-    using argument_type = typename FunctionalType::argument_type;
     using result_type = ResultType;
     using elementary_tensor = std::pair<FunctionalType, ResultType>;
 
@@ -43,7 +42,8 @@ public:
     explicit tensor_defined_operator(std::initializer_list<elementary_tensor> args) : m_data(args)
     {}
 
-    result_type operator()(const argument_type& arg) const
+    template <typename Arg>
+    result_type operator()(const Arg& arg) const
     {
         result_type result;
 

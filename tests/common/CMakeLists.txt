@@ -14,7 +14,7 @@ add_library(libalgebra_tests_utilities STATIC
         random_coeffs.h
         multi_test.h)
 
-
+set_target_properties(libalgebra_tests_utilities PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories(libalgebra_tests_utilities PUBLIC "${CMAKE_CURRENT_LIST_DIR}")
 
 target_link_libraries(libalgebra_tests_utilities PUBLIC

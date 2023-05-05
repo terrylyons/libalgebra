@@ -18,6 +18,7 @@ Version 3. (See accompanying file License.txt)
 #include "constpower.h"
 #include "detail/integer_maths.h"
 #include "key_iterators.h"
+#include "hall_set.h"
 
 namespace alg {
 

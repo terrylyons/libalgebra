@@ -129,9 +129,9 @@ difference between free_tensor_basis and shuffle_tensor_basis.
 template<DEG n_letters, DEG max_degree>
 class tensor_basis : dtl::tensor_size_info<n_letters>
 {
-    typedef dtl::tensor_size_info<n_letters> SIZE_INFO;
-
 public:
+
+    typedef dtl::tensor_size_info<n_letters> SIZE_INFO;
     /// A key is an dual ended queue of letters
     typedef _tensor_basis<n_letters, max_degree> KEY;
     /// A default key corresponds to the empty word.

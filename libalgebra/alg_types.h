@@ -1,4 +1,4 @@
-﻿/* *************************************************************
+/**************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
 Greg Gyurkó and Arend Janssen.
@@ -6,7 +6,7 @@ Greg Gyurkó and Arend Janssen.
 Distributed under the terms of the GNU General Public License,
 Version 3. (See accompanying file License.txt)
 
-************************************************************* */
+**************************************************************/
 
 #ifndef alg_types_h__
 #define alg_types_h__
@@ -98,9 +98,9 @@ struct alg_types {
     typedef Q RAT;
     typedef alg::DEG DEG;
     typedef alg::LET LET;
-    static const unsigned DEPTH = D;
-    static const unsigned myDIM = W;
-    static const unsigned ALPHABET_SIZE = W;
+    static constexpr unsigned DEPTH = D;
+    static constexpr unsigned myDIM = W;
+    static constexpr unsigned ALPHABET_SIZE = W;
     typedef alg::poly<COEFF> MULTIPOLY1;
     typedef alg::free_tensor<COEFF, ALPHABET_SIZE, DEPTH> TENSOR;
     typedef alg::shuffle_tensor<COEFF, ALPHABET_SIZE, DEPTH> SHUFFLE_TENSOR;
@@ -115,13 +115,14 @@ struct alg_types {
     // mtl::diagonal<>, mtl::packed<>, mtl::row_major>::type mtlDiagMat;
 };
 
+template<size_t D, size_t W, coefficient_t F, vector_t VectorType>
+constexpr unsigned alg_types<D, W, F, VectorType>::DEPTH;
 
 template<size_t D, size_t W, coefficient_t F, vector_t VectorType>
-const unsigned alg_types<D, W, F, VectorType>::DEPTH;
+constexpr unsigned alg_types<D, W, F, VectorType>::myDIM;
+
 template<size_t D, size_t W, coefficient_t F, vector_t VectorType>
-const unsigned alg_types<D, W, F, VectorType>::myDIM;
-template<size_t D, size_t W, coefficient_t F, vector_t VectorType>
-const unsigned alg_types<D, W, F, VectorType>::ALPHABET_SIZE;
+constexpr unsigned alg_types<D, W, F, VectorType>::ALPHABET_SIZE;
 
 
 

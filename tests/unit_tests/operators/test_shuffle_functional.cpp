@@ -48,7 +48,7 @@ SUITE(shuffle_tensor_functional)
 {
 
     struct fixture : alg_types<5, 5, DPReal> {
-        using functional_t = operators::linear_functional<shuffle_tensor_implementation<SHUFFLE_TENSOR>, TENSOR>;
+        using functional_t = operators::linear_functional<shuffle_tensor_implementation<SHUFFLE_TENSOR>>;
     };
 
     TEST_FIXTURE(fixture, test_bracket_zeros)

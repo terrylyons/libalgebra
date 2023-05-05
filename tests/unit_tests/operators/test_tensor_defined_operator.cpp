@@ -26,7 +26,7 @@ SUITE(tensor_defined_operator)
                 functional_t,
                 OUT_TENSOR>;
 
-        using op_type = alg::operators::linear_operator<op_impl, TENSOR, OUT_TENSOR>;
+        using op_type = alg::operators::linear_operator<op_impl>;
         op_type op;
 
         fixture() : op{

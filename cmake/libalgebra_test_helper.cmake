@@ -33,7 +33,7 @@ function(libalgebra_test)
     message(STATUS "Adding tests suite ${LA_TESTS_NAME}")
 
     set_target_properties(${_lib_name} PROPERTIES
-#            POSITION_INDEPENDENT_CODE ON
+            POSITION_INDEPENDENT_CODE ON
             LINKER_LANGUAGE CXX)
 
     target_link_libraries(${_lib_name} PUBLIC

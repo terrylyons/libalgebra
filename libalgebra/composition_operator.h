@@ -8,7 +8,7 @@
 namespace alg {
 namespace operators {
 
-template<typename ImplOuter, typename ImplInner, typename ArgumentType, typename ResultType>
+template<typename ImplOuter, typename ImplInner>
 class composition_operator : protected ImplInner, protected ImplOuter
 {
 
@@ -17,7 +17,8 @@ public:
         : ImplInner(inner), ImplOuter(outer)
     {}
 
-    ResultType operator()(const ArgumentType& arg) const
+    template <typename ArgumentType>
+    auto operator()(const ArgumentType& arg) const -> decltype(std::declval<const ImplOuter&>()(std::declval<const ImplInner&>()(arg)))
     {
         return ImplOuter::operator()(ImplInner::operator()(arg));
     }

@@ -16,7 +16,7 @@ namespace alg {
 namespace operators {
 
 template<typename ShuffleTensor, typename FreeTensor>
-using shuffle_tensor_functional = linear_functional<dot_product_implementation<ShuffleTensor, FreeTensor>, FreeTensor>;
+using shuffle_tensor_functional = linear_functional<dot_product_implementation<ShuffleTensor, FreeTensor>>;
 
 
 template <typename ShuffleTensor, typename FreeTensor>

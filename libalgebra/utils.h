@@ -177,7 +177,7 @@ public:
         Lie result;
         typename InputTensor::const_iterator i;
         for (i = arg.begin(); i != arg.end(); ++i) {
-            if (i->value() != Tensor::zero) {
+            if (i->key().size() != 0 && i->value() != Tensor::zero) {
                 result.add_scal_prod(rbraketing(i->key()), i->value());
             }
         }
@@ -293,7 +293,8 @@ public:
 
     /// Returns the CBH formula as a free lie element from an iterator to lie objects
     template<typename InputIt>
-    LIE full(InputIt start, InputIt finish)
+    std::enable_if_t<std::is_same<std::remove_cv_t<typename std::iterator_traits<InputIt>::value_type>, LIE>::value, LIE>
+            full(InputIt start, InputIt finish)
     {
         if (start == finish) {
             return empty_lie;
@@ -308,6 +309,28 @@ public:
 
         return m_maps.t2l(log(result));
     }
+
+    /// Returns the CBH formula as a free lie element from an iterator to lie objects
+    template<typename InputIt>
+    std::enable_if_t<std::is_same<std::remove_cv_t<typename std::iterator_traits<InputIt>::value_type>, vector_bundle<LIE>>::value, vector_bundle<LIE>>
+    full(InputIt start, InputIt finish)
+    {
+        if (start == finish) {
+            return vector_bundle<LIE>();
+        }
+
+        InputIt it(start);
+        auto result = exp(m_maps.l2t(*(it++)));
+
+        for (; it != finish; ++it) {
+            result.fmexp_inplace(m_maps.l2t(*it));
+        }
+
+        return m_maps.t2l(log(result));
+    }
+
+
+
 
     /// Returns the CBH formula as a free lie element from a vector of lie.
     inline LIE full(const std::vector<const LIE*>& lies) const

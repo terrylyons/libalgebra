@@ -47,11 +47,12 @@ public:
 
     using implementation_type::operator();
 
-    template <typename ArgBase, typename ArgFibre,
-             typename=std::enable_if_t<dtl::result_is_not_scalar_bundle<Impl, ArgBase, ArgFibre>::value>>
+//    template <typename ArgBase, typename ArgFibre,
+//             typename=std::enable_if_t<dtl::result_is_not_scalar_bundle<Impl, ArgBase, ArgFibre>::value>>
+    template <typename ArgBase, typename ArgFibre>
     auto operator()(const vector_bundle<ArgBase, ArgFibre>& arg)
-            -> vector_bundle<decltype((*this)(arg.base())),
-                    decltype((*this)(arg.fibre()))>
+            -> vector_bundle<decltype(Impl::operator()(arg.base())),
+                    decltype(Impl::operator()(arg.fibre()))>
     {
         return {Impl::operator()(arg.base()), Impl::operator()(arg.fibre())};
     }

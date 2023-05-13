@@ -293,8 +293,9 @@ public:
 
     /// Returns the CBH formula as a free lie element from an iterator to lie objects
     template<typename InputIt>
-    std::enable_if_t<std::is_same<std::remove_cv_t<typename std::iterator_traits<InputIt>::value_type>, LIE>::value, LIE>
-            full(InputIt start, InputIt finish)
+//    std::enable_if_t<std::is_same<std::remove_cv_t<typename std::iterator_traits<InputIt>::value_type>, LIE>::value, LIE>
+    LIE
+    full(InputIt start, InputIt finish)
     {
         if (start == finish) {
             return empty_lie;

@@ -143,7 +143,7 @@ private:
 #endif
 public:
 
-    void swap(vector_bundle_base& other) const noexcept {
+    void swap(vector_bundle_base& other) noexcept {
         std::swap(m_base, other.m_base);
         std::swap(m_fibre, other.m_fibre);
     }
@@ -151,6 +151,8 @@ public:
     const scalar_type& operator[](const key_type& key) const
     { return m_base[key]; }
 
+    Derived& add_scal_prod(const typename Vector::KEY& key, const scalar_type& s);
+    Derived& sub_scal_prod(const typename Vector::KEY& key, const scalar_type& s);
 
     Derived &add_scal_prod(const vector_bundle_base &rhs, const scalar_type &s);
     Derived &sub_scal_prod(const vector_bundle_base &rhs, const scalar_type &s);
@@ -414,6 +416,17 @@ commutator(const vector_bundle_base<LBase, LFibre, LDerived>& x,
     LDerived result(x * y);
     result.add_mul(y, x);
     return result;
+}
+
+template <typename Vector, typename Fibre, typename Derived>
+Derived& vector_bundle_base<Vector, Fibre, Derived>::add_scal_prod(const typename Vector::KEY& key, const scalar_type& s) {
+    m_base.add_scal_prod(key, s);
+    return static_cast<Derived&>(*this);
+}
+template <typename Vector, typename Fibre, typename Derived>
+Derived& vector_bundle_base<Vector, Fibre, Derived>::sub_scal_prod(const typename Vector::KEY& key, const scalar_type& s) {
+    m_base.sub_scal_prod(key, s);
+    return static_cast<Derived&>(*this);
 }
 
 template<typename Vector, typename Fibre, typename Derived>

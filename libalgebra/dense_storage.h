@@ -696,7 +696,9 @@ public:
      */
     void reserve(size_type sz)
     {
-        assert(sz > size());
+        if (sz <= size()) {
+            return;
+        }
 
         if (!m_base.is_owned()) {
             to_owned(sz);

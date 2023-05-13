@@ -5,11 +5,12 @@
 #ifndef LIBALGEBRA_ALTERNATIVE_MULTIPLICATIONS_H
 #define LIBALGEBRA_ALTERNATIVE_MULTIPLICATIONS_H
 
-#include "vectors.h"
-#include "tensor.h"
-#include "multiplication_helpers.h"
-#include "half_shuffle_tensor_multiplication.h"
 #include "area_tensor_multiplication.h"
+#include "half_shuffle_tensor_multiplication.h"
+#include "multiplication_helpers.h"
+#include "tensor.h"
+#include "vectors.h"
+#include "vector_bundle.h"
 
 namespace alg {
 namespace dtl {
@@ -47,7 +48,7 @@ void multiply_into_impl(
         const alg::vectors::vector<Basis, Coeffs, ArgVector, ArgArgs...>& rhs)
 {
     using mtraits = dtl::multiplication_traits<Multiplication>;
-//    alg::vectors::vector<Basis, Coeffs, ArgVector, ArgArgs...> tmp;
+    //    alg::vectors::vector<Basis, Coeffs, ArgVector, ArgArgs...> tmp;
     mtraits::multiply_and_add(mpl, result, lhs, rhs, op);
 
     //// This is slow, but at the moment it is the only way add different vector
@@ -61,9 +62,14 @@ void multiply_into(Result& result, const Arg& lhs, const Arg& rhs, const Multipl
     multiply_into_impl(mpl, op, result, lhs, rhs);
 }
 
+template <typename Multiplication, typename Op, typename Arg, typename Result>
+void multiply_into(vector_bundle<Result>& result, const vector_bundle<Arg>& lhs, const vector_bundle<Arg>& rhs, const Multiplication& mpl, Op op) {
+    multiply_into_impl(mpl, op, result.fibre(), lhs.base(), rhs.fibre());
+    multiply_into_impl(mpl, op, result.fibre(), lhs.fibre(), rhs.base());
+    multiply_into_impl(mpl, op, result.base(), lhs.base(), rhs.base());
 }
 
-
+}// namespace dtl
 
 template<typename Tensor>
 Tensor free_multiply(const Tensor& lhs, const Tensor& rhs)
@@ -95,6 +101,7 @@ Tensor half_shuffle_multiply(const Tensor& lhs, const Tensor& rhs)
     return result;
 }
 
+
 template<typename Tensor>
 Tensor area_multiply(const Tensor& lhs, const Tensor& rhs)
 {
@@ -105,7 +112,6 @@ Tensor area_multiply(const Tensor& lhs, const Tensor& rhs)
     return result;
 }
 
-} // namespace alg
+}// namespace alg
 
-
-#endif //LIBALGEBRA_ALTERNATIVE_MULTIPLICATIONS_H
+#endif//LIBALGEBRA_ALTERNATIVE_MULTIPLICATIONS_H

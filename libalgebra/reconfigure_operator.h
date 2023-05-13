@@ -122,6 +122,10 @@ class recalibrate_operator_impl {
              typename C2>
     void construct_impl(vectors::dense_vector<B<W, D1>, C1>& dst,
                         const vectors::dense_vector<B<W, D2>, C2>& src) const {
+        if (src.dimension() == 0) {
+            return;
+        }
+
         auto max_deg = std::min(D1, src.degree());
         dst.resize_to_degree(max_deg);
 
@@ -167,7 +171,7 @@ class recalibrate_operator_impl {
 public:
 
 
-    template <typename Argument>
+    template <typename Argument, typename=std::enable_if_t<alg::utils::is_vector_type<Argument>::value>>
     auto operator()(const Argument& arg) const -> recalibrated_t<Argument, Changes...> {
         recalibrated_t<Argument, Changes...> result;
         construct_impl(result.base_vector(), arg.base_vector());

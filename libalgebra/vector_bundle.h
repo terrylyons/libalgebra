@@ -87,8 +87,12 @@ public:
     vector_bundle_base& operator=(vector_bundle_base& other) noexcept = default;
 
 
-    template <typename... Args>
+    template<typename... Args, typename DummyArg = std::enable_if_t<(sizeof...(Args)>1)>>
     explicit vector_bundle_base(Args&&... args) : m_base(std::forward<Args>(args)...), m_fibre()
+    {}
+
+    template<typename Arg, typename DummyArg = std::enable_if_t<!(std::is_same<Arg, vector_bundle_base>::value)>>
+    explicit vector_bundle_base(Arg&& arg) : m_base(std::forward<Arg>(arg)), m_fibre()
     {}
 
     explicit vector_bundle_base(const Vector &point) : m_base(point), m_fibre() {}
@@ -106,7 +110,7 @@ public:
 
     template<typename Key, typename = typename std::enable_if<
             std::is_same<Key, key_type>::value && std::is_same<Key, fibre_key_type>::value>>
-    explicit vector_bundle_base(Key k)
+    explicit vector_bundle_base(const Key& k)
             : m_base(k), m_fibre(k) {}
 
     template<typename... Args>

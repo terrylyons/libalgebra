@@ -146,16 +146,9 @@ class recalibrate_operator_impl {
              typename C2,
              template <typename, typename, typename...> class V1,
              template <typename, typename, typename...> class V2>
-    std::enable_if_t<
-        !(std::is_same<
-            V1<B<W, D1>, C1>,
-            vectors::dense_vector<B<W, D1>, C1>
-        >::value &&
-        std::is_same<
-            V2<B<W, D2>, C2>,
-            vectors::dense_vector<B<W, D2>, C2>
-        >::value)>
-    construct_impl(V1<B<W, D1>, C1>& dst,
+    std::enable_if_t < !(
+            std::is_same<V1<B<W, D1>, C1>, vectors::dense_vector<B<W, D1>, C1>>::value && std::is_same<V2<B<W, D2>, C2>, vectors::dense_vector<B<W, D2>, C2>>::value)> 
+        construct_impl(V1<B<W, D1>, C1>& dst,
                         const V2<B<W, D2>, C2>& src) const {
         for (auto&& it : src) {
             auto key = it.key();

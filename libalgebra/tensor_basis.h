@@ -1,4 +1,4 @@
-﻿/* *************************************************************
+/* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
 Greg Gyurkó and Arend Janssen.
@@ -43,12 +43,12 @@ struct tensor_size_info {
     static constexpr DEG mantissa_bits_stored = std::numeric_limits<word_t>::digits - 1;
     static constexpr DEG max_depth = mantissa_bits_stored / bits_per_letter;
 
-    template<I Depth>
+    template<size_t Depth>
     struct helper {
         static constexpr I value = integer_maths::sum_powers(NoLetters, Depth);
     };
 
-    template<I D>
+    template<size_t D>
     struct power_helper {
         static constexpr I value = power(NoLetters, D);
     };

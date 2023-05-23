@@ -36,7 +36,7 @@ endif ()
 
 ## we have a limited binary boost dependency
 set(Boost_NO_WARN_NEW_VERSIONS ON)
-find_package(Boost REQUIRED COMPONENTS thread container)
+find_package(Boost REQUIRED)
 
 if (NOT LIBALGEBRA_NO_SERIALIZATION)
     find_package(Boost OPTIONAL_COMPONENTS serialization)

@@ -11,7 +11,7 @@
 #include <boost/multiprecision/gmp.hpp>
 #include "coefficients/gmp_ser.h"
 #else
-#include <boost/multipricision/cpp_bin_float.hpp>
+#include <boost/multiprecision/cpp_bin_float.hpp>
 #endif
 
 #include "coefficients.h"

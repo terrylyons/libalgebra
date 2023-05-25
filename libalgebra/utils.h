@@ -291,33 +291,51 @@ public:
         return m_maps.t2l(log(tmp));
     }
 
+private:
+    template <typename T>
+    struct bundle_or_lie {
+        using type = LIE;
+    };
+
+    template <typename T>
+    struct bundle_or_lie<vector_bundle<T>> {
+        using type = vector_bundle<LIE>;
+    };
+
+    template <typename T>
+    using bundle_or_lie_t = typename bundle_or_lie<T>::type;
+
+public:
+
+
+//    /// Returns the CBH formula as a free lie element from an iterator to lie objects
+//    template<typename InputIt>
+////    std::enable_if_t<std::is_same<std::remove_cv_t<typename std::iterator_traits<InputIt>::value_type>, LIE>::value, LIE>
+//    LIE
+//    full(InputIt start, InputIt finish)
+//    {
+//        if (start == finish) {
+//            return empty_lie;
+//        }
+//
+//        InputIt it(start);
+//        TENSOR result(exp(m_maps.l2t(*(it++))));
+//
+//        for (; it != finish; ++it) {
+//            result.fmexp_inplace(m_maps.l2t(*it));
+//        }
+//
+//        return m_maps.t2l(log(result));
+//    }
+
     /// Returns the CBH formula as a free lie element from an iterator to lie objects
     template<typename InputIt>
-//    std::enable_if_t<std::is_same<std::remove_cv_t<typename std::iterator_traits<InputIt>::value_type>, LIE>::value, LIE>
-    LIE
+//    std::enable_if_t<std::is_same<std::remove_cv_t<typename std::iterator_traits<InputIt>::value_type>, vector_bundle<LIE>>::value, vector_bundle<LIE>>
+    bundle_or_lie_t<typename std::iterator_traits<InputIt>::value_type>
     full(InputIt start, InputIt finish)
     {
         if (start == finish) {
-            return empty_lie;
-        }
-
-        InputIt it(start);
-        TENSOR result(exp(m_maps.l2t(*(it++))));
-
-        for (; it != finish; ++it) {
-            result.fmexp_inplace(m_maps.l2t(*it));
-        }
-
-        return m_maps.t2l(log(result));
-    }
-
-    /// Returns the CBH formula as a free lie element from an iterator to lie objects
-    template<typename InputIt>
-    std::enable_if_t<std::is_same<std::remove_cv_t<typename std::iterator_traits<InputIt>::value_type>, vector_bundle<LIE>>::value, vector_bundle<LIE>>
-    full(InputIt start, InputIt finish)
-    {
-        if (start == finish) {
-            return vector_bundle<LIE>();
+            return {};
         }
 
         InputIt it(start);

@@ -36,7 +36,7 @@ endif ()
 
 ## we have a limited binary boost dependency
 set(Boost_NO_WARN_NEW_VERSIONS ON)
-find_package(Boost REQUIRED COMPONENTS thread)
+find_package(Boost REQUIRED)
 
 if (NOT LIBALGEBRA_NO_SERIALIZATION)
     find_package(Boost OPTIONAL_COMPONENTS serialization)
@@ -126,11 +126,7 @@ target_include_directories(Libalgebra
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
         )
-target_link_libraries(Libalgebra INTERFACE
-        Boost::boost
-        Boost::thread
-        OpenMP::OpenMP_CXX
-        )
+target_link_libraries(Libalgebra INTERFACE Boost::boost)
 
 if (TARGET Boost::serialization)
     target_link_libraries(Libalgebra INTERFACE Boost::serialization)

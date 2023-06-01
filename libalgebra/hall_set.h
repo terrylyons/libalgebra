@@ -126,6 +126,7 @@ private:
             range.first = degree_ranges[current_degree].second;
             range.second = data.size();
             degree_ranges.push_back(range);
+            sizes.push_back(data.size());
 
             ++current_degree;
         }

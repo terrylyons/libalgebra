@@ -118,6 +118,7 @@ class hall_basis : private hall_set<N_letters>
 {
     /// Base class - privately derived, so keep private
     using hall_set_type = hall_set<N_letters>;
+    typedef dtl::hall_set_info<N_letters, MaxDepth> SIZE_INFO;
 
     template<typename Function, typename BinOp, typename Tag>
     friend class hall_set_type::extended_function;
@@ -220,7 +221,7 @@ public:
     using hall_set_type::parents_begin;
     using hall_set_type::parents_end;
     using hall_set_type::reverse_map_end;
-    using hall_set_type::start_of_degree;
+//    using hall_set_type::start_of_degree;
 
     /// Returns the value of the smallest key in the basis.
     using hall_set_type::begin;
@@ -235,7 +236,7 @@ public:
      */
     inline KEY nextkey(const KEY& k) const
     {
-        constexpr DIMN max_size = hall_set_type::start_of_degree(MaxDepth + 1);
+        DIMN max_size = start_of_degree(MaxDepth + 1);
         if (k < max_size) {
             return (k + 1);
         }
@@ -251,6 +252,13 @@ public:
             os << b.key2string(k) << ' ';
         }
         return os;
+    }
+
+    /// Get the index at which elements of given degree start
+    static DIMN start_of_degree(const DEG d)
+    {
+        assert(d <= MaxDepth + 1);
+        return (d == 0) ? 0 : SIZE_INFO::degree_sizes[d - 1];
     }
 
     /// The size of the Hall set up to degree MaxDepth
@@ -369,6 +377,7 @@ public:
     using hall_basis_type::parents_begin;
     using hall_basis_type::parents_end;
     using hall_basis_type::reverse_map_end;
+    using hall_basis_type::start_of_degree;
 
     /// Bring up the extended_function class - see also extend_function method
     template<typename Function, typename BinOp, typename Tag>
@@ -455,12 +464,7 @@ public:
         return (idx < start_of_degree(max_degree + 1)) ? KEY(idx + 1) : KEY(0);
     }
 
-    /// Get the index at which elements of given degree start
-    static DIMN start_of_degree(const DEG d)
-    {
-        assert(d <= max_degree + 1);
-        return (d == 0) ? 0 : SIZE_INFO::degree_sizes[d - 1];
-    }
+
 
     // Key iteration methods
 
@@ -483,6 +487,17 @@ public:
     {
         return basis::key_range<lie_basis>{*this, begin(), (end <= start_of_degree(max_degree + 1)) ? end : KEY(0)};
     }
+
+#ifdef LIBALGEBRA_ENABLE_SERIALIZATION
+protected:
+    friend class boost::serialization::access;
+
+    template <typename Archive>
+    void serialize(Archive& ar, const unsigned int /*version*/) {
+        ar & boost::serialization::base_object<hall_basis_type>(*this);
+    }
+
+#endif
 };
 
 namespace basis {

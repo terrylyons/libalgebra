@@ -83,7 +83,7 @@ public:
     vector_bundle_base(const vector_bundle_base &) = default;
     vector_bundle_base(vector_bundle_base &&) noexcept = default;
 
-    vector_bundle_base& operator=(const vector_bundle_base& other) = default;
+    //vector_bundle_base& operator=(const vector_bundle_base& other) = default;
     vector_bundle_base& operator=(vector_bundle_base& other) noexcept = default;
 
 

@@ -1,4 +1,4 @@
-﻿/* *************************************************************
+/* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
 Greg Gyurkó and Arend Janssen.
@@ -307,11 +307,11 @@ public:
         return reverse.data();
     }
 
-    pointer tile_ptr() noexcept
+    pointer __declspec(restrict) tile_ptr() noexcept
     {
         return static_cast<pointer>(tile.data);
     }
-    const_pointer tile_ptr() const noexcept
+    const_pointer __declspec(restrict)  tile_ptr() const noexcept
     {
         return static_cast<const_pointer>(tile.data);
     }

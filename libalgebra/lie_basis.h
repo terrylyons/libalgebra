@@ -1,4 +1,4 @@
-﻿/* *************************************************************
+/* *************************************************************
 
 Copyright 2010 Terry Lyons, Stephen Buckley, Djalil Chafai,
 Greg Gyurkó and Arend Janssen.
@@ -84,11 +84,11 @@ struct hall_set_info {
     using helper = hall_set_array_helper<NoLetters, Level>;
 
     using holder = typename alg::utils::generate_array<MaxDepth + 1, helper>::result;
-    static const std::array<DIMN, MaxDepth + 2> degree_sizes;
+    static constexpr std::array<DIMN, MaxDepth + 2> degree_sizes = hall_set_info<NoLetters, MaxDepth>::holder::data;
 };
 
 template<DEG NoLetters, DEG MaxDepth>
-const std::array<DIMN, MaxDepth + 2> hall_set_info<NoLetters, MaxDepth>::degree_sizes = hall_set_info<NoLetters, MaxDepth>::holder::data;
+constexpr std::array<DIMN, MaxDepth + 2> hall_set_info<NoLetters, MaxDepth>::degree_sizes; 
 
 }// namespace dtl
 
@@ -255,7 +255,7 @@ public:
     }
 
     /// Get the index at which elements of given degree start
-    static DIMN start_of_degree(const DEG d)
+    static constexpr DIMN start_of_degree(const DEG d)
     {
         assert(d <= MaxDepth + 1);
         return (d == 0) ? 0 : SIZE_INFO::degree_sizes[d - 1];

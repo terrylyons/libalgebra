@@ -2663,7 +2663,9 @@ template<DEG Width, DEG Depth>
 using shuffle_tensor_multiplication =
         base_multiplication<shuffle_tensor_multiplier<Width, Depth>>;
 
-template<typename Coeff, DEG n_letters, DEG max_degree, typename...>
+template<typename Coeff, DEG n_letters, DEG max_degree,
+         template <typename, typename, typename...> class VectorType,
+        typename...>
 class shuffle_tensor;
 
 /**
@@ -2974,11 +2976,16 @@ exp(const free_tensor<Coeffs, Width, Depth, VectorType, Args...>& arg)
  * the SCALAR type. This is permitted by the existence of empty keys in
  * shuffle_tensor_basis.
  */
-template<typename Coeff, DEG n_letters, DEG max_degree, typename...>
+template<typename Coeff, DEG n_letters, DEG max_degree,
+         template <typename, typename, typename...> class VectorType,
+         typename... ExtraArgs>
 class shuffle_tensor : public algebra<
                                shuffle_tensor_basis<n_letters, max_degree>,
                                Coeff,
-                               shuffle_tensor_multiplication<n_letters, max_degree>>
+                               shuffle_tensor_multiplication<n_letters, max_degree>,
+                               VectorType,
+                               shuffle_tensor<Coeff, n_letters, max_degree, VectorType, ExtraArgs...>
+                               >
 {
     typedef shuffle_tensor_multiplication<n_letters, max_degree> multiplication_t;
 
@@ -2988,7 +2995,7 @@ public:
     /// Import of the KEY type.
     typedef typename BASIS::KEY KEY;
     /// The algebra type.
-    typedef algebra<BASIS, Coeff, multiplication_t> ALG;
+    typedef algebra<BASIS, Coeff, multiplication_t, VectorType, shuffle_tensor> ALG;
 
     typedef typename Coeff::SCA SCA;
     typedef typename Coeff::RAT RAT;
@@ -3014,10 +3021,10 @@ public:
     {}
 
     /// Constructs an instance from a free_tensor instance.
-    template<template<typename, typename, typename...> class VectorType, template <DEG, DEG> class FTM, typename... Args>
-    shuffle_tensor(const free_tensor<Coeff, n_letters, max_degree, VectorType, FTM, Args...>& t)
+    template<template<typename, typename, typename...> class OVectorType, template <DEG, DEG> class FTM, typename... Args>
+    shuffle_tensor(const free_tensor<Coeff, n_letters, max_degree, OVectorType, FTM, Args...>& t)
     {
-        typename free_tensor<Coeff, n_letters, max_degree, VectorType, FTM, Args...>::const_iterator i;
+        typename free_tensor<Coeff, n_letters, max_degree, OVectorType, FTM, Args...>::const_iterator i;
         for (i = t.begin(); i != t.end(); ++i) {
             (*this)[i->key()] += i->value();
         }

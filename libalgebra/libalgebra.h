@@ -104,7 +104,10 @@ template<typename Coeff, DEG n_letters, DEG max_degree = 0,
 class free_tensor;
 
 /// Free Associative Shuffle Algebra.  Associative and Commutative.
-template<typename Coeff, DEG n_letters, DEG max_degree = 0, typename...>
+template<typename Coeff, DEG n_letters, DEG max_degree = 0,
+         template<typename, typename, typename...> class VectorType = vectors::template_vector_type_selector<shuffle_tensor_basis<n_letters, max_degree>, Coeff>::template type,
+         typename...
+         >
 class shuffle_tensor;
 
 /// Philip Hall Lie Basis.

@@ -47,8 +47,8 @@ class recalibrate<change_depth<NewDepth>, Base> : Base
     template<typename C, DEG W, DEG OD, template<typename, typename, typename...> class V, template<DEG, DEG> class M, typename... Args>
     static free_tensor<C, W, NewDepth, V, M, Args...> f(free_tensor<C, W, OD, V, M, Args...>& a);
 
-    template<typename C, DEG W, DEG OD, typename... Args>
-    static shuffle_tensor<C, W, NewDepth, Args...> f(shuffle_tensor<C, W, OD, Args...>& a);
+    template<typename C, DEG W, DEG OD, template<typename, typename, typename...> class V, typename... Args>
+    static shuffle_tensor<C, W, NewDepth, V, Args...> f(shuffle_tensor<C, W, OD, V, Args...>& a);
 
     template<typename C, DEG W, DEG OD, template<typename, typename, typename...> class V, typename... Args>
     static lie<C, W, NewDepth, V, Args...> f(lie<C, W, OD, V, Args...>& a);
@@ -65,8 +65,8 @@ class recalibrate<change_coeffs<NewCoeffs>, Base> : Base
     template<typename C, DEG W, DEG D, template<typename, typename, typename...> class V, template<DEG, DEG> class M, typename... Args>
     static free_tensor<NewCoeffs, W, D, V, M, Args...> f(free_tensor<C, W, D, V, M, Args...>& a);
 
-    template<typename C, DEG W, DEG D, typename... Args>
-    static shuffle_tensor<NewCoeffs, W, D, Args...> f(shuffle_tensor<C, W, D, Args...>& a);
+    template<typename C, DEG W, DEG D,template<typename, typename, typename...> class V, typename... Args>
+    static shuffle_tensor<NewCoeffs, W, D,V, Args...> f(shuffle_tensor<C, W, D,V, Args...>& a);
 
     template<typename C, DEG W, DEG D, template<typename, typename, typename...> class V, typename... Args>
     static lie<NewCoeffs, W, D, V, Args...> f(lie<C, W, D, V, Args...>& a);
@@ -84,8 +84,8 @@ class recalibrate<change_storage<NewVType, NewVArgs...>, Base> : Base
     template<typename C, DEG W, DEG D, template<typename, typename, typename...> class V, template<DEG, DEG> class M, typename... Args>
     static free_tensor<C, W, D, NewVType, M, NewVArgs...> f(free_tensor<C, W, D, V, M, Args...>& a);
 
-    template<typename C, DEG W, DEG D, typename... Args>
-    static shuffle_tensor<C, W, D, Args...> f(shuffle_tensor<C, W, D, Args...>& a);
+    template<typename C, DEG W, DEG D,template<typename, typename, typename...> class V, typename... Args>
+    static shuffle_tensor<C, W, D,V, Args...> f(shuffle_tensor<C, W, D, V, Args...>& a);
 
     template<typename C, DEG W, DEG D, template<typename, typename, typename...> class V, typename... Args>
     static lie<C, W, D, NewVType, NewVArgs...> f(lie<C, W, D, V, Args...>& a);

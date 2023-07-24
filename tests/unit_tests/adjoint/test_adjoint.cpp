@@ -38,7 +38,8 @@ SUITE(Adjoint)
 
         using shuffle_tensor_type = alg::shuffle_tensor<coeff_ring, width, depth>;
 
-        using operator_type = operators::dtl::adjoint_of_left_multiplication_operator_impl<tensor_type>;
+        template <typename T>
+        using operator_type = operators::dtl::adjoint_of_left_multiplication_operator_impl<T>;
 
         using sparse_traditional_tensor = alg::algebra<tensor_basis, coeff_ring, traditional_multiplication, alg::vectors::sparse_vector>;
         using dense_traditional_tensor = alg::algebra<tensor_basis, coeff_ring, traditional_multiplication, alg::vectors::dense_vector>;
@@ -123,6 +124,17 @@ SUITE(Adjoint)
             return result;
         }
 
+        template <template <typename, typename, typename...> class VT>
+        alg::shuffle_tensor<coeff_ring, Width, Depth, VT> generic_shuffle_tensor(LET offset = 0, DEG max_degree = depth) const
+        {
+            alg::shuffle_tensor<coeff_ring, Width, Depth, VT> result;
+
+            for (auto key : basis.iterate_keys_to_deg(max_degree + 1)) {
+                result[key] = to_poly_key(key, offset);
+            }
+            return result;
+        }
+
         tensor_type generic_tensor(LET offset = 0, DEG max_degree = depth) const
         {
             tensor_type result;
@@ -144,8 +156,9 @@ SUITE(Adjoint)
             return result;
         }
 
-        shuffle_tensor_type construct_expected(LET tensor_offset, LET shuffle_offset) {
-            shuffle_tensor_type result;
+        template <typename Shuffle=shuffle_tensor_type>
+        Shuffle construct_expected(LET tensor_offset, LET shuffle_offset) {
+            Shuffle result;
 
             for (auto&& key : basis.iterate_keys()) {
                 for (DEG i=0; i<=key.size(); ++i) {
@@ -181,7 +194,7 @@ SUITE(Adjoint)
         tensor_type this_tensor(scalar_type(1));
         shuffle_tensor_type this_shuffle_tensor(scalar_type(1));
 
-        operator_type adjoint(this_tensor);
+        operator_type<tensor_type> adjoint(this_tensor);
 
         CHECK_EQUAL(this_shuffle_tensor, adjoint(this_shuffle_tensor));
 
@@ -194,7 +207,7 @@ SUITE(Adjoint)
         tensor_type this_tensor(scalar_type(1));
         shuffle_tensor_type this_shuffle_tensor = generic_shuffle_tensor(2);
 
-        operator_type adjoint(this_tensor);
+        operator_type<tensor_type> adjoint(this_tensor);
 
         CHECK_EQUAL(this_shuffle_tensor, adjoint(this_shuffle_tensor));
 
@@ -206,11 +219,24 @@ SUITE(Adjoint)
         tensor_type this_tensor(generic_tensor(1));
         shuffle_tensor_type  this_shuffle_tensor(generic_shuffle_tensor(2));
 
-        operator_type adjoint(this_tensor);
+        operator_type<tensor_type> adjoint(this_tensor);
 
         auto expected = construct_expected(1, 2);
 
         CHECK_EQUAL(expected, adjoint(this_shuffle_tensor));
+    }
+
+    TEST_FIXTURE(PolyMultiplicationTests55, FullTestDense) {
+        auto this_tensor(generic_tensor<traditional_multiplication, alg::vectors::dense_vector>(1));
+        auto this_shuffle_tensor(generic_shuffle_tensor<alg::vectors::dense_vector>(2));
+
+        operator_type<decltype(this_tensor)> adjoint(this_tensor);
+
+        auto expected = construct_expected<decltype(this_shuffle_tensor)>(1, 2);
+
+        auto adj = adjoint(this_shuffle_tensor);
+//        CHECK_EQUAL(expected, adj);
+        CHECK_EQUAL(decltype(this_shuffle_tensor)(), expected-adj);
     }
 
 }// SUITE adjoint

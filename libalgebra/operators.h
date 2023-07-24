@@ -209,9 +209,9 @@ private:
                             DEG arg_deg)
     {
         if (param_deg < arg_deg) {
+            auto* out_ptr = out;
             for (DEG d = param_deg; d <= arg_deg; ++d) {
                 auto result_deg = d - param_deg;
-                auto* out_ptr = out + sizes[result_deg - 1];
 
                 for (DIMN param_idx = 0; param_idx < powers[param_deg]; ++param_idx) {
                     const auto* in_ptr = in + param_idx * powers[result_deg];
@@ -223,6 +223,7 @@ private:
                 }
 
                 in += powers[d];
+                out_ptr += powers[result_deg];
             }
         }
         else {
@@ -286,7 +287,7 @@ private:
             }
         }
 
-        for (DEG prefix_deg = 1; prefix_deg < lower_deg; ++prefix_deg) {
+        for (DEG prefix_deg = 1; prefix_deg <= lower_deg; ++prefix_deg) {
             arg_ptr += tsi::powers[prefix_deg - 1];
             param_ptr += tsi::powers[prefix_deg - 1];
 
